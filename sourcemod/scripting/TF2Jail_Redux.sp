@@ -26,6 +26,7 @@
 #include <tf2items>
 #include <tf2items_giveweapon>
 #include <morecolors>
+#include <clientprefs>
 #include "include/smlib/clients.inc"	// I have a phobia of unnecessarily large plugins
 #include <tf2attributes>
 #include <tf2jailredux>
@@ -38,7 +39,6 @@
 #tryinclude <sourcebans>
 #tryinclude <sourcecomms>
 #tryinclude <basecomm>
-#tryinclude <clientprefs>
 #define REQUIRE_PLUGIN
 
 #pragma semicolon 			1
@@ -103,6 +103,8 @@ char sCellNames[32],
 	 ;
 
 char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" };
+
+int EnumTNPS[4][eTextNodeParams];
 
 float flFreedayPosition[3], 
 	  flWardayBlu[3], 

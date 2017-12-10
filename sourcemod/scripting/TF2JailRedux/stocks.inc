@@ -183,7 +183,7 @@ stock void CreateParticles(char[] particlename, float Pos[3] = NULL_VECTOR, floa
 		ActivateEntity(particle);
 		AcceptEntityInput(particle, "start");
 		TeleportEntity(particle, Pos, NULL_VECTOR, NULL_VECTOR);
-		CreateTimer(time, RemoveEnt, EntIndexToEntRef(particle));
+		CreateTimer(time, RemoveEntity, EntIndexToEntRef(particle));
 	}
 	else LogError("CreateParticles: **** Couldn't Create 'info_particle_system Entity' ****");
 }
@@ -453,19 +453,24 @@ stock int GetLivingPlayers(const int team)
 	}
 	return AlivePlayers;
 }
-stock void IncrementHeadCount(const int client)
+stock void IncrementHeadCount(const int client, bool addhealth = true, int addheads = 1)
 {
-	if (!TF2_IsPlayerInCondition(client, TFCond_DemoBuff))
-		TF2_AddCondition(client, TFCond_DemoBuff, -1.0);
+	if ( (TF2_GetPlayerClass(client) == TFClass_DemoMan) &&  !TF2_IsPlayerInCondition(client, TFCond_DemoBuff) )
+		TF2_AddCondition(client, TFCond_DemoBuff, TFCondDuration_Infinite); // Apply this condition to Demomen to give them their glowing eye effect.
 	int decapitations = GetEntProp(client, Prop_Send, "m_iDecapitations");
-	SetEntProp(client, Prop_Send, "m_iDecapitations", decapitations+1);
-	int health = GetClientHealth(client);
-	//health += (decapitations >= 4 ? 10 : 15);
-	if (health < 300)
-		health += 15;
-	SetEntProp(client, Prop_Data, "m_iHealth", health);
-	SetEntProp(client, Prop_Send, "m_iHealth", health);
-	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.01);   //recalc their speed
+	SetEntProp(client, Prop_Send, "m_iDecapitations", decapitations + addheads);
+	if ( addhealth )
+	{
+		int health = GetClientHealth(client);
+		//health += (decapitations >= 4 ? 10 : 15);
+		if ( health + (15 * addheads) <= 300 ) // TODO: Replace this with an overheal calculation (MaxHP * 1.5) OR add a maxhealth arg. 
+			health += 15 * addheads;
+		else
+			health = 300;
+		SetEntProp(client, Prop_Data, "m_iHealth", health);
+		SetEntProp(client, Prop_Send, "m_iHealth", health);
+	}
+	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.01);   // Recalc their speed
 }
 stock void SpawnSmallHealthPackAt(const int client, int ownerteam = 0)
 {
@@ -1237,8 +1242,6 @@ stock void RandomModelSizes(const int client)
 	else SetEntPropFloat(client, Prop_Send, "m_flHandScale", GetRandomFloat(1.5, 4.0));
 }
 
-int EnumTNPS[4][eTextNodeParams];
-
 stock void SetTextNode(Handle node, const char[] sText, float X = -1.0, float Y = -1.0, float HoldTime = 5.0, int Red = 255, int Green = 255, int Blue = 255, int Alpha = 255, int Effect = 0, float fXTime = 6.0, float FadeIn = 0.1, float FadeOut = 0.2)
 {
 	SetHudTextParams(X, Y, HoldTime, Red, Green, Blue, Alpha, Effect, fXTime, FadeIn, FadeOut);
@@ -1248,4 +1251,32 @@ stock void SetTextNode(Handle node, const char[] sText, float X = -1.0, float Y 
 		if (IsClientValid(i))
 			ShowSyncHudText(i, node, sText);
 	}
+}
+stock bool OnlyScoutsLeft(const int team)
+{
+	for (int i=MaxClients ; i ; --i) {
+		if ( !IsValidClient(i) || !IsPlayerAlive(i) )
+			continue;
+		if (GetClientTeam(i) == team && TF2_GetPlayerClass(i) != TFClass_Scout)
+			return false;
+	}
+	return true;
+}
+stock void RemoveParachute(const int client)
+{
+	if (TF2_IsPlayerInCondition(client, TFCond_Parachute))
+		TF2_RemoveCondition(client, TFCond_Parachute);
+}
+stock int CalcBossHealth(const float initial, const int playing, const float subtract, const float exponent, const float additional)
+{
+	return RoundFloat( Pow((((initial)+playing)*(playing-subtract)), exponent)+additional );
+}
+public bool TraceRayDontHitSelf(int entity, int mask, any data)
+{
+	return (entity != data);
+}
+stock void OverNineThousand()
+{
+	EmitSoundToAll("saxton_hale/9000.wav");
+	EmitSoundToAll("saxton_hale/9000.wav");
 }
