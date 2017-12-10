@@ -2,7 +2,7 @@
 A current WIP
 
 Born out of my dislike with the unorganized and jumbled mess the original TF2Jail plugin was, I went out and did a partial rewrite of it, combining features of different plugins to create a more unique and pristine version that combatted the bugs and issues from the original.
-The entirety of the plugin is built with developers in mind, which is why much of it (including Last Requests) are hard coded within it rather than having a config file with limited control over gameplay. 
+The entirety of the plugin is built with developers in mind, which is why much of it (especially Last Requests) are hard coded within it rather than having a config file with limited control over gameplay. 
 With the building from several other plugins, props to:
 
   Nergal/Assyrian with several aspects (plus the LR module) taken from [VSH2](https://forums.alliedmods.net/showthread.php?t=286701).
@@ -39,6 +39,12 @@ The entire plugin is organized into files associated with what part of the code 
   
 ## Sub Plugins ##
 Versus Saxton Hale is the only current sub-plugin that relatively works as TFJR is still a WIP. It contains usage of the methodmap derivement from JBPlayer along with hooking to function calls and events from the core plugin. More information about this can be found on the [wiki](https://github.com/Ragenewb/TF2-Jailbreak-Redux/wiki/Forwards-and-Natives). (Prophunt is next on the list)
+
+## Requirements ##
+
+###### [TF2Items](https://forums.alliedmods.net/showthread.php?p=1050170) ######
+
+###### [TF2Attributes](https://forums.alliedmods.net/showthread.php?t=210221) ######
 
 -----------------------------
 
