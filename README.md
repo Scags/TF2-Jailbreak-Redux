@@ -26,9 +26,9 @@ The entire plugin is organized into files associated with what part of the code 
   
   **jailcommands.sp**- Commands obviously. Menus associated with them are also held in here.
   
-  **jailbase.sp**- Methodmap structure that all players are initiated into throughout the plugin. Ints, floats, bools, and functions can be referenced in the [wiki](https://github.com/Ragenewb/TF2Jail-Redux/wiki/Player-Methodmap).
+  **jailbase.sp**- Methodmap structure that all players are initiated into throughout the plugin. Ints, floats, bools, and functions can be referenced in the [wiki](https://github.com/Ragenewb/TF2-Jailbreak-Redux/wiki/Player-Methodmap).
   
-  **jailgamemode.sp**- Gamemode methodmap with more ints, floats, bools, and functions seen in the [wiki](https://github.com/Ragenewb/TF2Jail-Redux/wiki/GameMode-Methodmap).
+  **jailgamemode.sp**- Gamemode methodmap with more ints, floats, bools, and functions seen in the [wiki](https://github.com/Ragenewb/TF2-Jailbreak-Redux/wiki/GameMode-Methodmap).
   
   **stocks.inc**- Several stock functions used and some that could be used in the plugin.
   
@@ -38,7 +38,7 @@ The entire plugin is organized into files associated with what part of the code 
   
   
 ## Sub Plugins ##
-Versus Saxton Hale is the only current sub-plugin that relatively works as TFJR is still a WIP. It contains usage of the methodmap derivement from JBPlayer along with hooking to function calls and events from the core plugin. More information about this can be found on the [wiki](https://github.com/Ragenewb/TF2Jail-Redux/wiki/SubPlugin-Introduction). (Prophunt is next on the list)
+Versus Saxton Hale is the only current sub-plugin that relatively works as TFJR is still a WIP. It contains usage of the methodmap derivement from JBPlayer along with hooking to function calls and events from the core plugin. More information about this can be found on the [wiki](https://github.com/Ragenewb/TF2-Jailbreak-Redux/wiki/Forwards-and-Natives). (Prophunt is next on the list)
 
 -----------------------------
 
