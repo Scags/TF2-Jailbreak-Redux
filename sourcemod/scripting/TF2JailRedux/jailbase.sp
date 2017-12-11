@@ -117,7 +117,9 @@ public char strCustomLR[64];	// Used for formatting the player custom lr say hoo
 int
 	AmmoTable[2049],
 	ClipTable[2049]
-;	
+;
+
+int EnumTNPS[4][eTextNodeParams];
 
 //float flHolstered[PLYR][3];
 
@@ -516,7 +518,8 @@ methodmap JailFighter
 	}
 	public void GiveFreeday()
 	{
-		ServerCommand("sm_evilbeam #%d", this.userid);
+		// ServerCommand("sm_evilbeam #%d", this.userid);
+		ServerCommand("sm_ftrail #%d %i", this.userid, GetRandomInt(1, 16));
 		int flags = GetEntityFlags(this.index) | FL_NOTARGET;
 		SetEntityFlags(this.index, flags);
 		
@@ -530,7 +533,8 @@ methodmap JailFighter
 		int client = this.index;
 		int flags = GetEntityFlags(client) & ~FL_NOTARGET;
 		SetEntityFlags(client, flags);
-		ServerCommand("sm_evilbeam #%d", this.userid);
+		// ServerCommand("sm_evilbeam #%d", this.userid);
+		ServerCommand("sm_rtrail #%d", this.userid);
 		this.bIsFreeday = false;
 		//SetEntProp(client, Prop_Data, "m_takedamage", 2, 1);
 	}

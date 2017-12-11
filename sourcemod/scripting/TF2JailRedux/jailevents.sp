@@ -79,24 +79,6 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 			}
 		}
 	}
-	if (GetLivingPlayers(3) == 2)
-	{
-		if (cvarTF2Jail[RemoveFreedayOnLastGuard].BoolValue)
-		{
-			for (int i = MaxClients; i; --i)
-			{
-				JailFighter player = JailFighter(i);
-				if (IsClientValid(player.index) && player.bIsFreeday)
-					player.RemoveFreeday();
-			}
-		}
-		
-		/*if (!gamemode.bOneGuardLeft)
-		{
-			gamemode.bOneGuardLeft = true;
-			PrintCenterTextAll("One guard left...");
-		}*/
-	}
 
 	//SetPawnTimer(CheckAlivePlayers, 0.2);
 	
@@ -161,6 +143,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	gamemode.bWardenExists = false;
 	gamemode.bIsWardenLocked = false;
 	gamemode.bFirstDoorOpening = false;
+	gamemode.bOneGuardLeft = false;
 	
 	if (gamemode.b1stRoundFreeday)
 	{
@@ -202,7 +185,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		SetPawnTimer(ResetDamage, 1.0);	// Players could teamkill with the flames upon autobalance
 	}
 		
-	if (gamemode.iLRPresetType >= 0 || gamemode.iLRPresetType == -2)	// There's bound to be an easier way to do this
+	if (gamemode.iLRPresetType >= 0)	// There's bound to be an easier way to do this
 	{
 		gamemode.iLRType = gamemode.iLRPresetType;
 		//gamemode.bIsLRInUse = true;
@@ -215,6 +198,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		ManageHUDText();
 		ManageFFTimer();
 		ManageTimeLeft();
+
 		SetPawnTimer(_MusicPlay, 1.4);
 
 		for (i = MaxClients; i; --i)
@@ -238,7 +222,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	gamemode.iRoundState = StateRunning;
 
-	CreateTimer(1.0, Timer_Round, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(1.0, Timer_Round, _, FULLTIMER);
 	
 	if (gamemode.bIsMapCompatible && cvarTF2Jail[DoorOpenTimer].FloatValue != 0.0)
 	{

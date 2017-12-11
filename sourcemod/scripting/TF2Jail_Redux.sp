@@ -1,5 +1,5 @@
 /**
- *	Welcome to TF2Jail Redux!																		*
+ *	Hello person who will be reading this some time in the future, and welcome to TF2Jail Redux!	*
  *	Here is the summary and organization of the associated files within it 							*
  **	TF2Jail_Redux.sp: Contains the core functions of the plugin, along with forwards 			   **
  **	jailbase.sp: Player methodmap properties plus a few handy variables 						   **
@@ -16,7 +16,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.10.4"
+#define PLUGIN_VERSION		"0.10.7"
 #define PLUGIN_AUTHOR		"Ragenewb, props to Keith (Drixevel) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -26,8 +26,7 @@
 #include <tf2items>
 #include <tf2items_giveweapon>
 #include <morecolors>
-#include <clientprefs>
-#include "include/smlib/clients.inc"	// I have a phobia of unnecessarily large plugins
+#include <smlib/clients>	// I have a phobia of unnecessarily large plugins
 #include <tf2attributes>
 #include <tf2jailredux>
 
@@ -39,6 +38,7 @@
 #tryinclude <sourcebans>
 #tryinclude <sourcecomms>
 #tryinclude <basecomm>
+#tryinclude <clientprefs>
 #define REQUIRE_PLUGIN
 
 #pragma semicolon 			1
@@ -60,7 +60,6 @@ enum	// Cvar name
 	Balance = 0,
 	BalanceRatio,
 	DoorOpenTimer,
-	LRSLockWarden,
 	FreedayLimit,
 	KillPointServerCommand,
 	RemoveFreedayOnLR,
@@ -103,8 +102,6 @@ char sCellNames[32],
 	 ;
 
 char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" };
-
-int EnumTNPS[4][eTextNodeParams];
 
 float flFreedayPosition[3], 
 	  flWardayBlu[3], 
@@ -185,8 +182,6 @@ public void OnPluginStart()
 	HookEvent("player_jarated", PlayerJarated);
 	HookEvent("player_chargedeployed", UberDeployed);
 
-	//AddCommandListener(cmdVoiceMenu, "voicemenu");
-	//AddCommandListener(JoinTeam, "jointeam");
 	AddCommandListener(EurekaTele, "eureka_teleport");
 
 	RegConsoleCmd("sm_jhelp", Command_Help, "Display a menu containing the major commands");
@@ -247,10 +242,10 @@ public void OnPluginStart()
 	RegAdminCmd("sm_wardayblue", AdminWardayBlue, ADMFLAG_GENERIC, "Teleport all guards to their warday teleport location.");
 	RegAdminCmd("sm_startwarday", FullWarday, ADMFLAG_GENERIC, "Teleport all players to their warday teleport location.");
 
-	RegAdminCmd("sm_itype", Type, ADMFLAG_GENERIC, "gamemode.iLRType. (DEBUGGING)");
-	RegAdminCmd("sm_ipreset", Preset, ADMFLAG_GENERIC, "gamemode.iLRPresetType. (DEBUGGING)");
+	RegAdminCmd("sm_setpreset", SetPreset, ADMFLAG_ROOT, "Set gamemode.iLRPresetType. (DEBUGGING)");
+	RegAdminCmd("sm_itype", Type, ADMFLAG_ROOT, "gamemode.iLRType. (DEBUGGING)");
+	RegAdminCmd("sm_ipreset", Preset, ADMFLAG_ROOT, "gamemode.iLRPresetType. (DEBUGGING)");
 	RegAdminCmd("sm_jailreset", AdminResetPlugin, ADMFLAG_ROOT, "Reset all plug-in global variables. (DEBUGGING)");
-
 
 	hEngineConVars[0] = FindConVar("mp_friendlyfire");
 	hEngineConVars[1] = FindConVar("tf_avoidteammates_pushaway");
@@ -786,19 +781,6 @@ public void ParseNodeConfig()
 	delete key;
 }
 
-public void ListLastRequestPanel(const int client)
-{
-	if (IsVoteInProgress())
-		return;
-
-	Menu menu = new Menu(ListLRsPanel);
-	menu.SetTitle("Last Request List");
-	//menu.AddItem("0", "Random LR");
-	AddLRToMenu(menu);
-	menu.ExitButton = true;
-	menu.Display(client, 30);
-}
-
 public bool AlreadyMuted(const int client)
 {
 	switch (gamemode.bSC)
@@ -917,8 +899,7 @@ public void RandSniper(const int iTimer)
 	if (IsPlayerAlive(rand))
 		SDKHooks_TakeDamage(rand, 0, 0, 9001.0, DMG_DIRECT, _, _, _);
 	
-	int uTimer = gamemode.iRoundCount;
-	SetPawnTimer(RandSniper, GetRandomFloat(30.0, 60.0), uTimer);
+	SetPawnTimer(RandSniper, GetRandomFloat(30.0, 60.0), gamemode.iRoundCount);
 }
 
 public void EndRandSniper(const int iTimer)
@@ -933,8 +914,7 @@ public void EndRandSniper(const int iTimer)
 	if (IsPlayerAlive(rand))
 		SDKHooks_TakeDamage(rand, 0, 0, 9001.0, DMG_DIRECT, _, _, _);
 	
-	int uTimer = gamemode.iRoundCount;
-	SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), uTimer);
+	SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), gamemode.iRoundCount);
 }
 
 public void ResetModelProps(const int client)

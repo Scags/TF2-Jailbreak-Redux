@@ -894,7 +894,6 @@ stock bool StrStarts(const char[] szStr, const char[] szSubStr, bool bCaseSensit
 {
 	return !StrContains(szStr, szSubStr, bCaseSensitive);
 }
-
 stock bool ValidateName(const char[] name)
 {
 	int length = strlen(name);
@@ -907,7 +906,6 @@ stock bool ValidateName(const char[] name)
 	// A name is, of course, only valid if it's 1 or more chars long, though longer is recommended
 	return (length > 0);
 }
-
 stock int GetRandomPlayer(int team)  
 {  
     int[] clients = new int[MaxClients];  
@@ -919,7 +917,6 @@ stock int GetRandomPlayer(int team)
     }  
     return (clientCount == 0) ? -1 : clients[GetRandomInt(0, clientCount - 1)];  
 }
-
 stock void SetControlPoint(const bool enable)
 {
 	int CPm = -1;
@@ -933,7 +930,6 @@ stock void SetControlPoint(const bool enable)
 		}
 	}
 }
-
 stock int FindEntityByClassnameSafe(int iStart, char[] sClassName)
 {
 	while (iStart > -1 && !IsValidEntity(iStart))
@@ -941,7 +937,6 @@ stock int FindEntityByClassnameSafe(int iStart, char[] sClassName)
 
 	return FindEntityByClassname(iStart, sClassName);
 }
-
 stock void RemoveValveHat(int client, bool unhide = false)
 {
 	char sNetClass[32];
@@ -973,7 +968,6 @@ stock void RemoveValveHat(int client, bool unhide = false)
 		}
 	}
 }
-
 /*stock int CreateParticle2(const char[] sType, float refresh = 2.0, int client, int attach = NO_ATTACH, float xOffs = 0.0, float yOffs = 0.0, float zOffs = 0.0)
 {
 	int particle = CreateEntityByName("info_particle_system");
@@ -1026,7 +1020,6 @@ stock void RemoveValveHat(int client, bool unhide = false)
 
 	return EntIndexToEntRef(particle);
 }*/
-
 stock void TF2_SwitchToSlot(const int client, const int slot)
 {
 	if (slot >= 0 && slot <= 5 && IsClientValid(client) && IsPlayerAlive(client))
@@ -1099,7 +1092,6 @@ stock int MakeParticle(int client, char[] effect, char[] attachment)
 		AcceptEntityInput(particle, "Start");
 		return particle;
 }
-
 stock void RemoveAll(int client)
 {
 	TF2_RemovePlayerDisguise(client);
@@ -1226,7 +1218,6 @@ stock void KillShields(const int client)
 		}
 	}
 }
-
 stock void RandomModelSizes(const int client)
 {
 	if (!GetRandomInt(0, 1))
@@ -1241,7 +1232,6 @@ stock void RandomModelSizes(const int client)
 		SetEntPropFloat(client, Prop_Send, "m_flHandScale", GetRandomFloat(0.1, 0.5));
 	else SetEntPropFloat(client, Prop_Send, "m_flHandScale", GetRandomFloat(1.5, 4.0));
 }
-
 stock void SetTextNode(Handle node, const char[] sText, float X = -1.0, float Y = -1.0, float HoldTime = 5.0, int Red = 255, int Green = 255, int Blue = 255, int Alpha = 255, int Effect = 0, float fXTime = 6.0, float FadeIn = 0.1, float FadeOut = 0.2)
 {
 	SetHudTextParams(X, Y, HoldTime, Red, Green, Blue, Alpha, Effect, fXTime, FadeIn, FadeOut);
