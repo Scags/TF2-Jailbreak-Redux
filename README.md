@@ -46,6 +46,8 @@ Versus Saxton Hale is the only current sub-plugin that relatively works as TFJR 
 
 ###### [TF2Attributes](https://forums.alliedmods.net/showthread.php?t=210221) ######
 
+###### [Evil Admin: Beam](https://forums.alliedmods.net/showthread.php?p=709030) ######
+
 -----------------------------
 
 If you have any ideas, thoughts, feature requests, don't be shy to fork (but don't do it yet, I'm not done) or just leave me a comment on my [Steam Profile](http://steamcommunity.com/profiles/76561198085502536)
