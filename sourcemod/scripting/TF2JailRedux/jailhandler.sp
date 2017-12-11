@@ -15,7 +15,6 @@
 #define SuicideSound	"weapons/csgo_awp_shoot.wav"
 #define GunSound		"vo/heavy_meleedare02.mp3"
 #define TinySound		"vo/scout_sf12_badmagic28.mp3"
-#define MagicSound		"vo/scout_sf13_magic_reac06.mp3"
 #define WardaySound		"tf2jailredux/warday.mp3"
 #define NO 				"vo/heavy_no02.mp3"
 
@@ -1149,6 +1148,7 @@ public void CheckLivingPlayers()
 
 	switch (gamemode.iLRType)
 	{
+		case VSH: {	} // 'One guard left' is pointless during this round along with freedays
 		default:
 		{
 			if (GetLivingPlayers(BLU) == 1)
