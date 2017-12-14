@@ -195,7 +195,7 @@ public void AddLRToMenu(Menu & menu)
 /**
  *	Add a 'short' description to your last request for the !listlrs command
 */
-public void AddLRToPanel(Panel& panel)
+public void AddLRToPanel(Panel & panel)
 {
 	panel.DrawItem("Custom- Type your own last request");
 	panel.DrawItem("Freeday for Yourself- Give yourself a freeday");
@@ -393,7 +393,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 			}
 		}
-		case MenuAction_Cancel:delete menu;
+		case MenuAction_End:delete menu;
 	}
 	//Call_OnLRPicked(menu, action, base, select);
 }
