@@ -92,6 +92,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
+	JailFighter player;
+	
 	if (gamemode.bIsMapCompatible)
 	{
 		if (strlen(sCellOpener) != 0)
@@ -114,7 +116,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	{
 		if (!IsClientValid(i))
 			continue;
-		JailFighter player = JailFighter(i);
+		player = JailFighter(i);
 		player.UnmutePlayer();
 	}
 
@@ -137,13 +139,14 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	gamemode.DoorHandler(CLOSE);
+	JailFighter player;
 	int i;
 	gamemode.bCellsOpened = false;
 	gamemode.bWardenExists = false;
 	gamemode.bIsWardenLocked = false;
 	gamemode.bFirstDoorOpening = false;
 	gamemode.bOneGuardLeft = false;
+	gamemode.DoorHandler(CLOSE);
 	
 	if (gamemode.b1stRoundFreeday)
 	{
@@ -167,7 +170,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 				continue;
 			
 			SetEntProp(i, Prop_Data, "m_takedamage", 0, 1);	// For shitheads like Dimmy who ruin fun
-			JailFighter player = JailFighter(i);
+			player = JailFighter(i);
 			flRatio = float(GetLivingPlayers(3)) / float(GetLivingPlayers(2));
 
 			if (flRatio <= 0.5)
@@ -179,7 +182,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 				//TF2_ChangeClientTeam(i, TFTeam_Red);
 				//TF2_RespawnPlayer(i);	// ForceTeamChange does this automatically
 
-				CPrintToChat(i, "{red}TF2Jail{tan} You have been autobalanced.");
+				CPrintToChat(i, "{red}[JailRedux]{tan} You have been autobalanced.");
 			}
 		}
 		SetPawnTimer(ResetDamage, 1.0);	// Players could teamkill with the flames upon autobalance
@@ -206,7 +209,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 			if (!IsClientValid(i) || !IsPlayerAlive(i))
 				continue;
 
-			JailFighter player = JailFighter(i);
+			player = JailFighter(i);
 			OnLRActivate(player);	// Handler
 			
 			/*if (player.bIsFreeday)
@@ -236,7 +239,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		if (!IsValidClient(i))
 			continue;
 
-		JailFighter player = JailFighter(i);
+		player = JailFighter(i);
 		if (!player.bIsVIP || !IsPlayerAlive(i))
 			player.MutePlayer();
 		if (player.bIsVIP || TF2_GetClientTeam(i) == TFTeam_Blue)
@@ -265,6 +268,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		return Plugin_Continue;
 
 	StopBackGroundMusic();
+	JailFighter player;
 
 	for (int i = MaxClients; i; --i)
 	{
@@ -272,7 +276,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 			continue;
 		
 		TF2Attrib_RemoveAll(i);
-		JailFighter player = JailFighter(i);
+		player = JailFighter(i);
 		player.UnmutePlayer();
 
 		if (player.bIsFreeday)
@@ -335,7 +339,7 @@ public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player = JailFighter(GetClientOfUserId(event.GetInt("userid")), true);
+	JailFighter player = JailFighter(event.GetInt("userid"), true);
 	if (IsClientValid(player.index))
 	{
 		RequestFrame(KillWeapons, player);
