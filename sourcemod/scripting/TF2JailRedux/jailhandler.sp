@@ -197,24 +197,18 @@ public void AddLRToMenu(Menu & menu)
 */
 public void AddLRToPanel(Panel & panel)
 {
+	panel.DrawItem("Suicide- Kill yourself on the spot");
 	panel.DrawItem("Custom- Type your own last request");
 	panel.DrawItem("Freeday for Yourself- Give yourself a freeday");
 	panel.DrawItem("Freeday for Others- Give up to %i freedays to others", cvarTF2Jail[FreedayLimit].IntValue);
 	panel.DrawItem("Freeday for All- Give everybody a freeday");
-	panel.DrawItem("Suicide- Kill yourself on the spot");
 	panel.DrawItem("Guards Melee Only- Those guns are for babies!");
 	panel.DrawItem("Headless Horsemann Day- Turns all players into the HHH");
-	panel.DrawItem("Rapid Rockets Day- Completely obliterate everything");
 	panel.DrawItem("Tiny Round- Honey I shrunk the players");
 	panel.DrawItem("Hot Prisoner- Prisoners are too hot to touch");
 	panel.DrawItem("Low Gravity- Where did the gravity go");
 	panel.DrawItem("Sniper- A hired gun to take out some folks");
-	panel.DrawItem("CrazyBoi- Get into some magic");
-	panel.DrawItem("Presidential Warden- Obama comes to give a speech");
 	panel.DrawItem("Warday- Team Deathmatch");
-	panel.DrawItem("Pimp Day- Get slapped punk");
-	panel.DrawItem("Tank Warday- Warday, but with TANKS");
-	panel.DrawItem("Smelly Warden- Don't get too close to the warden");
 	panel.DrawItem("Class Wars- Warday but it's class versus class");
 	panel.DrawItem("Versus Saxton Hale- A nice round of VSH");
 }
@@ -224,17 +218,18 @@ public void AddLRToPanel(Panel & panel)
 */
 public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 {
-	if (!IsClientValid(client))
+	if (!IsClientValid(client) || !IsPlayerAlive(client))
 		return;
 		
 	JailFighter base = JailFighter(client);
+	JailFighter player;
 	switch (action)
 	{
 		case MenuAction_Select:
 		{
 			for (int i = MaxClients; i; --i)
 			{
-				JailFighter player = JailFighter(i);
+				player = JailFighter(i);
 				if (!IsClientValid(i) || !player.bIsFreeday)
 					continue;
 				player.RemoveFreeday();
@@ -368,7 +363,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, arrLRS[Warday], LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to do a {default}warday{tan}.", client);
+					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to do a {default}Warday{tan}.", client);
 					gamemode.iLRPresetType = Warday;
 					arrLRS[Warday]++;
 					return;
@@ -475,7 +470,7 @@ public void OnLRActivate(const JailFighter player)
 		if (_4wep > MaxClients && IsValidEdict(_4wep) && GetEntProp(_4wep, Prop_Send, "m_iItemDefinitionIndex") == 60)
 		{
 			TF2_RemoveWeaponSlot(client, 4);
-			player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "2 ; 1.0");
+			player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "");
 		}
 	}
 	Call_OnLRRoundActivate(player);
@@ -543,8 +538,8 @@ public void ManageRoundStart()
 					continue;
 
 				if (GetClientTeam(i) == RED)
-					TF2_SetPlayerClass(i, view_as<TFClassType>( iClassRED ));
-				else TF2_SetPlayerClass(i, view_as<TFClassType>( iClassBLU ));
+					TF2_SetPlayerClass(i, view_as< TFClassType >( iClassRED ));
+				else TF2_SetPlayerClass(i, view_as< TFClassType >( iClassBLU ));
 			}
 			EmitSoundToAll(WardaySound);
 			gamemode.bIsWarday = true;
@@ -1145,19 +1140,20 @@ public void CheckLivingPlayers()
 {
 	if (gamemode.iRoundState < StateRunning)
 		return;
-
+		
 	switch (gamemode.iLRType)
 	{
 		case VSH: {	} // 'One guard left' is pointless during this round along with freedays
 		default:
 		{
+			JailFighter player;
 			if (GetLivingPlayers(BLU) == 1)
 			{
 				if (cvarTF2Jail[RemoveFreedayOnLastGuard].BoolValue)
 				{
 					for (int i = MaxClients; i; --i)
 					{
-						JailFighter player = JailFighter(i);
+						player = JailFighter(i);
 						if (IsClientValid(player.index) && player.bIsFreeday)
 							player.RemoveFreeday();
 					}
