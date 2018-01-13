@@ -97,22 +97,39 @@ methodmap JBPlayer
 
 	/*		AVAILABLE PROPERTIES
 		property int iLRCustom							// For the Custom LR
-		property int iKills								// For the ghetto rigged freekill system
-		property int iUberTarget						// Optional, not used in core plugin
+		property int iKillCount							// For the ghetto rigged freekill system
 		property bool bIsMuted							// If not bIsAdmin and dead; or not bIsVIP and alive
 		property bool bIsQueuedFreeday					// Freeday for Self or Freeday for Others
+		property bool bIsFreeday 						// Client is/isn't a freeday
 		property bool bLockedFromWarden					// Upon being fired or retiring
 		property bool bIsVIP							// Default Reserve flag
 		property bool bIsAdmin							// Default Generic flag
 		property bool bIsHHH							// For the HHHDay LR
+		property bool bInJump							// Client is rocket/sticky jumping
 		property bool bNoMusic							// LR music option (cookie)
+		property bool bUnableToTeleport 				// Client can/can't teleport with Eureka Effect
+		property float flSpeed 							// Client speed, isn't used
+		property float flKillSpree 						// Also for the ghetto rigged freekill system
 	*/
 		
 	public native int SpawnWeapon(char[] name, const int index, const int level, const int qual, char[] att);
-	public native void ForceTeamChange(const int team, bool spawn = false);
+	public native void ForceTeamChange(const int team, bool spawn = true);
 	public native void TeleportToPosition(const int iLocation);
 	public native void ListLRS();
 	public native void PreEquip();
+	public native void SetAmmotable(const int wepslot, const int val);
+	public native void SetCliptable(const int wepslot, const int val);
+	public native void TeleToSpawn(int team = 0);
+	public native void SpawnSmallHealthPack(int ownerteam = 0);
+	public native void MutePlayer();
+	public native void GiveFreeday();
+	public native void RemoveFreeday();
+	public native void StripToMelee();
+	public native void EmptyWeaponSlots();
+	public native void UnmutePlayer();
+	public native void WardenSet();
+	public native void WardenUnset();
+	public native void MakeHorsemann();
 };
 
 
