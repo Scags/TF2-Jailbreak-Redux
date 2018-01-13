@@ -15,13 +15,13 @@
 #define SuicideSound	"weapons/csgo_awp_shoot.wav"
 #define GunSound		"vo/heavy_meleedare02.mp3"
 #define TinySound		"vo/scout_sf12_badmagic28.mp3"
-#define WardaySound		"tf2jailredux/warday.mp3"
+// #define WardaySound		"tf2jailredux/warday.mp3"
 #define NO 				"vo/heavy_no02.mp3"
 
-	/** 
- 	*	Simply add your new lr name to the enum to register it with function calls and switch statements
- 	*	Add them to the calls accordingly 
-	*/
+/** 
+ *	Simply add your new lr name to the enum to register it with function calls and switch statements
+ *	Add them to the calls accordingly 
+*/
 enum /** LRs **/
 {
 	// RegularGameplay = -1,
@@ -59,35 +59,21 @@ JailGameMode gamemode; // Sticking this sucker right here because it works
 int arrClass[8] = { 1, 3, 4, 5, 6, 7, 8, 9 };
 
 /** 
- *	Array looks silly I know, it's the LR Count which you can determine the max of under menu selection
- *	Add another 0 plus the lr name that you put
+ *	Array of LR usage
+ *	You can determine the maximum picks per round under menu selection
+ *	Since array values default at 0, we can keep this blank
 */
-int arrLRS[LRMAX + 1] = {	// Plus 1 to counterbalance the 0 in the enum
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0
-};
+int arrLRS[LRMAX + 1] = {	/* Plus 1 to counterbalance the 0 in the enum*/ 	};
 
 /** 
  *	Add your LR name to the array, referred back to in LRMenuAdd()
 */
 char strLRNames[][] = {
+	"Suicide",
 	"Custom",
 	"Freeday for Yourself",
 	"Freeday for Others",
 	"Freeday for All",
-	"Suicide",
 	"Guards Melee Only",
 	"Headless Horsemann Day",
 	"Tiny Round",
@@ -131,18 +117,16 @@ public void ManageDownloads()
 	PrecacheSound(TinySound, true);
 	PrecacheSound(NO, true);
 
-	PrepareSound(WardaySound);
-	//Call_OnDownloads();
+	// PrepareSound(WardaySound);
+	// Call_OnDownloads();
 }
 /**
  *	Called on map start again but this time for the starting lr count
 */
 public void LRMapStartVariables()
 {
-	for (int i = 0; i <= LRMAX; i++)
-	{	// For lazy people
+	for (int i = 0; i < LRMAX; i++)
 		arrLRS[i] = 0;
-	}
 }
 /** 
  *	Calls on map end, resets for lr variables
@@ -195,15 +179,16 @@ public void AddLRToMenu(Menu & menu)
 /**
  *	Add a 'short' description to your last request for the !listlrs command
 */
-public void AddLRToPanel(Panel & panel)
+public void AddLRToPanel(Panel& panel)
 {
-	panel.DrawItem("Suicide- Kill yourself on the spot");
 	panel.DrawItem("Custom- Type your own last request");
 	panel.DrawItem("Freeday for Yourself- Give yourself a freeday");
 	panel.DrawItem("Freeday for Others- Give up to %i freedays to others", cvarTF2Jail[FreedayLimit].IntValue);
 	panel.DrawItem("Freeday for All- Give everybody a freeday");
+	panel.DrawItem("Suicide- Kill yourself on the spot");
 	panel.DrawItem("Guards Melee Only- Those guns are for babies!");
 	panel.DrawItem("Headless Horsemann Day- Turns all players into the HHH");
+	panel.DrawItem("Rapid Rockets Day- Completely obliterate everything");
 	panel.DrawItem("Tiny Round- Honey I shrunk the players");
 	panel.DrawItem("Hot Prisoner- Prisoners are too hot to touch");
 	panel.DrawItem("Low Gravity- Where did the gravity go");
@@ -222,19 +207,20 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 		return;
 		
 	JailFighter base = JailFighter(client);
-	JailFighter player;
 	switch (action)
 	{
 		case MenuAction_Select:
 		{
-			for (int i = MaxClients; i; --i)
+			if (cvarTF2Jail[RemoveFreedayOnLR].BoolValue)
 			{
-				player = JailFighter(i);
-				if (!IsClientValid(i) || !player.bIsFreeday)
-					continue;
-				player.RemoveFreeday();
+				for (int i = MaxClients; i; --i)
+				{
+					if (!IsClientValid(i) || !JailFighter(i).bIsFreeday)
+						continue;
+					JailFighter(i).RemoveFreeday();
+				}
+				CPrintToChatAll("{red}[JailRedux]{tan} Last request has been chosen. Freedays have been stripped.");
 			}
-			CPrintToChatAll("{red}[JailRedux]{tan} Last request has been chosen. Freedays have been stripped.");
 			gamemode.bIsLRInUse = true;
 			
 			switch (select)
@@ -247,13 +233,10 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[randlr]++;
 					if (randlr == FreedaySelf)
 						base.bIsQueuedFreeday = true;
-					if (randlr == FreedayOther)
+					else if (randlr == FreedayOther)
 					{
 						for (int i = 0; i < 3; i++)
-						{
-							int y = Client_GetRandom(CLIENTFILTER_TEAMONE | CLIENTFILTER_NOBOTS);
-							JailFighter(y).bIsQueuedFreeday = true;
-						}
+							JailFighter( Client_GetRandom(CLIENTFILTER_TEAMONE | CLIENTFILTER_NOBOTS) ).bIsQueuedFreeday = true;
 					}
 					return;
 				}
@@ -363,7 +346,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, arrLRS[Warday], LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to do a {default}Warday{tan}.", client);
+					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to do a {default}warday{tan}.", client);
 					gamemode.iLRPresetType = Warday;
 					arrLRS[Warday]++;
 					return;
@@ -388,7 +371,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 			}
 		}
-		case MenuAction_End:delete menu;
+		case MenuAction_Cancel:delete menu;
 	}
 	//Call_OnLRPicked(menu, action, base, select);
 }
@@ -401,20 +384,20 @@ public void ManageHUDText()
 	switch (gamemode.iLRType)
 	{
 		//case FreedaySelf, FreedayOther:Format(strHudName, sizeof(strHudName), "");	// Should be blank
-		case Custom:strcopy(strHudName, sizeof(strHudName), strCustomLR);
-		case FreedayAll:Format(strHudName, sizeof(strHudName), "Freeday For All");
-		case GuardMelee:Format(strHudName, sizeof(strHudName), "Guards Melee Only");
-		case HHHDay:Format(strHudName, sizeof(strHudName), "Headless Horsemann Day");
-		case TinyRound:Format(strHudName, sizeof(strHudName), "Tiny Round");
-		case HotPrisoner:Format(strHudName, sizeof(strHudName), "Hot Prisoners");
-		case Gravity:Format(strHudName, sizeof(strHudName), "Low Gravity");
-		case RandomKill:Format(strHudName, sizeof(strHudName), "Sniper!");
-		case Warday:Format(strHudName, sizeof(strHudName), "Warday");
-		case ClassWars:Format(strHudName, sizeof(strHudName), "Class Warfare");
-		case VSH:Format(strHudName, sizeof(strHudName), "Versus Saxton Hale");
+		case Custom:		strcopy(strHudName, sizeof(strHudName), strCustomLR);
+		case FreedayAll:	Format(strHudName, sizeof(strHudName), "Freeday For All");
+		case GuardMelee:	Format(strHudName, sizeof(strHudName), "Guards Melee Only");
+		case HHHDay:		Format(strHudName, sizeof(strHudName), "Headless Horsemann Day");
+		case TinyRound:		Format(strHudName, sizeof(strHudName), "Tiny Round");
+		case HotPrisoner:	Format(strHudName, sizeof(strHudName), "Hot Prisoners");
+		case Gravity:		Format(strHudName, sizeof(strHudName), "Low Gravity");
+		case RandomKill:	Format(strHudName, sizeof(strHudName), "Sniper!");
+		case Warday:		Format(strHudName, sizeof(strHudName), "Warday");
+		case ClassWars:		Format(strHudName, sizeof(strHudName), "Class Warfare");
+		case VSH:			Format(strHudName, sizeof(strHudName), "Versus Saxton Hale");
 		default: {	}
 	}
-	if (strlen(strHudName) != 0)
+	if (strHudName[0] != '\0')
 		SetTextNode(hTextNodes[1], strHudName, EnumTNPS[1][fCoord_X], EnumTNPS[1][fCoord_Y], EnumTNPS[1][fHoldTime], EnumTNPS[1][iRed], EnumTNPS[1][iGreen], EnumTNPS[1][iBlue], EnumTNPS[1][iAlpha], EnumTNPS[1][iEffect], EnumTNPS[1][fFXTime], EnumTNPS[1][fFadeIn], EnumTNPS[1][fFadeOut]);
 	// Call_OnLRTextHud();
 }
@@ -470,7 +453,7 @@ public void OnLRActivate(const JailFighter player)
 		if (_4wep > MaxClients && IsValidEdict(_4wep) && GetEntProp(_4wep, Prop_Send, "m_iItemDefinitionIndex") == 60)
 		{
 			TF2_RemoveWeaponSlot(client, 4);
-			player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "");
+			player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "2 ; 1.0");
 		}
 	}
 	Call_OnLRRoundActivate(player);
@@ -517,8 +500,7 @@ public void ManageRoundStart()
 		case RandomKill:
 		{
 			CPrintToChatAll("{tan}Look out! Sniper!");
-			int rand = Client_GetRandom(CLIENTFILTER_ALIVE);
-			ForcePlayerSuicide(rand);	// Lol rip, no fun for this guy
+			ForcePlayerSuicide( Client_GetRandom(CLIENTFILTER_ALIVE) );	// Lol rip, no fun for this guy
 			EmitSoundToAll(SuicideSound);
 			SetPawnTimer(RandSniper, GetRandomFloat(30.0, 60.0), gamemode.iRoundCount);
 		}
@@ -526,7 +508,7 @@ public void ManageRoundStart()
 		{
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
-			EmitSoundToAll(WardaySound);
+			// EmitSoundToAll(WardaySound);
 		}
 		case ClassWars:
 		{
@@ -538,10 +520,10 @@ public void ManageRoundStart()
 					continue;
 
 				if (GetClientTeam(i) == RED)
-					TF2_SetPlayerClass(i, view_as< TFClassType >( iClassRED ));
-				else TF2_SetPlayerClass(i, view_as< TFClassType >( iClassBLU ));
+					TF2_SetPlayerClass(i, view_as< TFClassType >(iClassRED));
+				else TF2_SetPlayerClass(i, view_as< TFClassType >(iClassBLU));
 			}
-			EmitSoundToAll(WardaySound);
+			// EmitSoundToAll(WardaySound);
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
 		}
@@ -576,7 +558,6 @@ public void ManageRoundEnd(const JailFighter player)
 */
 public void ManageOnRoundEnd(Event event)
 {
-	int iTimer = gamemode.iRoundCount;
 	switch (gamemode.iLRType)
 	{
 		case HHHDay:
@@ -587,7 +568,7 @@ public void ManageOnRoundEnd(Event event)
 		}
 		case Gravity:FindConVar("sv_gravity").SetInt(800);	//ServerCommand("sm_cvar sv_gravity 800");
 		case HotPrisoner:EmitSoundToAll(Extinguish);
-		case RandomKill:SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), iTimer);
+		case RandomKill:SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), gamemode.iRoundCount);
 		default: {	}
 	}
 	Call_OnManageRoundEnd(event);
@@ -874,7 +855,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 			if (player.bIsFreeday)
 			{	// Registers with Razorbacks ^^
 				player.RemoveFreeday();
-				PrintCenterTextAll("%N has attacked a guard and lost their freeday!", player.index);
+				PrintCenterTextAll("%N has attacked a guard and lost their freeday!", attacker);
 			}
 		
 			if (victim.bIsFreeday && !player.bIsWarden)
@@ -884,7 +865,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 			}
 			if (!gamemode.bDisableCriticals)
 			{
-				if (TF2_GetClientTeam(player.index) == TFTeam_Blue)
+				if (TF2_GetClientTeam(attacker) == TFTeam_Blue)
 				{
 					damagetype = damagetype | DMG_CRIT;
 					return Plugin_Changed;
@@ -902,9 +883,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 public void ManagePlayerDeath(const JailFighter attacker, const JailFighter victim, Event event)
 {
 	FreeKillSystem(attacker);
-	if (gamemode.iLRType != VSH)
-		TF2Attrib_RemoveAll(victim.index);
-
+	TF2Attrib_RemoveAll(victim.index);
 	SetPawnTimer(CheckLivingPlayers, 0.2);
 
 	switch (gamemode.iLRType)
@@ -957,7 +936,7 @@ public void ManageEntityCreated(int ent, const char[] strClassName)
 		AcceptEntityInput(entity, "kill");
 		return;
 	}*/
-	if ( StrEqual(strClassName, "item_ammopack_full")
+	/*if ( StrEqual(strClassName, "item_ammopack_full")
 		|| StrEqual(strClassName, "item_ammopack_medium")
 		|| StrEqual(strClassName, "item_ammopack_small")
 		|| StrEqual(strClassName, "tf_ammo_pack") )
@@ -969,7 +948,7 @@ public void ManageEntityCreated(int ent, const char[] strClassName)
 	{
 		if (IsValidEntity(ent))
 			HookSingleEntityOutput(ent, "OnBreak", VentTouch, true);
-	}
+	}*/
 }
 /**
  *	Called directly when a player spawns, be sure to note iRoundState(s) if being specific
@@ -1140,20 +1119,19 @@ public void CheckLivingPlayers()
 {
 	if (gamemode.iRoundState < StateRunning)
 		return;
-		
+
 	switch (gamemode.iLRType)
 	{
-		case VSH: {	} // 'One guard left' is pointless during this round along with freedays
+		case VSH: {	}	// 'One guard left' is pointless during this round along with freedays
 		default:
 		{
-			JailFighter player;
 			if (GetLivingPlayers(BLU) == 1)
 			{
 				if (cvarTF2Jail[RemoveFreedayOnLastGuard].BoolValue)
 				{
 					for (int i = MaxClients; i; --i)
 					{
-						player = JailFighter(i);
+						JailFighter player = JailFighter(i);
 						if (IsClientValid(player.index) && player.bIsFreeday)
 							player.RemoveFreeday();
 					}

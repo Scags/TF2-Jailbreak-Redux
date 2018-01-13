@@ -513,4 +513,25 @@ methodmap JailGameMode //< StringMap
 			}
 		}
 	}
+	public void HookEntities()
+	{
+		int ent = -1;
+		while ((ent = FindEntityByClassname(ent, "item_ammopack_*")) != -1)
+		{
+			if (IsValidEntity(ent))
+				SDKHook(ent, SDKHook_Touch, OnEntTouch);
+		}
+		ent = -1;
+		while ((ent = FindEntityByClassname(ent, "tf_ammo_pack")) != -1)
+		{
+			if (IsValidEntity(ent))
+				SDKHook(ent, SDKHook_Touch, OnEntTouch);
+		}
+		ent = -1;
+		while ((ent = FindEntityByClassname(ent, "func_breakable")) != -1)
+		{
+			if (IsValidEntity(ent))
+				SDKHook(ent, SDKHook_OnTakeDamage, OnEntTakeDamage);
+		}
+	}
 };

@@ -16,8 +16,8 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.10.7"
-#define PLUGIN_AUTHOR		"Ragenewb, props to Keith (Drixevel) and Nergal/Assyrian"
+#define PLUGIN_VERSION		"0.10.8"
+#define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Drixevel) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
 #include <sourcemod>
@@ -259,7 +259,7 @@ public void OnPluginStart()
 	AddMultiTargetFilter("@freedays", FreedaysGroup, "All Freedays.", false);
 	AddMultiTargetFilter("@!warden", WardenGroup, "All but the Warden.", false);
 
-	int ent = -1;
+	/*int ent = -1;
 	while ((ent = FindEntityByClassname(ent, "item_ammopack_full")) != -1)
 	{
 		if (IsValidEntity(ent))
@@ -288,7 +288,7 @@ public void OnPluginStart()
 	{
 		if (IsValidEntity(ent))
 			HookSingleEntityOutput(ent, "OnBreak", VentTouch, true);
-	}
+	}*/
 	
 	AddNormalSoundHook(SoundHook);
 
@@ -565,7 +565,7 @@ public void ConvarsSet(bool Status)
 	}
 }
 
-public Action OnPlayerTouch(const char[] name, int touchee, int toucher, float delay)
+/*public Action OnPlayerTouch(const char[] name, int touchee, int toucher, float delay)
 {	// Works 9/10 times, better than nothing
 	if (!bEnabled.BoolValue || !cvarTF2Jail[RebelAmmo].BoolValue)
 		return Plugin_Continue;
@@ -591,7 +591,7 @@ public Action VentTouch(const char[] name, int toucher, int func, float delay)
 		PrintCenterTextAll("%N has broken a vent and lost their freeday!", touch.index);
 	}
 	return Plugin_Continue;
-}
+}*/
 
 public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
@@ -602,6 +602,34 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 	return ManageOnTakeDamage(vict, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 
 	//return Plugin_Continue;
+}
+
+public Action OnEntTouch(int toucher, int touchee)
+{
+	if (!cvarTF2Jail[RebelAmmo].BoolValue || !IsClientValid(toucher))
+		return Plugin_Continue;
+
+	JailFighter player = JailFighter(toucher);
+	if (player.bIsFreeday)
+	{
+		player.RemoveFreeday();
+		PrintCenterTextAll("%N has taken ammo and lost their freeday!", toucher);
+	}
+	return Plugin_Continue;
+}
+
+public Action OnEntTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	if (!cvarTF2Jail[VentHit].BoolValue || !IsClientValid(attacker))
+		return Plugin_Continue;
+
+	JailFighter player = JailFighter(attacker);
+	if (player.bIsFreeday)
+	{
+		player.RemoveFreeday();
+		PrintCenterTextAll("%N has broken a vent and lost their freeday!", attacker);
+	}
+	return Plugin_Continue;
 }
 
 public Action EurekaTele(int client, const char[] strCommand, int args)

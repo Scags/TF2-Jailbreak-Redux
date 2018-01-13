@@ -92,8 +92,6 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player;
-	
 	if (gamemode.bIsMapCompatible)
 	{
 		if (strlen(sCellOpener) != 0)
@@ -116,20 +114,16 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	{
 		if (!IsClientValid(i))
 			continue;
-		player = JailFighter(i);
+		JailFighter player = JailFighter(i);
 		player.UnmutePlayer();
 	}
 
 	gamemode.DoorHandler(CLOSE);
-	
-	//if (gamemode.b1stRoundFreeday)
-	//	gamemode.iTimeLeft = cvarTF2Jail[RoundTime_Freeday].IntValue;
-	//else gamemode.iTimeLeft = cvarTF2Jail[RoundTime].IntValue;
-	
 	gamemode.bDisableCriticals = false;
 	gamemode.iFreedayLimit = 0;
 	gamemode.iRoundState = StateStarting;
 	gamemode.iRoundCount++;
+	gamemode.bOneGuardLeft = false;
 	
 	return Plugin_Continue;
 }
@@ -139,14 +133,13 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player;
-	int i;
+	gamemode.HookEntities();
 	gamemode.bCellsOpened = false;
 	gamemode.bWardenExists = false;
 	gamemode.bIsWardenLocked = false;
 	gamemode.bFirstDoorOpening = false;
-	gamemode.bOneGuardLeft = false;
-	gamemode.DoorHandler(CLOSE);
+	int i;
+	JailFighter player;
 	
 	if (gamemode.b1stRoundFreeday)
 	{
@@ -163,7 +156,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	
 	if (cvarTF2Jail[Balance].BoolValue && gamemode.iPlaying > 2)
 	{
-		float flRatio;
+		float flRatio, flBalance = cvarTF2Jail[BalanceRatio].FloatValue;
 		for (i = MaxClients; i; --i)
 		{
 			if (!IsClientValid(i))
@@ -173,7 +166,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 			player = JailFighter(i);
 			flRatio = float(GetLivingPlayers(3)) / float(GetLivingPlayers(2));
 
-			if (flRatio <= 0.5)
+			if (flRatio <= flBalance)
 				break;
 
 			if (IsClientValid(i) && TF2_GetClientTeam(i) == TFTeam_Blue)
@@ -182,7 +175,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 				//TF2_ChangeClientTeam(i, TFTeam_Red);
 				//TF2_RespawnPlayer(i);	// ForceTeamChange does this automatically
 
-				CPrintToChat(i, "{red}[JailRedux]{tan} You have been autobalanced.");
+				CPrintToChat(i, "{red}TF2Jail{tan} You have been autobalanced.");
 			}
 		}
 		SetPawnTimer(ResetDamage, 1.0);	// Players could teamkill with the flames upon autobalance
@@ -229,8 +222,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	
 	if (gamemode.bIsMapCompatible && cvarTF2Jail[DoorOpenTimer].FloatValue != 0.0)
 	{
-		int iTimer = gamemode.iRoundCount;
-		SetPawnTimer(Open_Doors, cvarTF2Jail[DoorOpenTimer].FloatValue, iTimer);
+		SetPawnTimer(Open_Doors, cvarTF2Jail[DoorOpenTimer].FloatValue, gamemode.iRoundState);
 		//CreateTimer(cvarTF2Jail[DoorOpenTimer].FloatValue, Open_Doors, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
 
@@ -339,7 +331,7 @@ public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player = JailFighter(event.GetInt("userid"), true);
+	JailFighter player = JailFighter(GetClientOfUserId(event.GetInt("userid")), true);
 	if (IsClientValid(player.index))
 	{
 		RequestFrame(KillWeapons, player);
