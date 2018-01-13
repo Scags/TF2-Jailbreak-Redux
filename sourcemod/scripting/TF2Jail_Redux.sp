@@ -958,14 +958,6 @@ public void RemoveEnt(any data)
 		AcceptEntityInput(ent, "Kill");
 }
 
-public Action RemoveEntity(Handle timer, any entid)
-{
-	int ent = EntRefToEntIndex(entid);
-	if (ent > 0 && IsValidEntity(ent))
-		AcceptEntityInput(ent, "Kill");
-	return Plugin_Continue;
-}
-
 public void _MusicPlay()
 {
 	if (!bEnabled.BoolValue || gamemode.iRoundState != StateRunning)
@@ -1195,6 +1187,20 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBPlayer.TeleportToPosition", Native_JB_TeleportToPosition);
 	CreateNative("JBPlayer.ListLRS", Native_JB_ListLRS);
 	CreateNative("JBPlayer.PreEquip", Native_JB_PreEquip);
+	CreateNative("JBPlayer.WardenSet", Native_JB_WardenSet);
+	CreateNative("JBPlayer.WardenUnset", Native_JB_WardenUnset);
+	CreateNative("JBPlayer.MakeHorsemann", Native_JB_MakeHorsemann);
+	CreateNative("JBPlayer.MutePlayer", Native_JB_MutePlayer);
+	CreateNative("JBPlayer.UnmutePlayer", Native_JB_UnmutePlayer);
+	CreateNative("JBPlayer.EmptyWeaponSlots", Native_JB_EmptyWeaponSlots);
+	CreateNative("JBPlayer.StripToMelee", Native_JB_StripToMelee);
+	CreateNative("JBPlayer.GiveFreeday", Native_JB_GiveFreeday);
+	CreateNative("JBPlayer.RemoveFreeday", Native_JB_RemoveFreeday);
+	CreateNative("JBPlayer.SpawnSmallHealthPack", Native_JB_SpawnSmallHealthPack);
+	CreateNative("JBPlayer.TeleToSpawn", Native_JB_TeleToSpawn);
+	CreateNative("JBPlayer.SetCliptable", Native_JB_SetCliptable);
+	CreateNative("JBPlayer.SetAmmotable", Native_JB_SetAmmotable);
+
 		/* Gamemode */
 	CreateNative("JBGameMode_GetProperty", Native_JBGameMode_GetProperty);
 	CreateNative("JBGameMode_SetProperty", Native_JBGameMode_SetProperty);
@@ -1323,6 +1329,72 @@ public int Native_JB_PreEquip(Handle plugin, int numParams)
 	JailFighter player = GetNativeCell(1);
 	player.PreEquip();
 }
+public int Native_JB_WardenSet(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.WardenSet();
+}
+public int Native_JB_WardenUnset(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.WardenUnset();
+}
+public int Native_JB_MakeHorsemann(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.MakeHorsemann();
+}
+public int Native_JB_MutePlayer(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.MutePlayer();
+}
+public int Native_JB_UnmutePlayer(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.UnmutePlayer();
+}
+public int Native_JB_EmptyWeaponSlots(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.EmptyWeaponSlots();
+}
+public int Native_JB_StripToMelee(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.StripToMelee();
+}
+public int Native_JB_GiveFreeday(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.GiveFreeday();
+}
+public int Native_JB_RemoveFreeday(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.RemoveFreeday();
+}
+public int Native_JB_SpawnSmallHealthPack(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	int ownerteam = GetNativeCell(2);
+	player.SpawnSmallHealthPack(ownerteam);
+}
+public int Native_JB_SetCliptable(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	int slot = GetNativeCell(2);
+	int count = GetNativeCell(3);
+	player.SetCliptable(slot, count);
+}
+public int Native_JB_SetAmmotable(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	int slot = GetNativeCell(2);
+	int count = GetNativeCell(3);
+	player.SetAmmotable(slot, count);
+}
+
 public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)
 {
 	char prop_name[64]; GetNativeString(1, prop_name, 64);

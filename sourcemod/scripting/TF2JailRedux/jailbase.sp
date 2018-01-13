@@ -380,7 +380,7 @@ methodmap JailFighter
 	 * @param wepslot	the equipment slot of the player
 	 * @return		the recorded max ammo of the weapon
 	 */
-	public int getAmmotable(const int wepslot)
+	public int GetAmmotable(const int wepslot)
 	{
 		int weapon = GetPlayerWeaponSlot(this.index, wepslot);
 		if (weapon > MaxClients && IsValidEntity(weapon))
@@ -395,7 +395,7 @@ methodmap JailFighter
 	 * @param val		how much the new max ammo should be
 	 * @noreturn
 	 */
-	public void setAmmotable(const int wepslot, const int val)
+	public void SetAmmotable(const int wepslot, const int val)
 	{
 		int weapon = GetPlayerWeaponSlot(this.index, wepslot);
 		if (weapon > MaxClients && IsValidEntity(weapon))
@@ -407,7 +407,7 @@ methodmap JailFighter
 	 * @param wepslot	the equipment slot of the player
 	 * @return		the recorded clipsize ammo of the weapon
 	 */
-	public int getCliptable(const int wepslot)
+	public int GetCliptable(const int wepslot)
 	{
 		int weapon = GetPlayerWeaponSlot(this.index, wepslot);
 		if (weapon > MaxClients && IsValidEntity(weapon))
@@ -422,7 +422,7 @@ methodmap JailFighter
 	 * @param val		how much the new max clipsize should be
 	 * @noreturn
 	 */
-	public void setCliptable(const int wepslot, const int val)
+	public void SetCliptable(const int wepslot, const int val)
 	{
 		int weapon = GetPlayerWeaponSlot(this.index, wepslot);
 		if (weapon > MaxClients && IsValidEntity(weapon))
@@ -532,7 +532,8 @@ methodmap JailFighter
 		int client = this.index;
 		int flags = GetEntityFlags(client) & ~FL_NOTARGET;
 		SetEntityFlags(client, flags);
-		ServerCommand("sm_evilbeam #%d", this.userid);
+		// ServerCommand("sm_evilbeam #%d", this.userid);
+		ServerCommand("sm_rtrail #%d", this.userid);
 		this.bIsFreeday = false;
 		//SetEntProp(client, Prop_Data, "m_takedamage", 2, 1);
 	}
