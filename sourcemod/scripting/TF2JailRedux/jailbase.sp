@@ -532,8 +532,7 @@ methodmap JailFighter
 		int client = this.index;
 		int flags = GetEntityFlags(client) & ~FL_NOTARGET;
 		SetEntityFlags(client, flags);
-		// ServerCommand("sm_evilbeam #%d", this.userid);
-		ServerCommand("sm_rtrail #%d", this.userid);
+		ServerCommand("sm_evilbeam #%d", this.userid);
 		this.bIsFreeday = false;
 		//SetEntProp(client, Prop_Data, "m_takedamage", 2, 1);
 	}
