@@ -181,14 +181,13 @@ public void AddLRToMenu(Menu & menu)
 */
 public void AddLRToPanel(Panel& panel)
 {
+	panel.DrawItem("Suicide- Kill yourself on the spot");
 	panel.DrawItem("Custom- Type your own last request");
 	panel.DrawItem("Freeday for Yourself- Give yourself a freeday");
 	panel.DrawItem("Freeday for Others- Give up to %i freedays to others", cvarTF2Jail[FreedayLimit].IntValue);
 	panel.DrawItem("Freeday for All- Give everybody a freeday");
-	panel.DrawItem("Suicide- Kill yourself on the spot");
 	panel.DrawItem("Guards Melee Only- Those guns are for babies!");
 	panel.DrawItem("Headless Horsemann Day- Turns all players into the HHH");
-	panel.DrawItem("Rapid Rockets Day- Completely obliterate everything");
 	panel.DrawItem("Tiny Round- Honey I shrunk the players");
 	panel.DrawItem("Hot Prisoner- Prisoners are too hot to touch");
 	panel.DrawItem("Low Gravity- Where did the gravity go");
@@ -346,7 +345,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, arrLRS[Warday], LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to do a {default}warday{tan}.", client);
+					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to do a {default}Warday{tan}.", client);
 					gamemode.iLRPresetType = Warday;
 					arrLRS[Warday]++;
 					return;
@@ -371,7 +370,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 			}
 		}
-		case MenuAction_Cancel:delete menu;
+		case MenuAction_End:delete menu;
 	}
 	//Call_OnLRPicked(menu, action, base, select);
 }
@@ -453,7 +452,7 @@ public void OnLRActivate(const JailFighter player)
 		if (_4wep > MaxClients && IsValidEdict(_4wep) && GetEntProp(_4wep, Prop_Send, "m_iItemDefinitionIndex") == 60)
 		{
 			TF2_RemoveWeaponSlot(client, 4);
-			player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "2 ; 1.0");
+			player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "");
 		}
 	}
 	Call_OnLRRoundActivate(player);
