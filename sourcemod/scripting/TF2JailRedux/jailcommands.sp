@@ -353,7 +353,7 @@ public Action Command_GiveLastRequest(int client, int args)
 
 		Menu menu = new Menu(MenuHandle_ForceLR);
 		menu.SetTitle("Choose a Player");
-		LRMenuAdd(menu);
+		AddClientsToMenu(menu);
 		menu.ExitButton = true;
 		menu.Display(client, 30);
 	}
@@ -380,18 +380,21 @@ public Action Command_GiveLastRequest(int client, int args)
 	return Plugin_Handled;
 }
 
-public void LRMenuAdd(Menu & menu)
+void AddClientsToMenu(Menu & menu, bool alive = false, int team = RED)
 {
 	char strName[32], strID[8];
 	for (int i = MaxClients; i; --i)
 	{
-		if (IsClientValid(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
-		{
-			JailFighter player = JailFighter(i);
-			Format(strID, sizeof(strID), "%i", player.userid);
-			Format(strName, sizeof(strName), "%N", player.index);
-			menu.AddItem(strID, strName);
-		}
+		if (!IsClientInGame(i))
+			continue;
+		if (alive && !IsPlayerAlive(i))
+			continue;
+		if (GetClientTeam(i) != team)
+			continue;
+
+		IntToString(GetClientUserId(i), strID, sizeof(strID));
+		Format(strName, sizeof(strName), "%N", i);
+		menu.AddItem(strID, strName);
 	}
 }
 
@@ -421,14 +424,14 @@ public Action Command_RemoveLastRequest(int client, int args)
 
 	for (int i = MaxClients; i; --i)
 	{
-		if (IsClientValid(i))
+		if (IsClientInGame(i))
 			JailFighter(i).bIsQueuedFreeday = false;
 	}
 
 	arrLRS[gamemode.iLRPresetType]--;
 	gamemode.bIsLRInUse = false;
 	gamemode.iLRPresetType = -1;
-	CPrintToChatAll("{red}[JailRedux]{tan}Warden {default}%N{tan} has denied the Last Request!", player.index);
+	CPrintToChatAll("{red}[JailRedux]{tan}Warden {default}%N{tan} has denied the Last Request!", client);
 
 	return Plugin_Handled;
 }
@@ -538,12 +541,13 @@ public Action AdminDenyLR(int client, int args)
 		return Plugin_Handled;
 	}
 
+	JailFighter player;
 	for (int i = MaxClients; i; --i)
 	{
-		if (!IsClientValid(i))
+		if (!IsClientInGame(i))
 			continue;
 		
-		JailFighter player = JailFighter(i);
+		player = JailFighter(i);
 		if (player.bIsQueuedFreeday)
 		{
 			CPrintToChat(player.index, "{orange}[JailRedux]{tan} An Admin has removed your queued freeday!");
@@ -732,12 +736,13 @@ public Action AdminResetPlugin(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
+	JailFighter player;
 	for (int i = MaxClients; i; --i)
 	{
-		if (!IsClientValid(i))
+		if (!IsClientInGame(i))
 			continue;
-			
-		JailFighter player = JailFighter(i);
+		
+		player = JailFighter(i);
 		player.iCustom = 0;
 		player.iKillCount = 0;
 		player.bIsWarden = false;
@@ -788,7 +793,7 @@ public Action AdminMapCompatibilityCheck(int client, int args)
 
 	if (strlen(sCellNames) != 0)
 	{
-		int cell_door = Entity_FindByName(sCellNames, "func_door");
+		int cell_door = FindEntity(sCellNames, "func_door");
 		if (IsValidEntity(cell_door))
 			CReplyToCommand(client, "{orange}[JailRedux]{tan} Doors are functional.");
 		else CReplyToCommand(client, "{orange}[JailRedux]{fullred} Doors are not functional.");
@@ -796,7 +801,7 @@ public Action AdminMapCompatibilityCheck(int client, int args)
 
 	if (strlen(sCellOpener) != 0)
 	{
-		int open_cells = Entity_FindByName(sCellOpener, "func_button");
+		int open_cells = FindEntity(sCellOpener, "func_button");
 		if (IsValidEntity(open_cells))
 			CReplyToCommand(client, "{orange}[JailRedux]{tan} Cell door functionality is active.");
 		else CReplyToCommand(client, "{orange}[JailRedux]{fullred} Cell door functionality is inactive.");
@@ -842,10 +847,7 @@ public Action AdminGiveFreeday(int client, int args)
 public void Admin_GiveFreedaysMenu(const int client)
 {
 	if (!client)
-	{
-		CReplyToCommand(client, "{red}[JailRedux]{tan} Command must be done in-game.");
 		return;
-	}
 
 	if (IsVoteInProgress())
 		return;
@@ -853,17 +855,7 @@ public void Admin_GiveFreedaysMenu(const int client)
 	Menu menu = new Menu(ForceFreedayMenu);
 	menu.SetTitle("Select Player(s) for Freeday");
 
-	char strName[32], strID[8];
-	for (int i = MaxClients; i; --i)
-	{
-		if (IsClientValid(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
-		{
-			JailFighter player = JailFighter(i);
-			Format(strID, sizeof(strID), "%i", player.userid);
-			Format(strName, sizeof(strName), "%N", player.index);
-			menu.AddItem(strID, strName);
-		}
-	}
+	AddClientsToMenu(menu, false);
 	menu.ExitButton = true;
 	menu.Display(client, 30);
 }
@@ -876,7 +868,7 @@ public int ForceFreedayMenu(Menu menu, MenuAction action, int client, int select
 		{
 			char strCli[32];
 			menu.GetItem(select, strCli, sizeof(strCli));
-			JailFighter targ = JailFighter( GetClientOfUserId(StringToInt(strCli)) );
+			JailFighter targ = JailFighter( StringToInt(strCli), true );
 
 			if (!IsClientValid(targ.index))
 			{
@@ -896,7 +888,7 @@ public Action AdminRemoveFreeday(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	if (args > 0)
+	if (args)
 	{
 		char sArg[64];
 		GetCmdArgString(sArg, sizeof(sArg));
@@ -916,7 +908,7 @@ public Action AdminRemoveFreeday(int client, int args)
 			return Plugin_Handled;
 		}
 
-		CPrintToChatAll("{orange}[JailRedux]{tan} Admin has removed freeday from %N", targ.index);
+		CPrintToChatAll("{orange}[JailRedux]{tan} Admin has removed freeday from %N", target);
 		targ.RemoveFreeday();
 
 		return Plugin_Handled;
@@ -973,11 +965,8 @@ public Action AdminUnlockWarden(int client, int args)
 
 public void GiveFreedaysMenu(const int client)
 {
-	if (!IsClientValid(client))
-	{
-		CReplyToCommand(client, "[JailRedux] Command must be done in-game.");
+	if (!IsPlayerAlive(client))
 		return;
-	}
 
 	if (IsVoteInProgress())
 		return;
@@ -985,17 +974,7 @@ public void GiveFreedaysMenu(const int client)
 	Menu menu = new Menu(FreedayMenu);
 	menu.SetTitle("Select Player(s) for Freeday");
 
-	char strName[32], strID[8];
-	for (int i = MaxClients; i; --i)
-	{
-		if (IsClientValid(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
-		{
-			JailFighter player = JailFighter(i);
-			Format(strID, sizeof(strID), "%i", player.userid);
-			Format(strName, sizeof(strName), "%N", player.index);
-			menu.AddItem(strID, strName);
-		}
-	}
+	AddClientsToMenu(menu, false);
 	menu.ExitButton = true;
 	menu.Display(client, 30);
 }
@@ -1006,11 +985,14 @@ public int FreedayMenu(Menu menu, MenuAction action, int client, int select)
 	{
 		case MenuAction_Select:
 		{
+			if (!IsPlayerAlive(client))
+				return;
+
 			char strCli[32];
 			menu.GetItem(select, strCli, sizeof(strCli));
-			JailFighter targ = JailFighter( GetClientOfUserId(StringToInt(strCli)) );
+			JailFighter targ = JailFighter( StringToInt(strCli), true );
 
-			if (!IsClientValid(targ.index))
+			if (!IsClientInGame(targ.index))
 			{
 				CPrintToChat(client, "{red}[JailRedux]{tan} Player is no longer available.");
 				GiveFreedaysMenu(client);
@@ -1022,12 +1004,14 @@ public int FreedayMenu(Menu menu, MenuAction action, int client, int select)
 				GiveFreedaysMenu(client);
 				return;
 			}
-			if (gamemode.iFreedayLimit < cvarTF2Jail[FreedayLimit].IntValue)
+			int limit = cvarTF2Jail[FreedayLimit].IntValue;
+			if (gamemode.iFreedayLimit < limit)
 			{
 				targ.bIsQueuedFreeday = true;
 				CPrintToChat(client, "{red}[JailRedux]{tan} Selected {red}%N{tan}.", targ.index);
-				GiveFreedaysMenu(client);
 				gamemode.iFreedayLimit++;
+				if (gamemode.iFreedayLimit < limit)
+					GiveFreedaysMenu(client);
 				return;
 			}
 			else
@@ -1043,10 +1027,7 @@ public int FreedayMenu(Menu menu, MenuAction action, int client, int select)
 public void RemoveFreedaysMenu(int client)
 {
 	if (!client)
-	{
-		CReplyToCommand(client, "{red}[JailRedux]{tan} Command must be done in-game.");
 		return;
-	}
 
 	if (IsVoteInProgress())return;
 
@@ -1056,11 +1037,10 @@ public void RemoveFreedaysMenu(int client)
 	char strName[32], strID[8];
 	for (int i = MaxClients; i; --i)
 	{
-		if (IsClientValid(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
+		if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red && JailFighter(i).bIsFreeday)
 		{
-			JailFighter player = JailFighter(i);
-			Format(strID, sizeof(strID), "%i", player.userid);
-			Format(strName, sizeof(strName), "%N", player.index);
+			IntToString(GetClientUserId(i), strID, sizeof(strID));
+			Format(strName, sizeof(strName), "%N", i);
 			menu.AddItem(strID, strName);
 		}
 	}
@@ -1076,9 +1056,9 @@ public int MenuHandle_RemoveFreedays(Menu menu, MenuAction action, int client, i
 		{
 			char strCli[32];
 			menu.GetItem(select, strCli, sizeof(strCli));
-			JailFighter targ = JailFighter( GetClientOfUserId(StringToInt(strCli)) );
+			JailFighter targ = JailFighter( StringToInt(strCli), true );
 			
-			if (!IsClientValid(targ.index))
+			if (!IsClientInGame(targ.index))
 			{
 				CReplyToCommand(client, "{red}[JailRedux]{tan} Client is no longer available.");
 				return;
@@ -1186,24 +1166,24 @@ public int MenuHandle_WardenMenu(Menu menu, MenuAction action, int client, int s
 
 public int MenuHandle_ForceLR(Menu menu, MenuAction action, int client, int select)
 {
-	JailFighter param = JailFighter(client);
 	switch (action)
 	{
 		case MenuAction_Select:
 		{
+			JailFighter param = JailFighter(client);
+
 			char strCli[32];
 			menu.GetItem(select, strCli, sizeof(strCli));
-			JailFighter targ = JailFighter( GetClientOfUserId(StringToInt(strCli)) );
-
-			if (!IsClientValid(targ.index))
-			{
-				CPrintToChat(client, "{red}[JailRedux]{tan} Player is no longer available.");
-				return;
-			}
+			JailFighter targ = JailFighter( StringToInt(strCli), true );
 
 			if (!param.bIsWarden)
 			{
 				CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
+				return;
+			}
+			if (!IsClientInGame(targ.index))
+			{
+				CPrintToChat(client, "{red}[JailRedux]{tan} Player is no longer available.");
 				return;
 			}
 
@@ -1219,6 +1199,7 @@ public int MenuHandle_ForceLR(Menu menu, MenuAction action, int client, int sele
 				return;
 			}
 			targ.ListLRS();
+
 			CPrintToChatAll("{red}[JailRedux]{tan} Warden {red}%N{tan} has given %N a last request.", param.index, targ.index);
 		}
 		case MenuAction_End:delete menu;
@@ -1227,22 +1208,13 @@ public int MenuHandle_ForceLR(Menu menu, MenuAction action, int client, int sele
 
 public void FreedayforClientsMenu(const int client)
 {
-	if (IsVoteInProgress() || !IsClientValid(client))
+	if (IsVoteInProgress() || !IsPlayerAlive(client))
 		return;
+
 	Menu menu = new Menu(MenuHandle_FreedayForClients);
 	menu.SetTitle("Choose a Player for Freeday");
 	
-	char strName[32], strID[8];
-	for (int i = MaxClients; i; --i)
-	{
-		if (IsClientValid(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
-		{
-			JailFighter player = JailFighter(i);
-			Format(strID, sizeof(strID), "%i", player.userid);
-			Format(strName, sizeof(strName), "%N", player.index);
-			menu.AddItem(strID, strName);
-		}
-	}
+	AddClientsToMenu(menu, false);
 
 	menu.ExitButton = true;
 	menu.Display(client, 30);
@@ -1256,9 +1228,9 @@ public int MenuHandle_FreedayForClients(Menu menu, MenuAction action, int client
 		{
 			char strCli[32];
 			menu.GetItem(select, strCli, sizeof(strCli));
-			JailFighter targ = JailFighter( GetClientOfUserId(StringToInt(strCli)) );
+			JailFighter targ = JailFighter( StringToInt(strCli), true );
 
-			if (!IsClientValid(targ.index))
+			if (!IsClientInGame(targ.index))
 			{
 				CPrintToChat(client, "{red}[JailRedux]{tan} Player is no longer available");
 				FreedayforClientsMenu(client);
@@ -1298,8 +1270,7 @@ public Action Command_WardenFF(int client, int args)
 		CPrintToChat(client, "{red}[JailRedux]{tan} Round must be active.");
 		return Plugin_Handled;
 	}
-	JailFighter player = JailFighter(client);
-	if (!player.bIsWarden)
+	if (!JailFighter(client).bIsWarden)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
 		return Plugin_Handled;
@@ -1361,7 +1332,7 @@ public Action AdminWardayRed(int client, int args)
 
 	for (int i = MaxClients; i; --i)
 	{
-		if (!IsClientValid(i) || TF2_GetClientTeam(i) != TFTeam_Red)
+		if (!IsClientInGame(i) || TF2_GetClientTeam(i) != TFTeam_Red)
 			continue;
 
 		TeleportEntity(i, flWardayRed, nullvec, nullvec);
@@ -1383,7 +1354,7 @@ public Action AdminWardayBlue(int client, int args)
 
 	for (int i = MaxClients; i; --i)
 	{
-		if (!IsClientValid(i) || TF2_GetClientTeam(i) != TFTeam_Blue)
+		if (!IsClientInGame(i) || !IsPlayerAlive(i) || TF2_GetClientTeam(i) != TFTeam_Blue)
 			continue;
 
 		TeleportEntity(i, flWardayBlu, nullvec, nullvec);
@@ -1405,12 +1376,10 @@ public Action FullWarday(int client, int args)
 
 	for (int i = MaxClients; i; --i)
 	{
-		if (!IsClientValid(i))
+		if (!IsClientInGame(i) || !IsPlayerAlive(i))
 			continue;
 
-		if (TF2_GetClientTeam(i) == TFTeam_Blue)
-			TeleportEntity(i, flWardayBlu, nullvec, nullvec);
-		else TeleportEntity(i, flWardayRed, nullvec, nullvec);
+		JailFighter(i).TeleportToPosition(GetClientTeam(i));
 	}
 
 	CPrintToChatAll("{orange}[JailRedux]{tan} Warday has been activated!");
@@ -1459,12 +1428,10 @@ public Action Preset(int client, int args)
 {
 	CReplyToCommand(client, "%i", gamemode.iLRPresetType);
 }
-
 public Action Type(int client, int args)
 {
 	CReplyToCommand(client, "%i", gamemode.iLRType);
 }
-
 public Action SetPreset(int client, int args)
 {
 	char strCmd[4]; GetCmdArg(1, strCmd, sizeof(strCmd));

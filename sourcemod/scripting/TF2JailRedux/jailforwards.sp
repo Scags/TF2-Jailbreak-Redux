@@ -34,6 +34,7 @@ PrivateForward
 
 void InitializeForwards()
 {
+	g_hForwards[OnDownloads] 			= new PrivateForward( CreateForward(ET_Ignore) );
 	g_hForwards[OnLRRoundActivate] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnManageRoundStart] 	= new PrivateForward( CreateForward(ET_Ignore) );
 	g_hForwards[OnManageRoundEnd] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
@@ -44,7 +45,7 @@ void InitializeForwards()
 	g_hForwards[OnAllBlueThink] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnBlueNotWardenThink] 	= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnWardenThink] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
-	//g_hForwards[OnLRTextHud] 			= new PrivateForward( CreateForward(ET_Ignore) );
+	g_hForwards[OnLRTextHud] 			= new PrivateForward( CreateForward(ET_Ignore, Param_String) );
 	//g_hForwards[OnLRPicked] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnPlayerDied] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnBuildingDestroyed]	= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
@@ -52,9 +53,16 @@ void InitializeForwards()
 	g_hForwards[OnPlayerJarated] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnUberDeployed] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnPlayerSpawned]		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell) );
-	//g_hForwards[OnMenuAdd] 			= new PrivateForward( CreateForward(ET_Ignore, Param_CellByRef) );
+	g_hForwards[OnMenuAdd] 				= new PrivateForward( CreateForward(ET_Ignore, Param_CellByRef) );
+	g_hForwards[OnPanelAdd] 			= new PrivateForward( CreateForward(ET_Ignore, Param_CellByRef) );
 	g_hForwards[OnManageTimeLeft] 		= new PrivateForward( CreateForward(ET_Ignore) );
+	g_hForwards[OnPlayerPrepped] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnMusicPlay]			= new PrivateForward( CreateForward(ET_Ignore, Param_String, Param_FloatByRef) );
+}
+void Call_OnDownloads()
+{
+	g_hForwards[OnDownloads].Start();
+	Call_Finish();
 }
 void Call_OnLRRoundActivate(const JailFighter player)
 {
@@ -116,6 +124,12 @@ void Call_OnWardenThink(const JailFighter player)
 	Call_PushCell(player);
 	Call_Finish();
 }
+void Call_OnLRTextHud(char strHud[128])
+{
+	g_hForwards[OnLRTextHud].Start();
+	Call_PushString(strHud);
+	Call_Finish();
+}
 void Call_OnPlayerDied(const JailFighter player, const JailFighter victim, Event event)
 {
 	g_hForwards[OnPlayerDied].Start();
@@ -163,9 +177,27 @@ void Call_OnPlayerSpawned(const JailFighter player, Event event)
 	Call_PushCell(event);
 	Call_Finish();
 }
+void Call_OnMenuAdd(Menu & menu)
+{
+	g_hForwards[OnMenuAdd].Start();
+	Call_PushCellRef(menu);
+	Call_Finish();
+}
+void Call_OnPanelAdd(Panel & panel)
+{
+	g_hForwards[OnPanelAdd].Start();
+	Call_PushCellRef(panel);
+	Call_Finish();
+}
 void Call_OnManageTimeLeft()
 {
 	g_hForwards[OnManageTimeLeft].Start();
+	Call_Finish();
+}
+void Call_OnPlayerPrepped(const JailFighter player)
+{
+	g_hForwards[OnPlayerPrepped].Start();
+	Call_PushCell(player);
 	Call_Finish();
 }
 void Call_OnMusicPlay(char song[PLATFORM_MAX_PATH], float & time)

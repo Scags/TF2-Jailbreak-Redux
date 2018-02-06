@@ -498,22 +498,22 @@ methodmap JailFighter
 	}
 	public void ForceTeamChange(const int team, bool spawn = true)
 	{
-		if (TF2_GetPlayerClass(this.index) > TFClass_Unknown) {
-			SetEntProp(this.index, Prop_Send, "m_lifeState", 2);
-			ChangeClientTeam(this.index, team);
-			SetEntProp(this.index, Prop_Send, "m_lifeState", 0);
+		int client = this.index;
+		if (TF2_GetPlayerClass(client) > TFClass_Unknown) {
+			SetEntProp(client, Prop_Send, "m_lifeState", 2);
+			ChangeClientTeam(client, team);
+			SetEntProp(client, Prop_Send, "m_lifeState", 0);
 			if (spawn)
-				TF2_RespawnPlayer(this.index);
+				TF2_RespawnPlayer(client);
 		}
 	}
 	public void MutePlayer()
 	{
-		int client = this.index;
 		if (!this.bIsMuted && !this.bIsAdmin && !AlreadyMuted(this.index))
 		{
-			SetClientListeningFlags(client, VOICE_MUTED);
+			SetClientListeningFlags(this.index, VOICE_MUTED);
 			this.bIsMuted = true;
-			PrintToConsole(client, "[JailRedux] You are muted by the plugin.");
+			PrintToConsole(this.index, "[JailRedux] You are muted by the plugin.");
 		}
 	}
 	public void GiveFreeday()
@@ -523,7 +523,7 @@ methodmap JailFighter
 		SetEntityFlags(this.index, flags);
 		
 		if (this.bIsQueuedFreeday)
-			toggle(this.bIsQueuedFreeday);
+			this.bIsQueuedFreeday = false;
 		this.bIsFreeday = true;
 	}
 	
@@ -559,7 +559,8 @@ methodmap JailFighter
 		int client = this.index;
 		if (!IsClientValid(client) || TF2_GetClientTeam(client) != TFTeam_Red)
 			return;
-		int offset = Client_GetWeaponsOffset(client) - 4;
+
+		int offset = FindDataMapInfo(client, "m_hMyWeapons") - 4;
 	
 		for (int i = 0; i < 2; i++)
 		{
@@ -601,10 +602,9 @@ methodmap JailFighter
 	{
 		if (this.bIsMuted)
 		{
-			int client = this.index;
-			SetClientListeningFlags(client, VOICE_NORMAL);
+			SetClientListeningFlags(this.index, VOICE_NORMAL);
 			this.bIsMuted = false;
-			PrintToConsole(client, "[JailRedux] You are unmuted by the plugin.");
+			PrintToConsole(this.index, "[JailRedux] You are unmuted by the plugin.");
 		}
 	}
 	public void WardenSet()
@@ -635,10 +635,8 @@ methodmap JailFighter
 		{
 			for (int i = MaxClients; i; --i)
 			{
-				if (!IsClientValid(i))
-					continue;
-				
-				ClearSyncHud(i, hTextNodes[2]);
+				if (!IsClientInGame(i))
+					ClearSyncHud(i, hTextNodes[2]);
 			}
 		}
 		this.bIsWarden = false;
@@ -740,56 +738,6 @@ methodmap JailFighter
 			ResetPlayer(client);
 		this.bIsHHH = false;
 	}
-	public void RedEquip()
-	{
-		int client = this.index;
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1)
-		{
-			if (GetOwner(ent) == client) {
-				TF2_RemoveWearable(client, ent);
-				AcceptEntityInput(ent, "Kill");
-			}
-		}
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable_razorback")) != -1)
-		{
-			if (GetOwner(ent) == client) {
-				TF2_RemoveWearable(client, ent);
-				AcceptEntityInput(ent, "Kill");
-			}
-		}
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
-		{
-			if (GetOwner(ent) == client && (GetItemIndex(ent) == 405 || GetItemIndex(ent) == 608))
-			{
-				TF2_RemoveWearable(client, ent);
-				AcceptEntityInput(ent, "Kill");
-			}
-		}
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_weapon_parachute")) != -1)
-		{
-			if (GetOwner(ent) == client)
-			{
-				TF2_RemoveWearable(client, ent);
-				AcceptEntityInput(ent, "Kill");
-			}
-		}
-	}
-	public void BlueEquip()
-	{
-		int client = this.index;
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1)
-		{
-			if (GetOwner(ent) == client) {
-				TF2_RemoveWearable(client, ent);
-				AcceptEntityInput(ent, "Kill");
-			}
-		}
-	}
 	public void Init_JB()
 	{
 		this.iCustom = 0;
@@ -827,61 +775,5 @@ methodmap JailFighter
 		AddLRToMenu(menu);
 		menu.ExitButton = true;
 		menu.Display(this.index, 30);
-	}
-
-	/** From VoIDeD's Transitional Helpers, would've included the whole file but a lot of them were unnecessary/unneeded **/
-	/**
-	 * Gets the team this player belongs to.
-	*/
-	property TFTeam Team
-	{
-		public get() { return view_as<TFTeam>( GetClientTeam( this.index ) ); }
-	}
-
-	/**
-	 * Gets the player class of this player instance.
-	*/
-	property TFClassType Class
-	{
-		public get() { return TF2_GetPlayerClass( this.index ); }
-	}
-
-
-	/**
-	 * Sets the client's player class.
-	 *
-	 * @param class			The TF2 class to set the player to.
-	 * @param persistent	If true, this sets the player's desired class so it sticks after death.
-	*/
-	public void SetClass( TFClassType class, bool persistent = true )
-	{
-		TF2_SetPlayerClass( this.index, class, _, persistent );
-	}
-
-	/**
-	 * Changes this player's assigned team.
-	 *
-	 * @param team	The team to assign to this player.
-	*/
-	public void ChangeTeam( TFTeam team )
-	{
-		ChangeClientTeam( this.index, view_as<int>( team ) );
-	}
-
-	/**
-	 * Regenerate the player's class, loadout, weapons, ammo, etc.
-	 * Equivalent of having a player touch a resupply cabinet.
-	*/
-	public void Regenerate()
-	{
-		TF2_RegeneratePlayer( this.index );
-	}
-
-	/**
-	 * Respawns this player.
-	*/
-	public void Respawn()
-	{
-		TF2_RespawnPlayer( this.index );
 	}
 };

@@ -457,25 +457,8 @@ methodmap JailGameMode //< StringMap
 
 	public void FindRandomWarden()
 	{
-		int client = Client_GetRandom(CLIENTFILTER_TEAMTWO | CLIENTFILTER_ALIVE | CLIENTFILTER_NOBOTS);
-	
-		if (IsClientValid(client))
-		{
-			JailFighter player = JailFighter(client);
-			player.WardenSet();
-			this.bWardenExists = true;
-		}
-	}
-	public void WardenExists()
-	{
-		for (int i = MaxClients; i; --i)
-		{
-			JailFighter player = JailFighter(i);
-			if (!IsClientValid(i) || !IsPlayerAlive(i))
-				continue;
-			if (player.bIsWarden)
-				this.bWardenExists = true;
-		}
+		JailFighter( GetRandomPlayer(BLU, true) ).WardenSet();
+		this.bWardenExists = true;
 	}
 	public void DoorHandler(const eDoorsMode status)
 	{
@@ -511,27 +494,6 @@ methodmap JailGameMode //< StringMap
 				case LOCK:CPrintToChatAll("{red}[JailRedux]{tan} Cell doors have been locked.");
 				case UNLOCK:CPrintToChatAll("{red}[JailRedux]{tan} Cell doors have been unlocked.");
 			}
-		}
-	}
-	public void HookEntities()
-	{
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "item_ammopack_*")) != -1)
-		{
-			if (IsValidEntity(ent))
-				SDKHook(ent, SDKHook_Touch, OnEntTouch);
-		}
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_ammo_pack")) != -1)
-		{
-			if (IsValidEntity(ent))
-				SDKHook(ent, SDKHook_Touch, OnEntTouch);
-		}
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "func_breakable")) != -1)
-		{
-			if (IsValidEntity(ent))
-				SDKHook(ent, SDKHook_OnTakeDamage, OnEntTakeDamage);
 		}
 	}
 };

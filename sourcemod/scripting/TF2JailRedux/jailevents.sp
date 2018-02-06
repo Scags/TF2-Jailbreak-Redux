@@ -4,32 +4,12 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		return Plugin_Continue;
 
 	JailFighter player = JailFighter( event.GetInt("userid"), true );
-	if ( player && IsClientInGame(player.index) ) 
-	{
-		KillWeapons(player);
-		ManageWeaponStatus(player);
-		ManageSpawn(player, event);
+	
+	if (!IsClientValid(player.index))
+		return Plugin_Continue;
 
-		switch (TF2_GetClientTeam(player.index))
-		{
-			case TFTeam_Blue:
-			{
-				player.BlueEquip();
-				if (AlreadyMuted(player.index) && gamemode.iLRType != VSH)
-				{
-					player.ForceTeamChange(RED);
-					EmitSoundToClient(player.index, NO);
-					CPrintToChat(player.index, "{red}[JailRedux]{tan} You are muted, therefore you cannot join Blue team.");
-				}
-			}
-			case TFTeam_Red:
-			{
-				player.RedEquip();
-				//if (gamemode.iRoundState != StateRunning)
-					//CPrintToChat(player.index, "{red}[JailRedux]{tan} Your weapons and ammo have been stripped.");
-			}
-		}
-	}
+	SetPawnTimer(PrepPlayer, 0.2, player.userid);
+
 	return Plugin_Continue;
 }
 
@@ -44,7 +24,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	if ( victim.index == attacker || attacker <= 0 )
 		return Plugin_Continue;
 
-	JailFighter atkr = JailFighter( event.GetInt("attacker"), true );
+	JailFighter atkr = JailFighter(attacker);
 	ManageHurtPlayer(atkr, victim, event);
 
 	return Plugin_Continue;
@@ -57,30 +37,6 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 
 	JailFighter victim = JailFighter( event.GetInt("userid"), true );	
 	JailFighter attacker = JailFighter( event.GetInt("attacker"), true );
-
-	if (victim.bIsFreeday)
-		victim.RemoveFreeday();
-
-	victim.MutePlayer();
-
-	if (victim.iCustom > 0)
-		victim.iCustom = 0;
-		
-	if (victim.bIsWarden)
-	{
-		victim.WardenUnset();
-		gamemode.bWardenExists = false;
-		if (gamemode.iRoundState == StateRunning)
-		{
-			if (cvarTF2Jail[WardenTimer].IntValue != 0)
-			{
-				int iTimer = gamemode.iRoundCount;
-				SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, iTimer);
-			}
-		}
-	}
-
-	//SetPawnTimer(CheckAlivePlayers, 0.2);
 	
 	ManagePlayerDeath(attacker, victim, event);
 	
@@ -96,7 +52,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	{
 		if (strlen(sCellOpener) != 0)
 		{
-			int CellHandler = Entity_FindByName(sCellOpener, "func_button");
+			int CellHandler = FindEntity(sCellOpener, "func_button");
 			if (IsValidEntity(CellHandler))
 				SetEntProp(CellHandler, Prop_Data, "m_bLocked", 1, 1);
 			else LogError("***TF2JB ERROR*** Entity name not found for Cell Door Opener! Please verify integrity of the config and the map.");
@@ -104,7 +60,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 
 		if (strlen(sFFButton) != 0)
 		{
-			int iFFButton = Entity_FindByName(sFFButton, "func_button");
+			int iFFButton = FindEntity(sFFButton, "func_button");
 			if (IsValidEntity(iFFButton))
 				SetEntProp(iFFButton, Prop_Data, "m_bLocked", 1, 1);
 		}
@@ -112,10 +68,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	
 	for (int i = MaxClients; i; --i)
 	{
-		if (!IsClientValid(i))
-			continue;
-		JailFighter player = JailFighter(i);
-		player.UnmutePlayer();
+		if (IsClientInGame(i))
+			JailFighter(i).UnmutePlayer();
 	}
 
 	gamemode.DoorHandler(CLOSE);
@@ -133,12 +87,12 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	gamemode.HookEntities();
 	gamemode.bCellsOpened = false;
 	gamemode.bWardenExists = false;
 	gamemode.bIsWardenLocked = false;
 	gamemode.bFirstDoorOpening = false;
 	int i;
+	bool warday;
 	JailFighter player;
 	
 	if (gamemode.b1stRoundFreeday)
@@ -153,69 +107,66 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		gamemode.iTimeLeft = cvarTF2Jail[RoundTime_Freeday].IntValue;
 		gamemode.iLRType = -1;
 	}
-	
 	if (cvarTF2Jail[Balance].BoolValue && gamemode.iPlaying > 2)
 	{
 		float flRatio, flBalance = cvarTF2Jail[BalanceRatio].FloatValue;
+		int rand;
 		for (i = MaxClients; i; --i)
 		{
-			if (!IsClientValid(i))
+			if (!IsClientInGame(i))
 				continue;
-			
-			SetEntProp(i, Prop_Data, "m_takedamage", 0, 1);	// For shitheads like Dimmy who ruin fun
-			player = JailFighter(i);
+
 			flRatio = float(GetLivingPlayers(3)) / float(GetLivingPlayers(2));
 
 			if (flRatio <= flBalance)
 				break;
 
-			if (IsClientValid(i) && TF2_GetClientTeam(i) == TFTeam_Blue)
-			{
-				player.ForceTeamChange(2);
-				//TF2_ChangeClientTeam(i, TFTeam_Red);
-				//TF2_RespawnPlayer(i);	// ForceTeamChange does this automatically
-
-				CPrintToChat(i, "{red}TF2Jail{tan} You have been autobalanced.");
-			}
+			rand = GetRandomPlayer(BLU, true);
+			JailFighter(rand).ForceTeamChange(RED);
+			CPrintToChat(rand, "{red}[JailRedux]{tan} You have been autobalanced.");
 		}
-		SetPawnTimer(ResetDamage, 1.0);	// Players could teamkill with the flames upon autobalance
 	}
+
+	gamemode.iLRType = gamemode.iLRPresetType;
+	//gamemode.bIsLRInUse = true;
+
+	ManageRoundStart();		// THESE FIRE BEFORE INITIALIZATION FUNCTIONS IN THE PLAYER LOOP
+	IsFreedayLR();			// This is the only (easy) way for the VSH sub-plugin to grab a random player
+	CriticalEnable();		// And force them to be a boss, then OnLRActivate() we force non-bosses to red team
+	ManageCells();			// If you need to do something that goes against this functionality, you'll have to
+	ManageFFTimer();		// Loop clients on ManageRoundStart() to set what you want, then ignore OnLRActivate()
+	ManageHUDText();		// Or if you aren't using the VSH subplugin, ignore this
+	ManageFFTimer();
+	ManageTimeLeft();
+
+	SetPawnTimer(_MusicPlay, 1.4);
+	warday = gamemode.bIsWarday;
+
+	for (i = MaxClients; i; --i)
+	{
+		if (!IsClientInGame(i))
+			continue;
+
+		player = JailFighter(i);
+		if (!player.bIsVIP || !IsPlayerAlive(i))
+			player.MutePlayer();
+		else if (player.bIsVIP || TF2_GetClientTeam(i) == TFTeam_Blue)
+			player.UnmutePlayer();
+
+		if (!IsPlayerAlive(i))
+			continue;
 		
-	if (gamemode.iLRPresetType >= 0)	// There's bound to be an easier way to do this
-	{
-		gamemode.iLRType = gamemode.iLRPresetType;
-		//gamemode.bIsLRInUse = true;
+		SetEntProp(i, Prop_Data, "m_takedamage", 0, 1);	// For shitheads like Dimmy who ruin fun
+		OnLRActivate(player);
 
-		ManageRoundStart();		// THESE FIRE BEFORE LOADING FUNCTIONS FOR THE PLAYER LOOP
-		IsFreedayLR();			// This is only (easy) way for the VSH sub-plugin to grab a random player
-		CriticalEnable();		// And force them to be a boss, then OnLRActivate() we force non-bosses to red team
-		ManageCells();			// If you need to do something that goes against this functionality, you'll have to
-		ManageFFTimer();		// Loop clients on ManageRoundStart() to set what you want, then ignore OnLRActivate()
-		ManageHUDText();
-		ManageFFTimer();
-		ManageTimeLeft();
-
-		SetPawnTimer(_MusicPlay, 1.4);
-
-		for (i = MaxClients; i; --i)
-		{
-			if (!IsClientValid(i) || !IsPlayerAlive(i))
-				continue;
-
-			player = JailFighter(i);
-			OnLRActivate(player);	// Handler
-			
-			/*if (player.bIsFreeday)
-				TeleportEntity(player.index, flFreedayPosition, NULL_VECTOR, NULL_VECTOR);*/
-		}		
-		gamemode.iLRPresetType = -1;
+		if (warday)
+			player.TeleportToPosition(GetClientTeam(i));
 	}
-	else 
-	{
-		gamemode.iLRType = -1;
-		gamemode.iTimeLeft = cvarTF2Jail[RoundTime].IntValue;
-	}
+	SetPawnTimer(ResetDamage, 1.0);	// Players could teamkill with the flames upon autobalance
 
+	PrintToConsoleAll("[JailRedux] Red Team has been muted.");
+	
+	gamemode.iLRPresetType = -1;
 	gamemode.iRoundState = StateRunning;
 
 	CreateTimer(1.0, Timer_Round, _, FULLTIMER);
@@ -225,32 +176,6 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		SetPawnTimer(Open_Doors, cvarTF2Jail[DoorOpenTimer].FloatValue, gamemode.iRoundState);
 		//CreateTimer(cvarTF2Jail[DoorOpenTimer].FloatValue, Open_Doors, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
-
-	for (i = MaxClients; i; --i)
-	{
-		if (!IsValidClient(i))
-			continue;
-
-		player = JailFighter(i);
-		if (!player.bIsVIP || !IsPlayerAlive(i))
-			player.MutePlayer();
-		if (player.bIsVIP || TF2_GetClientTeam(i) == TFTeam_Blue)
-			player.UnmutePlayer();
-
-		PrintToConsole(i, "[JailRedux] Red Team has been muted.");
-	}
-
-	if (gamemode.bIsWarday)
-	{
-		for (i = MaxClients; i; --i)
-		{
-			if (!IsClientValid(i) || !IsPlayerAlive(i))
-				continue;
-			if (TF2_GetClientTeam(i) == TFTeam_Blue)
-				TeleportEntity(i, flWardayBlu, nullvec, nullvec);
-			else TeleportEntity(i, flWardayRed, nullvec, nullvec);
-		}
-	}	
 	return Plugin_Continue;
 }
 
@@ -309,19 +234,10 @@ public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player = JailFighter(event.GetInt("userid"), true);
+	JailFighter player = JailFighter( event.GetInt("userid"), true );
 
-	if (!IsValidClient(player.index))
-		return Plugin_Continue;
-		
-	RequestFrame(KillWeapons, player);
-	RequestFrame(ManageWeaponStatus, player);
-	
-	switch (TF2_GetClientTeam(player.index))
-	{
-		case TFTeam_Blue:player.BlueEquip();
-		case TFTeam_Red:player.RedEquip();
-	}
+	if (IsClientValid(player.index))
+		SetPawnTimer(PrepPlayer, 0.2, player.userid);
 
 	return Plugin_Continue;
 }
@@ -331,12 +247,10 @@ public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player = JailFighter(GetClientOfUserId(event.GetInt("userid")), true);
+	JailFighter player = JailFighter( (event.GetInt("userid")), true );
+
 	if (IsClientValid(player.index))
-	{
-		RequestFrame(KillWeapons, player);
-		RequestFrame(ManageWeaponStatus, player);
-	}
+		SetPawnTimer(PrepPlayer, 0.2, player.userid);
 
 	return Plugin_Continue;
 }
@@ -369,7 +283,7 @@ public Action ObjectDestroyed(Event event, const char[] name, bool dontBroadcast
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter destroyer = JailFighter(event.GetInt("attacker"), true);
+	JailFighter destroyer = JailFighter( event.GetInt("attacker"), true );
 	int building = event.GetInt("index");
 	int objecttype = event.GetInt("objecttype");
 	ManageBuildingDestroyed(destroyer, building, objecttype, event);
@@ -381,8 +295,8 @@ public Action PlayerJarated(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter jarateer = JailFighter(event.GetInt("thrower_entindex"), true);
-	JailFighter jarateed = JailFighter(event.GetInt("victim_entindex"), true);
+	JailFighter jarateer = JailFighter( event.GetInt("thrower_entindex"), true );
+	JailFighter jarateed = JailFighter( event.GetInt("victim_entindex"), true );
 	ManageOnPlayerJarated(jarateer, jarateed, event);
 	return Plugin_Continue;
 }
@@ -392,8 +306,8 @@ public Action UberDeployed(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 	
-	JailFighter medic = JailFighter(event.GetInt("userid"), true);
-	JailFighter patient = JailFighter(event.GetInt("targetid"), true);
+	JailFighter medic = JailFighter( event.GetInt("userid"), true );
+	JailFighter patient = JailFighter( event.GetInt("targetid"), true );
 	ManageUberDeployed(patient, medic, event);
 	return Plugin_Continue;
 }

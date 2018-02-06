@@ -41,10 +41,10 @@ enum
 	WBLU = 3
 };
 
-public char snd[PLATFORM_MAX_PATH];
+stock char snd[PLATFORM_MAX_PATH];
 #define MAXMESSAGE	4096
-public char gameMessage[MAXMESSAGE];	// For formatting chat/hint/center/etc messages
-public char BackgroundSong[PLATFORM_MAX_PATH];	// If you want a sweet song with your lr, try this out
+stock char gameMessage[MAXMESSAGE];	// For formatting chat/hint/center/etc messages
+stock char BackgroundSong[PLATFORM_MAX_PATH];	// If you want a sweet song with your lr, try this out
 
 /** Methodmaps ftw **/
 methodmap JBPlayer
@@ -53,7 +53,7 @@ methodmap JBPlayer
 	 * Constructs an instance of the JailFighter internal methodmap
 	 * @param index			index (or the userid) of a player
 	 * @param userid		if using userid instead of player index, set this param to true
-	 * @return			a player instance of the JBPlayer methodmap
+	 * @return				a player instance of the JBPlayer methodmap
 	*/
 	public native JBPlayer(const int index, bool userid=false);
 
@@ -144,7 +144,8 @@ native int TF2JailRedux_RegisterPlugin(const char plugin_name[64]);
 
 enum	// JB Hook Types
 {
-	OnLRRoundActivate = 0,
+	OnDownloads = 0,
+	OnLRRoundActivate,
 	OnManageRoundStart,
 	OnManageRoundEnd,
 	OnLRRoundEnd,
@@ -154,7 +155,7 @@ enum	// JB Hook Types
 	OnAllBlueThink,
 	OnBlueNotWardenThink,
 	OnWardenThink,
-	//OnLRTextHud,
+	OnLRTextHud,
 	//OnLRPicked,
 	OnPlayerDied,
 	OnBuildingDestroyed,
@@ -162,12 +163,14 @@ enum	// JB Hook Types
 	OnPlayerJarated,
 	OnUberDeployed,
 	OnPlayerSpawned,
-	//OnMenuAdd,
+	OnMenuAdd,
+	OnPanelAdd,
 	OnManageTimeLeft,
+	OnPlayerPrepped,
 	OnMusicPlay
 };
 
-
+/* SDKHook-Style Forwards */
 typeset JBHookCB 
 {
 	/*
@@ -178,6 +181,7 @@ typeset JBHookCB
 		OnBlueNotWardenThink
 		OnAllBlueThink
 		OnWardenThink
+		OnPlayerPrepped
 	*/
 	function void (const JBPlayer Player);
 	
@@ -204,13 +208,19 @@ typeset JBHookCB
 	function void ();
 
 	//	OnLRPicked
-	// function void (Menu & menu, MenuAction & action, const JBPlayer Player, const int select);
+	// function void (Menu menu, MenuAction action, const JBPlayer Player, const int select);
 
 	//	OnMenuAdd
-	// function void (Menu & menu);
+	function void (Menu & menu);
 
 	// OnManageRoundEnd
 	function void (Event event);
+
+	// OnPanelAdd
+	function void (Panel & panel);	
+
+	// OnLRTextHud
+	function void (char strHud[128]);
 };
 
 // Use hooktype enum on these.
@@ -255,7 +265,7 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	property bool bIsVIPLR			// Optional, not used in core
  *	property bool bFirstDoorOpening
  *	property float flMusicTime		// Optional, not used in core
-**/
+*/
 
 native void JBGameMode_FindRandomWarden();						//gamemode.FindRandomWarden
 native void JBGameMode_ManageCells(const eDoorsMode status);	//gamemode.DoorHandler(status)
@@ -275,10 +285,12 @@ public SharedPlugin __pl_tf2jailredux = {
 public __pl_tf2jailredux_SetNTVOptional()
 {
 	MarkNativeAsOptional("TF2JailRedux_RegisterPlugin");
+
 	MarkNativeAsOptional("JB_Hook");
 	MarkNativeAsOptional("JB_HookEx");
 	MarkNativeAsOptional("JB_Unhook");
 	MarkNativeAsOptional("JB_UnhookEx");
+
 	MarkNativeAsOptional("JBPlayer.JBPlayer");
 	MarkNativeAsOptional("JBPlayer.userid.get");
 	MarkNativeAsOptional("JBPlayer.index.get");
@@ -288,6 +300,21 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.ForceTeamChange");
 	MarkNativeAsOptional("JBPlayer.TeleportToPosition");
 	MarkNativeAsOptional("JBPlayer.ListLRS");
+	MarkNativeAsOptional("JBPlayer.PreEquip");
+	MarkNativeAsOptional("JBPlayer.SetAmmotable");
+	MarkNativeAsOptional("JBPlayer.SetCliptable");
+	MarkNativeAsOptional("JBPlayer.TeleToSpawn");
+	MarkNativeAsOptional("JBPlayer.SpawnSmallHealthPack");
+	MarkNativeAsOptional("JBPlayer.MutePlayer");
+	MarkNativeAsOptional("JBPlayer.GiveFreeday");
+	MarkNativeAsOptional("JBPlayer.RemoveFreeday");
+	MarkNativeAsOptional("JBPlayer.StripToMelee");
+	MarkNativeAsOptional("JBPlayer.EmptyWeaponSlots");
+	MarkNativeAsOptional("JBPlayer.UnmutePlayer");
+	MarkNativeAsOptional("JBPlayer.WardenSet");
+	MarkNativeAsOptional("JBPlayer.WardenUnset");
+	MarkNativeAsOptional("JBPlayer.MakeHorsemann");
+
 	MarkNativeAsOptional("JBGameMode_GetProperty");
 	MarkNativeAsOptional("JBGameMode_SetProperty");
 	MarkNativeAsOptional("JBGameMode_ManageCells");

@@ -1,7 +1,11 @@
+/*	  _____   _____   ____        _           _   _     ____               _                
+	 |_   _| |  ___| |___ \      | |   __ _  (_) | |   |  _ \    ___    __| |  _   _  __  __
+	   | |   | |_      __) |  _  | |  / _` | | | | |   | |_) |  / _ \  / _` | | | | | \ \/ /
+	   | |   |  _|    / __/  | |_| | | (_| | | | | |   |  _ <  |  __/ | (_| | | |_| |  >  < 
+	   |_|   |_|     |_____|  \___/   \__,_| |_| |_|   |_| \_\  \___|  \__,_|  \__,_| /_/\_\ */
+
 /**
- *	Hello person who will be reading this some time in the future, and welcome to TF2Jail Redux!	*
- *	Here is the summary and organization of the associated files within it 							*
- **	TF2Jail_Redux.sp: Contains the core functions of the plugin, along with forwards 			   **
+ **	TF2Jail_Redux.sp: Contains the core functions of the plugin, along with natives 			   **
  **	jailbase.sp: Player methodmap properties plus a few handy variables 						   **
  **	jailgamemode.sp: Gamemode methodmap properties that control gameplay functionality			   **
  **	jailevents.sp: Events of the plugin that are organized and managed by...					   **
@@ -10,14 +14,14 @@
  **	stocks.inc: Stock functions used or could possibly be used within plugin 					   **
  **	jailforwards.sp: Contains external gamemode third-party functionality, leave it alone 		   **
  ** tf2jailredux.inc: External gamemode third-party functionality, leave it alone 				   **
- *	If you're here to give some more uniqueness to the plugin, check jailhandler 	 				*
- *	It's fixed with a variety of not only last request examples, but gameplay event management.		*
- *	VSH is a subplugin, if there is an issues with it, simply delete it and edit jailhandler		*
+ *	If you're here to give some more uniqueness to the plugin, check jailhandler 	 			   **
+ *	It's fixed with a variety of not only last request examples, but gameplay event management.	   **
+ *	VSH is a subplugin, if there is an issues with it, simply delete it and edit jailhandler	   **
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.10.8"
-#define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Drixevel) and Nergal/Assyrian"
+#define PLUGIN_VERSION		"0.11.0"
+#define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Sky Guardian) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
 #include <sourcemod>
@@ -26,7 +30,6 @@
 #include <tf2items>
 #include <tf2items_giveweapon>
 #include <morecolors>
-#include <smlib/clients>	// I have a phobia of unnecessarily large plugins
 #include <tf2attributes>
 #include <tf2jailredux>
 
@@ -80,18 +83,18 @@ enum	// Cvar name
 	CritFallOff,
 	VIPFlag,
 	AdmFlag,
+	DisableBlueMute,
+	WeaponDisabler,
+	WearableDisabler,
 	Version
 };
 
-ConVar
-bEnabled = null
-;
-
 // If adding new cvars put them above Version in the enum
-ConVar cvarTF2Jail[Version + 1];
+ConVar cvarTF2Jail[Version + 1],
+	   bEnabled = null,
+	   hEngineConVars[2];
 
-Handle hEngineConVars[2],
-	   hTextNodes[4],
+Handle hTextNodes[4],
 	   AimHud,
 	   MusicCookie
 	   ;
@@ -117,7 +120,10 @@ public Plugin myinfo =
 	url = ""
 };
 
-ArrayList g_hPluginsRegistered;
+ArrayList g_hPluginsRegistered,
+		  hWeaponList,
+		  hWearableList
+		  ;
 
 #include "TF2JailRedux/stocks.inc"
 #include "TF2JailRedux/jailhandler.sp"
@@ -132,31 +138,34 @@ public void OnPluginStart()
 	
 	InitializeForwards();	// Forwards
 
-	bEnabled = CreateConVar("sm_tf2jr_enable", "1", "Status of the plugin: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[Version] = CreateConVar("tf2jr_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_SPONLY | FCVAR_DONTRECORD);
-	cvarTF2Jail[Balance] = CreateConVar("sm_tf2jr_auto_balance", "1", "Should the plugin autobalance teams?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[BalanceRatio] = CreateConVar("sm_tf2jr_balance_ratio", "0.5", "Ratio for autobalance: (Example: 0.5 = 2:4)", FCVAR_NOTIFY, true, 0.1, true, 1.0);
-	cvarTF2Jail[DoorOpenTimer] = CreateConVar("sm_tf2jr_cell_timer", "60", "Time after Arena round start to open doors.", FCVAR_NOTIFY, true, 0.0, true, 120.0);
-	cvarTF2Jail[FreedayLimit] = CreateConVar("sm_tf2jr_freeday_limit", "3", "Max number of freedays for the lr.", FCVAR_NOTIFY, true, 1.0, true, 16.0);
-	cvarTF2Jail[KillPointServerCommand] = CreateConVar("sm_tf2jr_point_servercommand", "1", "Kill 'point_servercommand' entities.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[RemoveFreedayOnLR] = CreateConVar("sm_tf2jr_freeday_removeonlr", "1", "Remove Freedays on Last Request.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[RemoveFreedayOnLastGuard] = CreateConVar("sm_tf2jr_freeday_removeonlastguard", "1", "Remove Freedays on Last Guard.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[WardenTimer] = CreateConVar("sm_tf2jr_warden_timer", "20", "Time in seconds after Warden is unset or lost to lock Warden.", FCVAR_NOTIFY);
-	cvarTF2Jail[RoundTimerStatus] = CreateConVar("sm_tf2jr_roundtimer_status", "1", "Status of the round timer.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[RoundTime] = CreateConVar("sm_tf2jr_roundtimer_time", "600", "Amount of time normally on the timer (if enabled).", FCVAR_NOTIFY, true, 0.0);
-	cvarTF2Jail[RoundTime_Freeday] = CreateConVar("sm_tf2jr_roundtimer_time_freeday", "300", "Amount of time on 1st day freeday.", FCVAR_NOTIFY, true, 0.0);
-	cvarTF2Jail[RebelAmmo] = CreateConVar("sm_tf2jr_red_ammo", "1", "Should freedays be removed upon a freeday player's collection of ammo?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[DroppedWeapons] = CreateConVar("sm_tf2jr_dropped_weapons", "1", "Should players be allowed to pick up dropped weapons?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[VentHit] = CreateConVar("sm_tf2jr_vent_freeday", "1", "Should freeday players lose their freeday if they hit/break a vent?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[SeeNames] = CreateConVar("sm_tf2jr_wardensee", "1", "Allow the Warden to see prisoner names?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[NameDistance] = CreateConVar("sm_tf2jr_wardensee_distance", "200", "From how far can the Warden see prisoner names? (Hammer Units)", FCVAR_NOTIFY, true, 0.0, true, 500.0);
-	cvarTF2Jail[SeeHealth] = CreateConVar("sm_tf2jr_wardensee_health", "1", "Can the Warden see prisoner health?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[EnableMusic] = CreateConVar("sm_tf2jr_music_on", "1", "Enable background music that could possibly play with last requests?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[MusicVolume] = CreateConVar("sm_tf2jr_music_volume", ".5", "Volume in which background music plays. (If enabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[EurekaTimer] = CreateConVar("sm_tf2jr_eureka_teleport", "20", "How long must players wait until they are able to Eureka Effect Teleport again?", FCVAR_NOTIFY, true, 0.0, true, 60.0);
-	cvarTF2Jail[CritFallOff] = CreateConVar("sm_tf2jr_crit_falloff", "1", "Should guard criticals receive damage falloff? (Similar to Ambassador's weapon stat)", FCVAR_NOTIFY, true, 1.0, true, 0.0);
-	cvarTF2Jail[VIPFlag] = CreateConVar("sm_tf2jr_vip_flag", "r", "What admin flag do VIP players fall under?", FCVAR_NOTIFY);
-	cvarTF2Jail[AdmFlag] = CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under?", FCVAR_NOTIFY);
+	bEnabled 								= CreateConVar("sm_tf2jr_enable", "1", "Status of the plugin: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[Version] 					= CreateConVar("tf2jr_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_SPONLY | FCVAR_DONTRECORD);
+	cvarTF2Jail[Balance] 					= CreateConVar("sm_tf2jr_auto_balance", "1", "Should the plugin autobalance teams?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[BalanceRatio] 				= CreateConVar("sm_tf2jr_balance_ratio", "0.5", "Ratio for autobalance: (Example: 0.5 = 2:4)", FCVAR_NOTIFY, true, 0.1, true, 1.0);
+	cvarTF2Jail[DoorOpenTimer] 				= CreateConVar("sm_tf2jr_cell_timer", "60", "Time after Arena round start to open doors.", FCVAR_NOTIFY, true, 0.0, true, 120.0);
+	cvarTF2Jail[FreedayLimit] 				= CreateConVar("sm_tf2jr_freeday_limit", "3", "Max number of freedays for the lr.", FCVAR_NOTIFY, true, 1.0, true, 16.0);
+	cvarTF2Jail[KillPointServerCommand] 	= CreateConVar("sm_tf2jr_point_servercommand", "1", "Kill 'point_servercommand' entities.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[RemoveFreedayOnLR] 			= CreateConVar("sm_tf2jr_freeday_removeonlr", "1", "Remove Freedays on Last Request.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[RemoveFreedayOnLastGuard] 	= CreateConVar("sm_tf2jr_freeday_removeonlastguard", "1", "Remove Freedays on Last Guard.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[WardenTimer] 				= CreateConVar("sm_tf2jr_warden_timer", "20", "Time in seconds after Warden is unset or lost to lock Warden.", FCVAR_NOTIFY);
+	cvarTF2Jail[RoundTimerStatus]			= CreateConVar("sm_tf2jr_roundtimer_status", "1", "Status of the round timer.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[RoundTime] 					= CreateConVar("sm_tf2jr_roundtimer_time", "600", "Amount of time normally on the timer (if enabled).", FCVAR_NOTIFY, true, 0.0);
+	cvarTF2Jail[RoundTime_Freeday] 			= CreateConVar("sm_tf2jr_roundtimer_time_freeday", "300", "Amount of time on 1st day freeday.", FCVAR_NOTIFY, true, 0.0);
+	cvarTF2Jail[RebelAmmo] 					= CreateConVar("sm_tf2jr_red_ammo", "1", "Should freedays be removed upon a freeday player's collection of ammo?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[DroppedWeapons] 			= CreateConVar("sm_tf2jr_dropped_weapons", "1", "Should players be allowed to pick up dropped weapons?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[VentHit] 					= CreateConVar("sm_tf2jr_vent_freeday", "1", "Should freeday players lose their freeday if they hit/break a vent?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[SeeNames] 					= CreateConVar("sm_tf2jr_wardensee", "1", "Allow the Warden to see prisoner names?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[NameDistance] 				= CreateConVar("sm_tf2jr_wardensee_distance", "200", "From how far can the Warden see prisoner names? (Hammer Units)", FCVAR_NOTIFY, true, 0.0, true, 500.0);
+	cvarTF2Jail[SeeHealth] 					= CreateConVar("sm_tf2jr_wardensee_health", "1", "Can the Warden see prisoner health?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[EnableMusic] 				= CreateConVar("sm_tf2jr_music_on", "1", "Enable background music that could possibly play with last requests?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[MusicVolume] 				= CreateConVar("sm_tf2jr_music_volume", ".5", "Volume in which background music plays. (If enabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[EurekaTimer] 				= CreateConVar("sm_tf2jr_eureka_teleport", "20", "How long must players wait until they are able to Eureka Effect Teleport again? (0 to disable)", FCVAR_NOTIFY, true, 0.0, true, 60.0);
+	cvarTF2Jail[CritFallOff] 				= CreateConVar("sm_tf2jr_crit_falloff", "1", "Should guard criticals receive damage falloff? (Similar to Ambassador's weapon stat)", FCVAR_NOTIFY, true, 1.0, true, 0.0);
+	cvarTF2Jail[VIPFlag] 					= CreateConVar("sm_tf2jr_vip_flag", "r", "What admin flag do VIP players fall under?", FCVAR_NOTIFY);
+	cvarTF2Jail[AdmFlag] 					= CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under?", FCVAR_NOTIFY);
+	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[WeaponDisabler] 			= CreateConVar("sm_tf2jr_disable_weapons", "", "Disable certain weapons. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"220,448\" WILL DISABLE SHORTSTOP AND SODA POPPER. NOTE THAT WEARABLES SUCH AS SNIPER BACK WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_wearables\" TO DISABLE \"tf_wearables\"", FCVAR_NOTIFY);
+	cvarTF2Jail[WearableDisabler] 			= CreateConVar("sm_tf2jr_disable_wearables", "", "Disable certain wearables. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"133,444\" WILL DISABLE GUNBOATS AND MANTREADS. NOTE THAT WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_weapons\" TO DISABLE \"tf_weapon*\"s", FCVAR_NOTIFY);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -296,9 +305,8 @@ public void OnPluginStart()
 
 	for (int i = MaxClients; i; --i) 
 	{
-		if (!IsValidClient(i))
-			continue;
-		OnClientPutInServer(i);
+		if (IsValidClient(i))
+			OnClientPutInServer(i);
 	}
 
 	hJailFields[0] = new StringMap();
@@ -310,7 +318,7 @@ public bool WardenGroup(const char[] pattern, Handle clients)
 	bool non = StrContains(pattern, "!", false) != - 1;
 	for (int i = MaxClients; i; i--) 
 	{
-		if (IsClientValid(i) && FindValueInArray(clients, i) == - 1)
+		if (IsClientInGame(i) && FindValueInArray(clients, i) == - 1)
 		{
 			if (bEnabled.BoolValue && JailFighter(i).bIsWarden) {
 				if (!non)
@@ -327,7 +335,7 @@ public bool FreedaysGroup(const char[] pattern, Handle clients)
 {
 	for (int i = MaxClients; i; --i)
 	{
-		if (IsClientValid(i) && FindValueInArray(clients, i) == -1)
+		if (IsClientInGame(i) && FindValueInArray(clients, i) == -1)
 		{
 			if (bEnabled.BoolValue && JailFighter(i).bIsFreeday)
 				PushArrayCell(clients, i);
@@ -409,7 +417,6 @@ public void OnConfigsExecuted()
 		return;
 
 	ConvarsSet(true);
-
 	ParseConfigs(); // Parse all configuration files under 'addons/sourcemod/configs/tf2jail/...'.
 
 	#if defined _steamtools_included
@@ -420,6 +427,29 @@ public void OnConfigsExecuted()
 		Steam_SetGameDescription(sDescription);
 	}
 	#endif
+
+	int i;
+	char strDisable[64];
+
+	hWeaponList = new ArrayList();
+	cvarTF2Jail[WeaponDisabler].GetString(strDisable, sizeof(strDisable));
+	if (strDisable[0] != '\0')
+	{
+		char strBuffer[6][32];	// Length is 6 in case you hate skins for some odd reason
+		int disabled = ExplodeString(strDisable, ",", strBuffer, 6, 32); 	// Split all of our disabled indexes and store them into our string array...
+		for (i = 0; i < disabled; i++)										// Loop through them all...
+			hWeaponList.Push( StringToInt(strBuffer[i]) );					// Then find their values and push them to the global array!
+	}
+
+	hWearableList = new ArrayList();
+	cvarTF2Jail[WearableDisabler].GetString(strDisable, sizeof(strDisable));
+	if (strDisable[0] != '\0')
+	{
+		char strBuffer[4][32];
+		int disabled = ExplodeString(strDisable, ",", strBuffer, 4, 32);	// And we repeat the same for our wearables
+		for (i = 0; i < disabled; i++)
+			hWearableList.Push( StringToInt(strBuffer[i]) );
+	}
 }
 
 public void OnMapStart()
@@ -450,10 +480,7 @@ public void OnMapEnd()
 public void OnClientPutInServer(int client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
-	//SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
 	SDKHook(client, SDKHook_Touch, OnTouch);
-	//SDKHook(client, SDKHook_WeaponSwitchPost, OnWeaponSwitchPost);
-	//SDKHook(client, SDKHook_PreThinkPost, OnPreThinkPost);
 		
 	if (hJailFields[client] != null)
 		delete hJailFields[client];
@@ -498,14 +525,14 @@ public void OnClientPostAdminCheck(int client)
 
 public Action OnTouch(int toucher, int touchee)
 {
-	if (IsClientValid(touchee) && IsClientValid(toucher)) 
-	{
-		JailFighter player = JailFighter(toucher);
-		JailFighter victim = JailFighter(touchee);
+	if (!bEnabled.BoolValue)
+		return Plugin_Continue;
+	if (!IsClientValid(toucher) || !IsClientValid(touchee))
+		return Plugin_Continue;
 		
-		if (TF2_GetClientTeam(player.index) == TFTeam_Red)
-			ManageRedTouchBlue(player, victim);	// Handler
-	}
+	if (TF2_GetClientTeam(toucher) == TFTeam_Red)
+		ManageRedTouchBlue(JailFighter(toucher), JailFighter(touchee));	// Handler
+
 	return Plugin_Continue;
 }
 
@@ -514,10 +541,12 @@ public Action Timer_PlayerThink(Handle hTimer)
 	if (!bEnabled.BoolValue || gamemode.iRoundState != StateRunning)
 		return Plugin_Continue;
 		
+	JailFighter player;
 	for (int i = MaxClients; i; --i) {
 		if (!IsValidClient(i, false) || !IsPlayerAlive(i))
 			continue;
-		JailFighter player = JailFighter(i);
+		
+		player = JailFighter(i);
 		if (TF2_GetClientTeam(player.index) == TFTeam_Blue)
 			ManageAllBlueThink(player);
 		else if (TF2_GetClientTeam(player.index) == TFTeam_Blue && !player.bIsWarden)
@@ -565,37 +594,19 @@ public void ConvarsSet(bool Status)
 	}
 }
 
-/*public Action OnPlayerTouch(const char[] name, int touchee, int toucher, float delay)
-{	// Works 9/10 times, better than nothing
-	if (!bEnabled.BoolValue || !cvarTF2Jail[RebelAmmo].BoolValue)
-		return Plugin_Continue;
-		
-	JailFighter player = JailFighter(toucher);
-	if (IsClientValid(player.index) && IsPlayerAlive(player.index) && player.bIsFreeday)
-	{
-		player.RemoveFreeday();
-		PrintCenterTextAll("%N has taken ammo and lost their freeday!", player.index);
-	}
-	return Plugin_Continue;
+public void HookAmmo(const int ref)
+{
+	SDKHook(EntRefToEntIndex(ref), SDKHook_Touch, OnEntTouch);
 }
 
-public Action VentTouch(const char[] name, int toucher, int func, float delay)
-{	// Does this even work?
-	if (!bEnabled.BoolValue || !cvarTF2Jail[VentHit].BoolValue)
-		return Plugin_Continue;
-		
-	JailFighter touch = JailFighter(toucher);
-	if (IsClientValid(touch.index) && IsPlayerAlive(touch.index) && touch.bIsFreeday && IsValidEntity(func))
-	{
-		touch.RemoveFreeday();
-		PrintCenterTextAll("%N has broken a vent and lost their freeday!", touch.index);
-	}
-	return Plugin_Continue;
-}*/
+public void HookVent(const int ref)
+{
+	SDKHook(EntRefToEntIndex(ref), SDKHook_OnTakeDamage, OnEntTakeDamage);
+}
 
 public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (!bEnabled.BoolValue || !IsClientValid(victim) || !IsClientValid(attacker))
+	if (!bEnabled.BoolValue || !IsClientValid(victim) || attacker <= 0)
 		return Plugin_Continue;
 
 	JailFighter vict = JailFighter(victim);
@@ -606,7 +617,7 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 public Action OnEntTouch(int toucher, int touchee)
 {
-	if (!cvarTF2Jail[RebelAmmo].BoolValue || !IsClientValid(toucher))
+	if (!IsClientValid(toucher) || !IsValidEntity(touchee))
 		return Plugin_Continue;
 
 	JailFighter player = JailFighter(toucher);
@@ -620,21 +631,26 @@ public Action OnEntTouch(int toucher, int touchee)
 
 public Action OnEntTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (!cvarTF2Jail[VentHit].BoolValue || !IsClientValid(attacker))
+	if (!IsClientValid(attacker) || !IsValidEntity(victim))
 		return Plugin_Continue;
 
 	JailFighter player = JailFighter(attacker);
 	if (player.bIsFreeday)
 	{
 		player.RemoveFreeday();
-		PrintCenterTextAll("%N has broken a vent and lost their freeday!", attacker);
+		PrintCenterTextAll("%N has hit a vent and lost their freeday!", attacker);
 	}
 	return Plugin_Continue;
 }
 
 public Action EurekaTele(int client, const char[] strCommand, int args)
 {
-	if (!bEnabled.BoolValue || !IsClientValid(client))
+	if (!bEnabled.BoolValue || !IsPlayerAlive(client))
+		return Plugin_Continue;
+
+	float time = cvarTF2Jail[EurekaTimer].FloatValue;
+
+	if (time <= 0.0)
 		return Plugin_Continue;
 
 	JailFighter player = JailFighter(client);
@@ -646,7 +662,8 @@ public Action EurekaTele(int client, const char[] strCommand, int args)
 	}
 
 	player.bUnableToTeleport = true;
-	SetPawnTimer(EnableEureka, cvarTF2Jail[EurekaTimer].FloatValue, player.userid);
+	SetPawnTimer(EnableEureka, time, player.userid);
+
 	return Plugin_Continue;
 }
 
@@ -674,7 +691,7 @@ public void ParseMapConfig()
 			key.GetString("CellNames", CellNames, sizeof(CellNames));
 			if (strlen(CellNames) != 0)
 			{
-				int iCelldoors = Entity_FindByName(CellNames, "func_door");
+				int iCelldoors = FindEntity(CellNames, "func_door");
 				if (IsValidEntity(iCelldoors))
 				{
 					sCellNames = CellNames;
@@ -685,16 +702,16 @@ public void ParseMapConfig()
 			else gamemode.bIsMapCompatible = false;
 
 			key.GetString("CellsButton", CellsButton, sizeof(CellsButton));
-			if (strlen(CellsButton) != 0)
+			if (strlen(CellsButton))
 			{
-				int iCellOpener = Entity_FindByName(CellsButton, "func_button");
+				int iCellOpener = FindEntity(CellsButton, "func_button");
 				if (IsValidEntity(iCellOpener))
 					sCellOpener = CellsButton;
 			}
 			key.GetString("FFButton", ffButton, sizeof(ffButton));
-			if (strlen(ffButton) != 0)
+			if (strlen(ffButton))
 			{
-				int iFFButton = Entity_FindByName(ffButton, "func_button");
+				int iFFButton = FindEntity(ffButton, "func_button");
 				if (IsValidEntity(iFFButton))
 					sCellOpener = ffButton;
 			}
@@ -813,7 +830,9 @@ public bool AlreadyMuted(const int client)
 {
 	switch (gamemode.bSC)
 	{
+#if defined _sourcecomms_included
 		case true:return view_as<bool>(SourceComms_GetClientMuteType(client) != bNot);
+#endif
 		case false:return view_as<bool>(BaseComm_IsClientMuted(client));
 	}
 	return false;
@@ -821,21 +840,23 @@ public bool AlreadyMuted(const int client)
 
 public void EnableEureka(const int userid)
 {
-	JailFighter player = JailFighter(GetClientOfUserId(userid));
-	player.bUnableToTeleport = false;
+	JailFighter player = JailFighter(userid, true);
+	if (IsClientInGame(player.index))
+		player.bUnableToTeleport = false;
 }
 
 public void WelcomeMessage(const int userid)
 {
 	int client = GetClientOfUserId(userid);
-	CPrintToChat(client, "{red}[JailRedux]{tan} Welcome to TF2 Jailbreak Redux. Type \"!jhelp\" for help.");
+	if (IsClientInGame(client))
+		CPrintToChat(client, "{red}[JailRedux]{tan} Welcome to TF2 Jailbreak Redux. Type \"!jhelp\" for help.");
 }
 
 public void ResetDamage()
 {
 	for (int i = MaxClients; i; --i)
 	{
-		if (!IsClientValid(i))
+		if (!IsClientInGame(i))
 			continue;
 		SetEntProp(i, Prop_Data, "m_takedamage", 2, 1);
 	}
@@ -844,26 +865,28 @@ public void ResetDamage()
 public Action Timer_AimName(Handle hTimer)
 {
 	if (!bEnabled.BoolValue || !cvarTF2Jail[SeeNames].BoolValue)
-		return Plugin_Stop;
+		return Plugin_Continue;
 	
+	JailFighter player;
+	int target;
 	for (int i = MaxClients; i; --i)
 	{
-		if (!IsClientValid(i) || !IsPlayerAlive(i))
+		if (!IsClientInGame(i) || !IsPlayerAlive(i))
 			continue;
-		JailFighter player = JailFighter(i);
-		int target = GetClientAimTarget(player.index, true);
+		player = JailFighter(i);
+		target = GetClientAimTarget(i, true);
 		
 		if (!IsClientValid(target))
 			return Plugin_Continue;
 			
-		if (GetClientTeam(player.index) == GetClientTeam(target))
+		if (GetClientTeam(i) == GetClientTeam(target))
 			return Plugin_Continue;
 		
 		float flCpos[3], flTpos[3];
-		GetClientEyePosition(player.index, flCpos);
+		GetClientEyePosition(i, flCpos);
 		GetClientEyePosition(target, flTpos);
 		
-		if (CanSeeTarget(player.index, flCpos, target, flTpos, cvarTF2Jail[NameDistance].FloatValue) && player.bIsWarden)
+		if (CanSeeTarget(i, flCpos, target, flTpos, cvarTF2Jail[NameDistance].FloatValue) && player.bIsWarden)
 		{
 			if (TF2_IsPlayerInCondition(target, TFCond_Cloaked) // Cloak watches are removed but meh
 				|| TF2_IsPlayerInCondition(target, TFCond_DeadRingered)
@@ -872,20 +895,20 @@ public Action Timer_AimName(Handle hTimer)
 
 			SetHudTextParams(-1.0, 0.59, 0.4, 255, 100, 255, 255, 1);
 			if (cvarTF2Jail[SeeHealth].BoolValue)
-				ShowSyncHudText(player.index, AimHud, "%N [%d]", target, GetClientHealth(target));
-			else ShowSyncHudText(player.index, AimHud, "%N", target);
+				ShowSyncHudText(i, AimHud, "%N [%d]", target, GetClientHealth(target));
+			else ShowSyncHudText(i, AimHud, "%N", target);
 		}
 	}
 	return Plugin_Continue;
 }
 
-public int FindWarden()
+int FindWarden()
 {
 	if (gamemode.bWardenExists)
 	{
 		for (int i = MaxClients; i; --i)
 		{
-			if (!IsClientValid(i))
+			if (!IsClientInGame(i))
 				continue;
 			if (!JailFighter(i).bIsWarden)
 				continue;
@@ -911,7 +934,7 @@ public void ManageHealth(const int client)
 
 public void UnHorsemannify(const JailFighter player)
 {
-	if (IsClientValid(player.index))
+	if (IsClientInGame(player.index))
 		player.UnHorsemann();
 }
 
@@ -920,7 +943,7 @@ public void RandSniper(const int iTimer)
 	if (iTimer != gamemode.iRoundCount)
 		return;
 		
-	int rand = Client_GetRandom(CLIENTFILTER_ALIVE | CLIENTFILTER_NOBOTS);
+	int rand = GetRandomClient();
 
 	ForcePlayerSuicide(rand);
 	EmitSoundToAll(SuicideSound);
@@ -935,7 +958,7 @@ public void EndRandSniper(const int iTimer)
 	if (iTimer != gamemode.iRoundCount)
 		return;
 
-	int rand = Client_GetRandom(CLIENTFILTER_ALIVE | CLIENTFILTER_NOBOTS);
+	int rand = GetRandomClient();
 
 	ForcePlayerSuicide(rand);
 	EmitSoundToAll(SuicideSound);
@@ -988,7 +1011,7 @@ public void RemoveEnt(any data)
 
 public void _MusicPlay()
 {
-	if (!bEnabled.BoolValue || gamemode.iRoundState != StateRunning)
+	if (gamemode.iRoundState != StateRunning)
 		return;
 	
 	float currtime = GetGameTime();
@@ -1006,7 +1029,7 @@ public void _MusicPlay()
 		strcopy(BackgroundSong, PLATFORM_MAX_PATH, sound);
 		for (int i = MaxClients; i; --i) 
 		{
-			if (!IsClientValid(i))
+			if (!IsClientInGame(i))
 				continue;
 			JailFighter player = JailFighter(i);
 			if (player.bNoMusic)
@@ -1023,20 +1046,17 @@ public void StopBackGroundMusic()
 {
 	for (int i = MaxClients; i; --i) 
 	{
-		if (!IsClientValid(i))
-			continue;
-
-		StopSound(i, SNDCHAN_AUTO, BackgroundSong);
+		if (IsClientInGame(i))
+			StopSound(i, SNDCHAN_AUTO, BackgroundSong);
 	}
 }
 
 public bool CheckSet(const int client, const int iLRCount, const int iMax)
 {
-	JailFighter player = JailFighter(client);
 	if (iLRCount >= iMax)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} This LR has been picked the maximum amount of times for this map.");
-		player.ListLRS();
+		JailFighter(client).ListLRS();
 		//ListLastRequests(client);
 		return false;
 	}
@@ -1087,10 +1107,10 @@ public Action UnmuteReds(Handle hTimer)
 {
 	for (int i = MaxClients; i; --i)
 	{
-		if (IsClientValid(i) && TF2_GetClientTeam(i) == TFTeam_Red)
+		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Red)
 			JailFighter(i).UnmutePlayer();
-		PrintToConsole(i, "[JailRedux] Red team has been unmuted.");
 	}
+	PrintToConsoleAll("[JailRedux] Red team has been unmuted.");
 }
 
 public void Open_Doors(const int iTimer)
@@ -1099,8 +1119,7 @@ public void Open_Doors(const int iTimer)
 		return;
 
 	gamemode.DoorHandler(OPEN);
-	int time = cvarTF2Jail[DoorOpenTimer].IntValue;
-	CPrintToChatAll("{red}[JailRedux]{tan} The cell doors have opened after %i seconds of remaining closed.", time);
+	CPrintToChatAll("{red}[JailRedux]{tan} The cell doors have opened after %i seconds of remaining closed.", cvarTF2Jail[DoorOpenTimer].IntValue);
 	gamemode.bCellsOpened = true;
 }
 
@@ -1115,8 +1134,11 @@ public void EnableFFTimer(const int iTimer)
 
 public void FreeKillSystem(const JailFighter attacker)
 {	// Ghetto rigged freekill system, gives the info needed for sourcebans
-	if (gamemode.iRoundState != StateRunning || gamemode.iLRType == 19)
+	if (!IsClientValid(attacker.index))
 		return;
+	if (gamemode.iRoundState != StateRunning)
+		return;
+
 	float curtime = GetGameTime();
 	if ( curtime <= attacker.flKillSpree && TF2_GetClientTeam(attacker.index) == TFTeam_Blue )
 		attacker.iKillCount++;
@@ -1128,18 +1150,18 @@ public void FreeKillSystem(const JailFighter attacker)
 	{
 		GetClientIP(attacker.index, strIP, sizeof(strIP));
 		//GetClientAuthId(attacker.index, AuthId_Steam2, strID, sizeof(strID));
+
 		for (int i = MaxClients; i; --i)
 		{
-			if (!IsClientValid(i))
+			if (!IsClientInGame(i))
 				continue;
 				
-			JailFighter player = JailFighter(i);
-			if (player.bIsAdmin)
+			if (JailFighter(i).bIsAdmin)
 				PrintToConsole(i, "**********\n%L\nIP:%s\n**********", attacker.index, strID, strIP);
 		}
 		attacker.iKillCount = 0;
 	}
-	else attacker.flKillSpree = curtime + 10;
+	else attacker.flKillSpree = curtime + 15;
 }
 
 // Props to Nergal!!!

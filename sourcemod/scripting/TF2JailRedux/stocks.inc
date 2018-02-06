@@ -1,5 +1,5 @@
-public char extensions[][] = { ".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd", ".phy" };
-public char extensionsb[2][5] = { ".vtf", ".vmt" };
+stock char extensions[][] = { ".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd", ".phy" };
+stock char extensionsb[2][5] = { ".vtf", ".vmt" };
 
 stock int GetHealingTarget(const int client)
 {
@@ -906,16 +906,35 @@ stock bool ValidateName(const char[] name)
 	// A name is, of course, only valid if it's 1 or more chars long, though longer is recommended
 	return (length > 0);
 }
-stock int GetRandomPlayer(int team)  
+stock int GetRandomPlayer(int team, bool alive = false)  
 {  
-    int[] clients = new int[MaxClients];  
-    int clientCount;  
-    for (int i = 1; i <= MaxClients; i++)  
-    {  
-        if (IsClientInGame(i) && GetClientTeam(i) == team) 
-            clients[clientCount++] = i;  
-    }  
-    return (clientCount == 0) ? -1 : clients[GetRandomInt(0, clientCount - 1)];  
+	int[] clients = new int[MaxClients];  
+	int clientCount;  
+	for (int i = MaxClients; i; --i)  
+	{
+		if (!IsClientInGame(i))
+			continue;
+		if (GetClientTeam(i) != team) 
+			continue;
+		if (alive && !IsPlayerAlive(i))
+			continue;
+		clients[clientCount++] = i;  
+	}  
+	return (clientCount == 0) ? -1 : clients[GetRandomInt(0, clientCount - 1)];  
+}
+stock int GetRandomClient(bool alive = true)
+{
+	int[] clients = new int[MaxClients];
+	int clientCount;
+	for (int i = MaxClients; i; --i)
+	{
+		if (!IsClientInGame(i))
+			continue;
+		if (alive && !IsPlayerAlive(i))
+			continue;
+		clients[clientCount++] = i;
+	}  
+	return (clientCount == 0) ? -1 : clients[GetRandomInt(0, clientCount - 1)];  
 }
 stock void SetControlPoint(const bool enable)
 {
@@ -1269,4 +1288,35 @@ stock void OverNineThousand()
 {
 	EmitSoundToAll("saxton_hale/9000.wav");
 	EmitSoundToAll("saxton_hale/9000.wav");
+}
+// From smlib
+stock int FindEntity(const char[] name, const char[] className = "")
+{
+	char strName[64];
+	if (className[0] == '\0') 
+	{
+		// Hack: Double the limit to gets none-networked entities too.
+		int realMaxEntities = GetMaxEntities() * 2;
+		for (int i = 0; i < realMaxEntities; i++) 
+		{
+			
+			if (!IsValidEntity(i))
+				continue;
+
+			GetEntPropString(i, Prop_Data, "m_iName", strName, 64);			
+			if (StrEqual(strName, name))
+				return i;
+		}
+	}
+	else 
+	{
+		int entity = -1;
+		while ((entity = FindEntityByClassname(entity, className)) != -1) 
+		{
+			GetEntPropString(entity, Prop_Data, "m_iName", strName, 64);
+			if (StrEqual(strName, name))
+				return entity;
+		}
+	}
+	return -1;
 }

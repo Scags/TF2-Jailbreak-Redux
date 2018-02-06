@@ -26,7 +26,7 @@ enum /** LRs **/
 {
 	// RegularGameplay = -1,
 	Suicide = 0,	//
-	Custom = 1,		// These 2 shouldn't register with gameplay orientation and are kept out of randlr, -1 is regular gameplay btw
+	Custom = 1,		// These 2 shouldn't register with gameplay orientation and are kept out of randlr
 	FreedaySelf = 2,
 	FreedayOther = 3,
 	FreedayAll = 4,
@@ -117,15 +117,14 @@ public void ManageDownloads()
 	PrecacheSound(TinySound, true);
 	PrecacheSound(NO, true);
 
-	// PrepareSound(WardaySound);
-	// Call_OnDownloads();
+	Call_OnDownloads();
 }
 /**
  *	Called on map start again but this time for the starting lr count
 */
 public void LRMapStartVariables()
 {
-	for (int i = 0; i < LRMAX; i++)
+	for (int i = 0; i <= LRMAX; i++)
 		arrLRS[i] = 0;
 }
 /** 
@@ -164,17 +163,17 @@ public void AddLRToMenu(Menu & menu)
 	char strID[4];
 	int iMax;
 
-	menu.AddItem("0", "Random LR");
+	menu.AddItem("-1", "Random LR");
 	for (int i = 0; i < sizeof(strLRNames); i++)	// Can also do '<= LRMAX' but either way is fine
 	{
 		iMax = LR_DEFAULT;	// 5
 		// if (i == 2)	// If you want a certain last request to have a different max, do something like this
 			// iMax = 3;
 		Format(strName, sizeof(strName), "%s (%i/%i)", strLRNames[i][0], arrLRS[i], iMax);
-		Format(strID, sizeof(strID), "%i", i+1);	// Bleh, also +1 because of the random LR
+		IntToString(i, strID, sizeof(strID));
 		menu.AddItem(strID, strName, arrLRS[i] >= iMax ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
 	}
-	//Call_OnMenuAdd(menu);
+	Call_OnMenuAdd(menu);	// According to this, you have to have your sub-plugin LR as the last in the enum, always
 }
 /**
  *	Add a 'short' description to your last request for the !listlrs command
@@ -195,6 +194,8 @@ public void AddLRToPanel(Panel& panel)
 	panel.DrawItem("Warday- Team Deathmatch");
 	panel.DrawItem("Class Wars- Warday but it's class versus class");
 	panel.DrawItem("Versus Saxton Hale- A nice round of VSH");
+
+	Call_OnPanelAdd(panel);
 }
 /** 
  *	Called when player is given lr and is selecting. Place your lr under the MenuAction_Select case
@@ -205,16 +206,17 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 	if (!IsClientValid(client) || !IsPlayerAlive(client))
 		return;
 		
-	JailFighter base = JailFighter(client);
 	switch (action)
 	{
 		case MenuAction_Select:
 		{
+			JailFighter base = JailFighter(client);
+			char strIndex[4]; menu.GetItem(select, strIndex, sizeof(strIndex));
 			if (cvarTF2Jail[RemoveFreedayOnLR].BoolValue)
 			{
 				for (int i = MaxClients; i; --i)
 				{
-					if (!IsClientValid(i) || !JailFighter(i).bIsFreeday)
+					if (!IsClientInGame(i) || !JailFighter(i).bIsFreeday)
 						continue;
 					JailFighter(i).RemoveFreeday();
 				}
@@ -222,9 +224,9 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			}
 			gamemode.bIsLRInUse = true;
 			
-			switch (select)
+			switch (StringToInt(strIndex))
 			{
-				case 0:	// Random
+				case -1:	// Random
 				{
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen a {default}Random Last Request{tan} as their last request!", client);
 					int randlr = GetRandomInt(2, LRMAX);
@@ -235,11 +237,11 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					else if (randlr == FreedayOther)
 					{
 						for (int i = 0; i < 3; i++)
-							JailFighter( Client_GetRandom(CLIENTFILTER_TEAMONE | CLIENTFILTER_NOBOTS) ).bIsQueuedFreeday = true;
+							JailFighter( GetRandomPlayer(RED) ).bIsQueuedFreeday = true;
 					}
 					return;
 				}
-				case (Suicide+1):
+				case Suicide:
 				{
 					if (!CheckSet(client, arrLRS[Suicide], LR_DEFAULT))
 						return;
@@ -248,7 +250,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[Suicide]++;
 					return;
 				}
-				case (Custom+1):
+				case Custom:
 				{
 					if (!CheckSet(client, arrLRS[Custom], LR_DEFAULT))
 						return;
@@ -258,7 +260,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					base.iCustom = base.userid;
 					return;
 				}
-				case (FreedaySelf+1):
+				case FreedaySelf:
 				{
 					if (!CheckSet(client, arrLRS[FreedaySelf], LR_DEFAULT))
 						return;
@@ -268,7 +270,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[FreedaySelf]++;
 					return;
 				}
-				case (FreedayOther+1):
+				case FreedayOther:
 				{
 					if (!CheckSet(client, arrLRS[FreedayOther], LR_DEFAULT))
 						return;
@@ -278,7 +280,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[FreedayOther]++;
 					return;
 				}
-				case (FreedayAll+1):
+				case FreedayAll:
 				{
 					if (!CheckSet(client, arrLRS[FreedayAll], LR_DEFAULT))
 						return;
@@ -287,7 +289,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[FreedayAll]++;
 					return;
 				}
-				case (GuardMelee+1):
+				case GuardMelee:
 				{
 					if (!CheckSet(client, arrLRS[GuardMelee], LR_DEFAULT))
 						return;
@@ -296,7 +298,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[GuardMelee]++;
 					return;
 				}
-				case (HHHDay+1):
+				case HHHDay:
 				{
 					if (!CheckSet(client, arrLRS[HHHDay], LR_DEFAULT))
 						return;
@@ -305,7 +307,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[HHHDay]++;
 					return;
 				}
-				case (TinyRound+1):
+				case TinyRound:
 				{
 					if (!CheckSet(client, arrLRS[TinyRound], LR_DEFAULT))
 						return;
@@ -314,7 +316,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[TinyRound]++;
 					return;
 				}
-				case (HotPrisoner+1):
+				case HotPrisoner:
 				{
 					if (!CheckSet(client, arrLRS[HotPrisoner], LR_DEFAULT))
 						return;
@@ -323,7 +325,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[HotPrisoner]++;
 					return;
 				}
-				case (Gravity+1):
+				case Gravity:
 				{
 					if (!CheckSet(client, arrLRS[Gravity], LR_DEFAULT))
 						return;
@@ -332,7 +334,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[Gravity]++;
 					return;
 				}
-				case (RandomKill+1):
+				case RandomKill:
 				{
 					if (!CheckSet(client, arrLRS[RandomKill], LR_DEFAULT))
 						return;
@@ -341,7 +343,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[RandomKill]++;
 					return;
 				}
-				case (Warday+1):
+				case Warday:
 				{
 					if (!CheckSet(client, arrLRS[Warday], LR_DEFAULT))
 						return;
@@ -350,7 +352,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[Warday]++;
 					return;
 				}
-				case (ClassWars+1):
+				case ClassWars:
 				{
 					if (!CheckSet(client, arrLRS[ClassWars], LR_DEFAULT))
 						return;
@@ -359,7 +361,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[ClassWars]++;
 					return;
 				}
-				case (VSH+1):
+				case VSH:
 				{
 					if (!CheckSet(client, arrLRS[VSH], LR_DEFAULT))
 						return;
@@ -382,6 +384,7 @@ public void ManageHUDText()
 	char strHudName[128];
 	switch (gamemode.iLRType)
 	{
+		case -1: {	}
 		//case FreedaySelf, FreedayOther:Format(strHudName, sizeof(strHudName), "");	// Should be blank
 		case Custom:		strcopy(strHudName, sizeof(strHudName), strCustomLR);
 		case FreedayAll:	Format(strHudName, sizeof(strHudName), "Freeday For All");
@@ -394,11 +397,198 @@ public void ManageHUDText()
 		case Warday:		Format(strHudName, sizeof(strHudName), "Warday");
 		case ClassWars:		Format(strHudName, sizeof(strHudName), "Class Warfare");
 		case VSH:			Format(strHudName, sizeof(strHudName), "Versus Saxton Hale");
-		default: {	}
 	}
+	Call_OnLRTextHud(strHudName);
+
 	if (strHudName[0] != '\0')
 		SetTextNode(hTextNodes[1], strHudName, EnumTNPS[1][fCoord_X], EnumTNPS[1][fCoord_Y], EnumTNPS[1][fHoldTime], EnumTNPS[1][iRed], EnumTNPS[1][iGreen], EnumTNPS[1][iBlue], EnumTNPS[1][iAlpha], EnumTNPS[1][iEffect], EnumTNPS[1][fFXTime], EnumTNPS[1][fFadeIn], EnumTNPS[1][fFadeOut]);
-	// Call_OnLRTextHud();
+}
+/**
+ *	Called directly when a player spawns, be sure to note iRoundState(s) if being specific
+*/
+public void ManageSpawn(const JailFighter base, Event event)
+{
+	int client = base.index;
+	switch (TF2_GetClientTeam(client))
+	{
+		case TFTeam_Red:
+		{
+			switch (TF2_GetPlayerClass(client))
+			{
+				case TFClass_Scout:TF2Attrib_SetByDefIndex(client, 49, 1.0);
+				case TFClass_Pyro:TF2Attrib_SetByDefIndex(client, 823, 1.0);
+			}
+	
+			if (!base.bIsVIP && gamemode.iRoundState == StateRunning)
+				base.MutePlayer();
+			else base.UnmutePlayer();
+					
+			if (base.bIsQueuedFreeday)
+			{
+				base.GiveFreeday();
+				base.TeleportToPosition(FREEDAY);
+			}
+		}
+		case TFTeam_Blue:
+		{
+			base.UnmutePlayer();
+			switch (TF2_GetPlayerClass(client))
+			{
+				case TFClass_Scout:TF2Attrib_SetByDefIndex(client, 49, 1.0);
+				case TFClass_Pyro:TF2Attrib_SetByDefIndex(client, 823, 1.0);
+			}
+			base.bIsQueuedFreeday = false;
+
+			if (cvarTF2Jail[CritFallOff].BoolValue)	// Does this even work lmao
+				TF2Attrib_SetByDefIndex(client, 868, 1.0);
+		}
+	}
+	if (gamemode.bIsWarday)
+		base.TeleportToPosition(GetClientTeam(client));	// Enum value is the same as team value, so we can cheat it
+
+	Call_OnPlayerSpawned(base, event);
+}
+/**
+ *	Manage each player just after spawn
+ *	gamemode.iLRType is initialized beforehand, so we can switch it if needed
+*/
+public void PrepPlayer(const int userid)
+{
+	JailFighter base = JailFighter(userid, true);
+	int client = base.index;
+	if (!IsPlayerAlive(client))
+		return;
+
+	int len = hWeaponList.Length, i, index, wep;
+	TFClassType class = TF2_GetPlayerClass(client);
+	char strClassName[64];
+	if (len)
+	{
+		int u;
+		bool active;
+		for (i = 0; i < 3; i++)	// Prepare for wicked laziness and hacky coding
+		{
+			wep = GetIndexOfWeaponSlot(client, i);
+			for (u = 0; u < len; u++)
+			{
+				if (wep != hWeaponList.Get(u))
+					continue;
+				active = true;
+			}
+
+			if (!active)
+				continue;
+
+			switch (class)
+			{
+				case TFClass_Scout:
+				{
+					strClassName = (!i ? "tf_weapon_scattergun" : (i == 1 ? "tf_weapon_pistol" : "tf_weapon_bat"));
+					index = (!i ? 13 : (i == 1 ? 23 : 0));
+				}
+				case TFClass_Soldier:
+				{
+					strClassName = (!i ? "tf_weapon_rocketlauncher" : (i == 1 ? "tf_weapon_shotgun" : "tf_weapon_shovel"));
+					index = (!i ? 18 : (i == 1 ? 10 : 6));
+				}
+				case TFClass_Pyro:
+				{
+					strClassName = (!i ? "tf_weapon_flamethrower" : (i == 1 ? "tf_weapon_shotgun" : "tf_weapon_fireaxe"));
+					index = (!i ? 21 : (i == 1 ? 12 : 2));
+				}
+				case TFClass_DemoMan:
+				{
+					strClassName = (!i ? "tf_weapon_grenadelauncher" : (i == 1 ? "tf_weapon_pipebomblauncher" : "tf_weapon_bottle"));
+					index = (!i ? 19 : (i == 1 ? 20 : 1));
+				}
+				case TFClass_Heavy:
+				{
+					strClassName = (!i ? "tf_weapon_minigun" : (i == 1 ? "tf_weapon_shotgun" : "tf_weapon_fists"));
+					index = (!i ? 15 : (i == 1 ? 11 : 5));
+				}
+				case TFClass_Engineer:
+				{
+					strClassName = (!i ? "tf_weapon_shotgun" : (i == 1 ? "tf_weapon_shotgun" : "tf_weapon_wrench"));
+					index = (!i ? 9 : (i == 1 ? 22 : 7));
+				}
+				case TFClass_Medic:
+				{
+					strClassName = (!i ? "tf_weapon_syringegun_medic" : (i == 1 ? "tf_weapon_medigun" : "tf_weapon_bonesaw"));
+					index = (!i ? 17 : (i == 1 ? 29 : 8));
+				}
+				case TFClass_Sniper:
+				{
+					strClassName = (!i ? "tf_weapon_sniperrifle" : (i == 1 ? "tf_weapon_smg" : "tf_weapon_club"));
+					index = (!i ? 14 : (i == 1 ? 16 : 3));
+				}
+				case TFClass_Spy:
+				{
+					strClassName = (!i ? "tf_weapon_revolver" : (i == 1 ? "tf_weapon_builder" : "tf_weapon_knife"));
+					index = (!i ? 24 : (i == 1 ? 735 : 4));
+				}
+			}
+
+			TF2_RemoveWeaponSlot(client, i);
+			base.SpawnWeapon(strClassName, index, 1, 0, "");	// That was fun, let's do it again but with wearables
+		}
+	}
+
+	len = hWearableList.Length;
+	if (len)
+	{	// FORTUNATELY, there are only a few wearables per class so we can do a cleaner? switch statement
+		int[] prepwep = new int[1];
+		for (i = 0; i < len; i++)
+		{
+			prepwep[0] = hWearableList.Get(i);
+			switch (prepwep[0])
+			{
+				case 133, 444:
+				{
+					wep = 10;
+					strClassName = "tf_weapon_shotgun";
+				}
+				case 405, 608:
+				{
+					wep = 19;
+					strClassName = "tf_weapon_grenadelauncher";
+				}
+				case 131, 406:
+				{
+					wep = 20;
+					strClassName = "tf_weapon_pipebomblauncher";
+				}
+				case 203, 231, 642:
+				{
+					wep = 16;
+					strClassName = "tf_weapon_smg";
+				}
+				default:wep = 0;	// "False" because then they aren't a weapon(slot)
+			}
+			if ( IsValidEntity(FindPlayerBack(client, prepwep, 1)) )
+				RemovePlayerBack(client, prepwep, 1);
+			if (wep)
+				base.SpawnWeapon(strClassName, wep, 1, 0, "");
+		}
+	}
+
+	TF2_RemoveWeaponSlot(client, TFWeaponSlot_PDA);
+	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
+	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Grenade);
+	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item1);
+	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item2);
+
+	if (GetClientTeam(client) == BLU)
+	{
+		if (AlreadyMuted(client) && gamemode.iLRType != VSH && cvarTF2Jail[DisableBlueMute].BoolValue)
+		{
+			base.ForceTeamChange(RED);
+			EmitSoundToClient(client, NO);
+			CPrintToChat(client, "{red}[JailRedux]{tan} You are muted, therefore you cannot join Blue team.");
+		}
+	}
+	base.EmptyWeaponSlots();	// We call this last so the spawned weapons are registered with the function
+
+	Call_OnPlayerPrepped(base);
 }
 /**
  *	Calls on lr round start for each living player
@@ -499,7 +689,7 @@ public void ManageRoundStart()
 		case RandomKill:
 		{
 			CPrintToChatAll("{tan}Look out! Sniper!");
-			ForcePlayerSuicide( Client_GetRandom(CLIENTFILTER_ALIVE) );	// Lol rip, no fun for this guy
+			ForcePlayerSuicide( GetRandomClient() );	// Lol rip, no fun for this guy
 			EmitSoundToAll(SuicideSound);
 			SetPawnTimer(RandSniper, GetRandomFloat(30.0, 60.0), gamemode.iRoundCount);
 		}
@@ -515,7 +705,7 @@ public void ManageRoundStart()
 			int iClassBLU = arrClass[GetRandomInt(0, 7)];
 			for (int i = MaxClients; i; --i)
 			{
-				if (!IsClientValid(i) || !IsPlayerAlive(i))
+				if (!IsClientInGame(i) || !IsPlayerAlive(i))
 					continue;
 
 				if (GetClientTeam(i) == RED)
@@ -565,7 +755,7 @@ public void ManageOnRoundEnd(Event event)
 			EmitSoundToAll(DEATHVO);
 			EmitSoundToAll(DEATHVO2);
 		}
-		case Gravity:FindConVar("sv_gravity").SetInt(800);	//ServerCommand("sm_cvar sv_gravity 800");
+		case Gravity:FindConVar("sv_gravity").SetInt(800);
 		case HotPrisoner:EmitSoundToAll(Extinguish);
 		case RandomKill:SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), gamemode.iRoundCount);
 		default: {	}
@@ -599,7 +789,7 @@ public void CriticalEnable()
 */
 public void ManageCells()
 {
-	switch(gamemode.iLRType)
+	switch (gamemode.iLRType)
 	{
 		case FreedayAll, 
 			TinyRound, 
@@ -607,34 +797,20 @@ public void ManageCells()
 			Warday, 
 			ClassWars
 			:gamemode.DoorHandler(OPEN);
-		default: {	}
 		/*case example:gamemode.DoorHandler(OPEN or CLOSE or LOCK or UNLOCK);*/
-	}
-}
-/**
- *	Kills weapons for team/player
-*/
-public void KillWeapons(const JailFighter player)
-{	
-	if (TF2_GetClientTeam(player.index) == TFTeam_Red)
-		player.EmptyWeaponSlots();
-
-	switch (gamemode.iLRType)
-	{
 		default: {	}
 	}
-	/** IF YOU NEED A MORE SPECIFIC WEAPON CONFIGURATION, IGNORE AND USE 'ManageWeaponStatus' INSTEAD **/
 }
 /**
  *	If you want something specific to happen to warden on get, stick it here
 */
-public void ManageWarden(const JailFighter player)
+public void ManageWarden(const JailFighter base)
 {
 	switch (gamemode.iLRType)
 	{
 		default: {	}
 	}
-	Call_OnWardenGet(player);
+	Call_OnWardenGet(base);
 }
 /**
  *	Called on model collision between players, Red player in this case is the 'toucher'
@@ -666,69 +842,6 @@ public void ManageFFTimer()
 		:SetPawnTimer(EnableFFTimer, 10.0, gamemode.iRoundCount);
 		default: {	}
 	}
-}
-/**
- *	Weapon configuration, more specific than KillWeapons
-*/
-public void ManageWeaponStatus(const JailFighter player)
-{
-	int client = player.index;
-	int _1wep = GetIndexOfWeaponSlot(client, TFWeaponSlot_Primary);
-	int _2wep = GetIndexOfWeaponSlot(client, TFWeaponSlot_Secondary);
-	int _3wep = GetIndexOfWeaponSlot(client, TFWeaponSlot_Melee);
-	//int _4wep = GetIndexOfWeaponSlot(client, TFWeaponSlot_PDA);
-
-	switch (_1wep)
-	{
-		case 220:
-		{
-			TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
-			if (TF2_GetClientTeam(client) == TFTeam_Blue)
-				player.SpawnWeapon("tf_weapon_scattergun", 13, 1, 0, "");
-		}
-	}
-	switch (_2wep)
-	{
-		case 36, 767, 222, 1121:
-		{
-			TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-			if (TF2_GetClientTeam(client) == TFTeam_Blue)
-				player.SpawnWeapon("tf_weapon_pistol", 23, 1, 0, "");
-		}
-		case 1179, 58, 1083:
-		{
-			if (TF2_GetClientTeam(client) == TFTeam_Red)
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-		}
-		case 1180:
-		{
-			TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-			if (TF2_GetClientTeam(client) == TFTeam_Blue)
-				player.SpawnWeapon("tf_weapon_shotgun_pyro", 12, 1, 0, "");
-		}
-	}
-	switch (_3wep)
-	{
-		case 225, 574:
-		{
-			TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
-			player.SpawnWeapon("tf_weapon_knife", 4, 1, 0, "");
-		}
-	}
-	
-	/*if (TF2_GetClientTeam(client) == TFTeam_Red)
-	{
-		switch (_2wep)
-		{
-			case 1179:TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-		}
-	}*/
-
-	TF2_RemoveWeaponSlot(client, TFWeaponSlot_PDA);
-	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
-	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Grenade);
-	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item1);
-	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item2);
 }
 /**
  *	Register what happens when a player receives a TFCond condition
@@ -804,14 +917,14 @@ public Action SoundHook(int clients[64], int & numClients, char sample[PLATFORM_
 	if (!bEnabled.BoolValue  || !IsValidClient(entity))
 		return Plugin_Continue;
 		
-	JailFighter player = JailFighter(entity);
+	JailFighter base = JailFighter(entity);
 	switch (gamemode.iLRType)
 	{
 		case HHHDay:
 		{
-			if (!strncmp(sample, "vo", 2, false) && player.bIsHHH)
+			if (!strncmp(sample, "vo", 2, false) && base.bIsHHH)
 				return Plugin_Handled;
-			if (strncmp(sample, "player/footsteps/", 17, false) != -1 && player.bIsHHH)
+			if (strncmp(sample, "player/footsteps/", 17, false) != -1 && base.bIsHHH)
 			{
 				if (StrContains(sample, "1.wav", false) != -1 || StrContains(sample, "3.wav", false) != -1) 
 					sample = LEFTFOOT;
@@ -845,19 +958,19 @@ public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victi
 */
 public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	JailFighter player = JailFighter(attacker);
 
 	switch (gamemode.iLRType)
 	{
 		default:
 		{
-			if (player.bIsFreeday)
+			JailFighter base = JailFighter(attacker);
+			if (base.bIsFreeday)
 			{	// Registers with Razorbacks ^^
-				player.RemoveFreeday();
+				base.RemoveFreeday();
 				PrintCenterTextAll("%N has attacked a guard and lost their freeday!", attacker);
 			}
 		
-			if (victim.bIsFreeday && !player.bIsWarden)
+			if (victim.bIsFreeday && !base.bIsWarden)
 			{
 				damage = 0.0;
 				return Plugin_Changed;
@@ -881,9 +994,33 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 */
 public void ManagePlayerDeath(const JailFighter attacker, const JailFighter victim, Event event)
 {
-	FreeKillSystem(attacker);
+	if (gamemode.iLRType != VSH)
+		FreeKillSystem(attacker);
+
 	TF2Attrib_RemoveAll(victim.index);
 	SetPawnTimer(CheckLivingPlayers, 0.2);
+
+	if (victim.bIsFreeday)
+		victim.RemoveFreeday();
+
+	victim.MutePlayer();
+
+	if (victim.iCustom > 0)
+		victim.iCustom = 0;
+		
+	if (victim.bIsWarden)
+	{
+		victim.WardenUnset();
+		gamemode.bWardenExists = false;
+		if (gamemode.iRoundState == StateRunning)
+		{
+			if (cvarTF2Jail[WardenTimer].IntValue != 0)
+			{
+				int iTimer = gamemode.iRoundCount;
+				SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, iTimer);
+			}
+		}
+	}
 
 	switch (gamemode.iLRType)
 	{
@@ -898,10 +1035,7 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 		case RandomKill:
 		{
 			if (!attacker)
-			{
 				EmitSoundToAll(SuicideSound);
-				event.SetString("weapon", "sniperrifle");
-			}
 		}
 		case VSH: {	}
 		default:
@@ -911,6 +1045,41 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 		}
 	}
 	Call_OnPlayerDied(attacker, victim, event);
+}
+/**
+ *	Whenever a player dies POST, this is called
+*/
+public void CheckLivingPlayers()
+{
+	if (gamemode.iRoundState < StateRunning)
+		return;
+
+	switch (gamemode.iLRType)
+	{
+		case VSH: {	}	// 'One guard left' is pointless during this round along with freedays
+		default:
+		{
+			if (GetLivingPlayers(BLU) == 1)
+			{
+				if (cvarTF2Jail[RemoveFreedayOnLastGuard].BoolValue)
+				{
+					JailFighter base;
+					for (int i = MaxClients; i; --i)
+					{
+						base = JailFighter(i);
+						if (IsClientInGame(i) && base.bIsFreeday)
+							base.RemoveFreeday();
+					}
+				}
+				
+				if (!gamemode.bOneGuardLeft)
+				{
+					gamemode.bOneGuardLeft = true;
+					PrintCenterTextAll("One guard left...");
+				}
+			}
+		}
+	}
 }
 /**
  *	Sticking this in Handler just in case someone wants to be incredibly specific with their lr 
@@ -925,7 +1094,7 @@ public void ManageEntityCreated(int ent, const char[] strClassName)
 		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
 		//CreateTimer(0.1, RemoveEnt, EntIndexToEntRef(ent));
 	
-	if (StrContains(strClassName, "rune")!= - 1)	// oWo what's this?
+	if (StrContains(strClassName, "rune") != - 1)	// oWo what's this?
 		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
 		//CreateTimer(0.1, RemoveEnt, EntIndexToEntRef(ent));
 	
@@ -935,107 +1104,43 @@ public void ManageEntityCreated(int ent, const char[] strClassName)
 		AcceptEntityInput(entity, "kill");
 		return;
 	}*/
-	/*if ( StrEqual(strClassName, "item_ammopack_full")
+	if ( StrEqual(strClassName, "item_ammopack_full")
 		|| StrEqual(strClassName, "item_ammopack_medium")
 		|| StrEqual(strClassName, "item_ammopack_small")
-		|| StrEqual(strClassName, "tf_ammo_pack") )
+		|| StrEqual(strClassName, "tf_ammo_pack")
+		&& cvarTF2Jail[RebelAmmo].BoolValue)
 	{
 		if (IsValidEntity(ent))
-			HookSingleEntityOutput(ent, "OnPlayerTouch", OnPlayerTouch, true);
+			RequestFrame(HookAmmo, EntIndexToEntRef(ent));
 	}
-	if (StrEqual(strClassName, "func_breakable"))
+	if (StrEqual(strClassName, "func_breakable") && cvarTF2Jail[VentHit].BoolValue)
 	{
 		if (IsValidEntity(ent))
-			HookSingleEntityOutput(ent, "OnBreak", VentTouch, true);
-	}*/
+			RequestFrame(HookVent, EntIndexToEntRef(ent));
+	}
 }
 /**
- *	Called directly when a player spawns, be sure to note iRoundState(s) if being specific
+ *	Self explanatory, set the gamemode.iTimeLeft to whatever time (in seconds) you desire
 */
-public void ManageSpawn(const JailFighter player, Event event)
+public void ManageTimeLeft()
 {
-	switch (TF2_GetClientTeam(player.index))
-	{
-		case TFTeam_Red:
-		{
-			switch (TF2_GetPlayerClass(player.index))
-			{
-				case TFClass_Scout:TF2Attrib_SetByDefIndex(player.index, 49, 1.0);
-				case TFClass_Pyro:TF2Attrib_SetByDefIndex(player.index, 823, 1.0);
-			}
-	
-			if (!player.bIsVIP && gamemode.iRoundState == StateRunning)
-				player.MutePlayer();
-			else player.UnmutePlayer();
-					
-			if (player.bIsQueuedFreeday)
-			{
-				player.GiveFreeday();
-				player.TeleportToPosition(FREEDAY);
-			}
-
-			if (gamemode.bIsWarday)
-				player.TeleportToPosition(WRED);
-
-			player.RedEquip();
-		}
-		case TFTeam_Blue:
-		{
-			player.UnmutePlayer();
-			switch (TF2_GetPlayerClass(player.index))
-			{
-				case TFClass_Scout:TF2Attrib_SetByDefIndex(player.index, 49, 1.0);
-				case TFClass_Pyro:TF2Attrib_SetByDefIndex(player.index, 823, 1.0);
-			}
-			if (gamemode.bIsWarday)
-				player.TeleportToPosition(WBLU);
-			player.BlueEquip();
-			player.bIsQueuedFreeday = false;
-
-			if (cvarTF2Jail[CritFallOff].BoolValue)
-				TF2Attrib_SetByDefIndex(player.index, 868, 1.0);
-		}
-	}
-
 	switch (gamemode.iLRType)
 	{
-		default: {	}
+		default:gamemode.iTimeLeft = cvarTF2Jail[RoundTime].IntValue;
 	}
-	Call_OnPlayerSpawned(player, event);
+	Call_OnManageTimeLeft();
 }
-/** 
- *	Determines if player attack is to be critical
-*/
-/*public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool & result)
-{
-	if (!bEnabled.BoolValue)
-		return Plugin_Continue;
-	switch (gamemode.iLRType)
-	{
-		default:
-		{
-			for (int i = MaxClients; i; --i)
-			{	// Crits shouldn't exist for Red Team, in my opinion at least
-				if (TF2_IsPlayerCritBuffed(i) && TF2_GetClientTeam(i) == TFTeam_Red)
-					return Plugin_Continue;
-				result = false;
-				return Plugin_Changed;
-			}
-		}
-	}
-	return Plugin_Continue;
-}*/
 /**
  *	Unique to the player Custom lr, formats the public char sCustomLR
 */
 public void OnClientSayCommand_Post(int client, const char[] sCommand, const char[] cArgs)
 {
-	JailFighter player = JailFighter(client);
-	if (player.iCustom > 0)
+	JailFighter base = JailFighter(client);
+	if (base.iCustom > 0)
 	{
 		strcopy(strCustomLR, sizeof(strCustomLR), cArgs);
 		CPrintToChat(client, "{red}[JailRedux]{tan} Your custom last request is {green}%s", strCustomLR);
-		player.iCustom = 0;
+		base.iCustom = 0;
 	}
 }
 /** 
@@ -1085,63 +1190,18 @@ public void ManageUberDeployed(const JailFighter patient, const JailFighter medi
 	Call_OnUberDeployed(patient, medic, event);
 }
 /**
- *	Self explanatory, set the gamemode.iTimeLeft to whatever time (in seconds) you desire
-*/
-public void ManageTimeLeft()
-{
-	switch (gamemode.iLRType)
-	{
-		default:gamemode.iTimeLeft = cvarTF2Jail[RoundTime].IntValue;
-	}
-	Call_OnManageTimeLeft();
-}
-/**
  *	Music that can play during your LR, use the commented example as reference. Don't forget that "time" is in seconds
 */
 public void ManageMusic(char song[PLATFORM_MAX_PATH], float & time)
 {
 	switch (gamemode.iLRType)
 	{
-		default: { song = ""; time = -1.0; }
 		/* case example:
 		{
 			song = "SomeBadassSong.mp3";
 			time = 9001.0;
 		}*/
+		default: { song = ""; time = -1.0; }
 	}
 	Call_OnMusicPlay(song, time);
-}
-/**
- *	Whenever a player dies, this is called
-*/
-public void CheckLivingPlayers()
-{
-	if (gamemode.iRoundState < StateRunning)
-		return;
-
-	switch (gamemode.iLRType)
-	{
-		case VSH: {	}	// 'One guard left' is pointless during this round along with freedays
-		default:
-		{
-			if (GetLivingPlayers(BLU) == 1)
-			{
-				if (cvarTF2Jail[RemoveFreedayOnLastGuard].BoolValue)
-				{
-					for (int i = MaxClients; i; --i)
-					{
-						JailFighter player = JailFighter(i);
-						if (IsClientValid(player.index) && player.bIsFreeday)
-							player.RemoveFreeday();
-					}
-				}
-				
-				if (!gamemode.bOneGuardLeft)
-				{
-					gamemode.bOneGuardLeft = true;
-					PrintCenterTextAll("One guard left...");
-				}
-			}
-		}
-	}
 }
