@@ -48,7 +48,6 @@
 #pragma newdecls 			required
 
 #define PLYR				MAXPLAYERS+1 
-#define toggle(%1)			(%1) = !(%1)
 #define UNASSIGNED 			0
 #define NEUTRAL 			0
 #define SPEC 				1
@@ -92,7 +91,8 @@ enum	// Cvar name
 // If adding new cvars put them above Version in the enum
 ConVar cvarTF2Jail[Version + 1],
 	   bEnabled = null,
-	   hEngineConVars[2];
+	   hEngineConVars[2]
+	   ;
 
 Handle hTextNodes[4],
 	   AimHud,
@@ -102,9 +102,8 @@ Handle hTextNodes[4],
 char sCellNames[32],
 	 sCellOpener[32],
 	 sFFButton[32]
+	 sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" },
 	 ;
-
-char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" };
 
 float flFreedayPosition[3], 
 	  flWardayBlu[3], 

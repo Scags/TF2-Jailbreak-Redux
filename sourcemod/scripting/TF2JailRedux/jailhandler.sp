@@ -38,15 +38,15 @@ enum /** LRs **/
 	RandomKill = 10,
 	Warday = 11,
 	ClassWars = 12,
-	VSH = 13			// DO NOT SET ANY NEW LRS UNDER THESE NUMBERS UNLESS YOU DISABLE OR ADJUST THE SUB PLUGIN!
-	//PH = 14,			// THEY WILL OVERLAP!
+	// VSH = 13			// DO NOT SET ANY NEW LRS UNDER THESE NUMBERS UNLESS YOU DISABLE OR ADJUST THE SUB PLUGIN!
+	// PH = 14,			// THEY WILL OVERLAP!
 };
 /** 
  *	When adding a new lr, increase the LRMAX to the proper/latest enum value
  *	Reminder that random lr grabs a random int from 2 to LRMAX
  *	Having breaks or skips within the enum will result in nothing happening the following round if that number is selected
 */
-#define LRMAX		VSH// + (g_hPluginsRegistered.Length)
+#define LRMAX		ClassWars+ (g_hPluginsRegistered.Length)
 
 #include "TF2JailRedux/jailbase.sp"
 #include "TF2JailRedux/jailgamemode.sp"
@@ -66,9 +66,9 @@ int arrClass[8] = { 1, 3, 4, 5, 6, 7, 8, 9 };
 int arrLRS[LRMAX + 1] = {	/* Plus 1 to counterbalance the 0 in the enum*/ 	};
 
 /** 
- *	Add your LR name to the array, referred back to in LRMenuAdd()
+ *	Add your LR name to the array, referred back to in AddLRToMenu()
 */
-char strLRNames[][] = {
+char strLRNames[LRMAX][] = {
 	"Suicide",
 	"Custom",
 	"Freeday for Yourself",
@@ -82,7 +82,6 @@ char strLRNames[][] = {
 	"Sniper!",
 	"Warday",
 	"Class Wars",
-	"Versus Saxton Hale"
 };
 
 /** 
@@ -164,8 +163,8 @@ public void AddLRToMenu(Menu & menu)
 	int iMax;
 
 	menu.AddItem("-1", "Random LR");
-	for (int i = 0; i < sizeof(strLRNames); i++)	// Can also do '<= LRMAX' but either way is fine
-	{
+	for (int i = 0; i < sizeof(strLRNames); i++)	// If we do '<= LRMAX' and you have a sub-plugin, array indexes will be out of bounds
+	{												// So don't add sub-plugin LR names to this plugin, simply do it within your own
 		iMax = LR_DEFAULT;	// 5
 		// if (i == 2)	// If you want a certain last request to have a different max, do something like this
 			// iMax = 3;
@@ -173,7 +172,12 @@ public void AddLRToMenu(Menu & menu)
 		IntToString(i, strID, sizeof(strID));
 		menu.AddItem(strID, strName, arrLRS[i] >= iMax ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
 	}
-	Call_OnMenuAdd(menu);	// According to this, you have to have your sub-plugin LR as the last in the enum, always
+	Call_OnMenuAdd(menu);	
+/**
+ *	According to this, you have to have your sub-plugin LR as the last in the enum, always
+ *	Secondly, you have to format strLRNames yourself on the menu item 
+ *	arrLRs[] handles the picks in this plugin, but you have to handle the increase on pick (consult the CheckSet() function and use it in your sub-plugin)
+*/
 }
 /**
  *	Add a 'short' description to your last request for the !listlrs command
@@ -193,7 +197,6 @@ public void AddLRToPanel(Panel & panel)
 	panel.DrawItem("Sniper- A hired gun to take out some folks");
 	panel.DrawItem("Warday- Team Deathmatch");
 	panel.DrawItem("Class Wars- Warday but it's class versus class");
-	panel.DrawItem("Versus Saxton Hale- A nice round of VSH");
 
 	Call_OnPanelAdd(panel);
 }
@@ -367,15 +370,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[ClassWars]++;
 					return;
 				}
-				case VSH:
-				{
-					if (!CheckSet(client, arrLRS[VSH], LR_DEFAULT))
-						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to have a round of {default}Versus Saxton Hale{tan}.", client);
-					gamemode.iLRPresetType = VSH;
-					arrLRS[VSH]++;
-					return;
-				}
 				default:Call_OnLRPicked(base, request);	// Menu functions aren't needed
 			}
 		}
@@ -402,7 +396,6 @@ public void ManageHUDText()
 		case RandomKill:	Format(strHudName, sizeof(strHudName), "Sniper!");
 		case Warday:		Format(strHudName, sizeof(strHudName), "Warday");
 		case ClassWars:		Format(strHudName, sizeof(strHudName), "Class Warfare");
-		case VSH:			Format(strHudName, sizeof(strHudName), "Versus Saxton Hale");
 		default: 			Call_OnLRTextHud(strHudName);
 	}
 
@@ -1043,7 +1036,6 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 			if (!attacker)
 				EmitSoundToAll(SuicideSound);
 		}
-		case VSH: {	}
 		default:
 		{
 			if (victim.bIsWarden)
