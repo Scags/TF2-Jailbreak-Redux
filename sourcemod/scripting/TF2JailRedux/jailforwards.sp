@@ -57,6 +57,7 @@ void InitializeForwards()
 	g_hForwards[OnPanelAdd] 			= new PrivateForward( CreateForward(ET_Ignore, Param_CellByRef) );
 	g_hForwards[OnManageTimeLeft] 		= new PrivateForward( CreateForward(ET_Ignore) );
 	g_hForwards[OnPlayerPrepped] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
+	g_hForwards[OnHurtPlayer] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnMusicPlay]			= new PrivateForward( CreateForward(ET_Ignore, Param_String, Param_FloatByRef) );
 }
 void Call_OnDownloads()
@@ -205,6 +206,17 @@ void Call_OnPlayerPrepped(const JailFighter player)
 {
 	g_hForwards[OnPlayerPrepped].Start();
 	Call_PushCell(player);
+	Call_Finish();
+}
+void Call_OnHurtPlayer(const JailFighter victim, const JailFighter attacker, int damage, int custom, int weapon, Event event)
+{
+	g_hForwards[OnHurtPlayer].Start();
+	Call_PushCell(victim);
+	Call_PushCell(attacker);
+	Call_PushCell(damage);
+	Call_PushCell(custom);
+	Call_PushCell(weapon);
+	Call_PushCell(event);
 	Call_Finish();
 }
 void Call_OnMusicPlay(char song[PLATFORM_MAX_PATH], float & time)

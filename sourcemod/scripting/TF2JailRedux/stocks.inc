@@ -172,7 +172,7 @@ stock int AttachParticle(const int ent, const char[] particleType, float offset 
 	}
 	ActivateEntity(particle);
 	AcceptEntityInput(particle, "start");
-	CreateTimer(3.0, RemoveEntity, EntIndexToEntRef(particle));
+	CreateTimer(3.0, EraseEntity, EntIndexToEntRef(particle));
 	return particle;
 }
 stock void CreateParticles(char[] particlename, float Pos[3] = NULL_VECTOR, float time)
@@ -183,7 +183,7 @@ stock void CreateParticles(char[] particlename, float Pos[3] = NULL_VECTOR, floa
 		ActivateEntity(particle);
 		AcceptEntityInput(particle, "start");
 		TeleportEntity(particle, Pos, NULL_VECTOR, NULL_VECTOR);
-		CreateTimer(time, RemoveEntity, EntIndexToEntRef(particle));
+		CreateTimer(time, EraseEntity, EntIndexToEntRef(particle));
 	}
 	else LogError("CreateParticles: **** Couldn't Create 'info_particle_system Entity' ****");
 }

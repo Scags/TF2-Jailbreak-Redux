@@ -101,8 +101,8 @@ Handle hTextNodes[4],
 
 char sCellNames[32],
 	 sCellOpener[32],
-	 sFFButton[32]
-	 sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" },
+	 sFFButton[32],
+	 sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" }
 	 ;
 
 float flFreedayPosition[3], 
@@ -116,7 +116,7 @@ public Plugin myinfo =
 	author = PLUGIN_AUTHOR,
 	description = PLUGIN_DESCRIPTION,
 	version = PLUGIN_VERSION,
-	url = ""
+	url = "https://github.com/Scags/TF2-Jailbreak-Redux"
 };
 
 ArrayList g_hPluginsRegistered,
@@ -351,9 +351,7 @@ public void OnAllPluginsLoaded()
 #if defined _sourcebans_included
 	gamemode.bSB = LibraryExists("sourcebans");
 #endif
-#if defined _sourcecomms_included
 	gamemode.bSC = LibraryExists("sourcecomms");
-#endif
 #if defined _voiceannounce_ex_included
 	gamemode.bVA = LibraryExists("voiceannounce_ex");
 #endif
@@ -370,10 +368,8 @@ public void OnLibraryAdded(const char[] name)
 	if (!strcmp(name, "sourcebans", false))
 		gamemode.bSB = true;
 #endif
-#if defined _sourcecomms_included
 	if (!strcmp(name, "sourcecomms", false))
 		gamemode.bSC = true;
-#endif
 #if defined _voiceannounce_ex_included
 	if (!strcmp(name, "voiceannounce_ex", false))
 		gamemode.bVA = true;
@@ -392,10 +388,8 @@ public void OnLibraryRemoved(const char[] name)
 	if (!strcmp(name, "sourcebans", false))
 		gamemode.bSB = false;
 #endif
-#if defined _sourcecomms_included
 	if (!strcmp(name, "sourcecomms", false))
 		gamemode.bSC = false;
-#endif
 #if defined _voiceannounce_ex_included
 	if (!strcmp(name, "voiceannounce_ex", false))
 		gamemode.bVA = false;

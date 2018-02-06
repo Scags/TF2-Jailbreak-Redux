@@ -167,6 +167,7 @@ enum	// JB Hook Types
 	OnPanelAdd,
 	OnManageTimeLeft,
 	OnPlayerPrepped,
+	OnHurtPlayer,
 	OnMusicPlay
 };
 
@@ -207,9 +208,6 @@ typeset JBHookCB
 	// OnManageRoundStart
 	function void ();
 
-	//	OnLRPicked
-	// function void (Menu menu, MenuAction action, const JBPlayer Player, const int select);
-
 	//	OnMenuAdd
 	function void (Menu & menu);
 
@@ -223,7 +221,10 @@ typeset JBHookCB
 	function void (char strHud[128]);
 
 	// OnLRPicked
-	function void (const JailFighter Player, const int request);
+	function void (const JBPlayer Player, const int request);
+
+	// OnHurtPlayer
+	function void (const JBPlayer Victim, const JBPlayer Attacker, int damage, int custom, int weapon, Event event);
 };
 
 // Use hooktype enum on these.

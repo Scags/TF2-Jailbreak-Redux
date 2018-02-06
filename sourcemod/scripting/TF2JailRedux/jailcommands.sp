@@ -428,7 +428,8 @@ public Action Command_RemoveLastRequest(int client, int args)
 			JailFighter(i).bIsQueuedFreeday = false;
 	}
 
-	arrLRS[gamemode.iLRPresetType]--;
+	int value = arrLRS.Get(gamemode.iLRPresetType);
+	arrLRS.Set( value, value-1 );
 	gamemode.bIsLRInUse = false;
 	gamemode.iLRPresetType = -1;
 	CPrintToChatAll("{red}[JailRedux]{tan}Warden {default}%N{tan} has denied the Last Request!", client);
@@ -564,7 +565,8 @@ public Action AdminDenyLR(int client, int args)
 			ClearSyncHud(i, hTextNodes[1]);
 	}
 
-	arrLRS[gamemode.iLRPresetType]--;
+	int value = arrLRS.Get(gamemode.iLRPresetType);
+	arrLRS.Set( value, value-1 );
 	gamemode.bIsLRInUse = false;
 	gamemode.iLRPresetType = -1;
 

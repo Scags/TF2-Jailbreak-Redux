@@ -123,7 +123,6 @@ methodmap JailGameMode //< StringMap
 		}
 	}
 #endif
-#if defined _sourcecomms_included
 	property bool bSC
 	{
 		public get()
@@ -136,7 +135,6 @@ methodmap JailGameMode //< StringMap
 			hGameModeFields.SetValue("bSC", val);
 		}
 	}
-#endif
 #if defined _voiceannounce_ex_included
 	property bool bVA
 	{
@@ -447,9 +445,7 @@ methodmap JailGameMode //< StringMap
 #if defined _sourcebans_included
 		this.bSB = false;
 #endif
-#if defined _sourcecomms_included
 		this.bSC = false;
-#endif
 #if defined _voiceannounce_ex_included
 		this.bVA = false;
 #endif
