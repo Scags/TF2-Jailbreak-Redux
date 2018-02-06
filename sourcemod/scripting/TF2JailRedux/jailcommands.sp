@@ -250,16 +250,16 @@ public Action Command_EnableFriendlyFire(int client, int args)
 		return Plugin_Handled;
 	}
 
-	switch (GetConVarBool(hEngineConVars[0]))
+	switch (hEngineConVars[0].BoolValue)
 	{
 		case true:
 		{
-			SetConVarBool(hEngineConVars[0], false);
+			hEngineConVars[0].SetBool(false);
 			CPrintToChatAll("{red}[JailRedux]{tan} Warden {default}%N{tan} has disabled Friendly-Fire.", client);
 		}
 		case false:
 		{
-			SetConVarBool(hEngineConVars[0], true);
+			hEngineConVars[0].SetBool(true);
 			CPrintToChatAll("{red}[JailRedux]{tan} Warden {default}%N{tan} has enabled Friendly-Fire.", client);
 		}
 	}
@@ -289,16 +289,16 @@ public Action Command_EnableCollisions(int client, int args)
 		return Plugin_Handled;
 	}
 
-	switch (GetConVarBool(hEngineConVars[1]))
+	switch (hEngineConVars[1].BoolValue)
 	{
 		case true:
 		{
-			SetConVarBool(hEngineConVars[1], false);
+			hEngineConVars[1].SetBool(false);
 			CPrintToChatAll("{red}[JailRedux]{tan} Warden {default}%N{tan} has disabled collisions.", client);
 		}
 		case false:
 		{
-			SetConVarBool(hEngineConVars[1], true);
+			hEngineConVars[1].SetBool(true);
 			CPrintToChatAll("{red}[JailRedux]{tan} Warden {default} %N{tan} has enabled collisions.", client);
 		}
 	}
@@ -550,13 +550,13 @@ public Action AdminDenyLR(int client, int args)
 		player = JailFighter(i);
 		if (player.bIsQueuedFreeday)
 		{
-			CPrintToChat(player.index, "{orange}[JailRedux]{tan} An Admin has removed your queued freeday!");
+			CPrintToChat(i, "{orange}[JailRedux]{tan} An Admin has removed your queued freeday!");
 			player.bIsQueuedFreeday = false;
 		}
 
 		if (player.bIsFreeday)
 		{
-			CPrintToChat(player.index, "{orange}[JailRedux]{tan} An Admin has removed your freeday!");
+			CPrintToChat(i, "{orange}[JailRedux]{tan} An Admin has removed your freeday!");
 			player.bIsFreeday = false;
 		}
 
@@ -1037,7 +1037,10 @@ public void RemoveFreedaysMenu(int client)
 	char strName[32], strID[8];
 	for (int i = MaxClients; i; --i)
 	{
-		if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red && JailFighter(i).bIsFreeday)
+		if (!IsClientInGame(i))
+			continue;
+			
+		if (JailFighter(i).bIsFreeday)
 		{
 			IntToString(GetClientUserId(i), strID, sizeof(strID));
 			Format(strName, sizeof(strName), "%N", i);
@@ -1132,28 +1135,28 @@ public int MenuHandle_WardenMenu(Menu menu, MenuAction action, int client, int s
 				}
 				case 2:
 				{
-					if (GetConVarBool(hEngineConVars[0]) == false)
+					if (hEngineConVars[0].BoolValue == false)
 					{
-						SetConVarBool(hEngineConVars[0], true);
+						hEngineConVars[0].SetBool(true);
 						CPrintToChatAll("{red}[JailRedux]{tan} Warden has enabled Friendly-Fire!");
 					}
 					else 
 					{
-						SetConVarBool(hEngineConVars[0], false);
+						hEngineConVars[0].SetBool(false);
 						CPrintToChatAll("{red}[JailRedux]{tan} Warden has disabled Friendly-Fire.");
 					}
 					WardenMenu(client);
 				}
 				case 3:
 				{
-					if (GetConVarBool(hEngineConVars[1]) == false)
+					if (hEngineConVars[1].BoolValue == false)
 					{
-						SetConVarBool(hEngineConVars[1], true);
+						hEngineConVars[1].SetBool(true);
 						CPrintToChatAll("{red}[JailRedux]{tan} Warden has enabled collisions!");
 					}
 					else
 					{
-						SetConVarBool(hEngineConVars[1], false);
+						hEngineConVars[1].SetBool(false);
 						CPrintToChatAll("{red}[JailRedux]{tan} Warden has disabled collisions.");
 					}
 					WardenMenu(client);
@@ -1276,14 +1279,14 @@ public Action Command_WardenFF(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (GetConVarBool(hEngineConVars[0]) == false)
+	if (hEngineConVars[0].BoolValue == false)
 	{
-		SetConVarBool(hEngineConVars[0], true);
+		hEngineConVars[0].SetBool(true);
 		CPrintToChatAll("{red}[JailRedux]{tan} Warden has enabled Friendly-Fire!");
 	}
 	else
 	{
-		SetConVarBool(hEngineConVars[0], false);
+		hEngineConVars[0].SetBool(false);
 		CPrintToChatAll("{red}[JailRedux]{tan} Warden has disabled Friendly-Fire!");
 	}
 	return Plugin_Handled;
@@ -1306,14 +1309,14 @@ public Action Command_WardenCC(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (GetConVarBool(hEngineConVars[1]) == false)
+	if (hEngineConVars[1].BoolValue == false)
 	{
-		SetConVarBool(hEngineConVars[1], true);
+		hEngineConVars[1].SetBool(true);
 		CPrintToChatAll("{red}[JailRedux]{tan} Warden has enabled Collisions!");
 	}
 	else
 	{
-		SetConVarBool(hEngineConVars[1], false);
+		hEngineConVars[1].SetBool(false);
 		CPrintToChatAll("{red}[JailRedux]{tan} Warden has disabled Collisions!");
 	}
 	return Plugin_Handled;

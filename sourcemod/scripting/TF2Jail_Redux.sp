@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.11.0"
+#define PLUGIN_VERSION		"0.11.1"
 #define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Sky Guardian) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -346,61 +346,61 @@ public bool FreedaysGroup(const char[] pattern, Handle clients)
 
 public void OnAllPluginsLoaded()
 {
-	#if defined _steamtools_included
+#if defined _steamtools_included
 	gamemode.bSteam = LibraryExists("SteamTools");
-	#endif
-	#if defined _sourcebans_included
+#endif
+#if defined _sourcebans_included
 	gamemode.bSB = LibraryExists("sourcebans");
-	#endif
-	#if defined _sourcecomms_included
+#endif
+#if defined _sourcecomms_included
 	gamemode.bSC = LibraryExists("sourcecomms");
-	#endif
-	#if defined _voiceannounce_ex_included
+#endif
+#if defined _voiceannounce_ex_included
 	gamemode.bVA = LibraryExists("voiceannounce_ex");
-	#endif
+#endif
 	gamemode.bTF2Attribs = LibraryExists("tf2attributes");
 }
 
 public void OnLibraryAdded(const char[] name)
 {
-	#if defined _steamtools_included
+#if defined _steamtools_included
 	if (!strcmp(name, "SteamTools", false))
 		gamemode.bSteam = true;
-	#endif
-	#if defined _sourcebans_included
+#endif
+#if defined _sourcebans_included
 	if (!strcmp(name, "sourcebans", false))
 		gamemode.bSB = true;
-	#endif
-	#if defined _sourcecomms_included
+#endif
+#if defined _sourcecomms_included
 	if (!strcmp(name, "sourcecomms", false))
 		gamemode.bSC = true;
-	#endif
-	#if defined _voiceannounce_ex_included
+#endif
+#if defined _voiceannounce_ex_included
 	if (!strcmp(name, "voiceannounce_ex", false))
 		gamemode.bVA = true;
-	#endif
+#endif
 	if (!strcmp(name, "tf2attributes", false))
 		gamemode.bTF2Attribs = true;
 }
 
 public void OnLibraryRemoved(const char[] name)
 {
-	#if defined _steamtools_included
+#if defined _steamtools_included
 	if (!strcmp(name, "SteamTools", false))
 		gamemode.bSteam = false;
-	#endif
-	#if defined _sourcebans_included
+#endif
+#if defined _sourcebans_included
 	if (!strcmp(name, "sourcebans", false))
 		gamemode.bSB = false;
-	#endif
-	#if defined _sourcecomms_included
+#endif
+#if defined _sourcecomms_included
 	if (!strcmp(name, "sourcecomms", false))
 		gamemode.bSC = false;
-	#endif
-	#if defined _voiceannounce_ex_included
+#endif
+#if defined _voiceannounce_ex_included
 	if (!strcmp(name, "voiceannounce_ex", false))
 		gamemode.bVA = false;
-	#endif
+#endif
 	if (!strcmp(name, "tf2attributes", false))
 		gamemode.bTF2Attribs = false;
 }
@@ -419,14 +419,14 @@ public void OnConfigsExecuted()
 	ConvarsSet(true);
 	ParseConfigs(); // Parse all configuration files under 'addons/sourcemod/configs/tf2jail/...'.
 
-	#if defined _steamtools_included
+#if defined _steamtools_included
 	if (gamemode.bSteam) 
 	{
 		char sDescription[64];
 		Format(sDescription, sizeof(sDescription), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
 		Steam_SetGameDescription(sDescription);
 	}
-	#endif
+#endif
 
 	int i;
 	char strDisable[64];
@@ -438,7 +438,7 @@ public void OnConfigsExecuted()
 		char strBuffer[6][32];	// Length is 6 in case you hate skins for some odd reason
 		int disabled = ExplodeString(strDisable, ",", strBuffer, 6, 32); 	// Split all of our disabled indexes and store them into our string array...
 		for (i = 0; i < disabled; i++)										// Loop through them all...
-			hWeaponList.Push( StringToInt(strBuffer[i]) );					// Then find their values and push them to the global array!
+			hWeaponList.Push( StringToInt(strBuffer[i]) );					// Then push their values to the global array!
 	}
 
 	hWearableList = new ArrayList();
@@ -514,11 +514,11 @@ public void OnClientPostAdminCheck(int client)
 
 	SetPawnTimer(WelcomeMessage, 5.0, player.userid);
 
-	if (IsValidAdmin(player.index, strVIP)) // Very useful stock ^^
+	if (IsValidAdmin(client, strVIP)) // Very useful stock ^^
 		player.bIsVIP = true;
 	else player.bIsVIP = false;
 
-	if (IsValidAdmin(player.index, strAdmin))
+	if (IsValidAdmin(client, strAdmin))
 		player.bIsAdmin = true;
 	else { player.bIsAdmin = false; player.MutePlayer(); }
 }
@@ -547,13 +547,13 @@ public Action Timer_PlayerThink(Handle hTimer)
 			continue;
 		
 		player = JailFighter(i);
-		if (TF2_GetClientTeam(player.index) == TFTeam_Blue)
+		if (TF2_GetClientTeam(i) == TFTeam_Blue)
 			ManageAllBlueThink(player);
-		else if (TF2_GetClientTeam(player.index) == TFTeam_Blue && !player.bIsWarden)
+		else if (TF2_GetClientTeam(i) == TFTeam_Blue && !player.bIsWarden)
 			ManageBlueNotWardenThink(player);
-		else if (TF2_GetClientTeam(player.index) == TFTeam_Red)
+		else if (TF2_GetClientTeam(i) == TFTeam_Red)
 			ManageRedThink(player);
-		else if (TF2_GetClientTeam(player.index) == TFTeam_Blue && player.bIsWarden)
+		else if (TF2_GetClientTeam(i) == TFTeam_Blue && player.bIsWarden)
 			ManageWardenThink(player);
 		/* Overcomplicated I know, but gives lrs every possible think aspect */
 	}
@@ -873,7 +873,11 @@ public Action Timer_AimName(Handle hTimer)
 	{
 		if (!IsClientInGame(i) || !IsPlayerAlive(i))
 			continue;
+
 		player = JailFighter(i);
+		if (!player.bIsWarden)
+			continue;
+
 		target = GetClientAimTarget(i, true);
 		
 		if (!IsClientValid(target))
@@ -886,7 +890,7 @@ public Action Timer_AimName(Handle hTimer)
 		GetClientEyePosition(i, flCpos);
 		GetClientEyePosition(target, flTpos);
 		
-		if (CanSeeTarget(i, flCpos, target, flTpos, cvarTF2Jail[NameDistance].FloatValue) && player.bIsWarden)
+		if (CanSeeTarget(i, flCpos, target, flTpos, cvarTF2Jail[NameDistance].FloatValue))
 		{
 			if (TF2_IsPlayerInCondition(target, TFCond_Cloaked) // Cloak watches are removed but meh
 				|| TF2_IsPlayerInCondition(target, TFCond_DeadRingered)
@@ -902,7 +906,7 @@ public Action Timer_AimName(Handle hTimer)
 	return Plugin_Continue;
 }
 
-int FindWarden()
+public int FindWarden()
 {
 	if (gamemode.bWardenExists)
 	{
@@ -1125,10 +1129,10 @@ public void Open_Doors(const int iTimer)
 
 public void EnableFFTimer(const int iTimer)
 {
-	if (GetConVarBool(hEngineConVars[0]) == true || iTimer != gamemode.iRoundCount || gamemode.iRoundState != StateRunning)
+	if (hEngineConVars[0].BoolValue == true || iTimer != gamemode.iRoundCount || gamemode.iRoundState != StateRunning)
 		return;
 		
-	SetConVarBool(hEngineConVars[0], true);
+	hEngineConVars[0].SetBool(true);
 	CPrintToChatAll("{red}[JailRedux]{tan} Friendly-Fire has been enabled!");
 }
 

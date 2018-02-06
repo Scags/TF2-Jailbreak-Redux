@@ -46,7 +46,7 @@ void InitializeForwards()
 	g_hForwards[OnBlueNotWardenThink] 	= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnWardenThink] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnLRTextHud] 			= new PrivateForward( CreateForward(ET_Ignore, Param_String) );
-	//g_hForwards[OnLRPicked] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell) );
+	g_hForwards[OnLRPicked] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell) );
 	g_hForwards[OnPlayerDied] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnBuildingDestroyed]	= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnObjectDeflected] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
@@ -128,6 +128,13 @@ void Call_OnLRTextHud(char strHud[128])
 {
 	g_hForwards[OnLRTextHud].Start();
 	Call_PushString(strHud);
+	Call_Finish();
+}
+void Call_OnLRPicked(const JailFighter player, const int request)
+{
+	g_hForwards[OnLRPicked].Start();
+	Call_PushCell(player);
+	Call_PushCell(request);
 	Call_Finish();
 }
 void Call_OnPlayerDied(const JailFighter player, const JailFighter victim, Event event)

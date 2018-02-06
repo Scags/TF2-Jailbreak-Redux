@@ -178,7 +178,7 @@ public void AddLRToMenu(Menu & menu)
 /**
  *	Add a 'short' description to your last request for the !listlrs command
 */
-public void AddLRToPanel(Panel& panel)
+public void AddLRToPanel(Panel & panel)
 {
 	panel.DrawItem("Suicide- Kill yourself on the spot");
 	panel.DrawItem("Custom- Type your own last request");
@@ -203,7 +203,7 @@ public void AddLRToPanel(Panel& panel)
 */
 public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 {
-	if (!IsClientValid(client) || !IsPlayerAlive(client))
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
 		return;
 		
 	switch (action)
@@ -214,17 +214,23 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			char strIndex[4]; menu.GetItem(select, strIndex, sizeof(strIndex));
 			if (cvarTF2Jail[RemoveFreedayOnLR].BoolValue)
 			{
+				JailFighter player;
 				for (int i = MaxClients; i; --i)
 				{
-					if (!IsClientInGame(i) || !JailFighter(i).bIsFreeday)
+					if (!IsClientInGame(i))
 						continue;
-					JailFighter(i).RemoveFreeday();
+					player = JailFighter(i);
+					if (!player.bIsFreeday)
+						continue;
+						
+					player.RemoveFreeday();
 				}
 				CPrintToChatAll("{red}[JailRedux]{tan} Last request has been chosen. Freedays have been stripped.");
 			}
 			gamemode.bIsLRInUse = true;
+			int request = StringToInt(strIndex);
 			
-			switch (StringToInt(strIndex))
+			switch (request)
 			{
 				case -1:	// Random
 				{
@@ -370,11 +376,11 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					arrLRS[VSH]++;
 					return;
 				}
+				default:Call_OnLRPicked(base, request);	// Menu functions aren't needed
 			}
 		}
 		case MenuAction_End:delete menu;
 	}
-	//Call_OnLRPicked(menu, action, base, select);
 }
 /**
  *	Displays lr HUD text during the round, Format() the name accordingly
@@ -397,8 +403,8 @@ public void ManageHUDText()
 		case Warday:		Format(strHudName, sizeof(strHudName), "Warday");
 		case ClassWars:		Format(strHudName, sizeof(strHudName), "Class Warfare");
 		case VSH:			Format(strHudName, sizeof(strHudName), "Versus Saxton Hale");
+		default: 			Call_OnLRTextHud(strHudName);
 	}
-	Call_OnLRTextHud(strHudName);
 
 	if (strHudName[0] != '\0')
 		SetTextNode(hTextNodes[1], strHudName, EnumTNPS[1][fCoord_X], EnumTNPS[1][fCoord_Y], EnumTNPS[1][fHoldTime], EnumTNPS[1][iRed], EnumTNPS[1][iGreen], EnumTNPS[1][iBlue], EnumTNPS[1][iAlpha], EnumTNPS[1][iEffect], EnumTNPS[1][fFXTime], EnumTNPS[1][fFadeIn], EnumTNPS[1][fFadeOut]);
@@ -1066,8 +1072,11 @@ public void CheckLivingPlayers()
 					JailFighter base;
 					for (int i = MaxClients; i; --i)
 					{
+						if (!IsClientInGame(i))
+							continue;
+
 						base = JailFighter(i);
-						if (IsClientInGame(i) && base.bIsFreeday)
+						if (base.bIsFreeday)
 							base.RemoveFreeday();
 					}
 				}

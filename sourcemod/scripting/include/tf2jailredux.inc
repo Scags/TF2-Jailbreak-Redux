@@ -156,7 +156,7 @@ enum	// JB Hook Types
 	OnBlueNotWardenThink,
 	OnWardenThink,
 	OnLRTextHud,
-	//OnLRPicked,
+	OnLRPicked,
 	OnPlayerDied,
 	OnBuildingDestroyed,
 	OnObjectDeflected,
@@ -221,6 +221,9 @@ typeset JBHookCB
 
 	// OnLRTextHud
 	function void (char strHud[128]);
+
+	// OnLRPicked
+	function void (const JailFighter Player, const int request);
 };
 
 // Use hooktype enum on these.

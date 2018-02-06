@@ -8,6 +8,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	if (!IsClientValid(player.index))
 		return Plugin_Continue;
 
+	ManageSpawn(player, event);
 	SetPawnTimer(PrepPlayer, 0.2, player.userid);
 
 	return Plugin_Continue;
@@ -193,8 +194,10 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 			continue;
 		
 		TF2Attrib_RemoveAll(i);
+
 		player = JailFighter(i);
 		player.UnmutePlayer();
+		player.bLockedFromWarden = false;
 
 		if (player.bIsFreeday)
 			player.RemoveFreeday();
@@ -204,8 +207,6 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 			if (hTextNodes[x] != null)
 				ClearSyncHud(i, hTextNodes[x]);
 		}
-			
-		player.bLockedFromWarden = false;
 
 		if (GetClientMenu(i) != MenuSource_None)
 			CancelClientMenu(i, true);
@@ -214,8 +215,8 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	}
 	ManageOnRoundEnd(event); // Making 1 with and without clients so things dont fire once for every client in the loop
 	
-	SetConVarBool(hEngineConVars[0], false);
-	SetConVarBool(hEngineConVars[1], false);
+	hEngineConVars[0].SetBool(false);
+	hEngineConVars[1].SetBool(false);
 
 	gamemode.bAdminLockWarden = false;
 	gamemode.b1stRoundFreeday = false;

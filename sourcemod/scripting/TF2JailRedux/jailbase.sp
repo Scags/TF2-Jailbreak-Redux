@@ -509,11 +509,12 @@ methodmap JailFighter
 	}
 	public void MutePlayer()
 	{
-		if (!this.bIsMuted && !this.bIsAdmin && !AlreadyMuted(this.index))
+		int client = this.index;
+		if (!this.bIsMuted && !this.bIsAdmin && !AlreadyMuted(client))
 		{
-			SetClientListeningFlags(this.index, VOICE_MUTED);
+			SetClientListeningFlags(client, VOICE_MUTED);
 			this.bIsMuted = true;
-			PrintToConsole(this.index, "[JailRedux] You are muted by the plugin.");
+			PrintToConsole(client, "[JailRedux] You are muted by the plugin.");
 		}
 	}
 	public void GiveFreeday()
@@ -602,9 +603,10 @@ methodmap JailFighter
 	{
 		if (this.bIsMuted)
 		{
-			SetClientListeningFlags(this.index, VOICE_NORMAL);
+			int client = this.index;
+			SetClientListeningFlags(client, VOICE_NORMAL);
 			this.bIsMuted = false;
-			PrintToConsole(this.index, "[JailRedux] You are unmuted by the plugin.");
+			PrintToConsole(client, "[JailRedux] You are unmuted by the plugin.");
 		}
 	}
 	public void WardenSet()
@@ -612,9 +614,10 @@ methodmap JailFighter
 		this.bIsWarden = true;	
 		this.UnmutePlayer();
 		char strWarden[256];
-		Format(strWarden, sizeof(strWarden), "%N is the current Warden.", this.index);
+		int client = this.index;
+		Format(strWarden, sizeof(strWarden), "%N is the current Warden.", client);
 		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
-		CPrintToChatAll("{red}[JailRedux]{fullred} %N{tan} is the new Warden", this.index);
+		CPrintToChatAll("{red}[JailRedux]{fullred} %N{tan} is the new Warden", client);
 	}
 	/**
 	 * Sets the custom model of this player.
@@ -635,7 +638,7 @@ methodmap JailFighter
 		{
 			for (int i = MaxClients; i; --i)
 			{
-				if (!IsClientInGame(i))
+				if (IsClientInGame(i))
 					ClearSyncHud(i, hTextNodes[2]);
 			}
 		}
