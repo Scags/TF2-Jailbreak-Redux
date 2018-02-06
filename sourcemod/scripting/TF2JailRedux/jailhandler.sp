@@ -45,8 +45,10 @@ enum /** LRs **/
  *	When adding a new lr, increase the LRMAX to the proper/latest enum value
  *	Reminder that random lr grabs a random int from 2 to LRMAX
  *	Having breaks or skips within the enum will result in nothing happening the following round if that number is selected
+ *	g_hPluginsRegistered.Length increases by 1 every time you 'TF2JailRedux_RegisterPlugin()' with a sub-plugin
+ *	Sub-Plugins *should* be completely manageable as their own plugin, with no need to touch this one
 */
-#define LRMAX		ClassWars+ (g_hPluginsRegistered.Length)
+#define LRMAX		ClassWars + (g_hPluginsRegistered.Length)
 
 #include "TF2JailRedux/jailbase.sp"
 #include "TF2JailRedux/jailgamemode.sp"
@@ -59,16 +61,17 @@ JailGameMode gamemode; // Sticking this sucker right here because it works
 int arrClass[8] = { 1, 3, 4, 5, 6, 7, 8, 9 };
 
 /** 
- *	Array of LR usage
- *	You can determine the maximum picks per round under menu selection
- *	Since array values default at 0, we can keep this blank
+ *	ArrayList of LR usage
+ *	You can determine the maximum picks per round under AddLRToMenu()
+ *	Size is managed under LRMapStartVariables
 */
-int arrLRS[LRMAX + 1] = {	/* Plus 1 to counterbalance the 0 in the enum*/ 	};
+ ArrayList arrLRS;
+// int arrLRS[LRMAX + 1] = {	/* Plus 1 to counterbalance the 0 in the enum*/ 	};
 
 /** 
  *	Add your LR name to the array, referred back to in AddLRToMenu()
 */
-char strLRNames[LRMAX][] = {
+char strLRNames[][] = {
 	"Suicide",
 	"Custom",
 	"Freeday for Yourself",
@@ -119,12 +122,14 @@ public void ManageDownloads()
 	Call_OnDownloads();
 }
 /**
- *	Called on map start again but this time for the starting lr count
+ *	Called on map start again but this time for the starting lr count and to manage our ArrayList
+ *	Because of the g_hPluginsRegistered ArrayList, we have to 
 */
 public void LRMapStartVariables()
 {
+	arrLRS = new ArrayList(1, LRMAX+1);
 	for (int i = 0; i <= LRMAX; i++)
-		arrLRS[i] = 0;
+		arrLRS.Set( i, 0 );
 }
 /** 
  *	Calls on map end, resets for lr variables
@@ -160,23 +165,25 @@ public void AddLRToMenu(Menu & menu)
 {
 	char strName[32];
 	char strID[4];
-	int iMax;
+	int iMax, value;
 
 	menu.AddItem("-1", "Random LR");
 	for (int i = 0; i < sizeof(strLRNames); i++)	// If we do '<= LRMAX' and you have a sub-plugin, array indexes will be out of bounds
 	{												// So don't add sub-plugin LR names to this plugin, simply do it within your own
 		iMax = LR_DEFAULT;	// 5
-		// if (i == 2)	// If you want a certain last request to have a different max, do something like this
+		// if (i == Warday)	// If you want a certain last request to have a different max, do something like this
 			// iMax = 3;
-		Format(strName, sizeof(strName), "%s (%i/%i)", strLRNames[i][0], arrLRS[i], iMax);
+		value = arrLRS.Get(i);
+		Format(strName, sizeof(strName), "%s (%i/%i)", strLRNames[i][0], value, iMax);
 		IntToString(i, strID, sizeof(strID));
-		menu.AddItem(strID, strName, arrLRS[i] >= iMax ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
+		menu.AddItem(strID, strName, value >= iMax ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
 	}
 	Call_OnMenuAdd(menu);	
 /**
  *	According to this, you have to have your sub-plugin LR as the last in the enum, always
+ *	If you have more than one, you have to distinguish which plugin has which enum value and stick with it
  *	Secondly, you have to format strLRNames yourself on the menu item 
- *	arrLRs[] handles the picks in this plugin, but you have to handle the increase on pick (consult the CheckSet() function and use it in your sub-plugin)
+ *	arrLRs[] handles the count in this plugin, but you have to handle the pick (consult the CheckSet() function and use it in your sub-plugin for simplicity)
 */
 }
 /**
@@ -187,7 +194,8 @@ public void AddLRToPanel(Panel & panel)
 	panel.DrawItem("Suicide- Kill yourself on the spot");
 	panel.DrawItem("Custom- Type your own last request");
 	panel.DrawItem("Freeday for Yourself- Give yourself a freeday");
-	panel.DrawItem("Freeday for Others- Give up to %i freedays to others", cvarTF2Jail[FreedayLimit].IntValue);
+	char strFreeday[64]; Format(strFreeday, sizeof(strFreeday), "Freeday for Others- Give up to %i freedays to others", cvarTF2Jail[FreedayLimit].IntValue);
+	panel.DrawItem(strFreeday);
 	panel.DrawItem("Freeday for All- Give everybody a freeday");
 	panel.DrawItem("Guards Melee Only- Those guns are for babies!");
 	panel.DrawItem("Headless Horsemann Day- Turns all players into the HHH");
@@ -203,6 +211,7 @@ public void AddLRToPanel(Panel & panel)
 /** 
  *	Called when player is given lr and is selecting. Place your lr under the MenuAction_Select case
  *	Use the already given lr's as a guide if you need help
+ *	CheckSet() is purely used for safety
 */
 public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 {
@@ -231,7 +240,8 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				CPrintToChatAll("{red}[JailRedux]{tan} Last request has been chosen. Freedays have been stripped.");
 			}
 			gamemode.bIsLRInUse = true;
-			int request = StringToInt(strIndex);
+			int request = StringToInt(strIndex),
+				value = arrLRS.Get(request);
 			
 			switch (request)
 			{
@@ -240,7 +250,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen a {default}Random Last Request{tan} as their last request!", client);
 					int randlr = GetRandomInt(2, LRMAX);
 					gamemode.iLRPresetType = randlr;
-					arrLRS[randlr]++;
+					arrLRS.Set( randlr, arrLRS.Get(randlr)+1 );
 					if (randlr == FreedaySelf)
 						base.bIsQueuedFreeday = true;
 					else if (randlr == FreedayOther)
@@ -252,125 +262,129 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case Suicide:
 				{
-					if (!CheckSet(client, arrLRS[Suicide], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to kill themselves. What a shame...", client);
 					SetPawnTimer(KillThatBitch, (GetRandomFloat(0.5, 7.0)), client);	// Meme lol
-					arrLRS[Suicide]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case Custom:
 				{
-					if (!CheckSet(client, arrLRS[Custom], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to type out their LR in chat.", client);
 					gamemode.iLRPresetType = Custom;
-					arrLRS[Custom]++;
+					arrLRS.Set( request, value+1 );
 					base.iCustom = base.userid;
 					return;
 				}
 				case FreedaySelf:
 				{
-					if (!CheckSet(client, arrLRS[FreedaySelf], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Freeday for Themselves{tan} next round.", client);
 					gamemode.iLRPresetType = FreedaySelf;
 					base.bIsQueuedFreeday = true;
-					arrLRS[FreedaySelf]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case FreedayOther:
 				{
-					if (!CheckSet(client, arrLRS[FreedayOther], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N is picking Freedays for next round...", client);
 					GiveFreedaysMenu(client);
 					gamemode.iLRPresetType = FreedayOther;
-					arrLRS[FreedayOther]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case FreedayAll:
 				{
-					if (!CheckSet(client, arrLRS[FreedayAll], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to grant {default}Freeday for All{tan} next round.", client);
 					gamemode.iLRPresetType = FreedayAll;
-					arrLRS[FreedayAll]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case GuardMelee:
 				{
-					if (!CheckSet(client, arrLRS[GuardMelee], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to strip the guards of their weapons.", client);
 					gamemode.iLRPresetType = GuardMelee;
-					arrLRS[GuardMelee]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case HHHDay:
 				{
-					if (!CheckSet(client, arrLRS[HHHDay], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Horseless Headless Horsemann Kill Round{tan} next round.", client);
 					gamemode.iLRPresetType = HHHDay;
-					arrLRS[HHHDay]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case TinyRound:
 				{
-					if (!CheckSet(client, arrLRS[TinyRound], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Super Small{tan} for everyone.", client);
 					gamemode.iLRPresetType = TinyRound;
-					arrLRS[TinyRound]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case HotPrisoner:
 				{
-					if (!CheckSet(client, arrLRS[HotPrisoner], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to ignite all of the prisoners next round!", client);
 					gamemode.iLRPresetType = HotPrisoner;
-					arrLRS[HotPrisoner]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case Gravity:
 				{
-					if (!CheckSet(client, arrLRS[Gravity], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Low Gravity{tan} as their last request.", client);
 					gamemode.iLRPresetType = Gravity;
-					arrLRS[Gravity]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case RandomKill:
 				{
-					if (!CheckSet(client, arrLRS[RandomKill], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to hire a Sniper for next round!", client);
 					gamemode.iLRPresetType = RandomKill;
-					arrLRS[RandomKill]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case Warday:
 				{
-					if (!CheckSet(client, arrLRS[Warday], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to do a {default}Warday{tan}.", client);
 					gamemode.iLRPresetType = Warday;
-					arrLRS[Warday]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case ClassWars:
 				{
-					if (!CheckSet(client, arrLRS[ClassWars], LR_DEFAULT))
+					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Class Warfare{tan} as their last request.", client);
 					gamemode.iLRPresetType = ClassWars;
-					arrLRS[ClassWars]++;
+					arrLRS.Set( request, value+1 );
 					return;
 				}
-				default:Call_OnLRPicked(base, request);	// Menu functions aren't needed
+				default:
+				{
+					arrLRS.Set( request, value+1 );		// CheckSet() won't apply to sub-plugins but AddLRToMenu() should handle itemdraw anyway
+					Call_OnLRPicked(base, request);		// Menu functions aren't needed
+				}
 			}
 		}
 		case MenuAction_End:delete menu;
@@ -578,7 +592,7 @@ public void PrepPlayer(const int userid)
 
 	if (GetClientTeam(client) == BLU)
 	{
-		if (AlreadyMuted(client) && gamemode.iLRType != VSH && cvarTF2Jail[DisableBlueMute].BoolValue)
+		if (AlreadyMuted(client) && gamemode.iLRType != 13 && cvarTF2Jail[DisableBlueMute].BoolValue)
 		{
 			base.ForceTeamChange(RED);
 			EmitSoundToClient(client, NO);
@@ -942,15 +956,15 @@ public Action SoundHook(int clients[64], int & numClients, char sample[PLATFORM_
 */
 public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victim, Event event)
 {
-	//int damage = event.GetInt("damageamount");
-	//int custom = event.GetInt("custom");
-	//int weapon = event.GetInt("weaponid");
+	int damage = event.GetInt("damageamount");
+	int custom = event.GetInt("custom");
+	int weapon = event.GetInt("weaponid");
 	
 	switch (gamemode.iLRType)
 	{
 		default: {	}
 	}
-	//Call_OnHurtPlayer(attacker, victim, damage, custom, weapon, event);
+	Call_OnHurtPlayer(attacker, victim, damage, custom, weapon, event);
 }
 /** 
  *	Calls when damage is taken/given during lr with SDKHooks
@@ -993,7 +1007,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 */
 public void ManagePlayerDeath(const JailFighter attacker, const JailFighter victim, Event event)
 {
-	if (gamemode.iLRType != VSH)
+	if (gamemode.iLRType != 13)
 		FreeKillSystem(attacker);
 
 	TF2Attrib_RemoveAll(victim.index);
@@ -1054,7 +1068,7 @@ public void CheckLivingPlayers()
 
 	switch (gamemode.iLRType)
 	{
-		case VSH: {	}	// 'One guard left' is pointless during this round along with freedays
+		case 13: {	}	// 'One guard left' is pointless during this round along with freedays
 		default:
 		{
 			if (GetLivingPlayers(BLU) == 1)
