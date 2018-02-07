@@ -15,7 +15,6 @@
 #define SuicideSound	"weapons/csgo_awp_shoot.wav"
 #define GunSound		"vo/heavy_meleedare02.mp3"
 #define TinySound		"vo/scout_sf12_badmagic28.mp3"
-// #define WardaySound		"tf2jailredux/warday.mp3"
 #define NO 				"vo/heavy_no02.mp3"
 
 /** 
@@ -123,7 +122,7 @@ public void ManageDownloads()
 }
 /**
  *	Called on map start again but this time for the starting lr count and to manage our ArrayList
- *	Because of the g_hPluginsRegistered ArrayList, we have to 
+ *	Because of the g_hPluginsRegistered ArrayList, we have to do this OnMapStart()
 */
 public void LRMapStartVariables()
 {
@@ -178,12 +177,12 @@ public void AddLRToMenu(Menu & menu)
 		IntToString(i, strID, sizeof(strID));
 		menu.AddItem(strID, strName, value >= iMax ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
 	}
-	Call_OnMenuAdd(menu);	
+	Call_OnMenuAdd(menu, arrLRS);	// Reminder that the sub-plugin lr index has to be one less when using an this array
 /**
  *	According to this, you have to have your sub-plugin LR as the last in the enum, always
  *	If you have more than one, you have to distinguish which plugin has which enum value and stick with it
  *	Secondly, you have to format strLRNames yourself on the menu item 
- *	arrLRs[] handles the count in this plugin, but you have to handle the pick (consult the CheckSet() function and use it in your sub-plugin for simplicity)
+ *	arrLRs[] is able to handle lr counts in this plugin but make sure you use the ArrayList in your OnLRPicked() forward
 */
 }
 /**
@@ -382,8 +381,8 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				default:
 				{
-					arrLRS.Set( request, value+1 );		// CheckSet() won't apply to sub-plugins but AddLRToMenu() should handle itemdraw anyway
-					Call_OnLRPicked(base, request);		// Menu functions aren't needed
+					// arrLRS.Set( request, value+1 );
+					Call_OnLRPicked(base, request, value, arrLRS);		// Menu functions aren't needed
 				}
 			}
 		}
@@ -974,7 +973,21 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 
 	switch (gamemode.iLRType)
 	{
-		default:
+		case
+		Suicide,
+		Custom,
+		FreedaySelf,
+		FreedayOther,
+		FreedayAll,
+		GuardMelee,
+		HHHDay,
+		TinyRound,
+		HotPrisoner,
+		Gravity,
+		RandomKill,
+		Warday,
+		ClassWars
+		:
 		{
 			JailFighter base = JailFighter(attacker);
 			if (base.bIsFreeday)
@@ -999,6 +1012,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 			if (victim.bIsWarden)
 				SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, gamemode.iRoundCount);
 		}
+		default:return Call_OnHookDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 	}
 	return Plugin_Continue;
 }

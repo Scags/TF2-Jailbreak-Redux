@@ -53,9 +53,6 @@ static const char HaleMatsV2[][] = {
 #define HaleKillKSpree132	"saxton_hale/saxton_hale_132_kspree_"	//1-2
 #define HaleKillLast132		"saxton_hale/saxton_hale_132_last.wav"
 #define HaleStubbed132		"saxton_hale/saxton_hale_132_stub_"  //1-4
-#define HaleTheme			"saxton_hale/saxtonhale.mp3"
-#define HaleTheme2			"saxton_hale/haletheme3_fix1.mp3"
-#define HaleTheme3			"saxton_hale/haletheme4_fix.mp3"
 
 #define HALESPEED		340.0
 
@@ -81,24 +78,8 @@ methodmap CHale < JailBoss
 
 	public void Think ()
 	{
-		if (!IsPlayerAlive(this.index) )
-			return;
-
+		this.DoGenericThink();
 		int buttons = GetClientButtons(this.index);
-		//float currtime = GetGameTime();
-		int flags = GetEntityFlags(this.index);
-
-		//int maxhp = GetEntProp(this.index, Prop_Data, "m_iMaxHealth");
-		int health = this.iHealth;
-		float speed = HALESPEED + 0.7 * (100-health*100/this.iMaxHealth);
-		SetEntPropFloat(this.index, Prop_Send, "m_flMaxspeed", speed);
-		
-		if (this.flGlowtime > 0.0) {
-			this.bGlow = 1;
-			this.flGlowtime -= 0.1;
-		}
-		else if (this.flGlowtime <= 0.0)
-			this.bGlow = 0;
 
 		if ( ((buttons & IN_DUCK) || (buttons & IN_ATTACK2)) && (this.flCharge >= 0.0) )
 		{
@@ -126,33 +107,6 @@ methodmap CHale < JailBoss
 			}
 			else this.flCharge = 0.0;
 		}
-		if (OnlyScoutsLeft(RED))
-			this.flRAGE += 0.25;
-
-		if ( flags & FL_ONGROUND )
-			this.flWeighDown = 0.0;
-		else this.flWeighDown += 0.1;
-
-		if ( (buttons & IN_DUCK) && this.flWeighDown >= HALE_WEIGHDOWN_TIME)
-		{
-			float ang[3]; GetClientEyeAngles(this.index, ang);
-			if ( ang[0] > 60.0 ) {
-				//float fVelocity[3];
-				//GetEntPropVector(this.index, Prop_Data, "m_vecVelocity", fVelocity);
-				//fVelocity[2] = -500.0;
-				//TeleportEntity(this.index, NULL_VECTOR, NULL_VECTOR, fVelocity);
-				SetEntityGravity(this.index, 6.0);
-				SetPawnTimer(SetGravityNormal, 1.0, this.userid);
-				this.flWeighDown = 0.0;
-			}
-		}
-		SetHudTextParams(-1.0, 0.77, 0.35, 255, 255, 255, 255);
-		float jmp = this.flCharge;
-		if (jmp > 0.0)
-			jmp *= 4.0;
-		if (this.flRAGE >= 100.0)
-                        ShowSyncHudText(this.index, hHudText, "Jump: %i | Rage: FULL - Call Medic (default: E) to activate", RoundFloat(jmp));
-                else ShowSyncHudText(this.index, hHudText, "Jump: %i | Rage: %0.1f", RoundFloat(jmp), this.flRAGE);
 	}
 	public void SetModel ()
 	{
@@ -180,68 +134,19 @@ methodmap CHale < JailBoss
 	public void RageAbility()
 	{
 		TF2_AddCondition(this.index, view_as<TFCond>(42), 4.0);
-		if (!GetEntProp(this.index, Prop_Send, "m_bIsReadyToHighFive")
+		if ( !GetEntProp(this.index, Prop_Send, "m_bIsReadyToHighFive")
 			&& !IsValidEntity(GetEntPropEnt(this.index, Prop_Send, "m_hHighFivePartner")) )
 		{
 			TF2_RemoveCondition(this.index, TFCond_Taunting);
 			this.SetModel(); //MakeModelTimer(null); // should reset Hale's animation
 		}
-		int i;
-		float pos[3], pos2[3], distance;
-		GetEntPropVector(this.index, Prop_Send, "m_vecOrigin", pos);
 
-		for (i=MaxClients ; i ; --i) {
-			if (!IsValidClient(i) || !IsPlayerAlive(i) || i == this.index )
-				continue;
-			else if (GetClientTeam(i) == GetClientTeam(this.index))
-				continue;
+		this.DoGenericStun(HALERAGEDIST);
 
-			GetEntPropVector(i, Prop_Send, "m_vecOrigin", pos2);
-			distance = GetVectorDistance(pos, pos2);
-			if (!TF2_IsPlayerInCondition(i, TFCond_Ubercharged) && distance < HALERAGEDIST)
-			{
-				int flags = TF_STUNFLAGS_GHOSTSCARE;
-				flags |= TF_STUNFLAG_NOSOUNDOREFFECT;
-				CreateTimer(5.0, RemoveEntity, EntIndexToEntRef(AttachParticle(i, "yikes_fx", 75.0)));
-				TF2_StunPlayer(i, 5.0, _, flags, this.index);
-			}
-		}
-		i = -1;
-		while ((i = FindEntityByClassname(i, "obj_sentrygun")) != -1)
-		{
-			GetEntPropVector(i, Prop_Send, "m_vecOrigin", pos2);
-			distance = GetVectorDistance(pos, pos2);
-			if (distance < HALERAGEDIST/2) {
-				SetEntProp(i, Prop_Send, "m_bDisabled", 1);
-				AttachParticle(i, "yikes_fx", 75.0);
-				SetVariantInt(1);
-				AcceptEntityInput(i, "RemoveHealth");
-				SetPawnTimer(EnableSG, 8.0, EntIndexToEntRef(i)); //CreateTimer(8.0, EnableSG, EntIndexToEntRef(i));
-			}
-		}
-		i = -1;
-		while ((i = FindEntityByClassname(i, "obj_dispenser")) != -1)
-		{
-			GetEntPropVector(i, Prop_Send, "m_vecOrigin", pos2);
-			distance = GetVectorDistance(pos, pos2);
-			if (distance < HALERAGEDIST) {
-				SetVariantInt(1);
-				AcceptEntityInput(i, "RemoveHealth");
-			}
-		}
-		i = -1;
-		while ((i = FindEntityByClassname(i, "obj_teleporter")) != -1)
-		{
-			GetEntPropVector(i, Prop_Send, "m_vecOrigin", pos2);
-			distance = GetVectorDistance(pos, pos2);
-			if (distance < HALERAGEDIST) {
-				SetVariantInt(1);
-				AcceptEntityInput(i, "RemoveHealth");
-			}
-		}
 		Format(snd, PLATFORM_MAX_PATH, "%s%i.wav", HaleRageSound, GetRandomInt(1, 4));
 		EmitSoundToAll(snd, this.index); EmitSoundToAll(snd, this.index);
 	}
+	
 	public void KilledPlayer(const JailBoss victim, Event event)
 	{
 		event.SetString("weapon", "fists");

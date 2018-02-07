@@ -163,7 +163,7 @@ public void OnPluginStart()
 	cvarTF2Jail[VIPFlag] 					= CreateConVar("sm_tf2jr_vip_flag", "r", "What admin flag do VIP players fall under?", FCVAR_NOTIFY);
 	cvarTF2Jail[AdmFlag] 					= CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under?", FCVAR_NOTIFY);
 	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[WeaponDisabler] 			= CreateConVar("sm_tf2jr_disable_weapons", "", "Disable certain weapons. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"220,448\" WILL DISABLE SHORTSTOP AND SODA POPPER. NOTE THAT WEARABLES SUCH AS SNIPER BACK WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_wearables\" TO DISABLE \"tf_wearables\"", FCVAR_NOTIFY);
+	cvarTF2Jail[WeaponDisabler] 			= CreateConVar("sm_tf2jr_disable_weapons", "", "Disable certain weapons. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"220,448\" WILL DISABLE SHORTSTOP AND SODA POPPER. NOTE THAT WEARABLES SUCH AS SNIPER BACK WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_wearables\" TO DISABLE \"tf_wearable*\"s", FCVAR_NOTIFY);
 	cvarTF2Jail[WearableDisabler] 			= CreateConVar("sm_tf2jr_disable_wearables", "", "Disable certain wearables. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"133,444\" WILL DISABLE GUNBOATS AND MANTREADS. NOTE THAT WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_weapons\" TO DISABLE \"tf_weapon*\"s", FCVAR_NOTIFY);
 
 	AutoExecConfig(true, "TF2JailRedux");
@@ -267,37 +267,6 @@ public void OnPluginStart()
 	AddMultiTargetFilter("@freedays", FreedaysGroup, "All Freedays.", false);
 	AddMultiTargetFilter("@!warden", WardenGroup, "All but the Warden.", false);
 
-	/*int ent = -1;
-	while ((ent = FindEntityByClassname(ent, "item_ammopack_full")) != -1)
-	{
-		if (IsValidEntity(ent))
-			HookSingleEntityOutput(ent, "OnPlayerTouch", OnPlayerTouch, true);
-	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "item_ammopack_medium")) != -1)
-	{
-		if (IsValidEntity(ent))
-			HookSingleEntityOutput(ent, "OnPlayerTouch", OnPlayerTouch, true);
-	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "item_ammopack_small")) != -1)
-	{
-		if (IsValidEntity(ent))
-			HookSingleEntityOutput(ent, "OnPlayerTouch", OnPlayerTouch, true);
-	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_ammo_pack")) != -1)
-	{
-		if (IsValidEntity(ent))
-			HookSingleEntityOutput(ent, "OnPlayerTouch", OnPlayerTouch, true);
-	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "func_breakable")) != -1)
-	{
-		if (IsValidEntity(ent))
-			HookSingleEntityOutput(ent, "OnBreak", VentTouch, true);
-	}*/
-	
 	AddNormalSoundHook(SoundHook);
 
 	MusicCookie = RegClientCookie("sm_tf2jr_music", "Determines if client wishes to listen to background music played by the plugin/LRs", CookieAccess_Protected);
@@ -1028,8 +997,7 @@ public void _MusicPlay()
 		{
 			if (!IsClientInGame(i))
 				continue;
-			JailFighter player = JailFighter(i);
-			if (player.bNoMusic)
+			if (JailFighter(i).bNoMusic)
 				continue;
 
 			EmitSoundToClient(i, sound, _, _, SNDLEVEL_NORMAL, SND_NOFLAGS, vol, 100, _, nullvec, nullvec, false, 0.0);
