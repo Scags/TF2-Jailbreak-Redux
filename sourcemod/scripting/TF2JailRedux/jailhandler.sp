@@ -177,33 +177,33 @@ public void AddLRToMenu(Menu & menu)
 		IntToString(i, strID, sizeof(strID));
 		menu.AddItem(strID, strName, value >= iMax ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
 	}
-	Call_OnMenuAdd(menu, arrLRS);	// Reminder that the sub-plugin lr index has to be one less when using an this array
+	Call_OnMenuAdd(menu, arrLRS);
 /**
  *	According to this, you have to have your sub-plugin LR as the last in the enum, always
  *	If you have more than one, you have to distinguish which plugin has which enum value and stick with it
  *	Secondly, you have to format strLRNames yourself on the menu item 
- *	arrLRs[] is able to handle lr counts in this plugin but make sure you use the ArrayList in your OnLRPicked() forward
+ *	arrLRs is able to handle lr counts in this plugin but make sure you use the ArrayList in your OnLRPicked() forward
 */
 }
 /**
  *	Add a 'short' description to your last request for the !listlrs command
 */
-public void AddLRToPanel(Panel & panel)
+public void AddLRToPanel(Menu & panel)
 {
-	panel.DrawItem("Suicide- Kill yourself on the spot");
-	panel.DrawItem("Custom- Type your own last request");
-	panel.DrawItem("Freeday for Yourself- Give yourself a freeday");
+	panel.AddItem("0", "Suicide- Kill yourself on the spot");
+	panel.AddItem("1", "Custom- Type your own last request");
+	panel.AddItem("2", "Freeday for Yourself- Give yourself a freeday");
 	char strFreeday[64]; Format(strFreeday, sizeof(strFreeday), "Freeday for Others- Give up to %i freedays to others", cvarTF2Jail[FreedayLimit].IntValue);
-	panel.DrawItem(strFreeday);
-	panel.DrawItem("Freeday for All- Give everybody a freeday");
-	panel.DrawItem("Guards Melee Only- Those guns are for babies!");
-	panel.DrawItem("Headless Horsemann Day- Turns all players into the HHH");
-	panel.DrawItem("Tiny Round- Honey I shrunk the players");
-	panel.DrawItem("Hot Prisoner- Prisoners are too hot to touch");
-	panel.DrawItem("Low Gravity- Where did the gravity go");
-	panel.DrawItem("Sniper- A hired gun to take out some folks");
-	panel.DrawItem("Warday- Team Deathmatch");
-	panel.DrawItem("Class Wars- Warday but it's class versus class");
+	panel.AddItem("3", strFreeday);
+	panel.AddItem("4", "Freeday for All- Give everybody a freeday");
+	panel.AddItem("5", "Guards Melee Only- Those guns are for babies!");
+	panel.AddItem("6", "Headless Horsemann Day- Turns all players into the HHH");
+	panel.AddItem("7", "Tiny Round- Honey I shrunk the players");
+	panel.AddItem("8", "Hot Prisoner- Prisoners are too hot to touch");
+	panel.AddItem("9", "Low Gravity- Where did the gravity go");
+	panel.AddItem("10", "Sniper- A hired gun to take out some folks");
+	panel.AddItem("11", "Warday- Team Deathmatch");
+	panel.AddItem("12", "Class Wars- Class versus class Warday");
 
 	Call_OnPanelAdd(panel);
 }
@@ -214,7 +214,7 @@ public void AddLRToPanel(Panel & panel)
 */
 public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 {
-	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+	if (!IsClientValid(client) || !IsPlayerAlive(client))
 		return;
 		
 	switch (action)
@@ -239,7 +239,8 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				CPrintToChatAll("{red}[JailRedux]{tan} Last request has been chosen. Freedays have been stripped.");
 			}
 			gamemode.bIsLRInUse = true;
-			int request = StringToInt(strIndex),
+			int request = StringToInt(strIndex), value;
+			if (request != -1)	// If the selection isn't random
 				value = arrLRS.Get(request);
 			
 			switch (request)
@@ -462,7 +463,6 @@ public void ManageSpawn(const JailFighter base, Event event)
 }
 /**
  *	Manage each player just after spawn
- *	gamemode.iLRType is initialized beforehand, so we can switch it if needed
 */
 public void PrepPlayer(const int userid)
 {
@@ -1129,24 +1129,9 @@ public void ManageEntityCreated(int ent, const char[] strClassName)
 	
 	if (cvarTF2Jail[DroppedWeapons].BoolValue && StrEqual(strClassName, "tf_dropped_weapon"))
 		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
-	/*{
-		AcceptEntityInput(entity, "kill");
-		return;
-	}*/
-	if ( StrEqual(strClassName, "item_ammopack_full")
-		|| StrEqual(strClassName, "item_ammopack_medium")
-		|| StrEqual(strClassName, "item_ammopack_small")
-		|| StrEqual(strClassName, "tf_ammo_pack")
-		&& cvarTF2Jail[RebelAmmo].BoolValue)
-	{
-		if (IsValidEntity(ent))
-			RequestFrame(HookAmmo, EntIndexToEntRef(ent));
-	}
+
 	if (StrEqual(strClassName, "func_breakable") && cvarTF2Jail[VentHit].BoolValue)
-	{
-		if (IsValidEntity(ent))
-			RequestFrame(HookVent, EntIndexToEntRef(ent));
-	}
+		RequestFrame(HookVent, EntIndexToEntRef(ent));
 }
 /**
  *	Self explanatory, set the gamemode.iTimeLeft to whatever time (in seconds) you desire

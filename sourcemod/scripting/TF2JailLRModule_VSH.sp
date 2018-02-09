@@ -26,7 +26,7 @@
 
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.0.0"
+#define PLUGIN_VERSION		"1.1.1"
 
 Handle hHudText, 
 	   rageHUD, 
@@ -1063,11 +1063,6 @@ public void ManagePlayBossIntro(const JailBoss base)
 	}
 }
 
-public Action OnPlayerKilled(Event event, const char[] name, bool dontBroadcast)
-{
-	return Plugin_Continue;
-}
-
 public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool & result)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13 || !IsClientValid(client))
@@ -1106,16 +1101,18 @@ public void ManageRoundEndBossInfo(bool bossWon)
 {
 	char victory[FULLPATH];
 	gameMessage[0] = '\0';
-	int i = 0;
+	int i;
 	JailBoss base = FindBoss(false);
+	if (!base)
+		return;
 
 	switch (base.iType) 
 	{
-		case Vagineer:Format(gameMessage, MAXMESSAGE, "%s\nThe Vagineer (%N) had %i (of %i) health left.", gameMessage, base.index, base.iHealth, base.iMaxHealth);
-		case HHHjr:Format(gameMessage, MAXMESSAGE, "%s\nThe Horseless Headless Horsemann Jr. (%N) had %i (of %i) health left.", gameMessage, base.index, base.iHealth, base.iMaxHealth);
-		case CBS:Format(gameMessage, MAXMESSAGE, "%s\nThe Christian Brutal Sniper (%N) had %i (of %i) health left.", gameMessage, base.index, base.iHealth, base.iMaxHealth);
-		case Bunny:Format(gameMessage, MAXMESSAGE, "%s\nThe Easter Bunny (%N) had %i (of %i) health left.", gameMessage, base.index, base.iHealth, base.iMaxHealth);
-		case Hale:Format(gameMessage, MAXMESSAGE, "%s\nSaxton Hale (%N) had %i (of %i) health left.", gameMessage, base.index, base.iHealth, base.iMaxHealth);
+		case Vagineer:Format(gameMessage, MAXMESSAGE, "\nThe Vagineer (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case HHHjr:Format(gameMessage, MAXMESSAGE, "\nThe Horseless Headless Horsemann Jr. (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case CBS:Format(gameMessage, MAXMESSAGE, "\nThe Christian Brutal Sniper (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case Bunny:Format(gameMessage, MAXMESSAGE, "\nThe Easter Bunny (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case Hale:Format(gameMessage, MAXMESSAGE, "\nSaxton Hale (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
 	}
 	if (bossWon) 
 	{
@@ -1146,7 +1143,10 @@ public void ManageRoundEndBossInfo(bool bossWon)
 
 public Action HookSound(int clients[64], int & numClients, char sample[FULLPATH], int & entity, int & channel, float & volume, int & level, int & pitch, int & flags)
 {
-	if (!JBVSH[Enabled].BoolValue || !IsValidClient(entity))
+	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
+		return Plugin_Continue;
+
+	if (!IsValidClient(entity))
 		return Plugin_Continue;
 		
 	if (StrContains(sample, "fall_damage", false) != -1)
@@ -1154,13 +1154,16 @@ public Action HookSound(int clients[64], int & numClients, char sample[FULLPATH]
 
 	switch (JailBoss(entity).iType) 
 	{
-		case  - 1: {  }
+		case  - 1: {
+			if (StrEqual(sample, "player/pl_impact_stun.wav", false))
+				return Plugin_Handled;
+		}
 		case Hale: {
 			if (!strncmp(sample, "vo", 2, false))
 				return Plugin_Handled;
 		}
 		case Vagineer: {
-			if (StrContains(sample, "vo/engineer_laughlong01", false)!= - 1)
+			if (StrContains(sample, "vo/engineer_laughlong01", false) != - 1)
 			{
 				strcopy(sample, FULLPATH, VagineerKSpree);
 				return Plugin_Changed;
@@ -1168,12 +1171,12 @@ public Action HookSound(int clients[64], int & numClients, char sample[FULLPATH]
 			
 			if (!strncmp(sample, "vo", 2, false))
 			{
-				if (StrContains(sample, "positivevocalization01", false)!= - 1) // For backstab sound
+				if (StrContains(sample, "positivevocalization01", false) != - 1) // For backstab sound
 					return Plugin_Continue;
-				if (StrContains(sample, "engineer_moveup", false)!= - 1)
+				if (StrContains(sample, "engineer_moveup", false) != - 1)
 					Format(sample, FULLPATH, "%s%i.wav", VagineerJump, GetRandomInt(1, 2));
 				
-				else if (StrContains(sample, "engineer_no", false)!= - 1 || GetRandomInt(0, 9) > 6)
+				else if (StrContains(sample, "engineer_no", false) != - 1 || GetRandomInt(0, 9) > 6)
 					strcopy(sample, FULLPATH, "vo/engineer_no01.mp3");
 				
 				else strcopy(sample, FULLPATH, "vo/engineer_jeers02.mp3");
@@ -1718,7 +1721,7 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 				{
 					SetMediCharge(medigun, 0.5);
 					damage *= 10;
-					TF2_AddCondition(client, TFCond_UberchargedOnTakeDamage, 0.1);	// TFCond_Bonked gives that shitty LostFooting thing when you get hit, have to use this
+					TF2_AddCondition(client, TFCond_PasstimeInterception, 0.1);
 					return Plugin_Changed;
 				}
 			}
@@ -1748,7 +1751,7 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 					&& !GetEntProp(ent, Prop_Send, "m_bDisguiseWearable")
 					&& weapon == GetPlayerWeaponSlot(attacker, 2))
 				{
-					TF2_AddCondition(client, TFCond_UberchargedOnTakeDamage, 0.1);
+					TF2_AddCondition(client, TFCond_PasstimeInterception, 0.1);
 					TF2_AddCondition(client, TFCond_SpeedBuffAlly, 1.0);
 					TF2_RemoveWearable(client, ent);
 					EmitSoundToAll("player/spy_shield_break.wav", client, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 1.0, 100, _, _, NULL_VECTOR, true, 0.0);
@@ -1759,7 +1762,7 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 				&& !TF2_IsPlayerInCondition(client, TFCond_Ubercharged)
 				&& weapon == GetPlayerWeaponSlot(attacker, 2))
 			{
-				TF2_AddCondition(client, TFCond_UberchargedOnTakeDamage, 0.1);
+				TF2_AddCondition(client, TFCond_PasstimeInterception, 0.1);
 				TF2_AddCondition(client, TFCond_SpeedBuffAlly, 1.0);
 				RemovePlayerBack(client, { 57 }, 1);
 				EmitSoundToAll("player/spy_shield_break.wav", client, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 1.0, 100, _, _, NULL_VECTOR, true, 0.0);
@@ -1971,6 +1974,164 @@ public void StopBackGroundMusic()
 	}
 }
 
+public void PrepPlayers(const int userid)	// OnPlayerPrepped doesn't fire after round start, and I don't want it to be that way in the core plugin
+{
+	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
+		return;
+
+	JailBoss player = JailBoss(userid, true);
+	int client = player.index;
+
+	if (!IsValidClient(client))
+		return;
+	if (!IsPlayerAlive(client)
+		|| JBGameMode_GetProperty("iRoundState") == StateEnding
+		|| player.bIsBoss)
+	return;
+	
+	TF2Attrib_RemoveAll(client);
+	if (GetClientTeam(client)!= RED && GetClientTeam(client) > view_as< int >(TFTeam_Spectator))
+	{
+		player.ForceTeamChange(RED);
+		TF2_RegeneratePlayer(client); // Added fix by Chdata to correct team colors
+	}
+	TF2_RegeneratePlayer(client);
+	SetEntityHealth(client, GetEntProp(client, Prop_Data, "m_iMaxHealth"));
+	
+	if (IsValidEntity(FindPlayerBack(client, { 444 }, 1))) //  Fixes mantreads to have jump height again
+	{
+		TF2Attrib_SetByDefIndex(client, 58, 1.3); //  "Self dmg push force increased"
+	}
+	int weapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary);
+	int index = -1;
+	if (weapon > MaxClients && IsValidEdict(weapon))
+	{
+		index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+		switch (index) {
+			case 237:
+			{
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
+				weapon = player.SpawnWeapon("tf_weapon_rocketlauncher", 18, 1, 0, "114 ; 1.0");
+				SetWeaponAmmo(weapon, 20);
+			}
+			case 17, 204:
+			{
+				if (GetItemQuality(weapon) != 10) {
+					TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
+					player.SpawnWeapon("tf_weapon_syringegun_medic", 17, 1, 10, "17 ; 0.05 ; 144 ; 1");
+				}
+			}
+		}
+	}
+	weapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
+	if (weapon > MaxClients && IsValidEdict(weapon))
+	{
+		index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+		switch (index) {
+			/*case 57:	// Razorback
+			{
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
+				weapon = player.SpawnWeapon("tf_weapon_smg", 16, 1, 0, "");
+			}*/
+			case 265: // Stickyjumper
+			{
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
+				weapon = player.SpawnWeapon("tf_weapon_pipebomblauncher", 20, 1, 0, "");
+				SetWeaponAmmo(weapon, 24);
+			}
+			/*case 311, 433:
+			{
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
+				weapon = player.SpawnWeapon("tf_weapon_pipebomblauncher", 20, 5, 10, "280 ; 3 ; 6 ; 0.7 ; 97 ; 0.5 ; 78 ; 1.2");
+				SetWeaponAmmo(weapon, GetMaxAmmo(client, 1));
+			}*/
+			case 528: //Short Circuit
+			{
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
+				weapon = player.SpawnWeapon("tf_weapon_laser_pointer", 140, 1, 0, "");
+			}
+			case 735, 736, 810, 831, 933, 1080, 1102: // Replace sapper with more useful nail-firing Pistol
+			{
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
+				weapon = player.SpawnWeapon("tf_weapon_handgun_scout_secondary", 23, 5, 10, "280 ; 5 ; 6 ; 0.7 ; 2 ; 0.66 ; 4 ; 4.167 ; 78 ; 8.333 ; 137 ; 6.0");
+				SetWeaponAmmo(weapon, 200);
+			}
+			/*case 46, 1145: //bonk atomic punch
+			{
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
+				weapon = player.SpawnWeapon("tf_weapon_lunchbox_drink", 163, 1, 0, "144 ; 2");
+			}*/
+			case 39, 351, 1081:
+			{
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
+				weapon = player.SpawnWeapon("tf_weapon_flaregun", index, 5, 10, "551 ; 1 ; 25 ; 0.5 ; 207 ; 1.66 ; 144 ; 1 ; 58 ; 3.0");
+				SetWeaponAmmo(weapon, 16);
+			}
+			case 740:
+			{
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
+				weapon = player.SpawnWeapon("tf_weapon_flaregun", index, 5, 10, "551 ; 1 ; 25 ; 0.5 ; 207 ; 1.33 ; 416 ; 3 ; 58 ; 2.08 ; 1 ; 0.65");
+				SetWeaponAmmo(weapon, 16);
+			}
+		}
+	}
+	/*if ( IsValidEntity (FindPlayerBack(client, { 57 }, 1)) )
+	{
+		RemovePlayerBack(client, { 57 }, 1);
+		weapon = player.SpawnWeapon("tf_weapon_smg", 16, 1, 0, "");
+	}*/
+	if (IsValidEntity(FindPlayerBack(client, { 642 }, 1)))
+	{
+		player.SpawnWeapon("tf_weapon_smg", 16, 1, 6, "149 ; 1.5 ; 1 ; 0.85");
+	}
+	if (IsValidEntity(FindPlayerBack(client, { 231 }, 1)))
+	{
+		player.SpawnWeapon("tf_weapon_smg", 16, 1, 6, "16 ; 1.0 ; 1 ; 0.85");
+	}
+	weapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
+	if (weapon > MaxClients && IsValidEdict(weapon)) 
+	{
+		index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+		switch (index)
+		{
+			/*case 331: {
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+				weapon = player.SpawnWeapon("tf_weapon_fists", 195, 1, 6, "");
+			}*/
+			case 357:SetPawnTimer(_NoHonorBound, 1.0, player.userid);
+			case 171:
+			{  // Remove and replace shiv to avoid idiots hitting themselves while climbing walls
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+				weapon = player.SpawnWeapon("tf_weapon_club", 3, 1, 0, "");
+			}
+		}
+	}
+	weapon = GetPlayerWeaponSlot(client, 4);
+	if (weapon > MaxClients && IsValidEdict(weapon) && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") == 60)
+	{
+		TF2_RemoveWeaponSlot(client, 4);
+		weapon = player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "");
+	}
+	TFClassType equip = TF2_GetPlayerClass(client);
+	switch (equip) 
+	{
+		case TFClass_Medic:
+		{
+			weapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
+			int mediquality = GetItemQuality(weapon);
+			if (mediquality != 10) {
+				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
+				if (JBVSH[PermOverheal].BoolValue)
+					weapon = player.SpawnWeapon("tf_weapon_medigun", 35, 5, 10, "14 ; 0.0 ; 18 ; 0.0 ; 10 ; 1.25 ; 178 ; 0.75");
+				else weapon = player.SpawnWeapon("tf_weapon_medigun", 35, 5, 10, "18 ; 0.0 ; 10 ; 1.25 ; 178 ; 0.75");
+				//200 ; 1 for area of effect healing, 178 ; 0.75 Faster switch-to, 14 ; 0.0 perm overheal, 11 ; 1.25 Higher overheal
+				if (GetMediCharge(weapon) < 0.41)
+					SetMediCharge(weapon, 0.41);
+			}
+		}
+	}
+}
+
 public void ManageBossCheckHealth(const JailBoss base)
 {
 	static int LastBossTotalHealth;
@@ -2028,7 +2189,7 @@ public void ManageMessageIntro()
 
 	gameMessage[0] = '\0';
 	int ent = -1;
-	while ((ent = FindEntityByClassname(ent, "func_door"))!= - 1)
+	while ((ent = FindEntityByClassname(ent, "func_door")) != - 1)
 	{	// Redundant but a backup in case doors don't work for some reason (which should never happen)
 		AcceptEntityInput(ent, "Open");
 		AcceptEntityInput(ent, "Unlock");
@@ -2039,11 +2200,11 @@ public void ManageMessageIntro()
 	switch (base.iType) 
 	{
 		case  - 1: {  }
-		case Hale:Format(gameMessage, MAXMESSAGE, "%s\n%N has become Saxton Hale with %i Health", gameMessage, base.index, base.iHealth);
-		case Vagineer:Format(gameMessage, MAXMESSAGE, "%s\n%N has become the Vagineer with %i Health", gameMessage, base.index, base.iHealth);
-		case CBS:Format(gameMessage, MAXMESSAGE, "%s\n%N has become the Christian Brutal Sniper with %i Health", gameMessage, base.index, base.iHealth);
-		case HHHjr:Format(gameMessage, MAXMESSAGE, "%s\n%N has become The Horseless Headless Horsemann Jr. with %i Health", gameMessage, base.index, base.iHealth);
-		case Bunny:Format(gameMessage, MAXMESSAGE, "%s\n%N has become The Easter Bunny with %i Health", gameMessage, base.index, base.iHealth);
+		case Hale:Format(gameMessage, MAXMESSAGE, "\n%N has become Saxton Hale with %i Health", base.index, base.iHealth);
+		case Vagineer:Format(gameMessage, MAXMESSAGE, "\n%N has become the Vagineer with %i Health", base.index, base.iHealth);
+		case CBS:Format(gameMessage, MAXMESSAGE, "\n%N has become the Christian Brutal Sniper with %i Health", base.index, base.iHealth);
+		case HHHjr:Format(gameMessage, MAXMESSAGE, "\n%N has become The Horseless Headless Horsemann Jr. with %i Health", base.index, base.iHealth);
+		case Bunny:Format(gameMessage, MAXMESSAGE, "\n%N has become The Easter Bunny with %i Health", base.index, base.iHealth);
 	}
 	SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
 	for (i = MaxClients; i; --i) {
@@ -2075,73 +2236,79 @@ public void fwdOnDownloads()
 	AddHHHToDownloads();
 	AddBunnyToDownloads();
 }
-public void fwdOnLRRoundActivate(const JBPlayer player)
+public void fwdOnLRRoundActivate(const JBPlayer Player)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
 		return;
-	JailBoss base = ToJailBoss(player);
+
+	JailBoss base = ToJailBoss(Player);
 	if (GetClientTeam(base.index) != RED && GetClientTeam(base.index) > view_as< int >(TFTeam_Spectator) && !base.bIsBoss)
 		base.ForceTeamChange(RED);
 
 	base.iDamage = 0;
-	SetPawnTimer( fwdOnPlayerPrepped, 0.2, JBPlayer( base.userid, true ) );
+	SetPawnTimer( PrepPlayers, 0.2, base.userid );
 }
 public void fwdOnManageRoundStart()
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
 		return;
+
 	JBGameMode_SetProperty("bWardenLocked", true);
 	JBGameMode_SetProperty("bCellsOpened", true);
+	JBGameMode_SetProperty("bOneGuardLeft", true);
+	JBGameMode_ManageCells(OPEN);
+
 	JailBoss rand = JailBoss( GetRandomClient() );
+	int client = rand.index;
 	int BOSS = GetRandomInt(Hale, MAXBOSS);
 	//MakePlayerBoss(rand.userid, BOSS);
 	rand.ConvertToBoss(BOSS);
-	if (GetClientTeam(rand.index) == RED)
+	if (GetClientTeam(client) == RED)
 		rand.ForceTeamChange(BLU);
 
-	if (!IsPlayerAlive(rand.index))
-		TF2_RespawnPlayer(rand.index);
+	if (!IsPlayerAlive(client))
+		TF2_RespawnPlayer(client);
 	if (JBGameMode_GetProperty("bWardayTeleportSetBlue"))
 		rand.TeleportToPosition(WBLU);
-	else ServerCommand("sm_freeze #%i 10", rand.userid);
+	else ServerCommand("sm_freeze #%i 5", rand.userid);
 	rand.iMaxHealth = CalcBossHealth(760.8, JBGameMode_GetProperty("iPlaying"), 1.0, 1.0341, 2046.0);
-	int maxhp = GetEntProp(rand.index, Prop_Data, "m_iMaxHealth");
-	TF2Attrib_RemoveAll(rand.index);
-	TF2Attrib_SetByDefIndex( rand.index, 26, float(rand.iMaxHealth)-maxhp );
-	TF2Attrib_SetByDefIndex( rand.index, 275, 1.0 );
-	if (GetClientTeam(rand.index) != BLU)
+	int maxhp = GetEntProp(client, Prop_Data, "m_iMaxHealth");
+	TF2Attrib_RemoveAll(client);
+	TF2Attrib_SetByDefIndex( client, 26, float(rand.iMaxHealth)-maxhp );
+	TF2Attrib_SetByDefIndex( client, 275, 1.0 );
+	if (GetClientTeam(client) != BLU)
 		rand.ForceTeamChange(BLU);
 	rand.iHealth = rand.iMaxHealth;
-	SetEntityHealth(rand.index, rand.iHealth);
+	SetEntityHealth(client, rand.iHealth);
 	JBGameMode_SetProperty("bDisableCriticals", true);
 
+	JailBoss player;
 	for (int i=MaxClients ; i ; --i) 
 	{
 		if (!IsValidClient(i) || GetClientTeam(i) <= view_as< int >(TFTeam_Spectator))
 			continue;
 
-		JailBoss player = JailBoss(i);
+		player = JailBoss(i);
 		if (player.bIsBoss)
 			continue;
 
 		SetEntityMoveType(i, MOVETYPE_WALK);
 		if (GetClientTeam(i) != RED)
 			player.ForceTeamChange(RED);
-		SetPawnTimer( fwdOnPlayerPrepped, 0.2, JBPlayer( player.userid, true ) );
-
-		if (GetClientTeam(i) == BLU)
-			player.ForceTeamChange(RED);
+		SetPawnTimer( PrepPlayers, 0.2, player.userid );
 	}
+
 	SetPawnTimer(ManagePlayBossIntro, 0.2, rand);
 	SetPawnTimer(CheckAlivePlayers, 0.4);
 	ManageMessageIntro();
 }
-public void fwdOnLRRoundEnd(const JBPlayer player)
+public void fwdOnLRRoundEnd(const JBPlayer Player)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
 		return;
-	ToJailBoss(player).Init_VSH();
-	TF2Attrib_RemoveByDefIndex(player.index, 26);
+
+	ToJailBoss(Player).Init_VSH();
+	TF2Attrib_RemoveByDefIndex(Player.index, 26);
 }
 public void fwdOnManageRoundEnd(Event event)
 {
@@ -2158,13 +2325,14 @@ public void fwdOnManageRoundEnd(Event event)
 
 	ManageRoundEndBossInfo( (event.GetInt("team") == BLU) );
 }
-public void fwdOnRedThink(const JBPlayer player)
+public void fwdOnRedThink(const JBPlayer Player)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 19 || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13 || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
-	if (GetClientTeam(player.index) != RED)
+	if (GetClientTeam(Player.index) != RED)
 		return;
-	JailBoss fighter = ToJailBoss(player);
+
+	JailBoss fighter = ToJailBoss(Player);
 	int i = fighter.index;
 	char wepclassname[64];
 	int buttons = GetClientButtons(i);
@@ -2432,11 +2600,11 @@ public void fwdOnRedThink(const JBPlayer player)
 		}
 	}
 }
-public void fwdOnAllBlueThink(const JBPlayer player)
+public void fwdOnAllBlueThink(const JBPlayer Player)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13 || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
-	JailBoss base = ToJailBoss(player);
+	JailBoss base = ToJailBoss(Player);
 	if (!base.bIsBoss)
 		return;
 	switch (base.iType) 
@@ -2455,55 +2623,58 @@ public void fwdOnLRTextHud(char strHud[128])
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
 		return;
+
 	Format(strHud, 128, "Versus Saxton Hale");
 }
-public void fwdOnLRPicked(const JBPlayer player, const int selection, const int value, ArrayList & arrLRS)
+public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int value, ArrayList & arrLRS)
 {
 	if (!JBVSH[Enabled].BoolValue || selection != 13)
 		return;
+
 	if (value >= JBVSH[PickCount].IntValue)
 	{
-		CPrintToChat(player.index, "{red}[JailRedux]{tan} This LR has been picked the maximum amount of times for this map.");
-		player.ListLRS();
+		CPrintToChat(Player.index, "{red}[JailRedux]{tan} This LR has been picked the maximum amount of times for this map.");
+		Player.ListLRS();
 		return;
 	}
-	CPrintToChatAll("{red}[JailRedux]{tan} %N has decided to play a round of {default}Versus Saxton Hale{tan}.", player.index);
+	CPrintToChatAll("{red}[JailRedux]{tan} %N has decided to play a round of {default}Versus Saxton Hale{tan}.", Player.index);
 	arrLRS.Set( selection, value+1 );
+	JBGameMode_SetProperty("iLRPresetType", 13);
 }
-public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Event event)
+public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Event event)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iRoundState") == StateDisabled || JBGameMode_GetProperty("iLRType") != 13)
 		return;
 
-	JailBoss vict = ToJailBoss(victim);
-	JailBoss atkr = ToJailBoss(attacker);
+	JailBoss victim = ToJailBoss(Victim);
+	JailBoss attacker = ToJailBoss(Attacker);
 
 	int deathflags = event.GetInt("death_flags");
-	if (vict.bIsBoss) // If victim is a boss, kill him off
-		SetPawnTimer(_BossDeath, 0.1, vict.userid);
+	if (victim.bIsBoss) // If victim is a boss, kill him off
+		SetPawnTimer(_BossDeath, 0.1, victim.userid);
 	
-	if (atkr.bIsBoss && !vict.bIsBoss)
+	if (attacker.bIsBoss && !victim.bIsBoss)
 	{
-		switch (atkr.iType) 
+		switch (attacker.iType) 
 		{
 			case  - 1: {  }
 			case Hale:
 			{
 				if (deathflags & TF_DEATHFLAG_DEADRINGER)
 					event.SetString("weapon", "fists");
-				else ToCHale(atkr).KilledPlayer(vict, event);
+				else ToCHale(attacker).KilledPlayer(victim, event);
 			}
-			case Vagineer:ToCVagineer(atkr).KilledPlayer(vict, event);
-			case CBS:ToCChristian(atkr).KilledPlayer(vict, event);
-			case HHHjr:ToCHHHJr(atkr).KilledPlayer(vict, event);
-			case Bunny:ToCBunny(atkr).KilledPlayer(vict, event);
+			case Vagineer:ToCVagineer(attacker).KilledPlayer(victim, event);
+			case CBS:ToCChristian(attacker).KilledPlayer(victim, event);
+			case HHHjr:ToCHHHJr(attacker).KilledPlayer(victim, event);
+			case Bunny:ToCBunny(attacker).KilledPlayer(victim, event);
 		}
 	}
 
-	if (!vict.bIsBoss)
+	if (!victim.bIsBoss)
 		SetPawnTimer(CheckAlivePlayers, 0.2);
 	
-	if ( (TF2_GetPlayerClass(vict.index) == TFClass_Engineer) && !(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) )
+	if ( (TF2_GetPlayerClass(victim.index) == TFClass_Engineer) && !(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) )
 	{
 		if (JBVSH[EngieBuildings].IntValue) 
 		{
@@ -2511,7 +2682,7 @@ public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Even
 			{
 				case 1: 
 				{
-					int sentry = FindSentry(vict.index);
+					int sentry = FindSentry(victim.index);
 					if (sentry != -1) 
 					{
 						SetVariantInt(GetEntProp(sentry, Prop_Send, "m_iMaxHealth")+8);
@@ -2526,7 +2697,7 @@ public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Even
 							continue;
 						else if (!HasEntProp(ent, Prop_Send, "m_hBuilder"))
 							continue;
-						else if (GetBuilder(ent) != vict.index)
+						else if (GetBuilder(ent) != victim.index)
 							continue;
 
 						SetVariantInt(GetEntProp(ent, Prop_Send, "m_iMaxHealth")+8);
@@ -2537,14 +2708,14 @@ public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Even
 		}
 	}
 }
-public void fwdOnBuildingDestroyed(const JBPlayer attacker, const int building, Event event)
+public void fwdOnBuildingDestroyed(const JBPlayer Attacker, const int building, Event event)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13 || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
 
-	JailBoss atkr = ToJailBoss(attacker);
+	JailBoss attacker = ToJailBoss(Attacker);
 
-	switch (atkr.iType) 
+	switch (attacker.iType) 
 	{
 		case  - 1: {  }
 		case Hale: 
@@ -2553,18 +2724,18 @@ public void fwdOnBuildingDestroyed(const JBPlayer attacker, const int building, 
 			if (!GetRandomInt(0, 3)) 
 			{
 				strcopy(snd, FULLPATH, HaleSappinMahSentry132);
-				EmitSoundToAll(snd, atkr.index);
+				EmitSoundToAll(snd, attacker.index);
 			}
 		}
 	}
 }
-public void fwdOnObjectDeflected(const JBPlayer attacker, const JBPlayer victim, Event event)
+public void fwdOnObjectDeflected(const JBPlayer Attacker, const JBPlayer Victim, Event event)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13 || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
 
-	//JailBoss airblaster = ToJailBoss(attacker.index);
-	JailBoss airblasted = ToJailBoss(victim);
+	//JailBoss airblaster = ToJailBoss(Attacker);
+	JailBoss airblasted = ToJailBoss(Victim);
 
 	switch (airblasted.iType) 
 	{
@@ -2578,46 +2749,46 @@ public void fwdOnObjectDeflected(const JBPlayer attacker, const JBPlayer victim,
 		}
 	}
 }
-public void fwdOnPlayerJarated(const JBPlayer attacker, const JBPlayer victim)
+public void fwdOnPlayerJarated(const JBPlayer Attacker, const JBPlayer Victim)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13 || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
 
-	ManagePlayerJarated(ToJailBoss(attacker), ToJailBoss(victim));
+	ManagePlayerJarated(ToJailBoss(Attacker), ToJailBoss(Victim));
 }
-public void fwdOnUberDeployed(const JBPlayer attacker, const JBPlayer victim)
+public void fwdOnUberDeployed(const JBPlayer Medic, const JBPlayer Patient)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iRoundState") != 13)
 		return;
 
-	ManageUberDeploy(ToJailBoss(attacker), ToJailBoss(victim));
+	ManageUberDeploy(ToJailBoss(Medic), ToJailBoss(Patient));
 }
-public void fwdOnPlayerSpawned(const JBPlayer player, Event event)
+public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
 		return;
 
-	JailBoss spawn = ToJailBoss(player);
+	JailBoss spawn = ToJailBoss(Player);
 
 	if (spawn.bIsBoss)
 		return;
 
 	SetVariantString(""); AcceptEntityInput(spawn.index, "SetCustomModel");
 
-	/*if (player.bIsBoss && JBGameMode_GetProperty("iRoundState") < StateEnding && JBGameMode_GetProperty("iRoundState") != StateDisabled)
+	/*if (spawn.bIsBoss && JBGameMode_GetProperty("iRoundState") < StateEnding && JBGameMode_GetProperty("iRoundState") != StateDisabled)
 	{
-		if (GetClientTeam(player.index) != BLU)
-			player.ForceTeamChange(BLU);
-		player.ConvertToBoss();
-		if (player.iHealth == 0)
-			player.iHealth = player.iMaxHealth);
+		if (GetClientTeam(spawn.index) != BLU)
+			spawn.ForceTeamChange(BLU);
+		spawn.ConvertToBoss();
+		if (spawn.iHealth == 0)
+			spawn.iHealth = spawn.iMaxHealth);
 	}*/
 
 	if (JBGameMode_GetProperty("iRoundState") > StateDisabled)
 	{
 		if (GetClientTeam(spawn.index) != RED)
 			spawn.ForceTeamChange(RED);
-		SetPawnTimer( fwdOnPlayerPrepped, 0.2, JBPlayer( spawn.userid, true ) );
+		SetPawnTimer( PrepPlayers, 0.2, spawn.userid );
 	}
 }
 public void fwdOnMenuAdd(Menu & menu, ArrayList arrLRS)
@@ -2630,11 +2801,12 @@ public void fwdOnMenuAdd(Menu & menu, ArrayList arrLRS)
 	Format(strMenu, sizeof(strMenu), "Versus Saxton Hale (%d/%d)", value, max);
 	menu.AddItem("13", strMenu, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 }
-public void fwdOnPanelAdd(Panel & panel)
+public void fwdOnPanelAdd(Menu & panel)
 {
 	if (!JBVSH[Enabled].BoolValue)
 		return;
-	panel.DrawItem("Versus Saxton Hale- A nice round of VSH");
+
+	panel.AddItem("13", "Versus Saxton Hale- A nice round of VSH");
 }
 public void fwdOnManageTimeLeft()
 {
@@ -2643,178 +2815,16 @@ public void fwdOnManageTimeLeft()
 
 	JBGameMode_SetProperty("iTimeLeft", 600);
 }
-public void fwdOnPlayerPrepped(const JBPlayer base)
-{
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
-		return;
-
-	int client = base.index;
-	JailBoss player = ToJailBoss(base);
-
-	if (!IsValidClient(client))
-		return;
-	if (!IsPlayerAlive(client)
-		|| JBGameMode_GetProperty("iRoundState") == StateEnding
-		|| player.bIsBoss)
-	return;
-	
-	TF2Attrib_RemoveAll(client);
-	if (GetClientTeam(client)!= RED && GetClientTeam(client) > view_as< int >(TFTeam_Spectator))
-	{
-		player.ForceTeamChange(RED);
-		TF2_RegeneratePlayer(client); // Added fix by Chdata to correct team colors
-	}
-	TF2_RegeneratePlayer(client);
-	SetEntityHealth(client, GetEntProp(client, Prop_Data, "m_iMaxHealth"));
-	
-	if (IsValidEntity(FindPlayerBack(client, { 444 }, 1))) //  Fixes mantreads to have jump height again
-	{
-		TF2Attrib_SetByDefIndex(client, 58, 1.3); //  "Self dmg push force increased"
-	}
-	int weapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary);
-	int index = -1;
-	if (weapon > MaxClients && IsValidEdict(weapon))
-	{
-		index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-		switch (index) {
-			case 237:
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
-				weapon = player.SpawnWeapon("tf_weapon_rocketlauncher", 18, 1, 0, "114 ; 1.0");
-				SetWeaponAmmo(weapon, 20);
-			}
-			case 17, 204:
-			{
-				if (GetItemQuality(weapon) != 10) {
-					TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
-					player.SpawnWeapon("tf_weapon_syringegun_medic", 17, 1, 10, "17 ; 0.05 ; 144 ; 1");
-				}
-			}
-			case 224: //letranger beta weapon
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
-				weapon = player.SpawnWeapon("tf_weapon_revolver", 224, 1, 10, "413 ; 1 ; 3 ; 0.5 ; 6 ; 0.75 ; 2 ; 1.15");
-			}
-		}
-	}
-	weapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
-	if (weapon > MaxClients && IsValidEdict(weapon))
-	{
-		index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-		switch (index) {
-			/*case 57:	// Razorback
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-				weapon = player.SpawnWeapon("tf_weapon_smg", 16, 1, 0, "");
-			}*/
-			case 265: // Stickyjumper
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-				weapon = player.SpawnWeapon("tf_weapon_pipebomblauncher", 20, 1, 0, "");
-				SetWeaponAmmo(weapon, 24);
-			}
-			/*case 311, 433:
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-				weapon = player.SpawnWeapon("tf_weapon_pipebomblauncher", 20, 5, 10, "280 ; 3 ; 6 ; 0.7 ; 97 ; 0.5 ; 78 ; 1.2");
-				SetWeaponAmmo(weapon, GetMaxAmmo(client, 1));
-			}*/
-			case 528: //Short Circuit
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-				weapon = player.SpawnWeapon("tf_weapon_laser_pointer", 140, 1, 0, "");
-			}
-			case 735, 736, 810, 831, 933, 1080, 1102: // Replace sapper with more useful nail-firing Pistol
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-				weapon = player.SpawnWeapon("tf_weapon_handgun_scout_secondary", 23, 5, 10, "280 ; 5 ; 6 ; 0.7 ; 2 ; 0.66 ; 4 ; 4.167 ; 78 ; 8.333 ; 137 ; 6.0");
-				SetWeaponAmmo(weapon, 200);
-			}
-			/*case 46, 1145: //bonk atomic punch
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-				weapon = player.SpawnWeapon("tf_weapon_lunchbox_drink", 163, 1, 0, "144 ; 2");
-			}*/
-			case 39, 351, 1081:
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-				weapon = player.SpawnWeapon("tf_weapon_flaregun", index, 5, 10, "551 ; 1 ; 25 ; 0.5 ; 207 ; 1.66 ; 144 ; 1 ; 58 ; 3.0");
-				SetWeaponAmmo(weapon, 16);
-			}
-			case 740:
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-				weapon = player.SpawnWeapon("tf_weapon_flaregun", index, 5, 10, "551 ; 1 ; 25 ; 0.5 ; 207 ; 1.33 ; 416 ; 3 ; 58 ; 2.08 ; 1 ; 0.65");
-				SetWeaponAmmo(weapon, 16);
-			}
-		}
-	}
-	/*if ( IsValidEntity (FindPlayerBack(client, { 57 }, 1)) )
-	{
-		RemovePlayerBack(client, { 57 }, 1);
-		weapon = player.SpawnWeapon("tf_weapon_smg", 16, 1, 0, "");
-	}*/
-	if (IsValidEntity(FindPlayerBack(client, { 642 }, 1)))
-	{
-		player.SpawnWeapon("tf_weapon_smg", 16, 1, 6, "149 ; 1.5 ; 1 ; 0.85");
-	}
-	if (IsValidEntity(FindPlayerBack(client, { 231 }, 1)))
-	{
-		player.SpawnWeapon("tf_weapon_smg", 16, 1, 6, "16 ; 1.0 ; 1 ; 0.85");
-	}
-	weapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
-	if (weapon > MaxClients && IsValidEdict(weapon)) 
-	{
-		index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-		switch (index)
-		{
-			/*case 331: {
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
-				weapon = player.SpawnWeapon("tf_weapon_fists", 195, 1, 6, "");
-			}*/
-			case 357:SetPawnTimer(_NoHonorBound, 1.0, player.userid);
-			case 171:
-			{  // Remove and replace shiv to avoid idiots hitting themselves while climbing walls
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
-				weapon = player.SpawnWeapon("tf_weapon_club", 3, 1, 0, "");
-			}
-		}
-	}
-	weapon = GetPlayerWeaponSlot(client, 4);
-	if (weapon > MaxClients && IsValidEdict(weapon) && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") == 60)
-	{
-		TF2_RemoveWeaponSlot(client, 4);
-		weapon = player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "");
-	}
-	TFClassType equip = TF2_GetPlayerClass(client);
-	switch (equip) 
-	{
-		case TFClass_Medic:
-		{
-			weapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
-			int mediquality = GetItemQuality(weapon);
-			if (mediquality != 10) {
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-				if (JBVSH[PermOverheal].BoolValue)
-					weapon = player.SpawnWeapon("tf_weapon_medigun", 35, 5, 10, "14 ; 0.0 ; 18 ; 0.0 ; 10 ; 1.25 ; 178 ; 0.75");
-				else weapon = player.SpawnWeapon("tf_weapon_medigun", 35, 5, 10, "18 ; 0.0 ; 10 ; 1.25 ; 178 ; 0.75");
-				//200 ; 1 for area of effect healing, 178 ; 0.75 Faster switch-to, 14 ; 0.0 perm overheal, 11 ; 1.25 Higher overheal
-				if (GetMediCharge(weapon) < 0.41)
-					SetMediCharge(weapon, 0.41);
-			}
-		}
-	}
-}
 public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, int damage, int custom, int weapon, Event event)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
 		return;
 
+	if (!IsClientValid(Victim.index) || !IsClientValid(Attacker.index) || Attacker.index == Victim.index)
+		return;
+
 	JailBoss victim = ToJailBoss(Victim);
 	JailBoss attacker = ToJailBoss(Attacker);
-
-	if (!IsClientValid(victim.index) || !IsClientValid(attacker.index) || attacker.index == victim.index)
-		return;
 
 	if (victim.bIsBoss)
 	{
@@ -2873,7 +2883,7 @@ public Action fwdOnHookDamage(const JBPlayer Victim, int& attacker, int& inflict
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13 || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return Plugin_Continue;
 
-	JailBoss victim = ToJailBoss(victim);
+	JailBoss victim = ToJailBoss(Victim);
 	int bFallDamage = (damagetype & DMG_FALL);
 	if (victim.bIsBoss && attacker <= 0 && bFallDamage)
 	{
@@ -2936,8 +2946,6 @@ public void CheckJBHooks()
 		LogError("Failed to load OnPanelAdd forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnManageTimeLeft, fwdOnManageTimeLeft))
 		LogError("Failed to load OnManageTimeLeft forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayerPrepped, fwdOnPlayerPrepped))
-		LogError("Failed to load OnPlayerPrepped forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnHurtPlayer, fwdOnHurtPlayer))
 		LogError("Failed to load OnHurtPlayer forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnHookDamage, fwdOnHookDamage))

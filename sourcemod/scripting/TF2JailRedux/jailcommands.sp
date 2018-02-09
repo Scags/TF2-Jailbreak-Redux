@@ -7,7 +7,9 @@ public Action Command_Help(int client, int args)
 	panel.SetTitle("Welcome to TF2Jail Redux!");
 	panel.DrawItem("Who's the current warden?");
 	panel.DrawItem("What are the last requests?");
+#if defined _clientprefs_included
 	panel.DrawItem("Turn off the background music? (Doesn't exist yet so lol)");
+#endif
 	panel.Send(client, Panel_Help, 9001);
 	delete panel;
 	
@@ -25,14 +27,13 @@ public int Panel_Help(Menu menu, MenuAction action, int client, int select)
 				case 0:
 				{
 					if (gamemode.bWardenExists)
-					{
-						int iWarden = FindWarden();
-						CPrintToChat(client, "{red}[JailRedux]{red} %N{tan} is the current warden.", iWarden);
-					}
+						CPrintToChat(client, "{red}[JailRedux]{red} %N{tan} is the current warden.", gamemode.FindWarden().index);
 					else CPrintToChat(client, "{red}[JailRedux]{tan} There is no current warden.");
 				}
 				case 1:ListLastRequestPanel(client);
+#if defined _clientprefs_included
 				case 2:MusicPanel(client);
+#endif
 			}
 		}
 	}
@@ -72,11 +73,9 @@ public Action Command_BecomeWarden(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	int iWarden = FindWarden();
-
 	if (gamemode.bWardenExists)
 	{
-		CPrintToChat(client, "{red}[JailRedux]{red} %N{tan} is the current warden.", iWarden);
+		CPrintToChat(client, "{red}[JailRedux]{red} %N{tan} is the current warden.", gamemode.FindWarden().index);
 		return Plugin_Handled;
 	}
 
@@ -456,17 +455,11 @@ public void ListLastRequestPanel(const int client)
 	if (IsVoteInProgress())
 		return;
 
-	Panel panel = new Panel();
+	Menu panel = new Menu(ListLRsPanel);
 	panel.SetTitle("Last Request List");
 	AddLRToPanel(panel);
-	panel.Send(client, ListLRsPanel, 9001);
-	delete panel;
-	/*Menu menu = new Menu(ListLRsPanel);
-	menu.SetTitle("Last Request List");
-	//menu.AddItem("0", "Random LR");
-	AddLRToMenu(menu);
-	menu.ExitButton = true;
-	menu.Display(client, 30);*/
+	panel.ExitButton = true;
+	panel.Display(client, -1);
 }
 
 public int ListLRsPanel(Menu menu, MenuAction action, int client, int select)
@@ -484,9 +477,8 @@ public Action Command_CurrentWarden(int client, int args)
 		CPrintToChat(client, "{red}[JailRedux]{tan} Round must be active.");
 		return Plugin_Handled;
 	}
-	int iWarden = FindWarden();
 	if (gamemode.bWardenExists)
-		CReplyToCommand(client, "{red}[JailRedux]{red} %N {tan}is the current warden.", iWarden);
+		CReplyToCommand(client, "{red}[JailRedux]{red} %N {tan}is the current warden.", gamemode.FindWarden().index);
 	else CReplyToCommand(client, "{red}[JailRedux]{tan} There is no current warden.");
 
 	return Plugin_Handled;
@@ -510,24 +502,9 @@ public Action AdminRemoveWarden(int client, int args)
 
 	PrintCenterTextAll("Warden has been fired!");
 	
-	FireWarden(false);
+	gamemode.FireWarden(false);
 	
 	return Plugin_Handled;
-}
-
-void FireWarden(bool prevent = true)
-{
-	JailFighter player = JailFighter(FindWarden());
-	player.WardenUnset();
-	gamemode.bWardenExists = false;
-	if (gamemode.iRoundState == StateRunning)
-	{
-		if (cvarTF2Jail[WardenTimer].IntValue != 0)
-			SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, gamemode.iRoundCount);
-	}
-	if (prevent)
-		player.bLockedFromWarden = true;
-	CPrintToChatAll("{orange}[JailRedux]{tan} Warden has been fired!");
 }
 
 public Action AdminDenyLR(int client, int args)
@@ -648,8 +625,7 @@ public Action AdminForceWarden(int client, int args)
 
 	if (gamemode.bWardenExists)
 	{
-		int iWarden = FindWarden();
-		CReplyToCommand(client, "{red}[JailRedux] {fullred}%N {tan} is the current warden.", iWarden);
+		CReplyToCommand(client, "{red}[JailRedux] {fullred}%N {tan} is the current warden.", gamemode.FindWarden().index);
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
@@ -935,7 +911,7 @@ public Action AdminLockWarden(int client, int args)
 	}
 	if (gamemode.bWardenExists)
 	{
-		JailFighter( FindWarden() ).WardenUnset();
+		gamemode.FindWarden().WardenUnset();
 		gamemode.bWardenExists = false;
 	}
 
@@ -1389,7 +1365,7 @@ public Action FullWarday(int client, int args)
 
 	return Plugin_Handled;
 }
-
+#if defined _clientprefs_included
 public Action Command_MusicOff(int client, int args)
 {
 	if (!bEnabled.BoolValue || !client)
@@ -1426,6 +1402,7 @@ public int MusicTogglePanel(Menu menu, MenuAction action, int client, int select
 		}
 	}
 }
+#endif
 
 public Action Preset(int client, int args)
 {

@@ -216,7 +216,7 @@ typeset JBHookCB
 	function void (Event event);
 
 	// OnPanelAdd
-	function void (Panel & panel);	
+	function void (Menu & panel);	
 
 	// OnLRTextHud
 	function void (char strHud[128]);
@@ -275,9 +275,10 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	property float flMusicTime		// Optional, not used in core
 */
 
-native void JBGameMode_FindRandomWarden();						//gamemode.FindRandomWarden
-native void JBGameMode_ManageCells(const eDoorsMode status);	//gamemode.DoorHandler(status)
-
+native void JBGameMode_FindRandomWarden();						// gamemode.FindRandomWarden()
+native void JBGameMode_ManageCells(const eDoorsMode status);	// gamemode.DoorHandler(status)
+native int JBGameMode_FindWarden(); 							// gamemode.FindWarden()
+native void JBGamMode_FireWarden(bool prevent = true, bool announce = true); // gamemode.FireWarden(prevent, announce)
 
 public SharedPlugin __pl_tf2jailredux = {
 	name = "TF2Jail_Redux",
@@ -327,5 +328,8 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBGameMode_SetProperty");
 	MarkNativeAsOptional("JBGameMode_ManageCells");
 	MarkNativeAsOptional("JBGameMode_FindRandomWarden");
+	MarkNativeAsOptional("JBGameMode_FindWarden");
+	MarkNativeAsOptional("JBGameMode_FireWarden");
+
 }
 #endif

@@ -492,4 +492,36 @@ methodmap JailGameMode //< StringMap
 			}
 		}
 	}
+	public JailFighter FindWarden()
+	{
+		if (this.bWardenExists)
+		{
+			JailFighter player;
+			for (int i = MaxClients; i; --i)
+			{
+				if (!IsClientInGame(i))
+					continue;
+				player = JailFighter(i);
+				if (!player.bIsWarden)
+					continue;
+				return player;
+			}
+		}
+		return view_as< JailFighter >(0);
+	}
+	public void FireWarden(bool prevent = true, bool announce = true)
+	{
+		JailFighter player = this.FindWarden();
+		player.WardenUnset();
+		this.bWardenExists = false;
+		if (this.iRoundState == StateRunning)
+		{
+			if (cvarTF2Jail[WardenTimer].BoolValue)
+				SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, this.iRoundCount);
+		}
+		if (prevent)
+			player.bLockedFromWarden = true;
+		if (announce)
+			CPrintToChatAll("{orange}[JailRedux]{tan} Warden has been fired!");
+	}
 };

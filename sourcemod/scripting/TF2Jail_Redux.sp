@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.11.1"
+#define PLUGIN_VERSION		"0.11.4"
 #define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Sky Guardian) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -95,8 +95,10 @@ ConVar cvarTF2Jail[Version + 1],
 	   ;
 
 Handle hTextNodes[4],
-	   AimHud,
-	   MusicCookie
+#if defined _clientprefs_included
+	   MusicCookie,
+#endif
+	   AimHud
 	   ;
 
 char sCellNames[32],
@@ -218,7 +220,9 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_lastrequestlist", Command_ListLastRequests, "Display a list of last requests available.");
 	RegConsoleCmd("sm_cw", Command_CurrentWarden, "Display the name of the current Warden.");
 	RegConsoleCmd("sm_currentwarden", Command_CurrentWarden, "Display the name of the current Warden.");
+#if defined _clientprefs_included
 	RegConsoleCmd("sm_jbmusic", Command_MusicOff, "Client cookie that disables LR background music (if it exists)");
+#endif
 
 	RegAdminCmd("sm_rw", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
 	RegAdminCmd("sm_removewarden", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
@@ -269,7 +273,9 @@ public void OnPluginStart()
 
 	AddNormalSoundHook(SoundHook);
 
+#if defined _clientprefs_included
 	MusicCookie = RegClientCookie("sm_tf2jr_music", "Determines if client wishes to listen to background music played by the plugin/LRs", CookieAccess_Protected);
+#endif
 
 	for (int i = MaxClients; i; --i) 
 	{
@@ -283,17 +289,20 @@ public void OnPluginStart()
 
 public bool WardenGroup(const char[] pattern, Handle clients)
 {
-	bool non = StrContains(pattern, "!", false) != - 1;
-	for (int i = MaxClients; i; i--) 
+	if (bEnabled.BoolValue)
 	{
-		if (IsClientInGame(i) && FindValueInArray(clients, i) == - 1)
+		bool non = StrContains(pattern, "!", false) != - 1;
+		for (int i = MaxClients; i; i--) 
 		{
-			if (bEnabled.BoolValue && JailFighter(i).bIsWarden) {
-				if (!non)
+			if (IsClientInGame(i) && FindValueInArray(clients, i) == - 1)
+			{
+				if (bEnabled.BoolValue && JailFighter(i).bIsWarden) {
+					if (!non)
+						PushArrayCell(clients, i);
+				}
+				else if (non)
 					PushArrayCell(clients, i);
 			}
-			else if (non)
-				PushArrayCell(clients, i);
 		}
 	}
 	return true;
@@ -301,12 +310,15 @@ public bool WardenGroup(const char[] pattern, Handle clients)
 
 public bool FreedaysGroup(const char[] pattern, Handle clients)
 {
-	for (int i = MaxClients; i; --i)
+	if (bEnabled.BoolValue)
 	{
-		if (IsClientInGame(i) && FindValueInArray(clients, i) == -1)
+		for (int i = MaxClients; i; --i)
 		{
-			if (bEnabled.BoolValue && JailFighter(i).bIsFreeday)
-				PushArrayCell(clients, i);
+			if (IsClientInGame(i) && FindValueInArray(clients, i) == -1)
+			{
+				if (JailFighter(i).bIsFreeday)
+					PushArrayCell(clients, i);
+			}
 		}
 	}
 	return true;
@@ -426,6 +438,11 @@ public void OnMapStart()
 		
 	LRMapStartVariables(); // Handler
 	ManageDownloads();	// Handler
+
+	HookEntityOutput("item_ammopack_full", "OnPlayerTouch", OnEntTouch);
+	HookEntityOutput("item_ammopack_medium", "OnPlayerTouch", OnEntTouch);
+	HookEntityOutput("item_ammopack_small", "OnPlayerTouch", OnEntTouch);
+	HookEntityOutput("tf_ammo_pack", "OnPlayerTouch", OnEntTouch);
 }
 
 public void OnMapEnd()
@@ -489,6 +506,7 @@ public Action OnTouch(int toucher, int touchee)
 {
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
+
 	if (!IsClientValid(toucher) || !IsClientValid(touchee))
 		return Plugin_Continue;
 		
@@ -556,14 +574,11 @@ public void ConvarsSet(bool Status)
 	}
 }
 
-public void HookAmmo(const int ref)
-{
-	SDKHook(EntRefToEntIndex(ref), SDKHook_Touch, OnEntTouch);
-}
-
 public void HookVent(const int ref)
 {
-	SDKHook(EntRefToEntIndex(ref), SDKHook_OnTakeDamage, OnEntTakeDamage);
+	int vent = EntRefToEntIndex(ref);
+	if (IsValidEntity(vent))
+		SDKHook(vent, SDKHook_OnTakeDamage, OnEntTakeDamage);
 }
 
 public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -571,16 +586,18 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 	if (!bEnabled.BoolValue || !IsClientValid(victim) || attacker <= 0)
 		return Plugin_Continue;
 
-	JailFighter vict = JailFighter(victim);
-	return ManageOnTakeDamage(vict, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+	return ManageOnTakeDamage(JailFighter(victim), attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 
 	//return Plugin_Continue;
 }
 
-public Action OnEntTouch(int toucher, int touchee)
+public void OnEntTouch(const char[] output, int touchee, int toucher, float delay)
 {
-	if (!IsClientValid(toucher) || !IsValidEntity(touchee))
-		return Plugin_Continue;
+	if (!bEnabled.BoolValue || !cvarTF2Jail[RebelAmmo].BoolValue)
+		return;
+
+	if (!IsClientValid(toucher))
+		return;
 
 	JailFighter player = JailFighter(toucher);
 	if (player.bIsFreeday)
@@ -588,7 +605,6 @@ public Action OnEntTouch(int toucher, int touchee)
 		player.RemoveFreeday();
 		PrintCenterTextAll("%N has taken ammo and lost their freeday!", toucher);
 	}
-	return Plugin_Continue;
 }
 
 public Action OnEntTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -795,7 +811,9 @@ public bool AlreadyMuted(const int client)
 #if defined _sourcecomms_included
 		case true:return view_as<bool>(SourceComms_GetClientMuteType(client) != bNot);
 #endif
+#if defined _basecomm_included
 		case false:return view_as<bool>(BaseComm_IsClientMuted(client));
+#endif
 	}
 	return false;
 }
@@ -866,22 +884,6 @@ public Action Timer_AimName(Handle hTimer)
 		}
 	}
 	return Plugin_Continue;
-}
-
-public int FindWarden()
-{
-	if (gamemode.bWardenExists)
-	{
-		for (int i = MaxClients; i; --i)
-		{
-			if (!IsClientInGame(i))
-				continue;
-			if (!JailFighter(i).bIsWarden)
-				continue;
-			return i;
-		}
-	}
-	return 0;
 }
 
 public void KillThatBitch(const int client)
@@ -997,8 +999,10 @@ public void _MusicPlay()
 		{
 			if (!IsClientInGame(i))
 				continue;
+#if defined _clientprefs_included
 			if (JailFighter(i).bNoMusic)
 				continue;
+#endif
 
 			EmitSoundToClient(i, sound, _, _, SNDLEVEL_NORMAL, SND_NOFLAGS, vol, 100, _, nullvec, nullvec, false, 0.0);
 		}
@@ -1109,10 +1113,9 @@ public void FreeKillSystem(const JailFighter attacker)
 		attacker.iKillCount++;
 	else attacker.iKillCount = 0;
 	
-	char strIP[32], strID[32];
-	
 	if (attacker.iKillCount == 3)
 	{
+		char strIP[32], strID[32];
 		GetClientIP(attacker.index, strIP, sizeof(strIP));
 		//GetClientAuthId(attacker.index, AuthId_Steam2, strID, sizeof(strID));
 
@@ -1221,6 +1224,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBGameMode_SetProperty", Native_JBGameMode_SetProperty);
 	CreateNative("JBGameMode_ManageCells", Native_JBGameMode_ManageCells);
 	CreateNative("JBGameMode_FindRandomWarden", Native_JBGameMode_FindRandomWarden);
+	CreateNative("JBGameMode_FindWarden", Native_JBGameMode_FindWarden);
+	CreateNative("JBGameMode_FireWarden", Native_JBGameMode_FireWarden);
 
 	RegPluginLibrary("TF2Jail_Redux");
 }
@@ -1433,4 +1438,14 @@ public int Native_JBGameMode_ManageCells(Handle plugin, int numParams)
 {
 	eDoorsMode status = GetNativeCell(1);
 	gamemode.DoorHandler(status);
+}
+public int Native_JBGameMode_FindWarden(Handle plugin, int numParams)
+{
+	return view_as< int >(gamemode.FindWarden());
+}
+public int Native_JBGameMode_FireWarden(Handle plugin, int numParams)
+{
+	bool prevent = GetNativeCell(1);
+	bool announce = GetNativeCell(2);
+	gamemode.FireWarden(prevent, announce);
 }

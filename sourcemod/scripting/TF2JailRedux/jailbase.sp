@@ -276,6 +276,7 @@ methodmap JailFighter
 			hJailFields[this.index].SetValue("bInJump", val);
 		}
 	}
+#if defined _clientprefs_included
 	property bool bNoMusic
 	{
 		public get()
@@ -299,6 +300,7 @@ methodmap JailFighter
 			SetClientCookie(this.index, MusicCookie, strMusic);
 		}
 	}
+#endif
 	property bool bUnableToTeleport
 	{
 		public get()				

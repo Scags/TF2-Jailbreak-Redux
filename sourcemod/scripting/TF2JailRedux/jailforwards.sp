@@ -46,7 +46,7 @@ void InitializeForwards()
 	g_hForwards[OnBlueNotWardenThink] 	= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnWardenThink] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnLRTextHud] 			= new PrivateForward( CreateForward(ET_Ignore, Param_String) );
-	g_hForwards[OnLRPicked] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell) );
+	g_hForwards[OnLRPicked] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef) );
 	g_hForwards[OnPlayerDied] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnBuildingDestroyed]	= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnObjectDeflected] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
@@ -138,7 +138,7 @@ void Call_OnLRPicked(const JailFighter player, const int request, const int valu
 	Call_PushCell(player);
 	Call_PushCell(request);
 	Call_PushCell(value);
-	Call_PushCell(array);
+	Call_PushCellRef(array);
 	Call_Finish();
 }
 void Call_OnPlayerDied(const JailFighter player, const JailFighter victim, Event event)
@@ -195,7 +195,7 @@ void Call_OnMenuAdd(Menu & menu, ArrayList array)
 	Call_PushCell(array);
 	Call_Finish();
 }
-void Call_OnPanelAdd(Panel & panel)
+void Call_OnPanelAdd(Menu & panel)
 {
 	g_hForwards[OnPanelAdd].Start();
 	Call_PushCellRef(panel);
