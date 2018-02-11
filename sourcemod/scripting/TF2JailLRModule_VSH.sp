@@ -549,9 +549,9 @@ public void OnAllPluginsLoaded()
 
 public bool HaleTargetFilter(const char[] pattern, Handle clients)
 {
-	bool non = StrContains(pattern, "!", false) != - 1;
 	if (JBVSH[Enabled].BoolValue)
 	{
+		bool non = StrContains(pattern, "!", false) != - 1;
 		for (int i = MaxClients; i; i--) 
 		{
 			if (IsClientInGame(i) && FindValueInArray(clients, i) == - 1)
@@ -624,7 +624,7 @@ public void OnMapStart()
 
 public Action MakeModelTimer(Handle hTimer)
 {
-	if (!JBVSH[Enabled].BoolValue || 	JBGameMode_GetProperty("iLRType") != 13)
+	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
 		return Plugin_Continue;
 
 	JailBoss player;
@@ -644,7 +644,9 @@ public Action MakeModelTimer(Handle hTimer)
 
 public Action MusicTimerChecker(Handle hTimer)
 {
-	if (!JBVSH[Enabled].BoolValue || 	JBGameMode_GetProperty("iLRType") != 13 || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
+		return Plugin_Continue;
+	if (JBGameMode_GetProperty("iRoundState") != StateRunning || !JBVSH[EnableMusic].BoolValue))
 		return Plugin_Continue;
 
 	if (flMusicTime <= GetGameTime())
@@ -652,6 +654,7 @@ public Action MusicTimerChecker(Handle hTimer)
 
 	return Plugin_Continue;
 }
+
 public void SetGravityNormal(const int userid)
 {
 	int i = GetClientOfUserId(userid);
@@ -897,7 +900,7 @@ public void _BossDeath(const int userid)
 public Action TimerLazor(Handle timer, any medigunid)
 {	// All mediguns give uber + crits (and crits to the medic)
 	int medigun = EntRefToEntIndex(medigunid);
-	if (medigun && IsValidEntity(medigun) && JBGameMode_GetProperty("iRoundState") == StateRunning && JBGameMode_GetProperty("iLRType") == 13)
+	if (medigun && IsValidEntity(medigun) && JBGameMode_GetProperty("iRoundState") == StateRunning)
 	{
 		int client = GetOwner(medigun);
 		float charge = GetMediCharge(medigun);
@@ -1029,22 +1032,21 @@ public void ManageBossModels(const JailBoss base)
 
 public void ManageMusic(char song[FULLPATH], float & time)
 {	// Couldn't do this with the music foward, fired too early and would overlap with starting voicelines
-	if (MapHasMusic()) { song = ""; time = -1.0; }
-	else 
+	JailBoss currBoss = FindBoss(false);
+	if (currBoss) 
 	{
-		JailBoss currBoss = FindBoss(false);
-		if (currBoss) 
+		switch (currBoss.iType) 
 		{
-			switch (currBoss.iType) {
-				case  - 1: { song = ""; time = -1.0; }
-				case CBS: {
-					strcopy(song, sizeof(song), CBSTheme);
-					time = 140.0;
-				}
-				case HHHjr: {
-					strcopy(song, sizeof(song), HHHTheme);
-					time = 90.0;
-				}
+			case  - 1: { song = ""; time = -1.0; }
+			case CBS: 
+			{
+				strcopy(song, sizeof(song), CBSTheme);
+				time = 140.0;
+			}
+			case HHHjr: 
+			{
+				strcopy(song, sizeof(song), HHHTheme);
+				time = 90.0;
 			}
 		}
 	}
@@ -1074,7 +1076,8 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 		case  - 1: {  }
 		case HHHjr: 
 		{
-			if (base.iClimbs < 10) {
+			if (base.iClimbs < 10) 
+			{
 				base.ClimbWall(weapon, 600.0, 0.0, false);
 				base.flWeighDown = 0.0;
 				base.iClimbs++;
@@ -1154,15 +1157,18 @@ public Action HookSound(int clients[64], int & numClients, char sample[FULLPATH]
 
 	switch (JailBoss(entity).iType) 
 	{
-		case  - 1: {
+		case  - 1: 
+		{
 			if (StrEqual(sample, "player/pl_impact_stun.wav", false))
 				return Plugin_Handled;
 		}
-		case Hale: {
+		case Hale: 
+		{
 			if (!strncmp(sample, "vo", 2, false))
 				return Plugin_Handled;
 		}
-		case Vagineer: {
+		case Vagineer: 
+		{
 			if (StrContains(sample, "vo/engineer_laughlong01", false) != - 1)
 			{
 				strcopy(sample, FULLPATH, VagineerKSpree);
@@ -1184,10 +1190,12 @@ public Action HookSound(int clients[64], int & numClients, char sample[FULLPATH]
 			}
 			else return Plugin_Continue;
 		}
-		case HHHjr: {
+		case HHHjr: 
+		{
 			if (!strncmp(sample, "vo", 2, false))
 			{
-				if (GetRandomInt(0, 30) <= 10) {
+				if (GetRandomInt(0, 30) <= 10) 
+				{
 					Format(sample, FULLPATH, "%s0%i.mp3", HHHLaught, GetRandomInt(1, 4));
 					return Plugin_Changed;
 				}
@@ -1195,7 +1203,8 @@ public Action HookSound(int clients[64], int & numClients, char sample[FULLPATH]
 					return Plugin_Handled;
 			}
 		}
-		case Bunny: {
+		case Bunny: 
+		{
 			if (StrContains(sample, "gibberish", false) == -1
 				 && StrContains(sample, "burp", false) == -1
 				 && !GetRandomInt(0, 2)) // Do sound things
@@ -1210,7 +1219,8 @@ public Action HookSound(int clients[64], int & numClients, char sample[FULLPATH]
 
 public void ManageBossEquipment(const JailBoss base)
 {
-	switch (base.iType) {
+	switch (base.iType) 
+	{
 		case  - 1: {  }
 		case Hale:ToCHale(base).Equip();
 		case Vagineer:ToCVagineer(base).Equip();
@@ -1222,7 +1232,8 @@ public void ManageBossEquipment(const JailBoss base)
 
 public void ManageBossMedicCall(const JailBoss base)
 {
-	switch (base.iType) {
+	switch (base.iType) 
+	{
 		case  - 1: {  }
 		case Hale, Vagineer, CBS, HHHjr, Bunny:
 		{
@@ -1235,7 +1246,8 @@ public void ManageBossMedicCall(const JailBoss base)
 
 public void ManageBossTaunt(const JailBoss base)
 {
-	switch (base.iType) {
+	switch (base.iType) 
+	{
 		case  - 1: {  }
 		case Hale:ToCHale(base).RageAbility();
 		case Vagineer:ToCVagineer(base).RageAbility();
@@ -1284,7 +1296,8 @@ public void OnEggBombSpawned(int entity)
 
 public void ManageBossTransition(const JailBoss base)/* whatever stuff needs initializing should be done here */
 {
-	switch (base.iType) {
+	switch (base.iType) 
+	{
 		case  - 1: {  }
 		case Hale:
 		TF2_SetPlayerClass(base.index, TFClass_Soldier, _, false);
@@ -1296,7 +1309,8 @@ public void ManageBossTransition(const JailBoss base)/* whatever stuff needs ini
 		TF2_SetPlayerClass(base.index, TFClass_DemoMan, _, false);
 	}
 	ManageBossModels(base);
-	switch (base.iType) {
+	switch (base.iType) 
+	{
 		case  - 1: {  }
 		case HHHjr:ToCHHHJr(base).flCharge = -1000.0;
 	}
@@ -2275,7 +2289,7 @@ public void fwdOnManageRoundStart()
 	int maxhp = GetEntProp(client, Prop_Data, "m_iMaxHealth");
 	TF2Attrib_RemoveAll(client);
 	TF2Attrib_SetByDefIndex( client, 26, float(rand.iMaxHealth)-maxhp );
-	TF2Attrib_SetByDefIndex( client, 275, 1.0 );
+	
 	if (GetClientTeam(client) != BLU)
 		rand.ForceTeamChange(BLU);
 	rand.iHealth = rand.iMaxHealth;

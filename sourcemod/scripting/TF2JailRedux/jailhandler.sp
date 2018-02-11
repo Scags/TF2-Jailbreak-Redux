@@ -588,16 +588,6 @@ public void PrepPlayer(const int userid)
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Grenade);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item1);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item2);
-
-	if (GetClientTeam(client) == BLU)
-	{
-		if (AlreadyMuted(client) && gamemode.iLRType != 13 && cvarTF2Jail[DisableBlueMute].BoolValue)
-		{
-			base.ForceTeamChange(RED);
-			EmitSoundToClient(client, NO);
-			CPrintToChat(client, "{red}[JailRedux]{tan} You are muted, therefore you cannot join Blue team.");
-		}
-	}
 	base.EmptyWeaponSlots();	// We call this last so the spawned weapons are registered with the function
 
 	Call_OnPlayerPrepped(base);
@@ -1021,9 +1011,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 */
 public void ManagePlayerDeath(const JailFighter attacker, const JailFighter victim, Event event)
 {
-	if (gamemode.iLRType != 13)
-		FreeKillSystem(attacker);
-
+	FreeKillSystem(attacker);
 	TF2Attrib_RemoveAll(victim.index);
 	SetPawnTimer(CheckLivingPlayers, 0.2);
 
@@ -1082,7 +1070,6 @@ public void CheckLivingPlayers()
 
 	switch (gamemode.iLRType)
 	{
-		case 13: {	}	// 'One guard left' is pointless during this round along with freedays
 		default:
 		{
 			if (GetLivingPlayers(BLU) == 1)

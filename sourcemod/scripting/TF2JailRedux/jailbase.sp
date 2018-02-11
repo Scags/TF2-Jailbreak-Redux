@@ -586,11 +586,6 @@ methodmap JailFighter
 			//Client_SetWeaponPlayerAmmoEx(client, weapon, 0, 0);
 		}
 	
-		//TF2_SwitchToSlot(client, TFWeaponSlot_Melee);
-		TF2_RemoveWeaponSlot(client, 3);
-		TF2_RemoveWeaponSlot(client, 4);
-		TF2_RemoveWeaponSlot(client, 5);
-		
 		char sClassName[64];
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
 		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
@@ -738,7 +733,6 @@ methodmap JailFighter
 		SetVariantInt(0);
 		AcceptEntityInput(client, "SetForcedTauntCam");
 		ClearHorsemannParticles(client);
-		SetEntityHealth(client, GetEntProp(client, Prop_Data, "m_iMaxHealth"));
 		if (IsPlayerAlive(client))
 			ResetPlayer(client);
 		this.bIsHHH = false;

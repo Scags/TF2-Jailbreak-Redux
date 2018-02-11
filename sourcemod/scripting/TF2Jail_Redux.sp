@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.11.4"
+#define PLUGIN_VERSION		"0.11.5"
 #define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Sky Guardian) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -28,7 +28,6 @@
 #include <sdkhooks>
 #include <tf2_stocks>
 #include <tf2items>
-#include <tf2items_giveweapon>
 #include <morecolors>
 #include <tf2attributes>
 #include <tf2jailredux>
@@ -193,6 +192,7 @@ public void OnPluginStart()
 	HookEvent("player_chargedeployed", UberDeployed);
 
 	AddCommandListener(EurekaTele, "eureka_teleport");
+	AddCommandListener(OnJoinTeam, "jointeam");
 
 	RegConsoleCmd("sm_jhelp", Command_Help, "Display a menu containing the major commands");
 	RegConsoleCmd("sm_jailhelp", Command_Help, "Display a menu containing the major commands");
@@ -621,7 +621,7 @@ public Action OnEntTakeDamage(int victim, int &attacker, int &inflictor, float &
 	return Plugin_Continue;
 }
 
-public Action EurekaTele(int client, const char[] strCommand, int args)
+public Action EurekaTele(int client, const char[] command, int args)
 {
 	if (!bEnabled.BoolValue || !IsPlayerAlive(client))
 		return Plugin_Continue;
@@ -642,6 +642,29 @@ public Action EurekaTele(int client, const char[] strCommand, int args)
 	player.bUnableToTeleport = true;
 	SetPawnTimer(EnableEureka, time, player.userid);
 
+	return Plugin_Continue;
+}
+
+public Action OnJoinTeam(int client, const char[] command, int args)
+{
+	if (!bEnabled.BoolValue || !cvarTF2Jail[DisableBlueMute].BoolValue)
+		return Plugin_Continue;
+
+	if (!AlreadyMuted(client))
+		return Plugin_Continue;
+
+	char arg[8]; GetCmdArg(1, arg, 8);
+	if (StrStarts(arg, "blu", false) || StrEqual(arg, "3", false))
+	{
+		EmitSoundToClient(client, NO);
+		TF2_ChangeClientTeam(client, TFTeam_Red);
+		return Plugin_Handled;
+	}
+	if (StrEqual(arg, "auto", false))
+	{
+		TF2_ChangeClientTeam(client, TFTeam_Red);
+		return Plugin_Handled;
+	}
 	return Plugin_Continue;
 }
 
