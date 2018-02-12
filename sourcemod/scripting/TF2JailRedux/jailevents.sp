@@ -148,12 +148,6 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		if (!IsClientInGame(i))
 			continue;
 
-		player = JailFighter(i);
-		if (!player.bIsVIP || !IsPlayerAlive(i))
-			player.MutePlayer();
-		else if (player.bIsVIP || TF2_GetClientTeam(i) == TFTeam_Blue)
-			player.UnmutePlayer();
-
 		if (!IsPlayerAlive(i))
 			continue;
 		
@@ -198,6 +192,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		player = JailFighter(i);
 		player.UnmutePlayer();
 		player.bLockedFromWarden = false;
+		player.bIsZombie = false;
 
 		if (player.bIsFreeday)
 			player.RemoveFreeday();

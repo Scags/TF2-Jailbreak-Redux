@@ -130,6 +130,9 @@ methodmap JBPlayer
 	public native void WardenSet();
 	public native void WardenUnset();
 	public native void MakeHorsemann();
+	public native void WardenMenu();
+	public native void ConvertToZombie();
+	public native void ClimbWall(const int weapon, const float upwardvel, const float health, const bool attackdelay);
 };
 
 
@@ -331,6 +334,9 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.WardenSet");
 	MarkNativeAsOptional("JBPlayer.WardenUnset");
 	MarkNativeAsOptional("JBPlayer.MakeHorsemann");
+	MarkNativeAsOptional("JBPlayer.WardenMenu");
+	MarkNativeAsOptional("JBPlayer.ConvertToZombie");
+	MarkNativeAsOptional("JBPlayer.ClimbWall");
 
 	MarkNativeAsOptional("JBGameMode_GetProperty");
 	MarkNativeAsOptional("JBGameMode_SetProperty");

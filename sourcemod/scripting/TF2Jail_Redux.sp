@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.11.7"
+#define PLUGIN_VERSION		"0.11.8"
 #define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -85,6 +85,10 @@ enum	// Cvar name
 	WeaponDisabler,
 	WearableDisabler,
 	Markers,
+	CritType,
+	MuteType,
+	LivingMuteType,
+	Disguising,
 	Version
 };
 
@@ -160,14 +164,18 @@ public void OnPluginStart()
 	cvarTF2Jail[SeeHealth] 					= CreateConVar("sm_tf2jr_wardensee_health", "1", "Can the Warden see prisoner health?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[EnableMusic] 				= CreateConVar("sm_tf2jr_music_on", "1", "Enable background music that could possibly play with last requests?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[MusicVolume] 				= CreateConVar("sm_tf2jr_music_volume", ".5", "Volume in which background music plays. (If enabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[EurekaTimer] 				= CreateConVar("sm_tf2jr_eureka_teleport", "20", "How long must players wait until they are able to Eureka Effect Teleport again? (0 to disable)", FCVAR_NOTIFY, true, 0.0, true, 60.0);
+	cvarTF2Jail[EurekaTimer] 				= CreateConVar("sm_tf2jr_eureka_teleport", "20", "How long must players wait until they are able to Eureka Effect Teleport again? (0 to disable cooldown)", FCVAR_NOTIFY, true, 0.0, true, 60.0);
 	cvarTF2Jail[CritFallOff] 				= CreateConVar("sm_tf2jr_crit_falloff", "1", "Should guard criticals receive damage falloff? (Similar to Ambassador's weapon stat)", FCVAR_NOTIFY, true, 1.0, true, 0.0);
 	cvarTF2Jail[VIPFlag] 					= CreateConVar("sm_tf2jr_vip_flag", "r", "What admin flag do VIP players fall under?", FCVAR_NOTIFY);
 	cvarTF2Jail[AdmFlag] 					= CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under?", FCVAR_NOTIFY);
 	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[WeaponDisabler] 			= CreateConVar("sm_tf2jr_disable_weapons", "", "Disable certain weapons. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"220,448\" WILL DISABLE SHORTSTOP AND SODA POPPER. NOTE THAT WEARABLES SUCH AS SNIPER BACK WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_wearables\" TO DISABLE \"tf_wearable*\"s", FCVAR_NOTIFY);
+	cvarTF2Jail[WeaponDisabler] 			= CreateConVar("sm_tf2jr_disable_weapons", "", "Disable certain weapons. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"220,448\" WILL DISABLE SHORTSTOP AND SODA POPPER. NOTE THAT WEARABLES SUCH AS SNIPER BACK WEAPONS, SOLDIER/DEMO BOOTS, AND DEMO SHIELDS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_wearables\" TO DISABLE \"tf_wearable*\"s", FCVAR_NOTIFY);
 	cvarTF2Jail[WearableDisabler] 			= CreateConVar("sm_tf2jr_disable_wearables", "", "Disable certain wearables. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"133,444\" WILL DISABLE GUNBOATS AND MANTREADS. NOTE THAT WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_weapons\" TO DISABLE \"tf_weapon*\"s", FCVAR_NOTIFY);
 	cvarTF2Jail[Markers] 					= CreateConVar("sm_tf2jr_markers", "3", "Warden markers lifetime in seconds? (0 to disable)", FCVAR_NOTIFY, true, 0.0, true, 30.0);
+	cvarTF2Jail[CritType] 					= CreateConVar("sm_tf2jr_criticals", "2", "What type of criticals should guards get? 0 = none; 1 = mini-crits; 2 = full crits", FCVAR_NOTIFY, true, 0.0, true, 2.0);
+	cvarTF2Jail[MuteType] 					= CreateConVar("sm_tf2jr_muting", "6", "What type of dead player muting should occur? 0 = no muting; 1 = red players only are muted(except VIPs); 2 = blue players only are muted(except VIPs); 3 = all players are muted(except VIPs); 4 = all red players are muted; 5 = all blue players are muted; 6 = everybody is muted. ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
+	cvarTF2Jail[LivingMuteType] 			= CreateConVar("sm_tf2jr_live_muting", "1", "What type of living player muting should occur? 0 = no muting; 1 = red players only are muted(except VIPs); 2 = blue players only are muted(except VIPs and warden); 3 = all players are muted(except VIPs and warden); 4 = all red players are muted; 5 = all blue players are muted(except warden); 6 = everybody is muted(except warden). ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
+	cvarTF2Jail[Disguising] 				= CreateConVar("sm_tf2jr_disguising", "0", "What teams can disguise, if any? (Your Eternal Reward only) 0 = no disguising; 1 = only red can disguise; 2 = only blue can disguise; 3 = all players can disguise", FCVAR_NOTIFY, true, 0.0, true, 3.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -482,6 +490,7 @@ public void OnClientPutInServer(int client)
 	player.bIsHHH = false;
 	player.bInJump = false;
 	player.bUnableToTeleport = false;
+	player.bIsZombie = false;
 	player.flSpeed = 0.0;
 	player.flKillSpree = 0.0;
 }
@@ -499,11 +508,12 @@ public void OnClientPostAdminCheck(int client)
 
 	if (IsValidAdmin(client, strVIP)) // Very useful stock ^^
 		player.bIsVIP = true;
-	else player.bIsVIP = false;
 
 	if (IsValidAdmin(client, strAdmin))
 		player.bIsAdmin = true;
-	else { player.bIsAdmin = false; player.MutePlayer(); }
+
+	if (cvarTF2Jail[MuteType].IntValue >= 4)
+		player.MutePlayer();
 }
 
 public Action OnTouch(int toucher, int touchee)
@@ -651,23 +661,69 @@ public Action EurekaTele(int client, const char[] command, int args)
 
 public Action OnJoinTeam(int client, const char[] command, int args)
 {
-	if (!bEnabled.BoolValue || !cvarTF2Jail[DisableBlueMute].BoolValue)
-		return Plugin_Continue;
-
-	if (!AlreadyMuted(client))
+	if (!bEnabled.BoolValue || !cvarTF2Jail[DisableBlueMute].BoolValue || !IsClientValid(client))
 		return Plugin_Continue;
 
 	char arg[8]; GetCmdArg(1, arg, 8);
+	JailFighter player = JailFighter(client);
+	int type = cvarTF2Jail[MuteType].IntValue;
 	if (StrStarts(arg, "blu", false) || StrEqual(arg, "3", false))
 	{
-		EmitSoundToClient(client, NO);
-		TF2_ChangeClientTeam(client, TFTeam_Red);
-		return Plugin_Handled;
+		if (AlreadyMuted(client))
+		{
+			EmitSoundToClient(client, NO);
+			TF2_ChangeClientTeam(client, TFTeam_Red);
+			return Plugin_Handled;
+		}
+		if (gamemode.iRoundState == StateRunning)
+		{
+			switch (type)
+			{
+				case 0, 1:player.UnmutePlayer();
+				case 2, 3:
+				{
+					if (!player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+				default:player.MutePlayer();
+			}
+		}
+		return Plugin_Continue;
+	}
+	if (StrEqual(arg, "2", false) || StrEqual(arg, "red", false))
+	{
+		if (gamemode.iRoundState == StateRunning)
+		{
+			switch (type)
+			{
+				case 0, 2:player.UnmutePlayer();
+				case 1, 3:
+				{
+					if (!player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+				default:player.MutePlayer();
+			}
+		}
+		return Plugin_Continue;
 	}
 	if (StrEqual(arg, "auto", false))
 	{
 		TF2_ChangeClientTeam(client, TFTeam_Red);
 		return Plugin_Handled;
+	}
+	switch (type)
+	{
+		case 0:player.UnmutePlayer();
+		case 1, 2, 3:
+		{
+			if (!player.bIsVIP)
+				player.MutePlayer();
+			else player.UnmutePlayer();
+		}
+		default:player.MutePlayer();
 	}
 	return Plugin_Continue;
 }
@@ -989,6 +1045,28 @@ public void DisableWarden(const int iTimer)
 	gamemode.bIsWardenLocked = true;
 }
 
+public void ZombieRespawn(const int userid)
+{
+	if (gamemode.iRoundState < StateRunning)
+		return;
+
+	int client = GetClientOfUserId(userid);
+	if (!IsClientInGame(client))
+		return;
+
+	JailFighter player = JailFighter(client);
+	if (!player.bIsZombie)
+		return;
+
+	player.ForceTeamChange(BLU);
+}
+
+public void NoAttacking(const int wepref)
+{
+	int weapon = EntRefToEntIndex(wepref);
+	SetNextAttack(weapon, 1.56);
+}
+
 public void OnEntityCreated(int entity, const char[] classname)
 {
 	if (!bEnabled.BoolValue)
@@ -1285,6 +1363,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBPlayer.SetCliptable", Native_JB_SetCliptable);
 	CreateNative("JBPlayer.SetAmmotable", Native_JB_SetAmmotable);
 	CreateNative("JBPlayer.WardenMenu", Native_JB_WardenMenu);
+	CreateNative("JBPlayer.ConvertToZombie", Native_JB_ConvertToZombie);
+	CreateNative("JBPlayer.ClimbWall", Native_JB_ClimbWall);
 		/* Gamemode */
 	CreateNative("JBGameMode_GetProperty", Native_JBGameMode_GetProperty);
 	CreateNative("JBGameMode_SetProperty", Native_JBGameMode_SetProperty);
@@ -1484,6 +1564,20 @@ public int Native_JB_WardenMenu(Handle plugin, int numParams)
 {
 	JailFighter player = GetNativeCell(1);
 	player.WardenMenu();
+}
+public int Native_JB_ConvertToZombie(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.ConvertToZombie();
+}
+public int Native_JB_ClimbWall(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	int wep = GetNativeCell(2);
+	float spawntime = view_as<float>(GetNativeCell(3));
+	float healthdmg = view_as<float>(GetNativeCell(4));
+	bool attackdelay = GetNativeCell(5);
+	player.ClimbWall(wep, spawntime, healthdmg, attackdelay);
 }
 
 public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)

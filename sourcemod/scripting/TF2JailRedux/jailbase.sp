@@ -313,6 +313,18 @@ methodmap JailFighter
 			hJailFields[this.index].SetValue("bUnableToTeleport", val);
 		}
 	}
+	property bool bIsZombie
+	{
+		public get()				
+		{
+			bool i; hJailFields[this.index].GetValue("bIsZombie", i);
+			return i;
+		}
+		public set( const bool val )
+		{
+			hJailFields[this.index].SetValue("bIsZombie", val);
+		}
+	}
 
 	property float flSpeed
 	{
@@ -751,10 +763,10 @@ methodmap JailFighter
 		this.bIsHHH = false;
 		this.bInJump = false;
 		this.bUnableToTeleport = false;
+		this.bIsZombie = false;
 		this.flSpeed = 0.0;
 		this.flKillSpree = 0.0;
 	}
-	/** Ghetto rigged another way to cross-plugin teleport players to freeday/warday positions without having to initialize config multiple times **/
 	public void TeleportToPosition(const int iLocation)
 	{
 		switch (iLocation)
@@ -768,6 +780,7 @@ methodmap JailFighter
 	{
 		if (IsVoteInProgress())
 			return;
+
 		Menu menu = new Menu(ListLRsMenu);
 		menu.SetTitle("Select a Last Request");
 		//menu.AddItem("-1", "Random LR");	// Moved to handler
@@ -785,5 +798,70 @@ methodmap JailFighter
 		ManageWardenMenu(wmenu);
 		wmenu.ExitButton = true;
 		wmenu.Display(this.index, MENU_TIME_FOREVER);
+	}
+	public void ClimbWall(const int weapon, const float upwardvel, const float health, const bool attackdelay)
+	//Credit to Mecha the Slag
+	{
+		if ( GetClientHealth(this.index) <= health )	// Have to baby players so they don't accidentally kill themselves trying to escape
+			return;
+
+		int client = this.index;
+		char classname[64];
+		float vecClientEyePos[3];
+		float vecClientEyeAng[3];
+		GetClientEyePosition(client, vecClientEyePos);   // Get the position of the player's eyes
+		GetClientEyeAngles(client, vecClientEyeAng);	   // Get the angle the player is looking
+
+		// Check for colliding entities
+		TR_TraceRayFilter(vecClientEyePos, vecClientEyeAng, MASK_PLAYERSOLID, RayType_Infinite, TraceRayDontHitSelf, client);
+
+		if ( !TR_DidHit(null) )
+			return;
+
+		int TRIndex = TR_GetEntityIndex(null);
+		GetEdictClassname(TRIndex, classname, sizeof(classname));
+		if (!StrEqual(classname, "worldspawn"))
+			return;
+
+		float fNormal[3];
+		TR_GetPlaneNormal(null, fNormal);
+		GetVectorAngles(fNormal, fNormal);
+
+		if (fNormal[0] >= 30.0 && fNormal[0] <= 330.0)
+			return;
+		if (fNormal[0] <= -30.0)
+			return;
+
+		float pos[3]; TR_GetEndPosition(pos);
+		float distance = GetVectorDistance(vecClientEyePos, pos);
+
+		if (distance >= 100.0)
+			return;
+
+		float fVelocity[3];
+		GetEntPropVector(client, Prop_Data, "m_vecVelocity", fVelocity);
+		fVelocity[2] = upwardvel;
+
+		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, fVelocity);
+		SDKHooks_TakeDamage(client, client, client, health, DMG_CLUB, GetPlayerWeaponSlot(client, TFWeaponSlot_Melee));
+
+		if (attackdelay)
+			SetPawnTimer(NoAttacking, 0.1, EntIndexToEntRef(weapon));
+	}
+	public void ConvertToZombie()
+	{
+		this.bIsZombie = true;
+		int client = this.index;
+		this.ForceTeamChange(BLU);
+		TF2_SetPlayerClass(client, TFClass_Scout);
+		this.PreEquip();
+		int weapon = this.SpawnWeapon("tf_weapon_bat", 572, 100, 5, "6 ; 0.5 ; 57 ; 15.0 ; 26 ; 75.0 ; 49 ; 1.0 ; 68 ; -2.0");
+		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
+		TF2_AddCondition(client, TFCond_Ubercharged, 3.0);
+		SetEntityHealth(client, 200);
+		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
+		SetEntProp(client, Prop_Send, "m_nBody", 0);
+		SetEntityRenderMode(client, RENDER_TRANSCOLOR);
+		SetEntityRenderColor(client, 30, 160, 255, 255);
 	}
 };

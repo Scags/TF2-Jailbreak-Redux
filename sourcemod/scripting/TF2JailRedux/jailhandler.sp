@@ -37,8 +37,9 @@ enum /** LRs **/
 	RandomKill = 10,
 	Warday = 11,
 	ClassWars = 12,
-	// VSH = 13			// DO NOT SET ANY NEW LRS UNDER THESE NUMBERS UNLESS YOU DISABLE OR ADJUST THE SUB PLUGIN!
-	// PH = 14,			// THEY WILL OVERLAP!
+	ZombieWarday = 13,
+	// VSH = 14			// DO NOT SET ANY NEW LRS UNDER THESE NUMBERS UNLESS YOU DISABLE OR ADJUST THE SUB PLUGIN!
+	// PH = 15,			// THEY WILL OVERLAP!
 };
 /** 
  *	When adding a new lr, increase the LRMAX to the proper/latest enum value
@@ -47,7 +48,7 @@ enum /** LRs **/
  *	g_hPluginsRegistered.Length increases by 1 every time you 'TF2JailRedux_RegisterPlugin()' with a sub-plugin
  *	Sub-Plugins *should* be completely manageable as their own plugin, with no need to touch this one
 */
-#define LRMAX		ClassWars + (g_hPluginsRegistered.Length)
+#define LRMAX		ZombieWarday + (g_hPluginsRegistered.Length)
 
 #include "TF2JailRedux/jailbase.sp"
 #include "TF2JailRedux/jailgamemode.sp"
@@ -84,6 +85,7 @@ char strLRNames[][] = {
 	"Sniper!",
 	"Warday",
 	"Class Wars",
+	"Zombie Warday"
 };
 
 /** 
@@ -182,7 +184,7 @@ public void AddLRToMenu(Menu & menu)
 	}
 	Call_OnMenuAdd(menu, arrLRS);
 /**
- *	According to this, you have to have your sub-plugin LR as the last in the enum, always
+ *	According to this, you have to have your sub-plugin(s) LR as the last in the enum, always
  *	If you have more than one, you have to distinguish which plugin has which enum value and stick with it
  *	Secondly, you have to format strLRNames yourself on the menu item 
  *	arrLRs is able to handle lr counts in this plugin but make sure you use the ArrayList in your OnLRPicked() forward
@@ -207,6 +209,7 @@ public void AddLRToPanel(Menu & panel)
 	panel.AddItem("10", "Sniper- A hired gun to take out some folks");
 	panel.AddItem("11", "Warday- Team Deathmatch");
 	panel.AddItem("12", "Class Wars- Class versus class Warday");
+	panel.AddItem("13", "Zombie Warday- Fight for your life!");
 
 	Call_OnPanelAdd(panel);
 }
@@ -306,7 +309,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to grant {default}Freeday for All{tan} next round.", client);
+					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to grant a {default}Freeday for All{tan} next round.", client);
 					gamemode.iLRPresetType = FreedayAll;
 					arrLRS.Set( request, value+1 );
 					return;
@@ -360,7 +363,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to hire a Sniper for next round!", client);
+					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to hire a Sniper for the next round!", client);
 					gamemode.iLRPresetType = RandomKill;
 					arrLRS.Set( request, value+1 );
 					return;
@@ -380,6 +383,15 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 						return;
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Class Warfare{tan} as their last request.", client);
 					gamemode.iLRPresetType = ClassWars;
+					arrLRS.Set( request, value+1 );
+					return;
+				}
+				case ZombieWarday:
+				{
+					if (!CheckSet(client, value, LR_DEFAULT))
+						return;
+					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Zombie Warday{tan} as their last request.", client);
+					gamemode.iLRPresetType = ZombieWarday;
 					arrLRS.Set( request, value+1 );
 					return;
 				}
@@ -414,6 +426,7 @@ public void ManageHUDText()
 		case RandomKill:	Format(strHudName, sizeof(strHudName), "Sniper!");
 		case Warday:		Format(strHudName, sizeof(strHudName), "Warday");
 		case ClassWars:		Format(strHudName, sizeof(strHudName), "Class Warfare");
+		case ZombieWarday:	Format(strHudName, sizeof(strHudName), "Zombie Warday");
 		default: 			Call_OnLRTextHud(strHudName);
 	}
 
@@ -436,10 +449,6 @@ public void ManageSpawn(const JailFighter base, Event event)
 				case TFClass_Pyro:TF2Attrib_SetByDefIndex(client, 823, 1.0);
 			}
 	
-			if (!base.bIsVIP && gamemode.iRoundState == StateRunning)
-				base.MutePlayer();
-			else base.UnmutePlayer();
-					
 			if (base.bIsQueuedFreeday)
 			{
 				base.GiveFreeday();
@@ -448,7 +457,6 @@ public void ManageSpawn(const JailFighter base, Event event)
 		}
 		case TFTeam_Blue:
 		{
-			base.UnmutePlayer();
 			switch (TF2_GetPlayerClass(client))
 			{
 				case TFClass_Scout:TF2Attrib_SetByDefIndex(client, 49, 1.0);
@@ -458,8 +466,51 @@ public void ManageSpawn(const JailFighter base, Event event)
 
 			if (cvarTF2Jail[CritFallOff].BoolValue)	// Does this even work lmao
 				TF2Attrib_SetByDefIndex(client, 868, 1.0);
+
+			if (gamemode.iLRType == ZombieWarday)
+			{
+				base.TeleportToPosition(WBLU);
+				base.ConvertToZombie();
+			}
 		}
 	}
+
+	if (gamemode.iRoundState == StateRunning)
+	{
+		switch (cvarTF2Jail[LivingMuteType].IntValue)
+		{
+			case 0:base.UnmutePlayer();
+			case 1:
+			{
+				if (GetClientTeam(client) == RED)
+				{
+					if (!base.bIsVIP)
+						base.MutePlayer();
+					else base.UnmutePlayer();
+				}
+			}
+			case 2:
+			{
+				if (GetClientTeam(client) == BLU)
+				{
+					if (!base.bIsVIP)
+						base.MutePlayer();
+					else base.UnmutePlayer();
+				}
+			}
+			case 3:
+			{
+				if (!base.bIsVIP)
+					base.UnmutePlayer();
+				else base.MutePlayer();
+			}
+			case 4:if (GetClientTeam(client) == RED) base.MutePlayer();
+			case 5:if (GetClientTeam(client) == BLU) base.MutePlayer();
+			case 6:base.MutePlayer();
+		}
+	}
+	else base.UnmutePlayer();
+
 	if (gamemode.bIsWarday)
 		base.TeleportToPosition(GetClientTeam(client));	// Enum value is the same as team value, so we can cheat it
 
@@ -471,6 +522,9 @@ public void ManageSpawn(const JailFighter base, Event event)
 public void PrepPlayer(const int userid)
 {
 	JailFighter base = JailFighter(userid, true);
+	if (base.bIsZombie)
+		return;
+
 	int client = base.index;
 	if (!IsPlayerAlive(client))
 		return;
@@ -618,7 +672,7 @@ public void OnLRActivate(const JailFighter player)
 				{
 					TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
 					player.SpawnWeapon("tf_weapon_bat", 0, 1, 0, "");
-					SetPawnTimer(ManageHealth, 0.2, client);	//SetEntProp(player.index, Prop_Data, "m_iHealth", (GetEntProp(player.index, Prop_Data, "m_iMaxHealth")));
+					SetEntityHealth(client, 125);
 				}
 			}
 		}
@@ -633,6 +687,12 @@ public void OnLRActivate(const JailFighter player)
 			}
 		}
 		case Warday, ClassWars:ResetPlayer(client);
+		case ZombieWarday:
+		{
+			player.TeleportToPosition(GetClientTeam(client));
+			if (GetClientTeam(client) == BLU)
+				player.ConvertToZombie();
+		}
 		default: {	}
 	}
 
@@ -723,6 +783,12 @@ public void ManageRoundStart()
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
 		}
+		case ZombieWarday:
+		{
+			gamemode.bIsWarday = true;
+			gamemode.bIsWardenLocked = true;
+			CPrintToChatAll("{tan} Braiiiiiins...");
+		}
 		default: {	}
 	}
 	Call_OnManageRoundStart();
@@ -787,7 +853,7 @@ public void CriticalEnable()
 {
 	switch (gamemode.iLRType)
 	{
-		case HHHDay:gamemode.bDisableCriticals = true;
+		case HHHDay, ZombieWarday:gamemode.bDisableCriticals = true;
 		default:gamemode.bDisableCriticals = false;
 	}
 }
@@ -857,7 +923,16 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 {	
 	switch (cond)
 	{
-		case TFCond_Disguising, TFCond_Disguised:if (TF2_GetClientTeam(client) == TFTeam_Blue) TF2_RemoveCondition(client, cond);
+		case TFCond_Disguising, TFCond_Disguised:
+		{
+			switch (cvarTF2Jail[Disguising].IntValue)
+			{
+				case 0:TF2_RemoveCondition(client, cond);
+				case 1:if (GetClientTeam(client) == BLU) TF2_RemoveCondition(client, cond);
+				case 2:if (GetClientTeam(client) == RED) TF2_RemoveCondition(client, cond);
+			}
+			if (TF2_GetClientTeam(client) == TFTeam_Blue) TF2_RemoveCondition(client, cond);
+		}
 	}
 }
 /**
@@ -890,7 +965,11 @@ public void ManageAllBlueThink(const JailFighter player)
 {
 	switch (gamemode.iLRType)
 	{
-		default: {	}
+		default:
+		{
+			if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 1 && GetClientTeam(player.index) == BLU)
+				TF2_AddCondition(player.index, TFCond_Buffed, 0.2);
+		}
 	}
 	Call_OnAllBlueThink(player);
 }
@@ -965,48 +1044,27 @@ public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victi
 */
 public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
+	JailFighter base = JailFighter(attacker);
+	if (base.bIsFreeday)
+	{	// Registers with Razorbacks ^^
+		base.RemoveFreeday();
+		PrintCenterTextAll("%N has attacked a guard and lost their freeday!", attacker);
+	}
+		
+	if (victim.bIsFreeday && !base.bIsWarden)
+	{
+		damage = 0.0;
+		return Plugin_Changed;
+	}
+
+	if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 2 && GetClientTeam(attacker) == BLU)
+	{
+		damagetype |= DMG_CRIT;
+		return Plugin_Changed;
+	}
 
 	switch (gamemode.iLRType)
 	{
-		case
-		Suicide,
-		Custom,
-		FreedaySelf,
-		FreedayOther,
-		FreedayAll,
-		GuardMelee,
-		HHHDay,
-		TinyRound,
-		HotPrisoner,
-		Gravity,
-		RandomKill,
-		Warday,
-		ClassWars
-		:
-		{
-			JailFighter base = JailFighter(attacker);
-			if (base.bIsFreeday)
-			{	// Registers with Razorbacks ^^
-				base.RemoveFreeday();
-				PrintCenterTextAll("%N has attacked a guard and lost their freeday!", attacker);
-			}
-		
-			if (victim.bIsFreeday && !base.bIsWarden)
-			{
-				damage = 0.0;
-				return Plugin_Changed;
-			}
-			if (!gamemode.bDisableCriticals)
-			{
-				if (TF2_GetClientTeam(attacker) == TFTeam_Blue)
-				{
-					damagetype = damagetype | DMG_CRIT;
-					return Plugin_Changed;
-				}
-			}
-			if (victim.bIsWarden)
-				SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, gamemode.iRoundCount);
-		}
 		default:return Call_OnHookDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 	}
 	return Plugin_Continue;
@@ -1016,47 +1074,87 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 */
 public void ManagePlayerDeath(const JailFighter attacker, const JailFighter victim, Event event)
 {
-	FreeKillSystem(attacker);
 	TF2Attrib_RemoveAll(victim.index);
-	SetPawnTimer(CheckLivingPlayers, 0.2);
 
-	if (victim.bIsFreeday)
-		victim.RemoveFreeday();
-
-	victim.MutePlayer();
-
-	if (victim.iCustom > 0)
-		victim.iCustom = 0;
-		
-	if (victim.bIsWarden)
+	if (gamemode.iRoundState == StateRunning)
 	{
-		victim.WardenUnset();
-		gamemode.bWardenExists = false;
-		if (cvarTF2Jail[WardenTimer].BoolValue)
-			SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, gamemode.iRoundCount);
-	}
+		FreeKillSystem(attacker);
+		SetPawnTimer(CheckLivingPlayers, 0.2);
 
-	switch (gamemode.iLRType)
-	{
-		case HHHDay:
+		if (victim.bIsFreeday)
+			victim.RemoveFreeday();
+	
+		if (victim.bIsWarden)
 		{
-			if (victim.bIsHHH)
+			victim.WardenUnset();
+			gamemode.bWardenExists = false;
+			PrintCenterTextAll("Warden has been killed!");
+			if (cvarTF2Jail[WardenTimer].BoolValue)
+				SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, gamemode.iRoundCount);
+		}
+
+		switch (cvarTF2Jail[MuteType].IntValue)
+		{
+			case 0:victim.UnmutePlayer();
+			case 1:
 			{
-				EmitSoundToAll(DEATHVO, victim.index);
-				victim.UnHorsemann();
+				if (GetClientTeam(victim.index) == RED)
+				{
+					if (!victim.bIsVIP)
+						victim.MutePlayer();
+					else victim.UnmutePlayer();
+				}
+			}
+			case 2:
+			{
+				if (GetClientTeam(victim.index) == BLU)
+				{
+					if (!victim.bIsVIP)
+						victim.MutePlayer();
+					else victim.UnmutePlayer();
+				}
+			}
+			case 3:
+			{
+				if (!victim.bIsVIP)
+					victim.MutePlayer();
+				else victim.UnmutePlayer();
+			}
+			default:victim.MutePlayer();
+		}
+
+		switch (gamemode.iLRType)
+		{
+			case HHHDay:
+			{
+				if (victim.bIsHHH)
+				{
+					EmitSoundToAll(DEATHVO, victim.index);
+					victim.UnHorsemann();
+				}
+			}
+			case RandomKill:
+			{
+				if (!attacker)
+					EmitSoundToAll(SuicideSound);
+			}
+			case ZombieWarday:
+			{
+				if (GetClientTeam(victim.index) == RED && IsClientValid(attacker.index))
+				{
+					victim.ForceTeamChange(BLU);
+					victim.bIsZombie = true;
+				}
+				else if (GetClientTeam(victim.index) == BLU)
+					SetPawnTimer(ZombieRespawn, float( GetLivingPlayers(BLU) ), victim.userid);
 			}
 		}
-		case RandomKill:
-		{
-			if (!attacker)
-				EmitSoundToAll(SuicideSound);
-		}
-		default:
-		{
-			if (victim.bIsWarden)
-				PrintCenterTextAll("Warden has been killed!");
-		}
 	}
+	else victim.UnmutePlayer();
+
+	if (victim.iCustom)
+		victim.iCustom = 0;
+
 	Call_OnPlayerDied(attacker, victim, event);
 }
 /**
@@ -1067,34 +1165,52 @@ public void CheckLivingPlayers()
 	if (gamemode.iRoundState < StateRunning)
 		return;
 
+	if (GetLivingPlayers(BLU) != 1)
+		return;
+
+	if (cvarTF2Jail[RemoveFreedayOnLastGuard].BoolValue)
+	{
+		JailFighter base;
+		for (int i = MaxClients; i; --i)
+		{
+			if (!IsClientInGame(i))
+				continue;
+
+			base = JailFighter(i);
+			if (base.bIsFreeday)
+				base.RemoveFreeday();
+		}
+	}
+
 	switch (gamemode.iLRType)
 	{
 		default:
 		{
-			if (GetLivingPlayers(BLU) == 1)
+			if (!gamemode.bOneGuardLeft)
 			{
-				if (cvarTF2Jail[RemoveFreedayOnLastGuard].BoolValue)
-				{
-					JailFighter base;
-					for (int i = MaxClients; i; --i)
-					{
-						if (!IsClientInGame(i))
-							continue;
-
-						base = JailFighter(i);
-						if (base.bIsFreeday)
-							base.RemoveFreeday();
-					}
-				}
-				
-				if (!gamemode.bOneGuardLeft)
-				{
-					gamemode.bOneGuardLeft = true;
-					PrintCenterTextAll("One guard left...");
-				}
+				gamemode.bOneGuardLeft = true;
+				PrintCenterTextAll("One %s left...", gamemode.iLRType == ZombieWarday ? "survivor" : "guard");
 			}
 		}
 	}
+}
+/**
+ *	Determines if a player's attack is to be critical
+*/
+public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool & result)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Continue;
+
+ 	if (!IsClientValid(client))
+ 		return Plugin_Continue;
+
+ 	JailFighter base = JailFighter(client);
+ 	switch (gamemode.iLRType)
+ 	{
+ 		case ZombieWarday:if (base.bIsZombie) base.ClimbWall(weapon, 400.0, 0.0, false);
+ 	}
+ 	return Plugin_Continue;
 }
 /**
  *	Sticking this in Handler just in case someone wants to be incredibly specific with their lr 
