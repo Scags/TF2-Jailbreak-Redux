@@ -174,7 +174,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	
 	if (gamemode.bIsMapCompatible && cvarTF2Jail[DoorOpenTimer].FloatValue != 0.0)
 	{
-		SetPawnTimer(Open_Doors, cvarTF2Jail[DoorOpenTimer].FloatValue, gamemode.iRoundState);
+		SetPawnTimer(Open_Doors, cvarTF2Jail[DoorOpenTimer].FloatValue, gamemode.iRoundCount);
 		//CreateTimer(cvarTF2Jail[DoorOpenTimer].FloatValue, Open_Doors, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
 	return Plugin_Continue;

@@ -93,7 +93,7 @@ public Action Command_BecomeWarden(int client, int args)
 	
 	JailFighter player = JailFighter(client);
 	player.WardenSet();
-	WardenMenu(player.index);
+	player.WardenMenu();
 	ManageWarden(player);
 	gamemode.bWardenExists = true;
 	return Plugin_Handled;
@@ -122,8 +122,8 @@ public Action Command_ExitWarden(int client, int args)
 		return Plugin_Handled;
 	}
 
-	CPrintToChatAll("{red}[JailRedux] {tan}Warden %N has retired!", player.index);
-	PrintCenterTextAll("Warden has retired");
+	CPrintToChatAll("{red}[JailRedux]{tan} Warden %N has retired!", client);
+	PrintCenterTextAll("Warden has retired!");
 	player.bLockedFromWarden = true;
 	player.WardenUnset();
 	gamemode.bWardenExists = false;
@@ -141,10 +141,9 @@ public Action Command_WardenMenu(int client, int args)
 		CReplyToCommand(client, "[JailRedux] Command is in-game only.");
 		return Plugin_Handled;
 	}
-	JailFighter player = JailFighter(client);
-	if (!player.bIsWarden)
+	if (!JailFighter(client).bIsWarden)
 	{
-		CPrintToChat(player.index, "{red}[JailRedux]{tan} You are not warden.");
+		CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
@@ -153,7 +152,7 @@ public Action Command_WardenMenu(int client, int args)
 		return Plugin_Handled;
 	}
 
-	WardenMenu(player.index);
+	JailFighter(client).WardenMenu();
 
 	return Plugin_Handled;
 }
@@ -180,8 +179,7 @@ public Action Command_OpenCells(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	JailFighter player = JailFighter(client);
-	if (!player.bIsWarden)
+	if (!JailFighter(client).bIsWarden)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
 		return Plugin_Handled;
@@ -207,15 +205,13 @@ public Action Command_CloseCells(int client, int args)
 		CPrintToChat(client, "{red}[JailRedux]{tan} Round must be active.");
 		return Plugin_Handled;
 	}
-
 	if (!gamemode.bIsMapCompatible)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} Map is incompatible.");
 		return Plugin_Handled;
 	}
 	
-	JailFighter player = JailFighter(client);
-	if (!player.bIsWarden)
+	if (!JailFighter(client).bIsWarden)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
 		return Plugin_Handled;
@@ -242,8 +238,7 @@ public Action Command_EnableFriendlyFire(int client, int args)
 		return Plugin_Handled;
 	}
 
-	JailFighter player = JailFighter(client);
-	if (!player.bIsWarden)
+	if (!JailFighter(client).bIsWarden)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
 		return Plugin_Handled;
@@ -281,8 +276,7 @@ public Action Command_EnableCollisions(int client, int args)
 		return Plugin_Handled;
 	}
 
-	JailFighter player = JailFighter(client);
-	if (!player.bIsWarden)
+	if (!JailFighter(client).bIsWarden)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
 		return Plugin_Handled;
@@ -332,8 +326,7 @@ public Action Command_GiveLastRequest(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	JailFighter player = JailFighter(client);
-	if (!player.bIsWarden)
+	if (!JailFighter(client).bIsWarden)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
 		return Plugin_Handled;
@@ -408,8 +401,7 @@ public Action Command_RemoveLastRequest(int client, int args)
 		return Plugin_Handled;
 	}
 
-	JailFighter player = JailFighter(client);
-	if (!player.bIsWarden)
+	if (!JailFighter(client).bIsWarden)
 	{
 		CReplyToCommand(client, "{red}[JailRedux]{tan} You are not warden.");
 		return Plugin_Handled;
@@ -655,7 +647,7 @@ public Action AdminForceWarden(int client, int args)
 
 		targ.WardenSet();
 		ManageWarden(targ);
-		CPrintToChatAll("{orange}[JailRedux]{tan} Admin has forced %N as warden.", targ.index);
+		CPrintToChatAll("{orange}[JailRedux]{tan} Admin has forced %N as warden.", target);
 		gamemode.bWardenExists = true;
 		
 		return Plugin_Handled;
@@ -678,7 +670,7 @@ public Action AdminForceLR(int client, int args)
 	
 	JailFighter player = JailFighter(client);
 
-	if (args > 0)
+	if (args)
 	{
 		char sArg[64];
 		GetCmdArgString(sArg, sizeof(sArg));
@@ -688,11 +680,6 @@ public Action AdminForceLR(int client, int args)
 		if (!IsClientValid(target))
 		{
 			CReplyToCommand(client, "{red}[JailRedux]{tan} Player is no longer available.");
-			return Plugin_Handled;
-		}
-		if (GetClientMenu(target) != MenuSource_None)
-		{
-			CReplyToCommand(client, "{red}[JailRedux]{tan} Target already has a menu open.");
 			return Plugin_Handled;
 		}
 		CPrintToChatAll("{orange}[JailRedux]{tan} Admin has forced %N to receive a Last Request.", target);
@@ -790,7 +777,7 @@ public Action AdminGiveFreeday(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	if (args > 0)
+	if (args)
 	{
 		char sArg[64];
 		GetCmdArgString(sArg, sizeof(sArg));
@@ -809,8 +796,7 @@ public Action AdminGiveFreeday(int client, int args)
 			return Plugin_Handled;
 		}
 		
-		CPrintToChatAll("{orange}[JailRedux]{tan} Admin has given %N a freeday.", targ.index);
-
+		CPrintToChatAll("{orange}[JailRedux]{tan} Admin has given %N a freeday.", target);
 		targ.GiveFreeday();
 
 		return Plugin_Handled;
@@ -1058,104 +1044,17 @@ public int MenuHandle_RemoveFreedays(Menu menu, MenuAction action, int client, i
 	}
 }
 
-public void WardenMenu(const int client)
-{
-	if (IsVoteInProgress())
-		return;
-
-	Menu menu = new Menu(MenuHandle_WardenMenu);
-	menu.SetTitle("Warden Commands");
-	menu.AddItem("0", "Open Cells");
-	menu.AddItem("1", "Close Cells");
-	menu.AddItem("2", "Enable/Disable FF");
-	menu.AddItem("3", "Enable/Disable Collisions");
-	menu.ExitButton = true;
-	menu.Display(client, MENU_TIME_FOREVER);
-}
-
-public int MenuHandle_WardenMenu(Menu menu, MenuAction action, int client, int select)
-{
-	JailFighter param = JailFighter(client);
-	switch (action)
-	{
-		case MenuAction_Select:
-		{
-			if (!param.bIsWarden)
-			{
-				CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
-				return;
-			}
-			switch (select)
-			{
-				case 0:
-				{
-					if (!gamemode.bCellsOpened)
-					{
-						gamemode.DoorHandler(OPEN);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has opened cells.");
-						gamemode.bCellsOpened = true;
-					}
-					else CPrintToChat(client, "{red}[JailRedux]{tan} Cells are already open.");
-					WardenMenu(client);
-				}
-				case 1:
-				{
-					if (gamemode.bCellsOpened)
-					{
-						gamemode.DoorHandler(CLOSE);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has closed cells.");
-						gamemode.bCellsOpened = false;
-					}
-					else CPrintToChat(client, "{red}[JailRedux]{tan} Cells are not open.");
-					WardenMenu(client);
-				}
-				case 2:
-				{
-					if (hEngineConVars[0].BoolValue == false)
-					{
-						hEngineConVars[0].SetBool(true);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has enabled Friendly-Fire!");
-					}
-					else 
-					{
-						hEngineConVars[0].SetBool(false);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has disabled Friendly-Fire.");
-					}
-					WardenMenu(client);
-				}
-				case 3:
-				{
-					if (hEngineConVars[1].BoolValue == false)
-					{
-						hEngineConVars[1].SetBool(true);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has enabled collisions!");
-					}
-					else
-					{
-						hEngineConVars[1].SetBool(false);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has disabled collisions.");
-					}
-					WardenMenu(client);
-				}
-			}
-		}
-		case MenuAction_End:delete menu;
-	}
-}
-
 public int MenuHandle_ForceLR(Menu menu, MenuAction action, int client, int select)
 {
 	switch (action)
 	{
 		case MenuAction_Select:
 		{
-			JailFighter param = JailFighter(client);
-
 			char strCli[32];
 			menu.GetItem(select, strCli, sizeof(strCli));
 			JailFighter targ = JailFighter( StringToInt(strCli), true );
 
-			if (!param.bIsWarden)
+			if (!JailFighter(client).bIsWarden)
 			{
 				CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
 				return;
@@ -1179,7 +1078,7 @@ public int MenuHandle_ForceLR(Menu menu, MenuAction action, int client, int sele
 			}
 			targ.ListLRS();
 
-			CPrintToChatAll("{red}[JailRedux]{tan} Warden {red}%N{tan} has given %N a last request.", param.index, targ.index);
+			CPrintToChatAll("{red}[JailRedux]{tan} Warden {red}%N{tan} has given %N a last request.", client, targ.index);
 		}
 		case MenuAction_End:delete menu;
 	}
@@ -1194,7 +1093,6 @@ public void FreedayforClientsMenu(const int client)
 	menu.SetTitle("Choose a Player for Freeday");
 	
 	AddClientsToMenu(menu, false);
-
 	menu.ExitButton = true;
 	menu.Display(client, 30);
 }
@@ -1278,8 +1176,7 @@ public Action Command_WardenCC(int client, int args)
 		CPrintToChat(client, "{red}[JailRedux]{tan} Round must be active.");
 		return Plugin_Handled;
 	}
-	JailFighter player = JailFighter(client);
-	if (!player.bIsWarden)
+	if (!JailFighter(client).bIsWarden)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
 		return Plugin_Handled;
@@ -1295,6 +1192,42 @@ public Action Command_WardenCC(int client, int args)
 		hEngineConVars[1].SetBool(false);
 		CPrintToChatAll("{red}[JailRedux]{tan} Warden has disabled Collisions!");
 	}
+	return Plugin_Handled;
+}
+
+public Action Command_WardenMarker(int client, int args)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Handled;
+
+	if (!client)
+	{
+		CReplyToCommand(client, "{red}[JailRedux]{tan} Command is in-game only.");
+		return Plugin_Handled;
+	}
+	if (!cvarTF2Jail[Markers].BoolValue)
+	{
+		CPrintToChat(client, "{red}[JailRedux]{tan} This is not enabled.");
+		return Plugin_Handled;
+	}
+	if (gamemode.iRoundState != StateRunning)
+	{
+		CPrintToChat(client, "{red}[JailRedux]{tan} Round must be active.");
+		return Plugin_Handled;
+	}
+
+	if (!JailFighter(client).bIsWarden)
+	{
+		CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
+		return Plugin_Handled;
+	}
+	if (gamemode.bMarkerExists)
+	{
+		CPrintToChat(client, "{red}[JailRedux]{tan} Slow down there cowboy.");
+		return Plugin_Handled;
+	}
+
+	CreateMarker(client);
 	return Plugin_Handled;
 }
 

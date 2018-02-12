@@ -20,8 +20,8 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.11.5"
-#define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Sky Guardian) and Nergal/Assyrian"
+#define PLUGIN_VERSION		"0.11.7"
+#define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
 #include <sourcemod>
@@ -84,6 +84,7 @@ enum	// Cvar name
 	DisableBlueMute,
 	WeaponDisabler,
 	WearableDisabler,
+	Markers,
 	Version
 };
 
@@ -166,6 +167,7 @@ public void OnPluginStart()
 	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WeaponDisabler] 			= CreateConVar("sm_tf2jr_disable_weapons", "", "Disable certain weapons. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"220,448\" WILL DISABLE SHORTSTOP AND SODA POPPER. NOTE THAT WEARABLES SUCH AS SNIPER BACK WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_wearables\" TO DISABLE \"tf_wearable*\"s", FCVAR_NOTIFY);
 	cvarTF2Jail[WearableDisabler] 			= CreateConVar("sm_tf2jr_disable_wearables", "", "Disable certain wearables. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"133,444\" WILL DISABLE GUNBOATS AND MANTREADS. NOTE THAT WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_weapons\" TO DISABLE \"tf_weapon*\"s", FCVAR_NOTIFY);
+	cvarTF2Jail[Markers] 					= CreateConVar("sm_tf2jr_markers", "3", "Warden markers lifetime in seconds? (0 to disable)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -223,6 +225,8 @@ public void OnPluginStart()
 #if defined _clientprefs_included
 	RegConsoleCmd("sm_jbmusic", Command_MusicOff, "Client cookie that disables LR background music (if it exists)");
 #endif
+	RegConsoleCmd("sm_wmarker", Command_WardenMarker, "Allows the warden to create a marker that players can see/hear.");
+	RegConsoleCmd("sm_wmk", Command_WardenMarker, "Allows the warden to create a marker that players can see/hear.");
 
 	RegAdminCmd("sm_rw", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
 	RegAdminCmd("sm_removewarden", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
@@ -1054,7 +1058,46 @@ public bool CheckSet(const int client, const int iLRCount, const int iMax)
 	}
 	return true;
 }
+// Props to Dr.Doctor
+public void CreateMarker(const int client)
+{
+	if (!cvarTF2Jail[Markers].BoolValue)
+		return;
 
+	float vecAngles[3], vecOrigin[3], flPos[3];
+
+	GetClientEyePosition(client, vecOrigin);
+	GetClientEyeAngles(client, vecAngles);
+
+	Handle trace = TR_TraceRayFilterEx(vecOrigin, vecAngles, MASK_SHOT, RayType_Infinite, TraceRayFilterPlayers);
+
+	if (!TR_DidHit(trace))
+	{
+		CPrintToChat(client, "{red}[JailRedux]{tan} Unable to create a marker.");
+		CloseHandle(trace);
+		return;
+	}
+
+	TR_GetEndPosition(flPos, trace);
+	flPos[2] += 5.0;
+	CloseHandle(trace);
+	
+	TE_SetupBeamRingPoint(flPos, 300.0, 300.1, PrecacheModel("materials/sprites/laserbeam.vmt"), PrecacheModel("materials/sprites/glow01.vmt"), 0, 10, cvarTF2Jail[Markers].FloatValue, 2.0, 0.0, {255, 255, 255, 255}, 10, 0);
+	TE_SendToAll();
+	gamemode.bMarkerExists = true;
+	SetPawnTimer(ResetMarker, 1.0);
+	EmitAmbientSound("misc/rd_finale_beep01.wav", flPos); EmitAmbientSound("misc/rd_finale_beep01.wav", flPos);
+}
+
+public void ResetMarker()
+{
+	gamemode.bMarkerExists = false;
+}
+
+public bool TraceRayFilterPlayers(int ent, int mask)
+{
+	return ent > MaxClients || !ent;
+}
 
 public Action Timer_Round(Handle timer)
 {
@@ -1241,7 +1284,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBPlayer.TeleToSpawn", Native_JB_TeleToSpawn);
 	CreateNative("JBPlayer.SetCliptable", Native_JB_SetCliptable);
 	CreateNative("JBPlayer.SetAmmotable", Native_JB_SetAmmotable);
-
+	CreateNative("JBPlayer.WardenMenu", Native_JB_WardenMenu);
 		/* Gamemode */
 	CreateNative("JBGameMode_GetProperty", Native_JBGameMode_GetProperty);
 	CreateNative("JBGameMode_SetProperty", Native_JBGameMode_SetProperty);
@@ -1436,6 +1479,11 @@ public int Native_JB_SetAmmotable(Handle plugin, int numParams)
 	int slot = GetNativeCell(2);
 	int count = GetNativeCell(3);
 	player.SetAmmotable(slot, count);
+}
+public int Native_JB_WardenMenu(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.WardenMenu();
 }
 
 public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)

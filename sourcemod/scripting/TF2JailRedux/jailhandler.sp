@@ -118,6 +118,9 @@ public void ManageDownloads()
 	PrecacheSound(TinySound, true);
 	PrecacheSound(NO, true);
 
+	PrecacheModel("materials/sprites/laserbeam.vmt", true);
+	PrecacheModel("materials/sprites/glow01.vmt", true);
+	PrecacheSound("misc/rd_finale_beep01.wav", true);
 	Call_OnDownloads();
 }
 /**
@@ -384,6 +387,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					// arrLRS.Set( request, value+1 );
 					Call_OnLRPicked(base, request, value, arrLRS);		// Menu functions aren't needed
+					// I went through so much effort to give this extra parameter even though you could easily get that value in your own plugin...
 				}
 			}
 		}
@@ -697,6 +701,7 @@ public void ManageRoundStart()
 		}
 		case Warday:
 		{
+			CPrintToChatAll("{tan} *War kazoo sounds*");
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
 			// EmitSoundToAll(WardaySound);
@@ -1027,13 +1032,10 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 	{
 		victim.WardenUnset();
 		gamemode.bWardenExists = false;
-		if (gamemode.iRoundState == StateRunning)
+		if (cvarTF2Jail[WardenTimer].IntValue != 0)
 		{
-			if (cvarTF2Jail[WardenTimer].IntValue != 0)
-			{
-				int iTimer = gamemode.iRoundCount;
-				SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, iTimer);
-			}
+			int iTimer = gamemode.iRoundCount;
+			SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, iTimer);
 		}
 	}
 
@@ -1144,6 +1146,112 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 		base.iCustom = 0;
 	}
 }
+/**
+ *	Manage the warden menu applications
+*/
+public void ManageWardenMenu(Menu & menu)
+{
+	menu.AddItem("0", "Open Cells");
+	menu.AddItem("1", "Close Cells");
+	menu.AddItem("2", "Enable/Disable FF");
+	menu.AddItem("3", "Enable/Disable Collisions");
+	if (cvarTF2Jail[Markers].BoolValue)
+		menu.AddItem("4", "Marker");
+
+	Call_OnWMenuAdd(menu);
+}
+/**
+ *	Handle warden menu selections
+*/
+ public int WardenMenuHandler(Menu menu, MenuAction action, int client, int select)
+ {
+ 	if (!IsPlayerAlive(client))
+ 		return;
+
+ 	switch (action)
+	{
+		case MenuAction_Select:
+		{
+			JailFighter player = JailFighter(client);
+			if (!player.bIsWarden)
+			{
+				CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
+				return;
+			}
+			char index[32]; menu.GetItem(select, index, sizeof(index));
+			int val = StringToInt(index);
+			switch (val)
+			{
+				case 0:
+				{
+					if (!gamemode.bCellsOpened)
+					{
+						gamemode.DoorHandler(OPEN);
+						CPrintToChatAll("{red}[JailRedux]{tan} Warden has opened cells.");
+						gamemode.bCellsOpened = true;
+					}
+					else CPrintToChat(client, "{red}[JailRedux]{tan} Cells are already open.");
+					player.WardenMenu();
+				}
+				case 1:
+				{
+					if (gamemode.bCellsOpened)
+					{
+						gamemode.DoorHandler(CLOSE);
+						CPrintToChatAll("{red}[JailRedux]{tan} Warden has closed cells.");
+						gamemode.bCellsOpened = false;
+					}
+					else CPrintToChat(client, "{red}[JailRedux]{tan} Cells are not open.");
+					player.WardenMenu();
+				}
+				case 2:
+				{
+					if (hEngineConVars[0].BoolValue == false)
+					{
+						hEngineConVars[0].SetBool(true);
+						CPrintToChatAll("{red}[JailRedux]{tan} Warden has enabled Friendly-Fire!");
+					}
+					else 
+					{
+						hEngineConVars[0].SetBool(false);
+						CPrintToChatAll("{red}[JailRedux]{tan} Warden has disabled Friendly-Fire.");
+					}
+					player.WardenMenu();
+				}
+				case 3:
+				{
+					if (hEngineConVars[1].BoolValue == false)
+					{
+						hEngineConVars[1].SetBool(true);
+						CPrintToChatAll("{red}[JailRedux]{tan} Warden has enabled collisions!");
+					}
+					else
+					{
+						hEngineConVars[1].SetBool(false);
+						CPrintToChatAll("{red}[JailRedux]{tan} Warden has disabled collisions.");
+					}
+					player.WardenMenu();
+				}
+				case 4:
+				{
+					if (cvarTF2Jail[Markers].BoolValue) 
+					{
+						if (gamemode.bMarkerExists)
+						{
+							CPrintToChat(client, "{red}[JailRedux]{tan} Slow down there cowboy.");
+							player.WardenMenu();
+							return;
+						}
+						CreateMarker(client);
+					}
+					player.WardenMenu();
+				}
+				default:Call_OnWMenuSelect(player, index);	// In case you set something wacky in the first AddItem() parameter
+			}
+		}
+		case MenuAction_End:delete menu;
+	}
+ }
 /** 
  *	This is all VSH stuff. Doing this to make more of a grasp with forwards
  *

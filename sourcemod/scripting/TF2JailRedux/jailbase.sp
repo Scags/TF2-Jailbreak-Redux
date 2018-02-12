@@ -775,4 +775,15 @@ methodmap JailFighter
 		menu.ExitButton = true;
 		menu.Display(this.index, 30);
 	}
+	public void WardenMenu()
+	{
+		if (IsVoteInProgress())
+			return;
+
+		Menu wmenu = new Menu(WardenMenuHandler);
+		wmenu.SetTitle("Warden Commands");
+		ManageWardenMenu(wmenu);
+		wmenu.ExitButton = true;
+		wmenu.Display(this.index, MENU_TIME_FOREVER);
+	}
 };

@@ -169,6 +169,8 @@ enum	// JB Hook Types
 	OnPlayerPrepped,
 	OnHurtPlayer,
 	OnHookDamage,
+	OnWMenuAdd,
+	OnWMenuSelect,
 	OnMusicPlay
 };
 
@@ -187,7 +189,7 @@ typeset JBHookCB
 	*/
 	function void (const JBPlayer Player);
 	
-	// OnPlayerSpawned
+	//	OnPlayerSpawned
 	function void (const JBPlayer Player, Event event);
 
 	/*
@@ -206,29 +208,35 @@ typeset JBHookCB
 	*/
 	function void (const JBPlayer Attacker, const JBPlayer Victim, Event event);
 
-	// OnManageRoundStart
+	// 	OnManageRoundStart
 	function void ();
 
 	//	OnMenuAdd
 	function void (Menu & menu, ArrayList array);
 
-	// OnManageRoundEnd
+	// 	OnManageRoundEnd
 	function void (Event event);
 
-	// OnPanelAdd
-	function void (Menu & panel);	
+	/* 
+		OnPanelAdd
+		OnWMenuAdd
+	*/
+	function void (Menu & menu);	
 
-	// OnLRTextHud
+	// 	OnLRTextHud
 	function void (char strHud[128]);
 
-	// OnLRPicked
+	// 	OnLRPicked
 	function void (const JBPlayer Player, const int request, const int value, ArrayList & array);
 
-	// OnHurtPlayer
+	// 	OnHurtPlayer
 	function void (const JBPlayer Victim, const JBPlayer Attacker, int damage, int custom, int weapon, Event event);
 
-	// OnHookDamage
+	// 	OnHookDamage
 	function Action (const JBPlayer Victim, int & attacker, int & inflictor, float & damage, int & damagetype, int & weapon, float damageForce[3], float damagePosition[3], int damagecustom);
+
+	// OnWMenuSelect
+	function void (const JBPlayer Player, const char[] index);
 };
 
 // Use hooktype enum on these.
@@ -330,6 +338,5 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBGameMode_FindRandomWarden");
 	MarkNativeAsOptional("JBGameMode_FindWarden");
 	MarkNativeAsOptional("JBGameMode_FireWarden");
-
 }
 #endif

@@ -59,6 +59,8 @@ void InitializeForwards()
 	g_hForwards[OnPlayerPrepped] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnHurtPlayer] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnHookDamage] 			= new PrivateForward( CreateForward(ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell) );
+	g_hForwards[OnWMenuAdd] 			= new PrivateForward( CreateForward(ET_Ignore, Param_CellByRef) );
+	g_hForwards[OnWMenuSelect] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_String) );
 	g_hForwards[OnMusicPlay]			= new PrivateForward( CreateForward(ET_Ignore, Param_String, Param_FloatByRef) );
 }
 void Call_OnDownloads()
@@ -238,6 +240,19 @@ Action Call_OnHookDamage(const JailFighter victim, int & attacker, int & inflict
 	Call_PushCell(damagecustom);
 	Call_Finish(result);
 	return result;
+}
+void Call_OnWMenuAdd(Menu & menu)
+{
+	g_hForwards[OnWMenuAdd].Start();
+	Call_PushCellRef(menu);
+	Call_Finish();
+}
+void Call_OnWMenuSelect(const JailFighter player, const char[] index)
+{
+	g_hForwards[OnWMenuSelect].Start();
+	Call_PushCell(player);
+	Call_PushString(index);
+	Call_Finish();
 }
 void Call_OnMusicPlay(char song[PLATFORM_MAX_PATH], float & time)
 {

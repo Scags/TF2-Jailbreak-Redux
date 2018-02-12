@@ -646,7 +646,8 @@ public Action MusicTimerChecker(Handle hTimer)
 {
 	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 13)
 		return Plugin_Continue;
-	if (JBGameMode_GetProperty("iRoundState") != StateRunning || !JBVSH[EnableMusic].BoolValue))
+
+	if (JBGameMode_GetProperty("iRoundState") != StateRunning || !JBVSH[EnableMusic].BoolValue)
 		return Plugin_Continue;
 
 	if (flMusicTime <= GetGameTime())

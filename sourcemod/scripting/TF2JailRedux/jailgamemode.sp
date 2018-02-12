@@ -94,6 +94,20 @@ methodmap JailGameMode //< StringMap
 			hGameModeFields.SetValue("iFreedayLimit", val);
 		}
 	}
+	property int iBeam
+	{
+		public get()
+		{
+			return PrecacheModel("materials/sprites/laserbeam.vmt");
+		}
+	}
+	property int iHalo
+	{
+		public get()
+		{
+			return PrecacheModel("materials/sprites/glow01.vmt");
+		}
+	}
 	
 #if defined _steamtools_included
 	property bool bSteam
@@ -354,18 +368,19 @@ methodmap JailGameMode //< StringMap
 			hGameModeFields.SetValue("bIsWarday", val);
 		}
 	}
-	property bool bIsVIPLR
+	property bool bMarkerExists
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bIsVIPLR", i);
+			bool i; hGameModeFields.GetValue("bMarkerExists", i);
 			return i;
 		}
 		public set(const bool val)
 		{
-			hGameModeFields.SetValue("bIsVIPLR", val);
+			hGameModeFields.SetValue("bMarkerExists", val);
 		}
 	}
+
 	property float flMusicTime
 	{
 		public get()
@@ -446,9 +461,7 @@ methodmap JailGameMode //< StringMap
 		this.bSB = false;
 #endif
 		this.bSC = false;
-#if defined _voiceannounce_ex_included
-		this.bVA = false;
-#endif
+		this.bMarkerExists = false;
 	}
 
 	public void FindRandomWarden()
