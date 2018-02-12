@@ -94,20 +94,6 @@ methodmap JailGameMode //< StringMap
 			hGameModeFields.SetValue("iFreedayLimit", val);
 		}
 	}
-	property int iBeam
-	{
-		public get()
-		{
-			return PrecacheModel("materials/sprites/laserbeam.vmt");
-		}
-	}
-	property int iHalo
-	{
-		public get()
-		{
-			return PrecacheModel("materials/sprites/glow01.vmt");
-		}
-	}
 	
 #if defined _steamtools_included
 	property bool bSteam

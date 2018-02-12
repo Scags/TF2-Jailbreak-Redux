@@ -167,7 +167,7 @@ public void OnPluginStart()
 	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WeaponDisabler] 			= CreateConVar("sm_tf2jr_disable_weapons", "", "Disable certain weapons. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"220,448\" WILL DISABLE SHORTSTOP AND SODA POPPER. NOTE THAT WEARABLES SUCH AS SNIPER BACK WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_wearables\" TO DISABLE \"tf_wearable*\"s", FCVAR_NOTIFY);
 	cvarTF2Jail[WearableDisabler] 			= CreateConVar("sm_tf2jr_disable_wearables", "", "Disable certain wearables. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"133,444\" WILL DISABLE GUNBOATS AND MANTREADS. NOTE THAT WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_weapons\" TO DISABLE \"tf_weapon*\"s", FCVAR_NOTIFY);
-	cvarTF2Jail[Markers] 					= CreateConVar("sm_tf2jr_markers", "3", "Warden markers lifetime in seconds? (0 to disable)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[Markers] 					= CreateConVar("sm_tf2jr_markers", "3", "Warden markers lifetime in seconds? (0 to disable)", FCVAR_NOTIFY, true, 0.0, true, 30.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 

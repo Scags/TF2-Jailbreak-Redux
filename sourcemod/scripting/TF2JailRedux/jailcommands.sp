@@ -141,18 +141,19 @@ public Action Command_WardenMenu(int client, int args)
 		CReplyToCommand(client, "[JailRedux] Command is in-game only.");
 		return Plugin_Handled;
 	}
-	if (!JailFighter(client).bIsWarden)
-	{
-		CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
-		return Plugin_Handled;
-	}
 	if (gamemode.iRoundState != StateRunning)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} Round must be active.");
 		return Plugin_Handled;
 	}
+	JailFighter player = JailFighter(client);
+	if (!player.bIsWarden)
+	{
+		CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
+		return Plugin_Handled;
+	}
 
-	JailFighter(client).WardenMenu();
+	player.WardenMenu();
 
 	return Plugin_Handled;
 }

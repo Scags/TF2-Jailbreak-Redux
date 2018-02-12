@@ -1032,11 +1032,8 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 	{
 		victim.WardenUnset();
 		gamemode.bWardenExists = false;
-		if (cvarTF2Jail[WardenTimer].IntValue != 0)
-		{
-			int iTimer = gamemode.iRoundCount;
-			SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, iTimer);
-		}
+		if (cvarTF2Jail[WardenTimer].BoolValue)
+			SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, gamemode.iRoundCount);
 	}
 
 	switch (gamemode.iLRType)
