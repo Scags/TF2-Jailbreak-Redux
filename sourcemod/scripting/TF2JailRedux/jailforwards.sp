@@ -45,16 +45,22 @@ void InitializeForwards()
 	g_hForwards[OnAllBlueThink] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnBlueNotWardenThink] 	= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnWardenThink] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
-	//g_hForwards[OnLRTextHud] 			= new PrivateForward( CreateForward(ET_Ignore) );
-	//g_hForwards[OnLRPicked] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell) );
+	g_hForwards[OnLRTextHud] 			= new PrivateForward( CreateForward(ET_Ignore, Param_String) );
+	g_hForwards[OnLRPicked] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef) );
 	g_hForwards[OnPlayerDied] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnBuildingDestroyed]	= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnObjectDeflected] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnPlayerJarated] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnUberDeployed] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell) );
 	g_hForwards[OnPlayerSpawned]		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell) );
-	//g_hForwards[OnMenuAdd] 			= new PrivateForward( CreateForward(ET_Ignore, Param_CellByRef) );
+	g_hForwards[OnMenuAdd] 				= new PrivateForward( CreateForward(ET_Ignore, Param_CellByRef, Param_Cell) );
+	g_hForwards[OnPanelAdd] 			= new PrivateForward( CreateForward(ET_Ignore, Param_CellByRef) );
 	g_hForwards[OnManageTimeLeft] 		= new PrivateForward( CreateForward(ET_Ignore) );
+	g_hForwards[OnPlayerPrepped] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
+	g_hForwards[OnHurtPlayer] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell) );
+	g_hForwards[OnHookDamage] 			= new PrivateForward( CreateForward(ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell) );
+	g_hForwards[OnWMenuAdd] 			= new PrivateForward( CreateForward(ET_Ignore, Param_CellByRef) );
+	g_hForwards[OnWMenuSelect] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_String) );
 	g_hForwards[OnMusicPlay]			= new PrivateForward( CreateForward(ET_Ignore, Param_String, Param_FloatByRef) );
 }
 void Call_OnDownloads()
@@ -122,6 +128,21 @@ void Call_OnWardenThink(const JailFighter player)
 	Call_PushCell(player);
 	Call_Finish();
 }
+void Call_OnLRTextHud(char strHud[128])
+{
+	g_hForwards[OnLRTextHud].Start();
+	Call_PushString(strHud);
+	Call_Finish();
+}
+void Call_OnLRPicked(const JailFighter player, const int request, const int value, ArrayList & array)
+{
+	g_hForwards[OnLRPicked].Start();
+	Call_PushCell(player);
+	Call_PushCell(request);
+	Call_PushCell(value);
+	Call_PushCellRef(array);
+	Call_Finish();
+}
 void Call_OnPlayerDied(const JailFighter player, const JailFighter victim, Event event)
 {
 	g_hForwards[OnPlayerDied].Start();
@@ -169,9 +190,68 @@ void Call_OnPlayerSpawned(const JailFighter player, Event event)
 	Call_PushCell(event);
 	Call_Finish();
 }
+void Call_OnMenuAdd(Menu & menu, ArrayList array)
+{
+	g_hForwards[OnMenuAdd].Start();
+	Call_PushCellRef(menu);
+	Call_PushCell(array);
+	Call_Finish();
+}
+void Call_OnPanelAdd(Menu & panel)
+{
+	g_hForwards[OnPanelAdd].Start();
+	Call_PushCellRef(panel);
+	Call_Finish();
+}
 void Call_OnManageTimeLeft()
 {
 	g_hForwards[OnManageTimeLeft].Start();
+	Call_Finish();
+}
+void Call_OnPlayerPrepped(const JailFighter player)
+{
+	g_hForwards[OnPlayerPrepped].Start();
+	Call_PushCell(player);
+	Call_Finish();
+}
+void Call_OnHurtPlayer(const JailFighter victim, const JailFighter attacker, int damage, int custom, int weapon, Event event)
+{
+	g_hForwards[OnHurtPlayer].Start();
+	Call_PushCell(victim);
+	Call_PushCell(attacker);
+	Call_PushCell(damage);
+	Call_PushCell(custom);
+	Call_PushCell(weapon);
+	Call_PushCell(event);
+	Call_Finish();
+}
+Action Call_OnHookDamage(const JailFighter victim, int & attacker, int & inflictor, float & damage, int & damagetype, int & weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	Action result = Plugin_Continue;
+	g_hForwards[OnHookDamage].Start();
+	Call_PushCell(victim);
+	Call_PushCellRef(attacker);
+	Call_PushCellRef(inflictor);
+	Call_PushFloatRef(damage);
+	Call_PushCellRef(damagetype);
+	Call_PushCellRef(weapon);
+	Call_PushArray(damageForce, 3);
+	Call_PushArray(damagePosition, 3);
+	Call_PushCell(damagecustom);
+	Call_Finish(result);
+	return result;
+}
+void Call_OnWMenuAdd(Menu & menu)
+{
+	g_hForwards[OnWMenuAdd].Start();
+	Call_PushCellRef(menu);
+	Call_Finish();
+}
+void Call_OnWMenuSelect(const JailFighter player, const char[] index)
+{
+	g_hForwards[OnWMenuSelect].Start();
+	Call_PushCell(player);
+	Call_PushString(index);
 	Call_Finish();
 }
 void Call_OnMusicPlay(char song[PLATFORM_MAX_PATH], float & time)
