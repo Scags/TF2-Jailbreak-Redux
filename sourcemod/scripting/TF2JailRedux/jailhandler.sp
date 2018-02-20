@@ -242,7 +242,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 						
 					player.RemoveFreeday();
 				}
-				CPrintToChatAll("{red}[JailRedux]{tan} Last request has been chosen. Freedays have been stripped.");
+				CPrintToChatAll("{red}[TF2Jail]{tan} Last request has been chosen. Freedays have been stripped.");
 			}
 			gamemode.bIsLRInUse = true;
 			int request = StringToInt(strIndex), value;
@@ -253,7 +253,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			{
 				case -1:	// Random
 				{
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen a {default}Random Last Request{tan} as their last request!", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen a {default}Random Last Request{tan} as their last request!", client);
 					int randlr = GetRandomInt(2, LRMAX);
 					gamemode.iLRPresetType = randlr;
 					arrLRS.Set( randlr, arrLRS.Get(randlr)+1 );
@@ -267,7 +267,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to kill themselves. What a shame...", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to kill themselves. What a shame...", client);
 					SetPawnTimer(KillThatBitch, (GetRandomFloat(0.5, 7.0)), client);	// Meme lol
 					arrLRS.Set( request, value+1 );
 				}
@@ -275,7 +275,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to type out their LR in chat.", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to type out their LR in chat.", client);
 					gamemode.iLRPresetType = Custom;
 					arrLRS.Set( request, value+1 );
 					base.iCustom = base.userid;
@@ -284,7 +284,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Freeday for Themselves{tan} next round.", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Freeday for Themselves{tan} next round.", client);
 					gamemode.iLRPresetType = FreedaySelf;
 					base.bIsQueuedFreeday = true;
 					arrLRS.Set( request, value+1 );
@@ -293,8 +293,8 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N is picking Freedays for next round...", client);
-					GiveFreedaysMenu(client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N is picking Freedays for next round...", client);
+					FreedayforClientsMenu(client);
 					gamemode.iLRPresetType = FreedayOther;
 					arrLRS.Set( request, value+1 );
 				}
@@ -302,7 +302,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to grant a {default}Freeday for All{tan} next round.", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to grant a {default}Freeday for All{tan} next round.", client);
 					gamemode.iLRPresetType = FreedayAll;
 					arrLRS.Set( request, value+1 );
 				}
@@ -310,7 +310,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to strip the guards of their weapons.", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to strip the guards of their weapons.", client);
 					gamemode.iLRPresetType = GuardMelee;
 					arrLRS.Set( request, value+1 );
 				}
@@ -318,7 +318,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Horseless Headless Horsemann Kill Round{tan} next round.", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Horseless Headless Horsemann Kill Round{tan} next round.", client);
 					gamemode.iLRPresetType = HHHDay;
 					arrLRS.Set( request, value+1 );
 				}
@@ -326,7 +326,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Super Small{tan} for everyone.", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Super Small{tan} for everyone.", client);
 					gamemode.iLRPresetType = TinyRound;
 					arrLRS.Set( request, value+1 );
 				}
@@ -334,7 +334,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to ignite all of the prisoners next round!", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to ignite all of the prisoners next round!", client);
 					gamemode.iLRPresetType = HotPrisoner;
 					arrLRS.Set( request, value+1 );
 				}
@@ -342,7 +342,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Low Gravity{tan} as their last request.", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Low Gravity{tan} as their last request.", client);
 					gamemode.iLRPresetType = Gravity;
 					arrLRS.Set( request, value+1 );
 				}
@@ -350,7 +350,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to hire a Sniper for the next round!", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to hire a Sniper for the next round!", client);
 					gamemode.iLRPresetType = RandomKill;
 					arrLRS.Set( request, value+1 );
 				}
@@ -358,7 +358,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to do a {default}Warday{tan}.", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to do a {default}Warday{tan}.", client);
 					gamemode.iLRPresetType = Warday;
 					arrLRS.Set( request, value+1 );
 				}
@@ -366,7 +366,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Class Warfare{tan} as their last request.", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Class Warfare{tan} as their last request.", client);
 					gamemode.iLRPresetType = ClassWars;
 					arrLRS.Set( request, value+1 );
 				}
@@ -374,7 +374,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, LR_DEFAULT))
 						return;
-					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Zombie Warday{tan} as their last request.", client);
+					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Zombie Warday{tan} as their last request.", client);
 					gamemode.iLRPresetType = ZombieWarday;
 					arrLRS.Set( request, value+1 );
 				}
@@ -732,7 +732,7 @@ public void ManageRoundStart()
 		case TinyRound:
 		{
 			EmitSoundToAll(TinySound);
-			CPrintToChatAll("{red}[JailRedux]{tan} SuperSmall for everyone activated.");
+			CPrintToChatAll("{red}[TF2Jail]{tan} SuperSmall for everyone activated.");
 			gamemode.bIsWardenLocked = true;
 		}
 		case Gravity:
@@ -1271,7 +1271,7 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 	if (base.iCustom > 0)
 	{
 		strcopy(strCustomLR, sizeof(strCustomLR), cArgs);
-		CPrintToChat(client, "{red}[JailRedux]{tan} Your custom last request is {green}%s", strCustomLR);
+		CPrintToChat(client, "{red}[TF2Jail]{tan} Your custom last request is {green}%s", strCustomLR);
 		base.iCustom = 0;
 	}
 }
@@ -1307,7 +1307,7 @@ public void ManageWardenMenu(Menu & menu)
 			JailFighter player = JailFighter(client);
 			if (!player.bIsWarden)
 			{
-				CPrintToChat(client, "{red}[JailRedux]{tan} You are not warden.");
+				CPrintToChat(client, "{red}[TF2Jail]{tan} You are not warden.");
 				return;
 			}
 			char index[32]; menu.GetItem(select, index, sizeof(index));
@@ -1319,10 +1319,10 @@ public void ManageWardenMenu(Menu & menu)
 					if (!gamemode.bCellsOpened)
 					{
 						gamemode.DoorHandler(OPEN);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has opened cells.");
+						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has opened cells.");
 						gamemode.bCellsOpened = true;
 					}
-					else CPrintToChat(client, "{red}[JailRedux]{tan} Cells are already open.");
+					else CPrintToChat(client, "{red}[TF2Jail]{tan} Cells are already open.");
 					player.WardenMenu();
 				}
 				case 1:
@@ -1330,10 +1330,10 @@ public void ManageWardenMenu(Menu & menu)
 					if (gamemode.bCellsOpened)
 					{
 						gamemode.DoorHandler(CLOSE);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has closed cells.");
+						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has closed cells.");
 						gamemode.bCellsOpened = false;
 					}
-					else CPrintToChat(client, "{red}[JailRedux]{tan} Cells are not open.");
+					else CPrintToChat(client, "{red}[TF2Jail]{tan} Cells are not open.");
 					player.WardenMenu();
 				}
 				case 2:
@@ -1341,12 +1341,12 @@ public void ManageWardenMenu(Menu & menu)
 					if (hEngineConVars[0].BoolValue == false)
 					{
 						hEngineConVars[0].SetBool(true);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has enabled Friendly-Fire!");
+						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has enabled Friendly-Fire!");
 					}
 					else 
 					{
 						hEngineConVars[0].SetBool(false);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has disabled Friendly-Fire.");
+						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has disabled Friendly-Fire.");
 					}
 					player.WardenMenu();
 				}
@@ -1355,12 +1355,12 @@ public void ManageWardenMenu(Menu & menu)
 					if (hEngineConVars[1].BoolValue == false)
 					{
 						hEngineConVars[1].SetBool(true);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has enabled collisions!");
+						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has enabled collisions!");
 					}
 					else
 					{
 						hEngineConVars[1].SetBool(false);
-						CPrintToChatAll("{red}[JailRedux]{tan} Warden has disabled collisions.");
+						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has disabled collisions.");
 					}
 					player.WardenMenu();
 				}
@@ -1370,7 +1370,7 @@ public void ManageWardenMenu(Menu & menu)
 					{
 						if (gamemode.bMarkerExists)
 						{
-							CPrintToChat(client, "{red}[JailRedux]{tan} Slow down there cowboy.");
+							CPrintToChat(client, "{red}[TF2Jail]{tan} Slow down there cowboy.");
 							player.WardenMenu();
 							return;
 						}

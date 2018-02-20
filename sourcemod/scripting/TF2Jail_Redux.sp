@@ -295,11 +295,9 @@ public void OnPluginStart()
 #endif
 
 	for (int i = MaxClients; i; --i) 
-	{
 		if (IsValidClient(i))
 			OnClientPutInServer(i);
-	}
-
+	
 	hJailFields[0] = new StringMap();
 	g_hPluginsRegistered = new ArrayList();
 }
@@ -420,14 +418,14 @@ public void OnConfigsExecuted()
 #endif
 
 	int i;
-	char strDisable[1028];
+	char strDisable[512];
 
 	hWeaponList = new ArrayList();
 	cvarTF2Jail[WeaponDisabler].GetString(strDisable, sizeof(strDisable));
 	if (strDisable[0] != '\0')
 	{
-		char strBuffer[32][32];
-		int disabled = ExplodeString(strDisable, ",", strBuffer, 32, 32); 	// Split all of our disabled indexes and store them into our string array...
+		char strBuffer[32][8];
+		int disabled = ExplodeString(strDisable, ",", strBuffer, 32, 8); 	// Split all of our disabled indexes and store them into our string array...
 		for (i = 0; i < disabled; i++)										// Loop through them all...
 			hWeaponList.Push( StringToInt(strBuffer[i]) );					// Then push their values to the global array!
 	}
@@ -436,8 +434,8 @@ public void OnConfigsExecuted()
 	cvarTF2Jail[WearableDisabler].GetString(strDisable, sizeof(strDisable));
 	if (strDisable[0] != '\0')
 	{
-		char strBuffer[32][32];
-		int disabled = ExplodeString(strDisable, ",", strBuffer, 32, 32);	// And we repeat the same for our wearables
+		char strBuffer[32][8];
+		int disabled = ExplodeString(strDisable, ",", strBuffer, 32, 8);	// And we repeat the same for our wearables
 		for (i = 0; i < disabled; i++)
 			hWearableList.Push( StringToInt(strBuffer[i]) );
 	}
@@ -539,8 +537,12 @@ public Action Timer_PlayerThink(Handle hTimer)
 	if (!bEnabled.BoolValue || gamemode.iRoundState != StateRunning)
 		return Plugin_Continue;
 		
+	if (gamemode.flMusicTime <= GetGameTime() && cvarTF2Jail[EnableMusic].BoolValue)
+		_MusicPlay();
+
 	JailFighter player;
-	for (int i = MaxClients; i; --i) {
+	for (int i = MaxClients; i; --i) 
+	{
 		if (!IsValidClient(i, false) || !IsPlayerAlive(i))
 			continue;
 		
@@ -653,7 +655,7 @@ public Action EurekaTele(int client, const char[] command, int args)
 	
 	if (player.bUnableToTeleport)
 	{
-		CPrintToChat(client, "{red}[JailRedux]{tan} You can't teleport yet!");
+		CPrintToChat(client, "{red}[TF2Jail]{tan} You can't teleport yet!");
 		return Plugin_Handled;
 	}
 
@@ -916,7 +918,7 @@ public void WelcomeMessage(const int userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (IsClientInGame(client))
-		CPrintToChat(client, "{red}[JailRedux]{tan} Welcome to TF2 Jailbreak Redux. Type \"!jhelp\" for help.");
+		CPrintToChat(client, "{red}[TF2Jail]{tan} Welcome to TF2 Jailbreak Redux. Type \"!jhelp\" for help.");
 }
 
 public void ResetDamage()
@@ -994,7 +996,7 @@ public void DisableWarden(const int iTimer)
 		|| gamemode.bIsWardenLocked)
 		return;
 
-	CPrintToChatAll("{red}[JailRedux]{tan} Warden has been locked due to lack of warden.");
+	CPrintToChatAll("{red}[TF2Jail]{tan} Warden has been locked due to lack of warden.");
 	gamemode.DoorHandler(OPEN);
 	gamemode.bIsWardenLocked = true;
 }
@@ -1083,7 +1085,7 @@ public bool CheckSet(const int client, const int iLRCount, const int iMax)
 {
 	if (iLRCount >= iMax)
 	{
-		CPrintToChat(client, "{red}[JailRedux]{tan} This LR has been picked the maximum amount of times for this map.");
+		CPrintToChat(client, "{red}[TF2Jail]{tan} This LR has been picked the maximum amount of times for this map.");
 		JailFighter(client).ListLRS();
 		//ListLastRequests(client);
 		return false;
@@ -1105,7 +1107,7 @@ public void CreateMarker(const int client)
 
 	if (!TR_DidHit(trace))
 	{
-		CPrintToChat(client, "{red}[JailRedux]{tan} Unable to create a marker.");
+		CPrintToChat(client, "{red}[TF2Jail]{tan} Unable to create a marker.");
 		CloseHandle(trace);
 		return;
 	}
@@ -1177,7 +1179,7 @@ public Action UnmuteReds(Handle hTimer)
 		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Red)
 			JailFighter(i).UnmutePlayer();
 	}
-	PrintToConsoleAll("[JailRedux] Red team has been unmuted.");
+	PrintToConsoleAll("[TF2Jail] Red team has been unmuted.");
 }
 
 public void Open_Doors(const int iTimer)
@@ -1186,7 +1188,7 @@ public void Open_Doors(const int iTimer)
 		return;
 
 	gamemode.DoorHandler(OPEN);
-	CPrintToChatAll("{red}[JailRedux]{tan} The cell doors have opened after %i seconds of remaining closed.", cvarTF2Jail[DoorOpenTimer].IntValue);
+	CPrintToChatAll("{red}[TF2Jail]{tan} The cell doors have opened after %i seconds of remaining closed.", cvarTF2Jail[DoorOpenTimer].IntValue);
 	gamemode.bCellsOpened = true;
 }
 
@@ -1196,7 +1198,7 @@ public void EnableFFTimer(const int iTimer)
 		return;
 		
 	hEngineConVars[0].SetBool(true);
-	CPrintToChatAll("{red}[JailRedux]{tan} Friendly-Fire has been enabled!");
+	CPrintToChatAll("{red}[TF2Jail]{tan} Friendly-Fire has been enabled!");
 }
 
 public void FreeKillSystem(const JailFighter attacker)
@@ -1314,8 +1316,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBPlayer.RemoveFreeday", Native_JB_RemoveFreeday);
 	CreateNative("JBPlayer.SpawnSmallHealthPack", Native_JB_SpawnSmallHealthPack);
 	CreateNative("JBPlayer.TeleToSpawn", Native_JB_TeleToSpawn);
-	CreateNative("JBPlayer.SetCliptable", Native_JB_SetCliptable);
-	CreateNative("JBPlayer.SetAmmotable", Native_JB_SetAmmotable);
+	// CreateNative("JBPlayer.SetCliptable", Native_JB_SetCliptable);
+	// CreateNative("JBPlayer.SetAmmotable", Native_JB_SetAmmotable);
 	CreateNative("JBPlayer.WardenMenu", Native_JB_WardenMenu);
 	CreateNative("JBPlayer.ConvertToZombie", Native_JB_ConvertToZombie);
 	CreateNative("JBPlayer.ClimbWall", Native_JB_ClimbWall);
@@ -1500,7 +1502,7 @@ public int Native_JB_SpawnSmallHealthPack(Handle plugin, int numParams)
 	int ownerteam = GetNativeCell(2);
 	player.SpawnSmallHealthPack(ownerteam);
 }
-public int Native_JB_SetCliptable(Handle plugin, int numParams)
+/*public int Native_JB_SetCliptable(Handle plugin, int numParams)
 {
 	JailFighter player = GetNativeCell(1);
 	int slot = GetNativeCell(2);
@@ -1513,7 +1515,7 @@ public int Native_JB_SetAmmotable(Handle plugin, int numParams)
 	int slot = GetNativeCell(2);
 	int count = GetNativeCell(3);
 	player.SetAmmotable(slot, count);
-}
+}*/
 public int Native_JB_WardenMenu(Handle plugin, int numParams)
 {
 	JailFighter player = GetNativeCell(1);

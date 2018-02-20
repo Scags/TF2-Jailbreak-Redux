@@ -1,135 +1,19 @@
-// Having this here for reasons
-methodmap TF2Item < Handle
-{
-	public TF2Item(int iFlags) {
-		return view_as<TF2Item>(TF2Items_CreateItem(iFlags));
-	}
-	property int iFlags {
-		public get() 			{ return TF2Items_GetFlags(this); }
-		public set(int iVal) 	{ TF2Items_SetFlags(this, iVal); }
-	}
-	property int iItemIndex {
-		public get() 			{ return TF2Items_GetItemIndex(this); }
-		public set(int iVal) 	{ TF2Items_SetItemIndex(this, iVal); }
-	}
-	property int iQuality {
-		public get() 			{ return TF2Items_GetQuality(this); }
-		public set(int iVal) 	{ TF2Items_SetQuality(this, iVal); }
-	}
-	property int iLevel {
-		public get() 			{ return TF2Items_GetLevel(this); }
-		public set(int iVal)	{ TF2Items_SetLevel(this, iVal); }
-	}
-	property int iNumAttribs {
-		public get() 			{ return TF2Items_GetNumAttributes(this); }
-		public set(int iVal) 	{ TF2Items_SetNumAttributes(this, iVal); }
-	}
-	public int GiveNamedItem(int iClient)
-	{
-		return TF2Items_GiveNamedItem(iClient, this);
-	}
-	public void SetClassname(char[] strClassName)
-	{
-		TF2Items_SetClassname(this, strClassName);
-	}
-	public void GetClassname(char[] strDest, int iDestSize)
-	{
-		TF2Items_GetClassname(this, strDest, iDestSize);
-	}
-	public void SetAttribute(int iSlotIndex, int iAttribDefIndex, float flValue)
-	{
-		TF2Items_SetAttribute(this, iSlotIndex, iAttribDefIndex, flValue);
-	}
-	public int GetAttribID(int iSlotIndex)
-	{
-		return TF2Items_GetAttributeId(this, iSlotIndex);
-	}
-	public float GetAttribValue(int iSlotIndex)
-	{
-		return TF2Items_GetAttributeValue(this, iSlotIndex);
-	}
-};
-
-stock TF2Item PrepareItemHandle(TF2Item hItem, char[] name = "", int index = -1, const char[] att = "", bool dontpreserve = false)
-{
-	static TF2Item hWeapon = null;
-	int addattribs = 0;
-
-	char weaponAttribsArray[32][32];
-	int attribCount = ExplodeString(att, " ; ", weaponAttribsArray, 32, 32);
-
-	int flags = OVERRIDE_ATTRIBUTES;
-	if (!dontpreserve)
-		flags |= PRESERVE_ATTRIBUTES;
-
-	if ( !hWeapon )
-		hWeapon = new TF2Item(flags);
-	else hWeapon.iFlags = flags;
-//	Handle hWeapon = TF2Items_CreateItem(flags);	//null;
-
-	if (hItem != null) {
-		addattribs = hItem.iNumAttribs;
-		if (addattribs) {
-			for (int i=0; i < 2*addattribs; i+=2) {
-				bool dontAdd = false;
-				int attribIndex = hItem.GetAttribID(i);
-				for (int z=0; z < attribCount+i; z += 2) {
-					if (StringToInt(weaponAttribsArray[z]) == attribIndex)
-					{
-						dontAdd = true;
-						break;
-					}
-				}
-				if (!dontAdd) {
-					IntToString(attribIndex, weaponAttribsArray[i+attribCount], 32);
-					FloatToString(hItem.GetAttribValue(i), weaponAttribsArray[i+1+attribCount], 32);
-				}
-			}
-			attribCount += 2*addattribs;
-		}
-		delete hItem;
-	}
-
-	if (name[0] != '\0') {
-		flags |= OVERRIDE_CLASSNAME;
-		hWeapon.SetClassname(name);
-	}
-	if (index != -1) {
-		flags |= OVERRIDE_ITEM_DEF;
-		hWeapon.iItemIndex = index;
-	}
-	if (attribCount > 1) {
-		hWeapon.iNumAttribs = (attribCount/2);
-		int i2 = 0;
-		for (int i=0; i<attribCount && i<32; i += 2)
-		{
-			hWeapon.SetAttribute(i2, StringToInt(weaponAttribsArray[i]), StringToFloat(weaponAttribsArray[i+1]));
-			i2++;
-		}
-	}
-	else hWeapon.iNumAttribs = 0;
-	hWeapon.iFlags = flags;
-	return hWeapon;
-}
-
 public char strCustomLR[64];	// Used for formatting the player custom lr say hook
 
-int
+/*int
 	AmmoTable[2049],
 	ClipTable[2049]
-;
+;*/
 
 int EnumTNPS[4][eTextNodeParams];
-
-//float flHolstered[PLYR][3];
 
 StringMap hJailFields[PLYR];
 
 methodmap JailFighter
 {
-	public JailFighter(const int ind, bool uid=false)
+	public JailFighter( const int ind, bool uid = false )
 	{
-		int player=0;
+		int player;
 		if (uid && GetClientOfUserId(ind) > 0)
 			player = ( ind );
 		else if ( IsClientValid(ind) )
@@ -137,10 +21,12 @@ methodmap JailFighter
 		return view_as< JailFighter >( player );
 	}
 
-	property int userid {
+	property int userid 
+	{
 		public get()				{ return view_as< int >(this); }
 	}
-	property int index {
+	property int index 
+	{
 		public get()				{ return GetClientOfUserId( view_as< int >(this) ); }
 	}
 
@@ -151,9 +37,9 @@ methodmap JailFighter
 			int i; hJailFields[this.index].GetValue("iCustom", i);
 			return i;
 		}
-		public set( const int val )
+		public set( const int i )
 		{
-			hJailFields[this.index].SetValue("iCustom", val);
+			hJailFields[this.index].SetValue("iCustom", i);
 		}
 	}
 	property int iKillCount
@@ -163,9 +49,9 @@ methodmap JailFighter
 			int i; hJailFields[this.index].GetValue("iKillCount", i);
 			return i;
 		}
-		public set( const int val )
+		public set( const int i )
 		{
-			hJailFields[this.index].SetValue("iKillCount", val);
+			hJailFields[this.index].SetValue("iKillCount", i);
 		}
 	}
 	property bool bIsWarden
@@ -175,9 +61,9 @@ methodmap JailFighter
 			bool i; hJailFields[this.index].GetValue("bIsWarden", i);
 			return i;
 		}
-		public set( const bool val )
+		public set( const bool i )
 		{
-			hJailFields[this.index].SetValue("bIsWarden", val);
+			hJailFields[this.index].SetValue("bIsWarden", i);
 		}
 	}
 	property bool bIsMuted
@@ -187,9 +73,9 @@ methodmap JailFighter
 			bool i; hJailFields[this.index].GetValue("bIsMuted", i);
 			return i;
 		}
-		public set( const bool val )		
+		public set( const bool i )		
 		{
-			hJailFields[this.index].SetValue("bIsMuted", val);
+			hJailFields[this.index].SetValue("bIsMuted", i);
 		}
 	}
 	property bool bIsQueuedFreeday
@@ -199,9 +85,9 @@ methodmap JailFighter
 			bool i; hJailFields[this.index].GetValue("bIsQueuedFreeday", i);
 			return i;
 		}
-		public set( const bool val )		
+		public set( const bool i )		
 		{
-			hJailFields[this.index].SetValue("bIsQueuedFreeday", val);
+			hJailFields[this.index].SetValue("bIsQueuedFreeday", i);
 		}
 	}
 	property bool bIsFreeday
@@ -211,9 +97,9 @@ methodmap JailFighter
 			bool i; hJailFields[this.index].GetValue("bIsFreeday", i);
 			return i;
 		}
-		public set( const bool val )		
+		public set( const bool i )		
 		{
-			hJailFields[this.index].SetValue("bIsFreeday", val);
+			hJailFields[this.index].SetValue("bIsFreeday", i);
 		}
 	}
 	property bool bLockedFromWarden
@@ -223,9 +109,9 @@ methodmap JailFighter
 			bool i; hJailFields[this.index].GetValue("bLockedFromWarden", i);
 			return i;
 		}
-		public set( const bool val )		
+		public set( const bool i )		
 		{
-			hJailFields[this.index].SetValue("bLockedFromWarden", val);
+			hJailFields[this.index].SetValue("bLockedFromWarden", i);
 		}
 	}
 	property bool bIsVIP
@@ -235,9 +121,9 @@ methodmap JailFighter
 			bool i; hJailFields[this.index].GetValue("bIsVIP", i);
 			return i;
 		}
-		public set( const bool val )
+		public set( const bool i )
 		{
-			hJailFields[this.index].SetValue("bIsVIP", val);
+			hJailFields[this.index].SetValue("bIsVIP", i);
 		}
 	}
 	property bool bIsAdmin
@@ -247,9 +133,9 @@ methodmap JailFighter
 			bool i; hJailFields[this.index].GetValue("bIsAdmin", i);
 			return i;
 		}
-		public set( const bool val )
+		public set( const bool i )
 		{
-			hJailFields[this.index].SetValue("bIsAdmin", val);
+			hJailFields[this.index].SetValue("bIsAdmin", i);
 		}
 	}
 	property bool bIsHHH
@@ -259,9 +145,9 @@ methodmap JailFighter
 			bool i; hJailFields[this.index].GetValue("bIsHHH", i);
 			return i;
 		}
-		public set( const bool val )		
+		public set( const bool i )		
 		{
-			hJailFields[this.index].SetValue("bIsHHH", val);
+			hJailFields[this.index].SetValue("bIsHHH", i);
 		}
 	}
 	property bool bInJump
@@ -271,9 +157,9 @@ methodmap JailFighter
 			bool i; hJailFields[this.index].GetValue("bInJump", i);
 			return i;
 		}
-		public set( const bool val )
+		public set( const bool i )
 		{
-			hJailFields[this.index].SetValue("bInJump", val);
+			hJailFields[this.index].SetValue("bInJump", i);
 		}
 	}
 #if defined _clientprefs_included
@@ -287,12 +173,12 @@ methodmap JailFighter
 			GetClientCookie(this.index, MusicCookie, strMusic, sizeof(strMusic));
 			return (StringToInt(strMusic) == 1);
 		}
-		public set( const bool val )
+		public set( const bool i )
 		{
 			if (!AreClientCookiesCached(this.index))
 				return;
 			int value;
-			if (val)
+			if (i)
 				value = 1;
 			else value = 0;
 			char strMusic[6];
@@ -308,9 +194,9 @@ methodmap JailFighter
 			bool i; hJailFields[this.index].GetValue("bUnableToTeleport", i);
 			return i;
 		}
-		public set( const bool val )
+		public set( const bool i )
 		{
-			hJailFields[this.index].SetValue("bUnableToTeleport", val);
+			hJailFields[this.index].SetValue("bUnableToTeleport", i);
 		}
 	}
 	property bool bIsZombie
@@ -320,9 +206,9 @@ methodmap JailFighter
 			bool i; hJailFields[this.index].GetValue("bIsZombie", i);
 			return i;
 		}
-		public set( const bool val )
+		public set( const bool i )
 		{
-			hJailFields[this.index].SetValue("bIsZombie", val);
+			hJailFields[this.index].SetValue("bIsZombie", i);
 		}
 	}
 
@@ -333,9 +219,9 @@ methodmap JailFighter
 			float i; hJailFields[this.index].GetValue("flSpeed", i);
 			return i;
 		}
-		public set( const float val )
+		public set( const float i )
 		{
-			hJailFields[this.index].SetValue("flSpeed", val);
+			hJailFields[this.index].SetValue("flSpeed", i);
 		}
 	}
 	property float flKillSpree
@@ -345,46 +231,48 @@ methodmap JailFighter
 			float i; hJailFields[this.index].GetValue("flKillSpree", i);
 			return i;
 		}
-		public set( const float val )
+		public set( const float i )
 		{
-			hJailFields[this.index].SetValue("flKillSpree", val);
+			hJailFields[this.index].SetValue("flKillSpree", i);
 		}
 	}
 	/**
-	 * creates and spawns a weapon to a player
+	 * Creates and spawns a weapon to a player
 	 *
 	 * @param name		entity name of the weapon, example: "tf_weapon_bat"
 	 * @param index		the index of the desired weapon
 	 * @param level		the level of the weapon
 	 * @param qual		the weapon quality of the item
 	 * @param att		the nested attribute string, example: "2 ; 2.0" - increases weapon damage by 100% aka 2x.
-	 * @return		entity index of the newly created weapon
+	 * @return			entity index of the newly created weapon
 	 */
-	public int SpawnWeapon(char[] name, const int index, const int level, const int qual, char[] att)
+	public int SpawnWeapon(char[] name, int index, int level, int qual, char[] att)
 	{
-		TF2Item hWep = new TF2Item(OVERRIDE_ALL|FORCE_GENERATION);
-		if ( !hWep )
+		Handle hWeapon = TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
+		if (hWeapon == null)
 			return -1;
-
-		hWep.SetClassname(name);
-		hWep.iItemIndex = index;
-		hWep.iLevel = level;
-		hWep.iQuality = qual;
+		
+		TF2Items_SetClassname(hWeapon, name);
+		TF2Items_SetItemIndex(hWeapon, index);
+		TF2Items_SetLevel(hWeapon, level);
+		TF2Items_SetQuality(hWeapon, qual);
 		char atts[32][32];
 		int count = ExplodeString(att, " ; ", atts, 32, 32);
-		count &= ~1;	// Odd numbered attributes result in an error, remove the 1st bit so count will always be even.
-		if (count > 0) {
-			hWep.iNumAttribs = count/2;
+		count &= ~1;
+		if (count > 0) 
+		{
+			TF2Items_SetNumAttributes(hWeapon, count/2);
 			int i2=0;
-			for (int i=0 ; i<count ; i+=2) {
-				hWep.SetAttribute( i2, StringToInt(atts[i]), StringToFloat(atts[i+1]) );
+			for (int i=0 ; i<count ; i += 2) 
+			{
+				TF2Items_SetAttribute(hWeapon, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
 				i2++;
 			}
 		}
-		else hWep.iNumAttribs = 0;
+		else TF2Items_SetNumAttributes(hWeapon, 0);
 
-		int entity = hWep.GiveNamedItem(this.index);
-		delete hWep;
+		int entity = TF2Items_GiveNamedItem(this.index, hWeapon);
+		delete (hWeapon);
 		EquipPlayerWeapon(this.index, entity);
 		return entity;
 	}
@@ -394,13 +282,13 @@ methodmap JailFighter
 	 * @param wepslot	the equipment slot of the player
 	 * @return		the recorded max ammo of the weapon
 	 */
-	public int GetAmmotable(const int wepslot)
+	/*public int GetAmmotable(const int wepslot)
 	{
 		int weapon = GetPlayerWeaponSlot(this.index, wepslot);
 		if (weapon > MaxClients && IsValidEntity(weapon))
 			return AmmoTable[weapon];
 		return -1;
-	}
+	}*/
 	
 	/**
 	 * sets the max recorded ammo for a certain weapon index
@@ -409,25 +297,25 @@ methodmap JailFighter
 	 * @param val		how much the new max ammo should be
 	 * @noreturn
 	 */
-	public void SetAmmotable(const int wepslot, const int val)
+	/*public void SetAmmotable(const int wepslot, const int val)
 	{
 		int weapon = GetPlayerWeaponSlot(this.index, wepslot);
 		if (weapon > MaxClients && IsValidEntity(weapon))
 			AmmoTable[weapon] = val;
-	}
+	}*/
 	/**
 	 * gets the max recorded clipsize for a certain weapon index
 	 *
 	 * @param wepslot	the equipment slot of the player
 	 * @return		the recorded clipsize ammo of the weapon
 	 */
-	public int GetCliptable(const int wepslot)
+	/*public int GetCliptable(const int wepslot)
 	{
 		int weapon = GetPlayerWeaponSlot(this.index, wepslot);
 		if (weapon > MaxClients && IsValidEntity(weapon))
 			return ClipTable[weapon];
 		return -1;
-	}
+	}*/
 	
 	/**
 	 * sets the max recorded clipsize for a certain weapon index
@@ -436,12 +324,12 @@ methodmap JailFighter
 	 * @param val		how much the new max clipsize should be
 	 * @noreturn
 	 */
-	public void SetCliptable(const int wepslot, const int val)
+	/*public void SetCliptable(const int wepslot, const int val)
 	{
 		int weapon = GetPlayerWeaponSlot(this.index, wepslot);
 		if (weapon > MaxClients && IsValidEntity(weapon))
 			ClipTable[weapon] = val;
-	}
+	}*/
 	public int GetWeaponSlotIndex(const int slot)
 	{
 		int weapon = GetPlayerWeaponSlot(this.index, slot);
@@ -528,7 +416,7 @@ methodmap JailFighter
 		{
 			SetClientListeningFlags(client, VOICE_MUTED);
 			this.bIsMuted = true;
-			PrintToConsole(client, "[JailRedux] You are muted by the plugin.");
+			PrintToConsole(client, "[TF2Jail] You are muted by the plugin.");
 		}
 	}
 	public void GiveFreeday()
@@ -606,7 +494,7 @@ methodmap JailFighter
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
 		}
 		
-		//CPrintToChat(client, "{red}[JailRedux]{tan} Your weapons and ammo have been stripped.");
+		//CPrintToChat(client, "{red}[TF2Jail]{tan} Your weapons and ammo have been stripped.");
 	}
 	public void UnmutePlayer()
 	{
@@ -615,7 +503,7 @@ methodmap JailFighter
 			int client = this.index;
 			SetClientListeningFlags(client, VOICE_NORMAL);
 			this.bIsMuted = false;
-			PrintToConsole(client, "[JailRedux] You are unmuted by the plugin.");
+			PrintToConsole(client, "[TF2Jail] You are unmuted by the plugin.");
 		}
 	}
 	public void WardenSet()
@@ -626,7 +514,7 @@ methodmap JailFighter
 		int client = this.index;
 		Format(strWarden, sizeof(strWarden), "%N is the current Warden.", client);
 		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
-		CPrintToChatAll("{red}[JailRedux]{fullred} %N{tan} is the new Warden", client);
+		CPrintToChatAll("{red}[TF2Jail]{fullred} %N{tan} is the new Warden", client);
 	}
 	/**	Props to VoIDed
 	 * Sets the custom model of this player.

@@ -1283,3 +1283,71 @@ stock int FindEntity(const char[] name, const char[] className = "")
 	}
 	return -1;
 }
+stock Handle PrepareItemHandle(Handle hItem, char[] name = "", int index = -1, const char[] att = "", bool dontpreserve = false)
+{
+	static Handle hWeapon = null;
+	int addattribs = 0;
+
+	char weaponAttribsArray[32][32];
+	int attribCount = ExplodeString(att, " ; ", weaponAttribsArray, 32, 32);
+
+	int flags = OVERRIDE_ATTRIBUTES;
+	if (!dontpreserve) 
+		flags |= PRESERVE_ATTRIBUTES;
+	if (hWeapon == null) 
+		hWeapon = TF2Items_CreateItem(flags);
+	else TF2Items_SetFlags(hWeapon, flags);
+
+	if (hItem != null)
+	{
+		addattribs = TF2Items_GetNumAttributes(hItem);
+		if (addattribs > 0)
+		{
+			for (int i = 0; i < 2 * addattribs; i += 2)
+			{
+				bool dontAdd = false;
+				int attribIndex = TF2Items_GetAttributeId(hItem, i);
+				for (int j = 0; j < attribCount+i; j += 2)
+				{
+					if (StringToInt(weaponAttribsArray[j]) == attribIndex)
+					{
+						dontAdd = true;
+						break;
+					}
+				}
+				if (!dontAdd)
+				{
+					IntToString(attribIndex, weaponAttribsArray[i+attribCount], 32);
+					FloatToString(TF2Items_GetAttributeValue(hItem, i), weaponAttribsArray[i+1+attribCount], 32);
+				}
+			}
+			attribCount += 2 * addattribs;
+		}
+        delete hItem;
+	}
+
+	if (name[0] != '\0')
+	{
+		flags |= OVERRIDE_CLASSNAME;
+		TF2Items_SetClassname(hWeapon, name);
+	}
+	if (index != -1)
+	{
+		flags |= OVERRIDE_ITEM_DEF;
+		TF2Items_SetItemIndex(hWeapon, index);
+	}
+	if (attribCount > 1)
+	{
+		TF2Items_SetNumAttributes(hWeapon, (attribCount/2));
+		int i2 = 0;
+		for (int i = 0; i < attribCount && i < 32; i += 2)
+		{
+			TF2Items_SetAttribute(hWeapon, i2, StringToInt(weaponAttribsArray[i]), StringToFloat(weaponAttribsArray[i+1]));
+			i2++;
+		}
+	}
+	else TF2Items_SetNumAttributes(hWeapon, 0);
+
+	TF2Items_SetFlags(hWeapon, flags);
+	return hWeapon;
+}

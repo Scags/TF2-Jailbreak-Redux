@@ -123,7 +123,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 			rand = GetRandomPlayer(BLU, true);
 			JailFighter(rand).ForceTeamChange(RED);
-			CPrintToChat(rand, "{red}[JailRedux]{tan} You have been autobalanced.");
+			CPrintToChat(rand, "{red}[TF2Jail]{tan} You have been autobalanced.");
 		}
 	}
 
@@ -209,7 +209,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	}
 	SetPawnTimer(ResetDamage, 1.0);	// Players could teamkill with the flames upon autobalance
 
-	PrintToConsoleAll("[JailRedux] Red Team has been muted.");
+	PrintToConsoleAll("[TF2Jail] Red Team has been muted.");
 	
 	gamemode.iLRPresetType = -1;
 	gamemode.iRoundState = StateRunning;

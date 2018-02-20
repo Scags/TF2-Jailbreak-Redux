@@ -117,8 +117,8 @@ methodmap JBPlayer
 	public native void TeleportToPosition(const int iLocation);
 	public native void ListLRS();
 	public native void PreEquip();
-	public native void SetAmmotable(const int wepslot, const int val);
-	public native void SetCliptable(const int wepslot, const int val);
+	// public native void SetAmmotable(const int wepslot, const int val);
+	// public native void SetCliptable(const int wepslot, const int val);
 	public native void TeleToSpawn(int team = 0);
 	public native void SpawnSmallHealthPack(int ownerteam = 0);
 	public native void MutePlayer();
@@ -137,10 +137,11 @@ methodmap JBPlayer
 
 
 /**
- * Registers a plugin to be able to use TF2Jail's forwards
- * NOTE: The purpose of this native is to register last-request subplugins, you don't need to register plugins to use forwards, simply hook what forward you need.
- * @param plugin_name		module name you want your calling plugin to be identified under
- * @return					integer of the plugin array index
+ *	Registers a plugin to be able to use TF2Jail's forwards
+ *	NOTE: The purpose of this native is to register last-request subplugins, you don't need to register plugins to use forwards, simply hook what forward you need.
+ *	If you add a last request and want to test it before you allow all players to use it, do NOT register the sub-plugin, and use sm_setpreset to activate the lr type for next round
+ *	@param plugin_name		module name you want your calling plugin to be identified under
+ *	@return					integer of the plugin array index
  */
 native int TF2JailRedux_RegisterPlugin(const char plugin_name[64]);
 
@@ -321,8 +322,8 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.TeleportToPosition");
 	MarkNativeAsOptional("JBPlayer.ListLRS");
 	MarkNativeAsOptional("JBPlayer.PreEquip");
-	MarkNativeAsOptional("JBPlayer.SetAmmotable");
-	MarkNativeAsOptional("JBPlayer.SetCliptable");
+	// MarkNativeAsOptional("JBPlayer.SetAmmotable");
+	// MarkNativeAsOptional("JBPlayer.SetCliptable");
 	MarkNativeAsOptional("JBPlayer.TeleToSpawn");
 	MarkNativeAsOptional("JBPlayer.SpawnSmallHealthPack");
 	MarkNativeAsOptional("JBPlayer.MutePlayer");
