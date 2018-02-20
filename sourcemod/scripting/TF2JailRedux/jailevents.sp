@@ -77,7 +77,6 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	gamemode.bDisableCriticals = false;
 	gamemode.iFreedayLimit = 0;
 	gamemode.iRoundState = StateStarting;
-	gamemode.iRoundCount++;
 	gamemode.bOneGuardLeft = false;
 	
 	return Plugin_Continue;
@@ -92,7 +91,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	gamemode.bWardenExists = false;
 	gamemode.bIsWardenLocked = false;
 	gamemode.bFirstDoorOpening = false;
-	int i;
+	int i, type, livingtype;
 	bool warday;
 	JailFighter player;
 	
@@ -142,6 +141,8 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	SetPawnTimer(_MusicPlay, 1.4);
 	warday = gamemode.bIsWarday;
+	type = cvarTF2Jail[MuteType].IntValue;
+	livingtype = cvarTF2Jail[LivingMuteType].IntValue;
 
 	for (i = MaxClients; i; --i)
 	{
@@ -150,12 +151,61 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 		if (!IsPlayerAlive(i))
 			continue;
+
+		player = JailFighter(i);
 		
 		SetEntProp(i, Prop_Data, "m_takedamage", 0, 1);	// For shitheads like Dimmy who ruin fun
 		OnLRActivate(player);
 
 		if (warday)
 			player.TeleportToPosition(GetClientTeam(i));
+
+		if (!IsPlayerAlive(i))
+		{
+			switch (type)
+			{
+				case 0:player.UnmutePlayer();
+				case 1:
+				{
+					if (GetClientTeam(i) == RED && !player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+				case 2:
+				{
+					if (GetClientTeam(i) == BLU && !player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+				case 3:if (!player.bIsVIP) player.MutePlayer();
+				case 4:if (GetClientTeam(i) == RED) player.MutePlayer();
+				case 5:if (GetClientTeam(i) == BLU) player.MutePlayer();
+				default:player.MutePlayer();
+			}
+		}
+		else
+		{
+			switch (livingtype)
+			{
+				case 0:player.UnmutePlayer();
+				case 1:
+				{
+					if (GetClientTeam(i) == RED && !player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+				case 2:
+				{
+					if (GetClientTeam(i) == BLU && !player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+				case 3:if (!player.bIsVIP) player.MutePlayer();
+				case 4:if (GetClientTeam(i) == RED) player.MutePlayer();
+				case 5:if (GetClientTeam(i) == BLU) player.MutePlayer();
+				default:player.MutePlayer();
+			}
+		}
 	}
 	SetPawnTimer(ResetDamage, 1.0);	// Players could teamkill with the flames upon autobalance
 
@@ -181,6 +231,8 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 
 	StopBackGroundMusic();
 	JailFighter player;
+	int x;
+	gamemode.iRoundCount++;
 
 	for (int i = MaxClients; i; --i)
 	{
@@ -197,7 +249,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		if (player.bIsFreeday)
 			player.RemoveFreeday();
 
-		for (int x = 0; x < sizeof(hTextNodes); x++)
+		for (x = 0; x < sizeof(hTextNodes); x++)
 		{
 			if (hTextNodes[x] != null)
 				ClearSyncHud(i, hTextNodes[x]);

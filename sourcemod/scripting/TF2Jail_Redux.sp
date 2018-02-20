@@ -16,11 +16,11 @@
  ** tf2jailredux.inc: External gamemode third-party functionality, leave it alone 				   **
  *	If you're here to give some more uniqueness to the plugin, check jailhandler 	 			   **
  *	It's fixed with a variety of not only last request examples, but gameplay event management.	   **
- *	VSH is a subplugin, if there is an issues with it, simply delete it and edit jailhandler	   **
+ *	VSH is a standalone subplugin, if there is an issue with it, simply delete it	   				**
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.11.8"
+#define PLUGIN_VERSION		"0.11.9"
 #define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -93,28 +93,32 @@ enum	// Cvar name
 };
 
 // If adding new cvars put them above Version in the enum
-ConVar cvarTF2Jail[Version + 1],
-	   bEnabled = null,
-	   hEngineConVars[2]
-	   ;
+ConVar 
+	cvarTF2Jail[Version + 1],
+	bEnabled = null,
+	hEngineConVars[2]
+;
 
-Handle hTextNodes[4],
+Handle 
+	hTextNodes[4],
 #if defined _clientprefs_included
-	   MusicCookie,
+	MusicCookie,
 #endif
-	   AimHud
-	   ;
+	AimHud
+;
 
-char sCellNames[32],
-	 sCellOpener[32],
-	 sFFButton[32],
-	 sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" }
-	 ;
+char
+	sCellNames[32],
+	sCellOpener[32],
+	sFFButton[32],
+	sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" }
+;
 
-float flFreedayPosition[3], 
-	  flWardayBlu[3], 
-	  flWardayRed[3]
-	  ;
+float
+	flFreedayPosition[3], 
+	flWardayBlu[3], 
+	flWardayRed[3]
+;
 
 public Plugin myinfo =
 {
@@ -125,10 +129,11 @@ public Plugin myinfo =
 	url = "https://github.com/Scags/TF2-Jailbreak-Redux"
 };
 
-ArrayList g_hPluginsRegistered,
-		  hWeaponList,
-		  hWearableList
-		  ;
+ArrayList 
+	g_hPluginsRegistered,
+	hWeaponList,
+	hWearableList
+;
 
 #include "TF2JailRedux/stocks.inc"
 #include "TF2JailRedux/jailhandler.sp"
@@ -280,8 +285,8 @@ public void OnPluginStart()
 	AimHud = CreateHudSynchronizer();
 
 	AddMultiTargetFilter("@warden", WardenGroup, "The Warden.", false);
-	AddMultiTargetFilter("@freedays", FreedaysGroup, "All Freedays.", false);
 	AddMultiTargetFilter("@!warden", WardenGroup, "All but the Warden.", false);
+	AddMultiTargetFilter("@freedays", FreedaysGroup, "All Freedays.", false);
 
 	AddNormalSoundHook(SoundHook);
 
@@ -415,14 +420,14 @@ public void OnConfigsExecuted()
 #endif
 
 	int i;
-	char strDisable[64];
+	char strDisable[1028];
 
 	hWeaponList = new ArrayList();
 	cvarTF2Jail[WeaponDisabler].GetString(strDisable, sizeof(strDisable));
 	if (strDisable[0] != '\0')
 	{
-		char strBuffer[6][32];	// Length is 6 in case you hate skins for some odd reason
-		int disabled = ExplodeString(strDisable, ",", strBuffer, 6, 32); 	// Split all of our disabled indexes and store them into our string array...
+		char strBuffer[32][32];
+		int disabled = ExplodeString(strDisable, ",", strBuffer, 32, 32); 	// Split all of our disabled indexes and store them into our string array...
 		for (i = 0; i < disabled; i++)										// Loop through them all...
 			hWeaponList.Push( StringToInt(strBuffer[i]) );					// Then push their values to the global array!
 	}
@@ -431,8 +436,8 @@ public void OnConfigsExecuted()
 	cvarTF2Jail[WearableDisabler].GetString(strDisable, sizeof(strDisable));
 	if (strDisable[0] != '\0')
 	{
-		char strBuffer[4][32];
-		int disabled = ExplodeString(strDisable, ",", strBuffer, 4, 32);	// And we repeat the same for our wearables
+		char strBuffer[32][32];
+		int disabled = ExplodeString(strDisable, ",", strBuffer, 32, 32);	// And we repeat the same for our wearables
 		for (i = 0; i < disabled; i++)
 			hWearableList.Push( StringToInt(strBuffer[i]) );
 	}
@@ -443,7 +448,6 @@ public void OnMapStart()
 	if (!bEnabled.BoolValue)
 		return;
 		
-	CreateTimer(0.3, Timer_AimName, _, FULLTIMER);
 	CreateTimer(0.1, Timer_PlayerThink, _, FULLTIMER);
 		
 	gamemode.b1stRoundFreeday = true;
@@ -661,7 +665,7 @@ public Action EurekaTele(int client, const char[] command, int args)
 
 public Action OnJoinTeam(int client, const char[] command, int args)
 {
-	if (!bEnabled.BoolValue || !cvarTF2Jail[DisableBlueMute].BoolValue || !IsClientValid(client))
+	if (!bEnabled.BoolValue || !IsClientValid(client))
 		return Plugin_Continue;
 
 	char arg[8]; GetCmdArg(1, arg, 8);
@@ -669,7 +673,7 @@ public Action OnJoinTeam(int client, const char[] command, int args)
 	int type = cvarTF2Jail[MuteType].IntValue;
 	if (StrStarts(arg, "blu", false) || StrEqual(arg, "3", false))
 	{
-		if (AlreadyMuted(client))
+		if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue)
 		{
 			EmitSoundToClient(client, NO);
 			TF2_ChangeClientTeam(client, TFTeam_Red);
@@ -709,7 +713,7 @@ public Action OnJoinTeam(int client, const char[] command, int args)
 		}
 		return Plugin_Continue;
 	}
-	if (StrEqual(arg, "auto", false))
+	if (StrEqual(arg, "auto", false) && AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue)
 	{
 		TF2_ChangeClientTeam(client, TFTeam_Red);
 		return Plugin_Handled;
@@ -925,62 +929,12 @@ public void ResetDamage()
 	}
 }
 
-public Action Timer_AimName(Handle hTimer)
-{
-	if (!bEnabled.BoolValue || !cvarTF2Jail[SeeNames].BoolValue)
-		return Plugin_Continue;
-	
-	JailFighter player;
-	int target;
-	for (int i = MaxClients; i; --i)
-	{
-		if (!IsClientInGame(i) || !IsPlayerAlive(i))
-			continue;
-
-		player = JailFighter(i);
-		if (!player.bIsWarden)
-			continue;
-
-		target = GetClientAimTarget(i, true);
-		
-		if (!IsClientValid(target))
-			return Plugin_Continue;
-			
-		if (GetClientTeam(i) == GetClientTeam(target))
-			return Plugin_Continue;
-		
-		float flCpos[3], flTpos[3];
-		GetClientEyePosition(i, flCpos);
-		GetClientEyePosition(target, flTpos);
-		
-		if (CanSeeTarget(i, flCpos, target, flTpos, cvarTF2Jail[NameDistance].FloatValue))
-		{
-			if (TF2_IsPlayerInCondition(target, TFCond_Cloaked) // Cloak watches are removed but meh
-				|| TF2_IsPlayerInCondition(target, TFCond_DeadRingered)
-				|| TF2_IsPlayerInCondition(target, TFCond_Disguised))
-				return Plugin_Continue;
-
-			SetHudTextParams(-1.0, 0.59, 0.4, 255, 100, 255, 255, 1);
-			if (cvarTF2Jail[SeeHealth].BoolValue)
-				ShowSyncHudText(i, AimHud, "%N [%d]", target, GetClientHealth(target));
-			else ShowSyncHudText(i, AimHud, "%N", target);
-		}
-	}
-	return Plugin_Continue;
-}
-
 public void KillThatBitch(const int client)
 {
 	EmitSoundToAll(SuicideSound);
 	ForcePlayerSuicide(client);
 	if (IsPlayerAlive(client))	// In case their kartified or something idk
 		SDKHooks_TakeDamage(client, 0, 0, 9001.0, DMG_DIRECT, _, _, _);
-}
-
-public void ManageHealth(const int client)
-{	// Idk why but health refused to set straight from start
-	SetEntityHealth(client, GetEntProp(client, Prop_Data, "m_iMaxHealth"));
-	SetEntProp(client, Prop_Send, "m_iHealth", GetEntProp(client, Prop_Data, "m_iMaxHealth"));
 }
 
 public void UnHorsemannify(const JailFighter player)

@@ -44,6 +44,11 @@ public Action Command_BecomeWarden(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
+	if (!client)
+	{
+		CReplyToCommand(client, "[JailRedux] Command is in-game only");
+		return Plugin_Handled;
+	}
 	if (gamemode.iRoundState != StateRunning)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} Round must be active.");
@@ -53,11 +58,6 @@ public Action Command_BecomeWarden(int client, int args)
 	if (cli.bLockedFromWarden)
 	{
 		CPrintToChat(client, "{red}[JailRedux]{tan} You may not become warden until next round.");
-		return Plugin_Handled;
-	}
-	if (!client)
-	{
-		CReplyToCommand(client, "[JailRedux] Command is in-game only");
 		return Plugin_Handled;
 	}
 

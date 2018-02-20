@@ -260,11 +260,8 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					if (randlr == FreedaySelf)
 						base.bIsQueuedFreeday = true;
 					else if (randlr == FreedayOther)
-					{
 						for (int i = 0; i < 3; i++)
 							JailFighter( GetRandomPlayer(RED) ).bIsQueuedFreeday = true;
-					}
-					return;
 				}
 				case Suicide:
 				{
@@ -273,7 +270,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to kill themselves. What a shame...", client);
 					SetPawnTimer(KillThatBitch, (GetRandomFloat(0.5, 7.0)), client);	// Meme lol
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case Custom:
 				{
@@ -283,7 +279,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					gamemode.iLRPresetType = Custom;
 					arrLRS.Set( request, value+1 );
 					base.iCustom = base.userid;
-					return;
 				}
 				case FreedaySelf:
 				{
@@ -293,7 +288,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					gamemode.iLRPresetType = FreedaySelf;
 					base.bIsQueuedFreeday = true;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case FreedayOther:
 				{
@@ -303,7 +297,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					GiveFreedaysMenu(client);
 					gamemode.iLRPresetType = FreedayOther;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case FreedayAll:
 				{
@@ -312,7 +305,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to grant a {default}Freeday for All{tan} next round.", client);
 					gamemode.iLRPresetType = FreedayAll;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case GuardMelee:
 				{
@@ -321,7 +313,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to strip the guards of their weapons.", client);
 					gamemode.iLRPresetType = GuardMelee;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case HHHDay:
 				{
@@ -330,7 +321,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Horseless Headless Horsemann Kill Round{tan} next round.", client);
 					gamemode.iLRPresetType = HHHDay;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case TinyRound:
 				{
@@ -339,7 +329,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Super Small{tan} for everyone.", client);
 					gamemode.iLRPresetType = TinyRound;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case HotPrisoner:
 				{
@@ -348,7 +337,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to ignite all of the prisoners next round!", client);
 					gamemode.iLRPresetType = HotPrisoner;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case Gravity:
 				{
@@ -357,7 +345,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Low Gravity{tan} as their last request.", client);
 					gamemode.iLRPresetType = Gravity;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case RandomKill:
 				{
@@ -366,7 +353,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to hire a Sniper for the next round!", client);
 					gamemode.iLRPresetType = RandomKill;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case Warday:
 				{
@@ -375,7 +361,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen to do a {default}Warday{tan}.", client);
 					gamemode.iLRPresetType = Warday;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case ClassWars:
 				{
@@ -384,7 +369,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Class Warfare{tan} as their last request.", client);
 					gamemode.iLRPresetType = ClassWars;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				case ZombieWarday:
 				{
@@ -393,7 +377,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 					CPrintToChatAll("{red}[JailRedux]{tan} %N has chosen {default}Zombie Warday{tan} as their last request.", client);
 					gamemode.iLRPresetType = ZombieWarday;
 					arrLRS.Set( request, value+1 );
-					return;
 				}
 				default:
 				{
@@ -553,17 +536,17 @@ public void PrepPlayer(const int userid)
 			{
 				case TFClass_Scout:
 				{
-					strClassName = (!i ? "tf_weapon_scattergun" : (i == 1 ? "tf_weapon_pistol" : "tf_weapon_bat"));
+					strClassName = (!i ? "tf_weapon_scattergun" : (i == 1 ? "tf_weapon_pistol_scout" : "tf_weapon_bat"));
 					index = (!i ? 13 : (i == 1 ? 23 : 0));
 				}
 				case TFClass_Soldier:
 				{
-					strClassName = (!i ? "tf_weapon_rocketlauncher" : (i == 1 ? "tf_weapon_shotgun" : "tf_weapon_shovel"));
+					strClassName = (!i ? "tf_weapon_rocketlauncher" : (i == 1 ? "tf_weapon_shotgun_soldier" : "tf_weapon_shovel"));
 					index = (!i ? 18 : (i == 1 ? 10 : 6));
 				}
 				case TFClass_Pyro:
 				{
-					strClassName = (!i ? "tf_weapon_flamethrower" : (i == 1 ? "tf_weapon_shotgun" : "tf_weapon_fireaxe"));
+					strClassName = (!i ? "tf_weapon_flamethrower" : (i == 1 ? "tf_weapon_shotgun_pyro" : "tf_weapon_fireaxe"));
 					index = (!i ? 21 : (i == 1 ? 12 : 2));
 				}
 				case TFClass_DemoMan:
@@ -578,7 +561,7 @@ public void PrepPlayer(const int userid)
 				}
 				case TFClass_Engineer:
 				{
-					strClassName = (!i ? "tf_weapon_shotgun" : (i == 1 ? "tf_weapon_shotgun" : "tf_weapon_wrench"));
+					strClassName = (!i ? "tf_weapon_shotgun_primary" : (i == 1 ? "tf_weapon_pistol" : "tf_weapon_wrench"));
 					index = (!i ? 9 : (i == 1 ? 22 : 7));
 				}
 				case TFClass_Medic:
@@ -593,13 +576,24 @@ public void PrepPlayer(const int userid)
 				}
 				case TFClass_Spy:
 				{
-					strClassName = (!i ? "tf_weapon_revolver" : (i == 1 ? "tf_weapon_builder" : "tf_weapon_knife"));
+					strClassName = (!i ? "tf_weapon_revolver" : (i == 1 ? "tf_weapon_pda_spy" : "tf_weapon_knife"));
 					index = (!i ? 24 : (i == 1 ? 735 : 4));
 				}
 			}
 
+/*	Flamethrower attributes are fucked up after Jungle Inferno, these static attribs are required whenever spawning them
+"flame_gravity"                         "0"
+"flame_drag"                            "8.5"
+"flame_up_speed"                        "50"
+"flame_speed"                           "2450"
+"flame_spread_degree"                   "2.8"
+"flame_lifetime"                        "0.6"
+"flame_random_life_time_offset"         "0.1"
+*/
+
 			TF2_RemoveWeaponSlot(client, i);
-			base.SpawnWeapon(strClassName, index, 1, 0, "");	// That was fun, let's do it again but with wearables
+			base.SpawnWeapon(strClassName, index, 1, 0, (index == 21 ? "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1" : ""));
+			// That was fun, let's do it again but with wearables
 		}
 	}
 
@@ -615,7 +609,7 @@ public void PrepPlayer(const int userid)
 				case 133, 444:
 				{
 					wep = 10;
-					strClassName = "tf_weapon_shotgun";
+					strClassName = "tf_weapon_shotgun_soldier";
 				}
 				case 405, 608:
 				{
@@ -635,9 +629,11 @@ public void PrepPlayer(const int userid)
 				default:wep = 0;	// "False" because then they aren't a weapon(slot)
 			}
 			if ( IsValidEntity(FindPlayerBack(client, prepwep, 1)) )
+			{
 				RemovePlayerBack(client, prepwep, 1);
-			if (wep)
-				base.SpawnWeapon(strClassName, wep, 1, 0, "");
+				if (wep)
+					base.SpawnWeapon(strClassName, wep, 1, 0, "");
+			}
 		}
 	}
 
@@ -693,7 +689,6 @@ public void OnLRActivate(const JailFighter player)
 			if (GetClientTeam(client) == BLU)
 				player.ConvertToZombie();
 		}
-		default: {	}
 	}
 
 	if (gamemode.bIsWarday)
@@ -789,7 +784,6 @@ public void ManageRoundStart()
 			gamemode.bIsWardenLocked = true;
 			CPrintToChatAll("{tan} Braiiiiiins...");
 		}
-		default: {	}
 	}
 	Call_OnManageRoundStart();
 }
@@ -811,7 +805,6 @@ public void ManageRoundEnd(const JailFighter player)
 			if (TF2_GetClientTeam(player.index) == TFTeam_Red)
 				SetEntityRenderColor(player.index, 255, 255, 255, 255);
 		}
-		default: {	}
 	}
 	Call_OnLRRoundEnd(player);
 }
@@ -871,7 +864,6 @@ public void ManageCells()
 			ClassWars
 			:gamemode.DoorHandler(OPEN);
 		/*case example:gamemode.DoorHandler(OPEN or CLOSE or LOCK or UNLOCK);*/
-		default: {	}
 	}
 }
 /**
@@ -931,7 +923,6 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 				case 1:if (GetClientTeam(client) == BLU) TF2_RemoveCondition(client, cond);
 				case 2:if (GetClientTeam(client) == RED) TF2_RemoveCondition(client, cond);
 			}
-			if (TF2_GetClientTeam(client) == TFTeam_Blue) TF2_RemoveCondition(client, cond);
 		}
 	}
 }
@@ -989,6 +980,31 @@ public void ManageBlueNotWardenThink(const JailFighter player)
 */
 public void ManageWardenThink(const JailFighter player)
 {
+	int i = player.index;
+	int target = GetClientAimTarget(i, true);
+		
+	if (!IsClientValid(target))
+		return;
+		
+	if (GetClientTeam(i) == GetClientTeam(target))
+		return;
+	
+	float flCpos[3], flTpos[3];
+	GetClientEyePosition(i, flCpos);
+	GetClientEyePosition(target, flTpos);
+	
+	if (CanSeeTarget(i, flCpos, target, flTpos, cvarTF2Jail[NameDistance].FloatValue))
+	{
+		if (TF2_IsPlayerInCondition(target, TFCond_Cloaked) // Cloak watches are removed but meh
+			|| TF2_IsPlayerInCondition(target, TFCond_DeadRingered)
+			|| TF2_IsPlayerInCondition(target, TFCond_Disguised))
+			return;
+
+		SetHudTextParams(-1.0, 0.59, 0.4, 255, 100, 255, 255, 1);
+		if (cvarTF2Jail[SeeHealth].BoolValue)
+			ShowSyncHudText(i, AimHud, "%N [%d]", target, GetClientHealth(target));
+		else ShowSyncHudText(i, AimHud, "%N", target);
+	}
 	switch (gamemode.iLRType)
 	{
 		default: {	}
@@ -1278,6 +1294,9 @@ public void ManageWardenMenu(Menu & menu)
 */
  public int WardenMenuHandler(Menu menu, MenuAction action, int client, int select)
  {
+ 	if (!IsClientValid(client))
+ 		return;
+
  	if (!IsPlayerAlive(client))
  		return;
 
@@ -1423,7 +1442,6 @@ public void ManageMusic(char song[PLATFORM_MAX_PATH], float & time)
 			song = "SomeBadassSong.mp3";
 			time = 9001.0;
 		}*/
-		default: { song = ""; time = -1.0; }
+		default:Call_OnMusicPlay(song, time);
 	}
-	Call_OnMusicPlay(song, time);
 }

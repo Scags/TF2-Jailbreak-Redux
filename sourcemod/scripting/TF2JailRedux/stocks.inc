@@ -577,43 +577,6 @@ stock void SetClientGlow(const int client, const float time1, float clampfl = 0.
 		else SetEntProp(client, Prop_Send, "m_bGlowEnabled", 1);
 	}
 }
-stock void SpawnRandomAmmo()
-{
-	int iEnt = MaxClients+1;
-	float vPos[3], vAng[3];
-	while ( (iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1 )
-	{
-		if ( GetRandomInt(0, 4) )
-			continue;
-
-		// Technically you'll never find a map without a spawn point.
-		GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", vPos);
-		GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
-
-		int iEnt2 = CreateEntityByName("item_ammopack_small");
-		TeleportEntity(iEnt2, vPos, vAng, NULL_VECTOR);
-		DispatchSpawn(iEnt2);
-		SetEntProp(iEnt2, Prop_Send, "m_iTeamNum", bEnabled.BoolValue ? 2 : 0, 4);
-	}
-}
-stock void SpawnRandomHealth()
-{
-	int iEnt = MaxClients+1;
-	float vPos[3], vAng[3];
-	while ( (iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1 )
-	{
-		if ( GetRandomInt(0, 4) )
-			{continue;}
-		// Technically you'll never find a map without a spawn point.
-		GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", vPos);
-		GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
-
-		int iEnt2 = CreateEntityByName("item_healthkit_small");
-		TeleportEntity(iEnt2, vPos, vAng, NULL_VECTOR);
-		DispatchSpawn(iEnt2);
-		SetEntProp(iEnt2, Prop_Send, "m_iTeamNum", bEnabled.BoolValue ? 2 : 0, 4);
-	}
-}
 stock int GetTeamPlayerCount(const int team)
 {
 	int count = 0;
