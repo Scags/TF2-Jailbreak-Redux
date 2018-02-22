@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.11.9"
+#define PLUGIN_VERSION		"0.11.10"
 #define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -143,7 +143,7 @@ ArrayList
 
 public void OnPluginStart()
 {
-	gamemode = JailGameMode();
+	gamemode = new JailGameMode();
 	gamemode.Init();
 	
 	InitializeForwards();	// Forwards
@@ -170,7 +170,7 @@ public void OnPluginStart()
 	cvarTF2Jail[EnableMusic] 				= CreateConVar("sm_tf2jr_music_on", "1", "Enable background music that could possibly play with last requests?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[MusicVolume] 				= CreateConVar("sm_tf2jr_music_volume", ".5", "Volume in which background music plays. (If enabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[EurekaTimer] 				= CreateConVar("sm_tf2jr_eureka_teleport", "20", "How long must players wait until they are able to Eureka Effect Teleport again? (0 to disable cooldown)", FCVAR_NOTIFY, true, 0.0, true, 60.0);
-	cvarTF2Jail[CritFallOff] 				= CreateConVar("sm_tf2jr_crit_falloff", "1", "Should guard criticals receive damage falloff? (Similar to Ambassador's weapon stat)", FCVAR_NOTIFY, true, 1.0, true, 0.0);
+	cvarTF2Jail[CritFallOff] 				= CreateConVar("sm_tf2jr_crit_falloff", "2", "Should guard damage have falloff? 1 = Half-falloff; 2 = Full-falloff", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	cvarTF2Jail[VIPFlag] 					= CreateConVar("sm_tf2jr_vip_flag", "r", "What admin flag do VIP players fall under?", FCVAR_NOTIFY);
 	cvarTF2Jail[AdmFlag] 					= CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under?", FCVAR_NOTIFY);
 	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -192,7 +192,7 @@ public void OnPluginStart()
 	HookEvent("arena_round_start", OnArenaRoundStart);
 	HookEvent("teamplay_round_win", OnRoundEnd);
 	//HookEvent("player_shield_blocked", RazorBackStab);	// SDKHooks grabs this anyways
-	HookEvent("post_inventory_application", OnRegeneration);
+	// HookEvent("post_inventory_application", OnRegeneration);
 	HookEvent("player_changeclass", OnChangeClass, EventHookMode_Pre);
 	//HookEvent("player_team", OnChangeTeam, EventHookMode_Post);
 		/* Kinda used in core but not really */
@@ -274,6 +274,8 @@ public void OnPluginStart()
 	RegAdminCmd("sm_setpreset", SetPreset, ADMFLAG_ROOT, "Set gamemode.iLRPresetType. (DEBUGGING)");
 	RegAdminCmd("sm_itype", Type, ADMFLAG_ROOT, "gamemode.iLRType. (DEBUGGING)");
 	RegAdminCmd("sm_ipreset", Preset, ADMFLAG_ROOT, "gamemode.iLRPresetType. (DEBUGGING)");
+	RegAdminCmd("sm_getprop", GameModeProp, ADMFLAG_ROOT, "Retrieve a gamemode property value. (DEBUGGING)");
+	RegAdminCmd("sm_getpprop", BaseProp, ADMFLAG_ROOT, "Retrieve a base player property value. (DEBUGGING)");
 	RegAdminCmd("sm_jailreset", AdminResetPlugin, ADMFLAG_ROOT, "Reset all plug-in global variables. (DEBUGGING)");
 
 	hEngineConVars[0] = FindConVar("mp_friendlyfire");
@@ -492,7 +494,6 @@ public void OnClientPutInServer(int client)
 	player.bIsHHH = false;
 	player.bInJump = false;
 	player.bUnableToTeleport = false;
-	player.bIsZombie = false;
 	player.flSpeed = 0.0;
 	player.flKillSpree = 0.0;
 }
@@ -1001,22 +1002,6 @@ public void DisableWarden(const int iTimer)
 	gamemode.bIsWardenLocked = true;
 }
 
-public void ZombieRespawn(const int userid)
-{
-	if (gamemode.iRoundState < StateRunning)
-		return;
-
-	int client = GetClientOfUserId(userid);
-	if (!IsClientInGame(client))
-		return;
-
-	JailFighter player = JailFighter(client);
-	if (!player.bIsZombie)
-		return;
-
-	player.ForceTeamChange(BLU);
-}
-
 public void NoAttacking(const int wepref)
 {
 	int weapon = EntRefToEntIndex(wepref);
@@ -1319,11 +1304,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	// CreateNative("JBPlayer.SetCliptable", Native_JB_SetCliptable);
 	// CreateNative("JBPlayer.SetAmmotable", Native_JB_SetAmmotable);
 	CreateNative("JBPlayer.WardenMenu", Native_JB_WardenMenu);
-	CreateNative("JBPlayer.ConvertToZombie", Native_JB_ConvertToZombie);
 	CreateNative("JBPlayer.ClimbWall", Native_JB_ClimbWall);
 		/* Gamemode */
 	CreateNative("JBGameMode_GetProperty", Native_JBGameMode_GetProperty);
 	CreateNative("JBGameMode_SetProperty", Native_JBGameMode_SetProperty);
+	CreateNative("JBGameMode_Playing", Native_JBGameMode_Playing);
 	CreateNative("JBGameMode_ManageCells", Native_JBGameMode_ManageCells);
 	CreateNative("JBGameMode_FindRandomWarden", Native_JBGameMode_FindRandomWarden);
 	CreateNative("JBGameMode_FindWarden", Native_JBGameMode_FindWarden);
@@ -1521,17 +1506,12 @@ public int Native_JB_WardenMenu(Handle plugin, int numParams)
 	JailFighter player = GetNativeCell(1);
 	player.WardenMenu();
 }
-public int Native_JB_ConvertToZombie(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	player.ConvertToZombie();
-}
 public int Native_JB_ClimbWall(Handle plugin, int numParams)
 {
 	JailFighter player = GetNativeCell(1);
 	int wep = GetNativeCell(2);
-	float spawntime = view_as<float>(GetNativeCell(3));
-	float healthdmg = view_as<float>(GetNativeCell(4));
+	float spawntime = view_as< float >(GetNativeCell(3));
+	float healthdmg = view_as< float >(GetNativeCell(4));
 	bool attackdelay = GetNativeCell(5);
 	player.ClimbWall(wep, spawntime, healthdmg, attackdelay);
 }
@@ -1540,16 +1520,19 @@ public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)
 {
 	char prop_name[64]; GetNativeString(1, prop_name, 64);
 	any item;
-	if (hGameModeFields.GetValue(prop_name, item)) {
+	if (gamemode.GetValue(prop_name, item))
 		return item;
-	}
 	return 0;
 }
 public int Native_JBGameMode_SetProperty(Handle plugin, int numParams)
 {
 	char prop_name[64]; GetNativeString(1, prop_name, 64);
 	any item = GetNativeCell(2);
-	hGameModeFields.SetValue(prop_name, item);
+	gamemode.SetValue(prop_name, item);
+}
+public int Native_JBGameMode_Playing(Handle plugin, int numParams)
+{
+	return gamemode.iPlaying;
 }
 public int Native_JBGameMode_FindRandomWarden(Handle plugin, int numParams)
 {

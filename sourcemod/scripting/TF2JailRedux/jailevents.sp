@@ -3,12 +3,50 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player = JailFighter( event.GetInt("userid"), true );
+	int client = GetClientOfUserId( event.GetInt("userid") );
 	
-	if (!IsClientValid(player.index))
+	if (!IsClientValid(client))
 		return Plugin_Continue;
 
+	JailFighter player = JailFighter(client);
 	ManageSpawn(player, event);
+
+	if (gamemode.iRoundState == StateRunning)
+	{
+		switch (cvarTF2Jail[LivingMuteType].IntValue)
+		{
+			case 0:player.UnmutePlayer();
+			case 1:
+			{
+				if (GetClientTeam(client) == RED)
+				{
+					if (!player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+			}
+			case 2:
+			{
+				if (GetClientTeam(client) == BLU)
+				{
+					if (!player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+			}
+			case 3:
+			{
+				if (!player.bIsVIP)
+					player.UnmutePlayer();
+				else player.MutePlayer();
+			}
+			case 4:if (GetClientTeam(client) == RED) player.MutePlayer();
+			case 5:if (GetClientTeam(client) == BLU) player.MutePlayer();
+			case 6:player.MutePlayer();
+		}
+	}
+	else player.UnmutePlayer();
+
 	SetPawnTimer(PrepPlayer, 0.2, player.userid);
 
 	return Plugin_Continue;
@@ -68,10 +106,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	}
 	
 	for (int i = MaxClients; i; --i)
-	{
 		if (IsClientInGame(i))
 			JailFighter(i).UnmutePlayer();
-	}
 
 	gamemode.DoorHandler(CLOSE);
 	gamemode.bDisableCriticals = false;
@@ -106,6 +142,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		
 		gamemode.iTimeLeft = cvarTF2Jail[RoundTime_Freeday].IntValue;
 		gamemode.iLRType = -1;
+		return Plugin_Continue;
 	}
 	if (cvarTF2Jail[Balance].BoolValue && gamemode.iPlaying > 2)
 	{
@@ -128,16 +165,14 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	}
 
 	gamemode.iLRType = gamemode.iLRPresetType;
-	//gamemode.bIsLRInUse = true;
 
 	ManageRoundStart();		// THESE FIRE BEFORE INITIALIZATION FUNCTIONS IN THE PLAYER LOOP
-	IsFreedayLR();			// This is the only (easy) way for the VSH sub-plugin to grab a random player
-	CriticalEnable();		// And force them to be a boss, then OnLRActivate() we force non-bosses to red team
-	ManageCells();			// If you need to do something that goes against this functionality, you'll have to
-	ManageFFTimer();		// Loop clients on ManageRoundStart() to set what you want, then ignore OnLRActivate()
-	ManageHUDText();		// Or if you aren't using the VSH subplugin, ignore this
-	ManageFFTimer();
-	ManageTimeLeft();
+	ManageCells();			// This is the only (easy) way for the VSH sub-plugin to grab a random player
+	ManageFFTimer();		// And force them to be a boss, then OnLRActivate() we force non-bosses to red team
+	ManageHUDText();		// If you need to do something that goes against this functionality, you'll have to
+	ManageTimeLeft();		// Loop clients on ManageRoundStart() to set what you want, then ignore OnLRActivate()
+	// Or if you aren't using the VSH subplugin, ignore this
+	
 
 	SetPawnTimer(_MusicPlay, 1.4);
 	warday = gamemode.bIsWarday;
@@ -208,8 +243,6 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		}
 	}
 	SetPawnTimer(ResetDamage, 1.0);	// Players could teamkill with the flames upon autobalance
-
-	PrintToConsoleAll("[TF2Jail] Red Team has been muted.");
 	
 	gamemode.iLRPresetType = -1;
 	gamemode.iRoundState = StateRunning;
@@ -244,7 +277,6 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		player = JailFighter(i);
 		player.UnmutePlayer();
 		player.bLockedFromWarden = false;
-		player.bIsZombie = false;
 
 		if (player.bIsFreeday)
 			player.RemoveFreeday();
@@ -277,7 +309,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	return Plugin_Continue;
 }
 
-public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
+/*public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
@@ -288,7 +320,7 @@ public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 		SetPawnTimer(PrepPlayer, 0.2, player.userid);
 
 	return Plugin_Continue;
-}
+}*/
 
 public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 {

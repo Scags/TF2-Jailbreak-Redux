@@ -1323,7 +1323,7 @@ stock Handle PrepareItemHandle(Handle hItem, char[] name = "", int index = -1, c
 			}
 			attribCount += 2 * addattribs;
 		}
-        delete hItem;
+		delete hItem;
 	}
 
 	if (name[0] != '\0')

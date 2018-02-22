@@ -1,30 +1,31 @@
 
-StringMap hGameModeFields;
+// StringMap hGameModeFields;
 
-methodmap JailGameMode
+methodmap JailGameMode < StringMap
 {
 	public JailGameMode()
 	{
-		hGameModeFields = new StringMap();
+		return view_as< JailGameMode >(new StringMap());
 	}
 	property int iRoundState
 	{
 		public get()
 		{
-			int i; hGameModeFields.GetValue("iRoundState", i);
+			int i; this.GetValue("iRoundState", i);
 			return i;
 		}
 		public set( const int i )
 		{
-			hGameModeFields.SetValue("iRoundState", i);
+			this.SetValue("iRoundState", i);
 		}
 	}
 	property int iPlaying
 	{
 		public get()
 		{
-			int playing = 0;
-			for (int i=MaxClients ; i ; --i) {
+			int playing;
+			for (int i=MaxClients ; i ; --i) 
+			{
 				if (!IsClientInGame(i))
 					continue;
 				else if (!IsPlayerAlive(i))
@@ -38,60 +39,60 @@ methodmap JailGameMode
 	{
 		public get()
 		{
-			int i; hGameModeFields.GetValue("iTimeLeft", i);
+			int i; this.GetValue("iTimeLeft", i);
 			return i;
 		}
 		public set( const int i )
 		{
-			hGameModeFields.SetValue("iTimeLeft", i);
+			this.SetValue("iTimeLeft", i);
 		}
 	}
 	property int iRoundCount
 	{
 		public get()
 		{
-			int i; hGameModeFields.GetValue("iRoundCount", i);
+			int i; this.GetValue("iRoundCount", i);
 			return i;
 		}
 		public set( const int i )
 		{
-			hGameModeFields.SetValue("iRoundCount", i);
+			this.SetValue("iRoundCount", i);
 		}
 	}
 	property int iLRPresetType
 	{
 		public get()
 		{
-			int i; hGameModeFields.GetValue("iLRPresetType", i);
+			int i; this.GetValue("iLRPresetType", i);
 			return i;
 		}
 		public set( const int i )
 		{
-			hGameModeFields.SetValue("iLRPresetType", i);
+			this.SetValue("iLRPresetType", i);
 		}
 	}
 	property int iLRType
 	{
 		public get()
 		{
-			int i; hGameModeFields.GetValue("iLRType", i);
+			int i; this.GetValue("iLRType", i);
 			return i;
 		}
 		public set( const int i )
 		{
-			hGameModeFields.SetValue("iLRType", i);
+			this.SetValue("iLRType", i);
 		}
 	}
 	property int iFreedayLimit
 	{
 		public get()
 		{
-			int i; hGameModeFields.GetValue("iFreedayLimit", i);
+			int i; this.GetValue("iFreedayLimit", i);
 			return i;
 		}
 		public set( const int i )
 		{
-			hGameModeFields.SetValue("iFreedayLimit", i);
+			this.SetValue("iFreedayLimit", i);
 		}
 	}
 	
@@ -100,12 +101,12 @@ methodmap JailGameMode
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bSteam", i);
+			bool i; this.GetValue("bSteam", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bSteam", i);
+			this.SetValue("bSteam", i);
 		}
 	}
 #endif
@@ -114,12 +115,12 @@ methodmap JailGameMode
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bSB", i);
+			bool i; this.GetValue("bSB", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bSB", i);
+			this.SetValue("bSB", i);
 		}
 	}
 #endif
@@ -127,12 +128,12 @@ methodmap JailGameMode
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bSC", i);
+			bool i; this.GetValue("bSC", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bSC", i);
+			this.SetValue("bSC", i);
 		}
 	}
 #if defined _voiceannounce_ex_included
@@ -140,230 +141,229 @@ methodmap JailGameMode
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bVA", i);
+			bool i; this.GetValue("bVA", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bVA", i);
+			this.SetValue("bVA", i);
 		}
 	}
 #endif
-	property bool bTF2Attribs // REQUIRED
+	property bool bTF2Attribs
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bTF2Attribs", i);
+			bool i; this.GetValue("bTF2Attribs", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bTF2Attribs", i);
+			this.SetValue("bTF2Attribs", i);
 		}
 	}
 	property bool bIsMapCompatible
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bIsMapCompatible", i);
+			bool i; this.GetValue("bIsMapCompatible", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bIsMapCompatible", i);
+			this.SetValue("bIsMapCompatible", i);
 		}
 	}
 	property bool bFreedayTeleportSet
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bFreedayTeleportSet", i);
+			bool i; this.GetValue("bFreedayTeleportSet", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bFreedayTeleportSet", i);
+			this.SetValue("bFreedayTeleportSet", i);
 		}
 	}
 	property bool bWardayTeleportSetBlue
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bWardayTeleportSetBlue", i);
+			bool i; this.GetValue("bWardayTeleportSetBlue", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bWardayTeleportSetBlue", i);
+			this.SetValue("bWardayTeleportSetBlue", i);
 		}
 	}
 	property bool bWardayTeleportSetRed
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bWardayTeleportSetRed", i);
+			bool i; this.GetValue("bWardayTeleportSetRed", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bWardayTeleportSetRed", i);
+			this.SetValue("bWardayTeleportSetRed", i);
 		}
 	}
 	property bool bCellsOpened
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bCellsOpened", i);
+			bool i; this.GetValue("bCellsOpened", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bCellsOpened", i);
+			this.SetValue("bCellsOpened", i);
 		}
 	}
 	property bool b1stRoundFreeday
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("b1stRoundFreeday", i);
+			bool i; this.GetValue("b1stRoundFreeday", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("b1stRoundFreeday", i);
+			this.SetValue("b1stRoundFreeday", i);
 		}
 	}
 	property bool bIsLRInUse
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bIsLRInUse", i);
+			bool i; this.GetValue("bIsLRInUse", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bIsLRInUse", i);
+			this.SetValue("bIsLRInUse", i);
 		}
 	}
 	property bool bIsWardenLocked
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bIsWardenLocked", i);
+			bool i; this.GetValue("bIsWardenLocked", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bIsWardenLocked", i);
+			this.SetValue("bIsWardenLocked", i);
 		}
 	}
 	property bool bOneGuardLeft
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bOneGuardLeft", i);
+			bool i; this.GetValue("bOneGuardLeft", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bOneGuardLeft", i);
+			this.SetValue("bOneGuardLeft", i);
 		}
 	}
 	property bool bAdminLockWarden
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bAdminLockWarden", i);
+			bool i; this.GetValue("bAdminLockWarden", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bAdminLockWarden", i);
+			this.SetValue("bAdminLockWarden", i);
 		}
 	}
 	property bool bAdminLockedLR
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bAdminLockedLR", i);
+			bool i; this.GetValue("bAdminLockedLR", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bAdminLockedLR", i);
+			this.SetValue("bAdminLockedLR", i);
 		}
 	}
 	property bool bDisableCriticals
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bDisableCriticals", i);
+			bool i; this.GetValue("bDisableCriticals", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bDisableCriticals", i);
+			this.SetValue("bDisableCriticals", i);
 		}
 	}
 	property bool bIsFreedayRound
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bIsFreedayRound", i);
+			bool i; this.GetValue("bIsFreedayRound", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bIsFreedayRound", i);
+			this.SetValue("bIsFreedayRound", i);
 		}
 	}
 	property bool bWardenExists
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bWardenExists", i);
+			bool i; this.GetValue("bWardenExists", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bWardenExists", i);
+			this.SetValue("bWardenExists", i);
 		}
 	}
 	property bool bFirstDoorOpening
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bFirstDoorOpening", i);
+			bool i; this.GetValue("bFirstDoorOpening", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bFirstDoorOpening", i);
+			this.SetValue("bFirstDoorOpening", i);
 		}
 	}
-	/** PROPERTIES BELOW ARE A PART OF LAST REQUEST PROPERTIES **/
 	property bool bIsWarday
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bIsWarday", i);
+			bool i; this.GetValue("bIsWarday", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bIsWarday", i);
+			this.SetValue("bIsWarday", i);
 		}
 	}
 	property bool bMarkerExists
 	{
 		public get()
 		{
-			bool i; hGameModeFields.GetValue("bMarkerExists", i);
+			bool i; this.GetValue("bMarkerExists", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			hGameModeFields.SetValue("bMarkerExists", i);
+			this.SetValue("bMarkerExists", i);
 		}
 	}
 
@@ -371,12 +371,12 @@ methodmap JailGameMode
 	{
 		public get()
 		{
-			float i; hGameModeFields.GetValue("flMusicTime", i);
+			float i; this.GetValue("flMusicTime", i);
 			return i;
 		}
 		public set( const float i )
 		{
-			hGameModeFields.SetValue("flMusicTime", i);
+			this.SetValue("flMusicTime", i);
 		}
 	}
 
@@ -420,7 +420,7 @@ methodmap JailGameMode
 	}
 	public void DoorHandler(const eDoorsMode status)
 	{
-		if (strlen(sCellNames) != 0)
+		if (sCellNames[0] != '\0')
 		{
 			for (int i = 0; i < sizeof(sDoorsList); i++)
 			{

@@ -72,7 +72,9 @@ methodmap CHale < JailBoss
 
 	public void PlaySpawnClip()
 	{
-		Format(snd, PLATFORM_MAX_PATH, "%s%i.wav", HaleRoundStart, GetRandomInt(1, 10));
+		if( !GetRandomInt(0, 1) )
+			Format(snd, PLATFORM_MAX_PATH, "%s%i.wav", HaleRoundStart, GetRandomInt(1, 5));
+		else Format(snd, PLATFORM_MAX_PATH, "%s%i.wav", HaleStart132, GetRandomInt(1, 5));
 		EmitSoundToAll(snd);
 	}
 

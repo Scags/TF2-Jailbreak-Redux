@@ -15,6 +15,7 @@
 #define SPEC 				1
 #define RED 				2
 #define BLU 				3
+#define NotVSH 				(JBGameMode_GetProperty("iLRType") != 13)
 
 #define nullvec				NULL_VECTOR
 
@@ -26,13 +27,14 @@
 
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.1.1"
+#define PLUGIN_VERSION		"1.1.2"
 
-Handle hHudText, 
-	   rageHUD, 
-	   //MusicCookie,
-	   jumpHUD
-	   ;
+Handle
+	hHudText, 
+	// rageHUD, 
+	// MusicCookie,
+	jumpHUD
+;
 
 methodmap JailBoss < JBPlayer
 {	// Here we inherit all of the properties and functions that we made as natives
@@ -42,99 +44,108 @@ methodmap JailBoss < JBPlayer
 	property int iUberTarget 
 	{	// And then add new ones that we need
 		public get() 				{ return this.GetProperty("iUberTarget"); }
-		public set(const int i) 	{ this.SetProperty("iUberTarget", i); }
+		public set( const int i ) 	{ this.SetProperty("iUberTarget", i); }
 	}
 	property int iHealth 
 	{
 		public get() 				{ return this.GetProperty("iHealth"); }
-		public set(const int i) 	{ this.SetProperty("iHealth", i); }
+		public set( const int i ) 	{ this.SetProperty("iHealth", i); }
 	}
 	property int iMaxHealth 
 	{
 		public get() 				{ return this.GetProperty("iMaxHealth"); }
-		public set(const int i) 	{ this.SetProperty("iMaxHealth", i); }
+		public set( const int i ) 	{ this.SetProperty("iMaxHealth", i); }
 	}
 	property int iAirDamage 
 	{
 		public get() 				{ return this.GetProperty("iAirDamage"); }
-		public set(const int i) 	{ this.SetProperty("iAirDamage", i); }
+		public set( const int i ) 	{ this.SetProperty("iAirDamage", i); }
 	}
 	property int iType 
 	{
 		public get() 				{ return this.GetProperty("iType"); }
-		public set(const int i) 	{ this.SetProperty("iType", i); }
+		public set( const int i ) 	{ this.SetProperty("iType", i); }
 	}
 	property int iStabbed 
 	{
 		public get() 				{ return this.GetProperty("iStabbed"); }
-		public set(const int i) 	{ this.SetProperty("iStabbed", i); }
+		public set( const int i ) 	{ this.SetProperty("iStabbed", i); }
 	}
 	property int iMarketted 
 	{
 		public get() 				{ return this.GetProperty("iMarketted"); }
-		public set(const int i) 	{ this.SetProperty("iMarketted", i); }
+		public set( const int i ) 	{ this.SetProperty("iMarketted", i); }
 	}
 	property int iDamage 
 	{
 		public get() 				{ return this.GetProperty("iDamage"); }
-		public set(const int i) 	{ this.SetProperty("iDamage", i); }
+		public set( const int i ) 	{ this.SetProperty("iDamage", i); }
 	}
-	property int bGlow 
+	property int bGlow
 	{
-		public get() 				{ return this.GetProperty("bGlow"); }
-		public set(const int i) 	{ this.SetProperty("bGlow", i); }
+		public get()					{ return GetEntProp(this.index, Prop_Send, "m_bGlowEnabled"); }
+		public set( const int i )
+		{
+			int boolean = ( (i) ? 1 : 0 ) ;
+			SetEntProp(this.index, Prop_Send, "m_bGlowEnabled", boolean);
+		}
 	}
 	property int iKills 
 	{
 		public get() 				{ return this.GetProperty("iKills"); }
-		public set(const int i) 	{ this.SetProperty("iKills", i); }
+		public set( const int i ) 	{ this.SetProperty("iKills", i); }
 	}
 	property int iClimbs 
 	{
 		public get() 				{ return this.GetProperty("iClimbs"); }
-		public set(const int i) 	{ this.SetProperty("iClimbs", i); }
+		public set( const int i ) 	{ this.SetProperty("iClimbs", i); }
 	}
 
 	property bool bIsBoss 
 	{
 		public get() 				{ return this.GetProperty("bIsBoss"); }
-		public set(const bool i) 	{ this.SetProperty("bIsBoss", i); }
+		public set( const bool i ) 	{ this.SetProperty("bIsBoss", i); }
 	}
-	/*property bool bInJump 	// Moved to core
+	property bool bInJump 	// Moved to core
 	{
 		public get() 				{ return this.GetProperty("bInJump"); }
-		public set(const bool i) 	{ this.SetProperty("bInJump", i); }
-	}*/
+		public set( const bool i ) 	{ this.SetProperty("bInJump", i); }
+	}
 
 	/*property float flSpeed 	// Moved to core
 	{
 		public get() 				{ return this.GetProperty("flSpeed"); }
-		public set(const float i) 	{ this.SetProperty("flSpeed", i); }
+		public set( const float i ) { this.SetProperty("flSpeed", i); }
 	}*/
 	property float flRAGE 
 	{
 		public get() 				{ return this.GetProperty("flRAGE"); }
-		public set(const float i) 	{ this.SetProperty("flRAGE", i); }
+		public set( const float i ) { this.SetProperty("flRAGE", i); }
 	}
 	property float flWeighDown 
 	{
 		public get() 				{ return this.GetProperty("flWeighDown"); }
-		public set(const float i) 	{ this.SetProperty("flWeighDown", i); }
+		public set( const float i ) { this.SetProperty("flWeighDown", i); }
 	}
-	property float flGlowtime 
+	property float flGlowtime
 	{
-		public get() 				{ return this.GetProperty("flGlowtime"); }
-		public set(const float i) 	{ this.SetProperty("flGlowtime", i); }
+		public get()
+		{
+			float i = this.GetProperty("flGlowtime");
+			if (i < 0.0) i = 0.0;
+			return i;
+		}
+		public set( const float i )		{ this.SetProperty("flGlowtime", i); }
 	}
 	property float flCharge 
 	{
 		public get() 				{ return this.GetProperty("flCharge"); }
-		public set(const float i) 	{ this.SetProperty("flCharge", i); }
+		public set( const float i ) { this.SetProperty("flCharge", i); }
 	}
 	property float flKillSpree 
 	{
 		public get() 				{ return this.GetProperty("flKillSpree"); }
-		public set(const float i) 	{ this.SetProperty("flKillSpree", i); }
+		public set( const float i ) { this.SetProperty("flKillSpree", i); }
 	}
 
 	public void ConvertToBoss(const int bossid)
@@ -155,7 +166,7 @@ methodmap JailBoss < JBPlayer
 		this.iStabbed = 0;
 		this.iMarketted = 0;
 		this.flRAGE = 0.0;
-		this.iDamage = 0;
+		// this.iDamage = 0;
 		this.iAirDamage = 0;
 		this.iUberTarget = 0;
 		this.flCharge = 0.0;
@@ -293,120 +304,6 @@ methodmap JailBoss < JBPlayer
 	}
 };
 
-// I really should've just made these natives, or just used the basic TF2Items functions
-methodmap TF2Item < Handle
-{
-	public TF2Item(int iFlags) {
-		return view_as<TF2Item>(TF2Items_CreateItem(iFlags));
-	}
-	property int iFlags {
-		public get() 			{ return TF2Items_GetFlags(this); }
-		public set(int iVal) 	{ TF2Items_SetFlags(this, iVal); }
-	}
-	property int iItemIndex {
-		public get() 			{ return TF2Items_GetItemIndex(this); }
-		public set(int iVal) 	{ TF2Items_SetItemIndex(this, iVal); }
-	}
-	property int iQuality {
-		public get() 			{ return TF2Items_GetQuality(this); }
-		public set(int iVal) 	{ TF2Items_SetQuality(this, iVal); }
-	}
-	property int iLevel {
-		public get() 			{ return TF2Items_GetLevel(this); }
-		public set(int iVal)	{ TF2Items_SetLevel(this, iVal); }
-	}
-	property int iNumAttribs {
-		public get() 			{ return TF2Items_GetNumAttributes(this); }
-		public set(int iVal) 	{ TF2Items_SetNumAttributes(this, iVal); }
-	}
-	public int GiveNamedItem(int iClient)
-	{
-		return TF2Items_GiveNamedItem(iClient, this);
-	}
-	public void SetClassname(char[] strClassName)
-	{
-		TF2Items_SetClassname(this, strClassName);
-	}
-	public void GetClassname(char[] strDest, int iDestSize)
-	{
-		TF2Items_GetClassname(this, strDest, iDestSize);
-	}
-	public void SetAttribute(int iSlotIndex, int iAttribDefIndex, float flValue)
-	{
-		TF2Items_SetAttribute(this, iSlotIndex, iAttribDefIndex, flValue);
-	}
-	public int GetAttribID(int iSlotIndex)
-	{
-		return TF2Items_GetAttributeId(this, iSlotIndex);
-	}
-	public float GetAttribValue(int iSlotIndex)
-	{
-		return TF2Items_GetAttributeValue(this, iSlotIndex);
-	}
-};
-
-stock TF2Item PrepareItemHandle(TF2Item hItem, char[] name = "", int index = -1, const char[] att = "", bool dontpreserve = false)
-{
-	static TF2Item hWeapon = null;
-	int addattribs = 0;
-
-	char weaponAttribsArray[32][32];
-	int attribCount = ExplodeString(att, " ; ", weaponAttribsArray, 32, 32);
-
-	int flags = OVERRIDE_ATTRIBUTES;
-	if (!dontpreserve)
-		flags |= PRESERVE_ATTRIBUTES;
-
-	if ( !hWeapon )
-		hWeapon = new TF2Item(flags);
-	else hWeapon.iFlags = flags;
-//	Handle hWeapon = TF2Items_CreateItem(flags);	//null;
-
-	if (hItem != null) {
-		addattribs = hItem.iNumAttribs;
-		if (addattribs) {
-			for (int i=0; i < 2*addattribs; i+=2) {
-				bool dontAdd = false;
-				int attribIndex = hItem.GetAttribID(i);
-				for (int z=0; z < attribCount+i; z += 2) {
-					if (StringToInt(weaponAttribsArray[z]) == attribIndex)
-					{
-						dontAdd = true;
-						break;
-					}
-				}
-				if (!dontAdd) {
-					IntToString(attribIndex, weaponAttribsArray[i+attribCount], 32);
-					FloatToString(hItem.GetAttribValue(i), weaponAttribsArray[i+1+attribCount], 32);
-				}
-			}
-			attribCount += 2*addattribs;
-		}
-		delete hItem;
-	}
-
-	if (name[0] != '\0') {
-		flags |= OVERRIDE_CLASSNAME;
-		hWeapon.SetClassname(name);
-	}
-	if (index != -1) {
-		flags |= OVERRIDE_ITEM_DEF;
-		hWeapon.iItemIndex = index;
-	}
-	if (attribCount > 1) {
-		hWeapon.iNumAttribs = (attribCount/2);
-		int i2 = 0;
-		for (int i=0; i<attribCount && i<32; i += 2)
-		{
-			hWeapon.SetAttribute(i2, StringToInt(weaponAttribsArray[i]), StringToFloat(weaponAttribsArray[i+1]));
-			i2++;
-		}
-	}
-	else hWeapon.iNumAttribs = 0;
-	hWeapon.iFlags = flags;
-	return hWeapon;
-}
-
 public Plugin myinfo =
 {
 	name = "TF2Jail VSH LR Module",
@@ -434,18 +331,23 @@ enum/*CvarName*/
 	DroppedWeapons, 
 	Anchoring, 
 	PickCount,
+	Ammo,
+	Health,
 	Version
 };
 
-ConVar JBVSH[Version + 1]
-	   ;
+ConVar 
+	JBVSH[Version + 1]
+;
 
-int iHealthChecks = 0		// For !halehp
-	;
+int 
+	iHealthChecks = 0		// For !halehp
+;
 
-float flHealthTime = 0.0,	// For health bar
-	  flMusicTime = 0.0		// Playing the background songs 
-	  ;
+float 
+	flHealthTime = 0.0,		// For health bar
+	flMusicTime = 0.0		// Playing the background songs 
+;
 
 public void OnPluginStart()
 {
@@ -465,6 +367,8 @@ public void OnPluginStart()
 	JBVSH[DemoShieldCrits] 	= CreateConVar("sm_jbvsh_demoman_shield_crits", "1", "Sets Demoman Shield crit behaviour. 0 - No crits, 1 - Mini-crits, 2 - Crits, 3 - Scale with Charge Meter (Losing the Shield results in no more (mini)crits.)", FCVAR_NOTIFY, true, 0.0, true, 3.0);
 	JBVSH[Anchoring] 		= CreateConVar("sm_jbvsh_allow_boss_anchor", "1", "When enabled, reduces all knockback bosses experience when crouching.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	JBVSH[PickCount] 		= CreateConVar("sm_jbvsh_lr_max", "5", "What is the maximum number of times this LR can be picked in a single map?", FCVAR_NOTIFY, true, 1.0);
+	JBVSH[Ammo]				= CreateConVar("sm_jbvsh_ammo", "4", "Spawn random ammo at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0, true, 10.0);
+	JBVSH[Health] 			= CreateConVar("sm_jbvsh_health", "4", "Spawn random health at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0, true, 10.0);
 
 	RegConsoleCmd("sm_hale_hp", Command_GetHPCmd);
 	RegConsoleCmd("sm_halehp", Command_GetHPCmd);
@@ -481,7 +385,7 @@ public void OnPluginStart()
 	AddCommandListener(cdVoiceMenu, "voicemenu");
 
 	hHudText = CreateHudSynchronizer();
-	rageHUD = CreateHudSynchronizer();
+	// rageHUD = CreateHudSynchronizer();
 	jumpHUD = CreateHudSynchronizer();
 	
 	AutoExecConfig(true, "LRModuleVSH");
@@ -546,7 +450,7 @@ public Action BlockSuicide(int client, const char[] command, int argc)
 {
 	if (!JBVSH[Enabled].BoolValue)
 		return Plugin_Continue;
-	if (JBGameMode_GetProperty("iLRType") != 14)
+	if (JBGameMode_GetProperty("iLRType") != 13)
 		return Plugin_Continue;
 	if (JBGameMode_GetProperty("iRoundState") == StateRunning)
 	{
@@ -567,7 +471,7 @@ public Action BlockSuicide(int client, const char[] command, int argc)
 public void OnClientDisconnect(int client)
 {
 	if (JailBoss(client).bIsBoss && JBGameMode_GetProperty("iRoundState") >= StateRunning)
-		CPrintToChatAll("{tan}[JailRedux]{fullred} Boss has disconnected!");
+		CPrintToChatAll("{tan}[TF2Jail]{fullred} Boss has disconnected!");
 }
 
 public void OnMapStart()
@@ -578,7 +482,7 @@ public void OnMapStart()
 
 public Action MakeModelTimer(Handle hTimer)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return Plugin_Continue;
 
 	JailBoss player;
@@ -598,7 +502,7 @@ public Action MakeModelTimer(Handle hTimer)
 
 public Action MusicTimerChecker(Handle hTimer)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return Plugin_Continue;
 
 	if (JBGameMode_GetProperty("iRoundState") != StateRunning || !JBVSH[EnableMusic].BoolValue)
@@ -634,7 +538,7 @@ public void _MakePlayerBoss(const int userid)
 
 public void OnPreThinkPost(int client)
 {	// We don't want cheaters to camp near dispensers now do we?
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
 	if (IsClientObserver(client) || !IsPlayerAlive(client))
@@ -663,7 +567,7 @@ public Action EraseEntity(Handle timer, any entid)
 
 public Action cdVoiceMenu(int client, const char[] command, int argc)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return Plugin_Continue;
 	if (argc < 2 || !IsPlayerAlive(client))
 		return Plugin_Handled;
@@ -681,7 +585,7 @@ public Action cdVoiceMenu(int client, const char[] command, int argc)
 
 public Action DoTaunt(int client, const char[] command, int argc)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return Plugin_Continue;
 	
 	JailBoss player = JailBoss(client);
@@ -695,10 +599,57 @@ public Action DoTaunt(int client, const char[] command, int argc)
 
 public void OnEntityCreated(int entity, const char[] classname)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 	
 	ManageEntityCreated(entity, classname);
+}
+
+stock void SpawnRandomAmmo()
+{
+	int iEnt = MaxClients+1;
+	float vPos[3], vAng[3];
+	int spawned;
+	int limit = JBVSH[Ammo].IntValue;
+	if (!limit)
+		return;
+
+	while( (iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1 ) {
+		if( limit )
+			if( spawned >= limit )
+				break;
+		// Technically you'll never find a map without a spawn point.
+		GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", vPos);
+		GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
+		int ammo = CreateEntityByName("item_ammopack_small");
+		TeleportEntity(ammo, vPos, vAng, NULL_VECTOR);
+		DispatchSpawn(ammo);
+		SetEntProp(ammo, Prop_Send, "m_iTeamNum", 2, 4);
+		++spawned;
+	}
+}
+stock void SpawnRandomHealth()
+{
+	int iEnt = MaxClients+1;
+	float vPos[3], vAng[3];
+	int spawned;
+	int limit = JBVSH[Health].IntValue;
+	if (!limit)
+		return;
+
+	while( (iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1 ) {
+		if( limit )
+			if( spawned >= limit )
+				break;
+		// Technically you'll never find a map without a spawn point.
+		GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", vPos);
+		GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
+		int healthkit = CreateEntityByName("item_healthkit_small");
+		TeleportEntity(healthkit, vPos, vAng, NULL_VECTOR);
+		DispatchSpawn(healthkit);
+		SetEntProp(healthkit, Prop_Send, "m_iTeamNum", 2, 4);
+		++spawned;
+	}
 }
 
 public void ShowPlayerScores()
@@ -800,7 +751,8 @@ public void CalcScores()
 		for (j = 0; damage - amount > 0; damage -= amount, j++) {  }
 		scoring.SetInt("points", j);
 		scoring.Fire();
-		CPrintToChat(i, "{red}[JailRedux]{tan} You scored %i points.", j);
+		CPrintToChat(i, "{red}[TF2Jail]{tan} You scored %i points.", j);
+		player.iDamage = 0;
 	}
 }
 
@@ -945,7 +897,7 @@ public JailBoss FindBoss(const bool balive)
 
 public Action Command_GetHPCmd(int client, int args)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14 || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return Plugin_Handled;
 	
 	JailBoss player = JailBoss(client);
@@ -1022,7 +974,7 @@ public void ManagePlayBossIntro(const JailBoss base)
 
 public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool & result)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14 || !IsClientValid(client))
+	if (!JBVSH[Enabled].BoolValue || NotVSH || !IsClientValid(client))
 		return Plugin_Continue;
 	
 	JailBoss base = JailBoss(client);
@@ -1088,7 +1040,7 @@ public void ManageRoundEndBossInfo(bool bossWon)
 
 	if (gameMessage[0] !='\0') 
 	{
-		CPrintToChatAll("{red}[JailRedux] End of Round{tan} %s", gameMessage);
+		CPrintToChatAll("{red}[TF2Jail] End of Round{tan} %s", gameMessage);
 		SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
 		for (i = MaxClients; i; --i) 
 		{
@@ -1101,7 +1053,7 @@ public void ManageRoundEndBossInfo(bool bossWon)
 
 public Action HookSound(int clients[64], int & numClients, char sample[FULLPATH], int & entity, int & channel, float & volume, int & level, int & pitch, int & flags)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return Plugin_Continue;
 
 	if (!IsValidClient(entity))
@@ -1112,7 +1064,7 @@ public Action HookSound(int clients[64], int & numClients, char sample[FULLPATH]
 
 	switch (JailBoss(entity).iType) 
 	{
-		case  - 1: 
+		case  -1: 
 		{
 			if (StrEqual(sample, "player/pl_impact_stun.wav", false))
 				return Plugin_Handled;
@@ -1743,87 +1695,87 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 
 public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDefinitionIndex, Handle & hItem)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return Plugin_Continue;
 	
-	TF2Item hItemOverride = null;
-	TF2Item hItemCast = view_as< TF2Item >(hItem);
-	switch (iItemDefinitionIndex) {
+	Handle hItemOverride = null;
+	switch (iItemDefinitionIndex) 
+	{
 		case 59: // Dead ringer
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "35 ; 2.0 ; 729 ; 0.0");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "35 ; 2.0 ; 729 ; 0.0");
 		}
-		case 1103: //Backscatter
+		case 1103: // Backscatter
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "179 ; 1.0");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "179 ; 1.0");
 		}
 		case 40, 1146: // Backburner
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "165 ; 1.0");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "165 ; 1.0");
 		}
 		case 220: // Shortstop
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "525 ; 1 ; 526 ; 1.2 ; 533 ; 1.4 ; 534 ; 1.4 ; 328 ; 1 ; 241 ; 1.5 ; 78 ; 1.389 ; 97 ; 0.75", true);
+			hItemOverride = PrepareItemHandle(hItem, _, _, "525 ; 1 ; 526 ; 1.2 ; 533 ; 1.4 ; 534 ; 1.4 ; 328 ; 1 ; 241 ; 1.5 ; 78 ; 1.389 ; 97 ; 0.75", true);
 		}
 		case 349: // Sun on a stick
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "134 ; 13 ; 208 ; 1");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "134 ; 13 ; 208 ; 1");
 		}
 		/*case 444: //Mantreads
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "275 ; 1.0");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "275 ; 1.0");
 		}*/
 		case 648: // Wrap assassin
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "279 ; 3.0 ; 208 ; 1.0");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "279 ; 3.0 ; 208 ; 1.0");
 		}
 		/*case 224: //Letranger
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "166 ; 15 ; 1 ; 0.8", true);
+			hItemOverride = PrepareItemHandle(hItem, _, _, "166 ; 15 ; 1 ; 0.8", true);
 		}*/
 		case 225, 574: //YER
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "155 ; 1 ; 160 ; 1", true);
+			hItemOverride = PrepareItemHandle(hItem, _, _, "155 ; 1 ; 160 ; 1", true);
 		}
 		case 232, 401: // Bushwacka + Shahanshah
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "236 ; 1");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "236 ; 1");
 		}
 		case 226: // The Battalion's Backup
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "252 ; 0.25");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "252 ; 0.25");
 		}
 		case 305, 1079: // Medic Xbow
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "17 ; 0.15 ; 2 ; 1.45"); // ; 266 ; 1.0");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "17 ; 0.15 ; 2 ; 1.45"); // ; 266 ; 1.0");
 		}
 		case 56, 1005, 1092: // Huntsman
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "76 ; 2.0 ; 2 ; 1.5");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "76 ; 2.0 ; 2 ; 1.5");
 		}
 		case 239, 1084, 1100: // GRU
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, iItemDefinitionIndex, "107 ; 1.5 ; 1 ; 0.5 ; 128 ; 1 ; 206 ; 2.0 ; 772 ; 1.5", true);
+			hItemOverride = PrepareItemHandle(hItem, _, iItemDefinitionIndex, "107 ; 1.5 ; 1 ; 0.5 ; 128 ; 1 ; 206 ; 2.0 ; 772 ; 1.5", true);
 		}
 		case 415: // Reserve shooter
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "179 ; 1 ; 114 ; 1.0 ; 178 ; 0.6 ; 2 ; 1.1 ; 3 ; 0.66", true);
+			hItemOverride = PrepareItemHandle(hItem, _, _, "179 ; 1 ; 114 ; 1.0 ; 178 ; 0.6 ; 2 ; 1.1 ; 3 ; 0.66", true);
 		}
 		case 405, 608: // Demo boots have falling stomp damage
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "259 ; 1 ; 252 ; 0.25");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "259 ; 1 ; 252 ; 0.25");
 		}
 		case 36, 412: // Blutsauger and Overdose
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "17 ; 0.01");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "17 ; 0.01");
 		}
 		case 772: // Baby Face Blaster
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "106 ; 0.3 ; 4 ; 1.33 ; 45 ; 0.6 ; 114 ; 1.0", true);
+			hItemOverride = PrepareItemHandle(hItem, _, _, "106 ; 0.3 ; 4 ; 1.33 ; 45 ; 0.6 ; 114 ; 1.0", true);
 		}
 		case 609: // Sticky gardener
 		{
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "267 ; 1");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "267 ; 1");
 		}
 	}
 	if (hItemOverride != null) {
@@ -1836,46 +1788,46 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 	if (!strncmp(classname, "tf_weapon_rocketlauncher", 24, false) || !strncmp(classname, "tf_weapon_particle_cannon", 25, false))
 	{
 		switch (iItemDefinitionIndex) {
-			case 127:hItemOverride = PrepareItemHandle(hItemCast, _, _, "114 ; 1.0 ; 179 ; 1.0");
-			case 414:hItemOverride = PrepareItemHandle(hItemCast, _, _, "114 ; 1.0 ; 99 ; 1.25");
-			case 1104:hItemOverride = PrepareItemHandle(hItemCast, _, _, "76 ; 1.25 ; 114 ; 1.0");
-			case 730:hItemOverride = PrepareItemHandle(hItemCast, _, _, "394 ; 0.1 ; 241 ; 1.3 ; 3 ; 0.75 ; 411 ; 5 ; 6 ; 0.2 ; 642 ; 1 ; 413 ; 1 ; 109 ; 0.40", true);
-			default:hItemOverride = PrepareItemHandle(hItemCast, _, _, "114 ; 1.0");
+			case 127:hItemOverride = PrepareItemHandle(hItem, _, _, "114 ; 1.0 ; 179 ; 1.0");
+			case 414:hItemOverride = PrepareItemHandle(hItem, _, _, "114 ; 1.0 ; 99 ; 1.25");
+			case 1104:hItemOverride = PrepareItemHandle(hItem, _, _, "76 ; 1.25 ; 114 ; 1.0");
+			case 730:hItemOverride = PrepareItemHandle(hItem, _, _, "394 ; 0.1 ; 241 ; 1.3 ; 3 ; 0.75 ; 411 ; 5 ; 6 ; 0.2 ; 642 ; 1 ; 413 ; 1 ; 109 ; 0.40", true);
+			default:hItemOverride = PrepareItemHandle(hItem, _, _, "114 ; 1.0");
 		}
 	}
 	if (!strncmp(classname, "tf_weapon_grenadelauncher", 25, false) || !strncmp(classname, "tf_weapon_cannon", 16, false))
 	{
 		switch (iItemDefinitionIndex) {
 			// loch n load
-			case 308:hItemOverride = PrepareItemHandle(hItemCast, _, _, "114 ; 1.0 ; 208 ; 1.0");
-			default:hItemOverride = PrepareItemHandle(hItemCast, _, _, "114 ; 1.0 ; 128 ; 1 ; 135 ; 0.5");
+			case 308:hItemOverride = PrepareItemHandle(hItem, _, _, "114 ; 1.0 ; 208 ; 1.0");
+			default:hItemOverride = PrepareItemHandle(hItem, _, _, "114 ; 1.0 ; 128 ; 1 ; 135 ; 0.5");
 		}
 	}
 	/*if (!strncmp(classname, "tf_weapon_sword", 15, false))
 	{
-		hItemOverride = PrepareItemHandle(hItemCast, _, _, "178 ; 0.8");
+		hItemOverride = PrepareItemHandle(hItem, _, _, "178 ; 0.8");
 	}*/
 	if (!strncmp(classname, "tf_weapon_shotgun", 17, false) || !strncmp(classname, "tf_weapon_sentry_revenge", 24, false))
 	{
 		switch (iClass) {
 			case TFClass_Soldier:
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "135 ; 0.6 ; 114 ; 1.0");
-			default:hItemOverride = PrepareItemHandle(hItemCast, _, _, "114 ; 1.0");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "135 ; 0.6 ; 114 ; 1.0");
+			default:hItemOverride = PrepareItemHandle(hItem, _, _, "114 ; 1.0");
 		}
 		//hItemOverride = PrepareItemHandle(hItem, _, _, "114 ; 1.0");
 	}
 	if (!strncmp(classname, "tf_weapon_wrench", 16, false) || !strncmp(classname, "tf_weapon_robot_arm", 19, false))
 	{
 		if (iItemDefinitionIndex == 142)
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "26 ; 55");
-		else hItemOverride = PrepareItemHandle(hItemCast, _, _, "26 ; 25");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "26 ; 55");
+		else hItemOverride = PrepareItemHandle(hItem, _, _, "26 ; 25");
 	}
 	if (!strncmp(classname, "tf_weapon_minigun", 17, false))
 	{
 		switch (iItemDefinitionIndex) {
 			case 41: // Natascha
-			hItemOverride = PrepareItemHandle(hItemCast, _, _, "76 ; 1.5", true);
-			default:hItemOverride = PrepareItemHandle(hItemCast, _, _, "233 ; 1.25");
+			hItemOverride = PrepareItemHandle(hItem, _, _, "76 ; 1.5", true);
+			default:hItemOverride = PrepareItemHandle(hItem, _, _, "233 ; 1.25");
 		}
 	}
 	if (hItemOverride != null) {
@@ -1945,7 +1897,7 @@ public void StopBackGroundMusic()
 
 public void PrepPlayers(const int userid)	// OnPlayerPrepped doesn't fire after round start, and I don't want it to be that way in the core plugin
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
 	JailBoss player = JailBoss(userid, true);
@@ -2145,11 +2097,11 @@ public void ManageBossCheckHealth(const JailBoss base)
 			totalHealth += boss.iHealth;
 		}
 		PrintCenterTextAll(gameMessage);
-		CPrintToChatAll("{red}[JailRedux] Boss Health Check{tan} %s", gameMessage);
+		CPrintToChatAll("{red}[TF2Jail] Boss Health Check{tan} %s", gameMessage);
 		LastBossTotalHealth = totalHealth;
 		flHealthTime = (iHealthChecks < 3 ? 10.0 : 60.0);
 	}
-	else CPrintToChat(base.index, "{red}[JailRedux]{tan} You can see the Boss HP now (wait %i seconds). Last known total health was %i.", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
+	else CPrintToChat(base.index, "{red}[TF2Jail]{tan} You can see the Boss HP now (wait %i seconds). Last known total health was %i.", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
 }
 
 public void ManageMessageIntro()
@@ -2207,7 +2159,7 @@ public void fwdOnDownloads()
 }
 public void fwdOnLRRoundActivate(const JBPlayer Player)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
 	JailBoss base = ToJailBoss(Player);
@@ -2215,17 +2167,20 @@ public void fwdOnLRRoundActivate(const JBPlayer Player)
 		base.ForceTeamChange(RED);
 
 	base.iDamage = 0;
-	SetPawnTimer( PrepPlayers, 0.2, base.userid );
+	SetPawnTimer( PrepPlayers, 0.4, base.userid );
 }
 public void fwdOnManageRoundStart()
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
 	JBGameMode_SetProperty("bWardenLocked", true);
 	JBGameMode_SetProperty("bCellsOpened", true);
 	JBGameMode_SetProperty("bOneGuardLeft", true);
+	JBGameMode_SetProperty("bDisableCriticals", true);
 	JBGameMode_ManageCells(OPEN);
+	SpawnRandomHealth();
+	SpawnRandomAmmo();
 
 	JailBoss rand = JailBoss( GetRandomClient() );
 	int client = rand.index;
@@ -2240,13 +2195,11 @@ public void fwdOnManageRoundStart()
 	if (JBGameMode_GetProperty("bWardayTeleportSetBlue"))
 		rand.TeleportToPosition(WBLU);
 	else ServerCommand("sm_freeze #%i 5", rand.userid);
-	rand.iMaxHealth = CalcBossHealth(760.8, JBGameMode_GetProperty("iPlaying"), 1.0, 1.0341, 2046.0);
+	rand.iMaxHealth = CalcBossHealth(760.8, JBGameMode_Playing(), 1.0, 1.0341, 2046.0);
 	int maxhp = GetEntProp(client, Prop_Data, "m_iMaxHealth");
 	TF2Attrib_RemoveAll(client);
 	TF2Attrib_SetByDefIndex( client, 26, float(rand.iMaxHealth)-maxhp );
 	
-	if (GetClientTeam(client) != BLU)
-		rand.ForceTeamChange(BLU);
 	rand.iHealth = rand.iMaxHealth;
 	SetEntityHealth(client, rand.iHealth);
 	JBGameMode_SetProperty("bDisableCriticals", true);
@@ -2264,7 +2217,7 @@ public void fwdOnManageRoundStart()
 		SetEntityMoveType(i, MOVETYPE_WALK);
 		if (GetClientTeam(i) != RED)
 			player.ForceTeamChange(RED);
-		SetPawnTimer( PrepPlayers, 0.2, player.userid );
+		SetPawnTimer( PrepPlayers, 0.4, player.userid );
 	}
 
 	SetPawnTimer(ManagePlayBossIntro, 0.2, rand);
@@ -2273,7 +2226,7 @@ public void fwdOnManageRoundStart()
 }
 public void fwdOnLRRoundEnd(const JBPlayer Player)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
 	ToJailBoss(Player).Init_VSH();
@@ -2281,7 +2234,7 @@ public void fwdOnLRRoundEnd(const JBPlayer Player)
 }
 public void fwdOnManageRoundEnd(Event event)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
 	//JBGameMode_ManageCells(OPEN);
@@ -2296,7 +2249,7 @@ public void fwdOnManageRoundEnd(Event event)
 }
 public void fwdOnRedThink(const JBPlayer Player)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14 || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
 	if (GetClientTeam(Player.index) != RED)
 		return;
@@ -2307,7 +2260,7 @@ public void fwdOnRedThink(const JBPlayer Player)
 	int buttons = GetClientButtons(i);
 	
 	SetHudTextParams(-1.0, 0.88, 0.35, 90, 255, 90, 255, 0, 0.35, 0.0, 0.1);
-	if (!IsPlayerAlive(i)) 
+	/*if (!IsPlayerAlive(i)) 
 	{
 		int obstarget = GetEntPropEnt(i, Prop_Send, "m_hObserverTarget");
 		if (IsValidClient(obstarget) && GetClientTeam(obstarget) != 3 && obstarget != i)
@@ -2321,11 +2274,11 @@ public void fwdOnRedThink(const JBPlayer Player)
 				ShowSyncHudText(i, rageHUD, "Damage: %d", fighter.iDamage);
 		}
 		return;
-	}
-	/*if (HasEntProp(i, Prop_Send, "m_iKillStreak")) {
-		int killstreaker = fighter.GetProperty("iDamage") / 500;
-		if (killstreaker && GetEntProp(i, Prop_Send, "m_iKillStreak") >= 0)
-			SetEntProp(i, Prop_Send, "m_iKillStreak", killstreaker);
+	}*/
+	/*if (HasEntProp(i, Prop_Send, "m_nStreaks")) {
+		int killstreaker = fighter.iDamage / 500;
+		if (killstreaker && GetEntProp(i, Prop_Send, "m_nStreaks") >= 0)
+			SetEntProp(i, Prop_Send, "m_nStreaks", killstreaker);
 	}*/
 	TFClassType TFClass = TF2_GetPlayerClass(i);
 	int weapon = GetActiveWep(i);
@@ -2571,7 +2524,7 @@ public void fwdOnRedThink(const JBPlayer Player)
 }
 public void fwdOnAllBlueThink(const JBPlayer Player)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14 || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
 
 	JailBoss base = ToJailBoss(Player);
@@ -2597,29 +2550,29 @@ public void fwdOnAllBlueThink(const JBPlayer Player)
 }
 public void fwdOnLRTextHud(char strHud[128])
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
 	Format(strHud, 128, "Versus Saxton Hale");
 }
 public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int value, ArrayList & arrLRS)
 {
-	if (!JBVSH[Enabled].BoolValue || selection != 14)
+	if (!JBVSH[Enabled].BoolValue || selection != 13)
 		return;
 
 	if (value >= JBVSH[PickCount].IntValue)
 	{
-		CPrintToChat(Player.index, "{red}[JailRedux]{tan} This LR has been picked the maximum amount of times for this map.");
+		CPrintToChat(Player.index, "{red}[TF2Jail]{tan} This LR has been picked the maximum amount of times for this map.");
 		Player.ListLRS();
 		return;
 	}
-	CPrintToChatAll("{red}[JailRedux]{tan} %N has decided to play a round of {default}Versus Saxton Hale{tan}.", Player.index);
+	CPrintToChatAll("{red}[TF2Jail]{tan} %N has decided to play a round of {default}Versus Saxton Hale{tan}.", Player.index);
 	arrLRS.Set( selection, value+1 );
-	JBGameMode_SetProperty("iLRPresetType", 14);
+	JBGameMode_SetProperty("iLRPresetType", 13);
 }
 public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Event event)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iRoundState") == StateDisabled || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iRoundState") == StateDisabled || NotVSH)
 		return;
 
 	JailBoss victim = ToJailBoss(Victim);
@@ -2686,7 +2639,7 @@ public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Even
 }
 public void fwdOnBuildingDestroyed(const JBPlayer Attacker, const int building, Event event)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14 || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
 
 	JailBoss attacker = ToJailBoss(Attacker);
@@ -2707,7 +2660,7 @@ public void fwdOnBuildingDestroyed(const JBPlayer Attacker, const int building, 
 }
 public void fwdOnObjectDeflected(const JBPlayer Attacker, const JBPlayer Victim, Event event)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14 || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
 
 	//JailBoss airblaster = ToJailBoss(Attacker);
@@ -2727,21 +2680,21 @@ public void fwdOnObjectDeflected(const JBPlayer Attacker, const JBPlayer Victim,
 }
 public void fwdOnPlayerJarated(const JBPlayer Attacker, const JBPlayer Victim)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14 || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
 
 	ManagePlayerJarated(ToJailBoss(Attacker), ToJailBoss(Victim));
 }
 public void fwdOnUberDeployed(const JBPlayer Medic, const JBPlayer Patient)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iRoundState") != 14)
+	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iRoundState") != 13)
 		return;
 
 	ManageUberDeploy(ToJailBoss(Medic), ToJailBoss(Patient));
 }
 public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
 	JailBoss spawn = ToJailBoss(Player);
@@ -2764,7 +2717,7 @@ public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 	{
 		if (GetClientTeam(spawn.index) != RED)
 			spawn.ForceTeamChange(RED);
-		SetPawnTimer( PrepPlayers, 0.2, spawn.userid );
+		SetPawnTimer( PrepPlayers, 0.4, spawn.userid );
 	}
 }
 public void fwdOnMenuAdd(Menu & menu, ArrayList arrLRS)
@@ -2773,27 +2726,27 @@ public void fwdOnMenuAdd(Menu & menu, ArrayList arrLRS)
 		return;
 	char strMenu[32];
 	int max = JBVSH[PickCount].IntValue,
-		value = arrLRS.Get(14);
+		value = arrLRS.Get(13);
 	Format(strMenu, sizeof(strMenu), "Versus Saxton Hale (%d/%d)", value, max);
-	menu.AddItem("14", strMenu, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+	menu.AddItem("13", strMenu, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 }
 public void fwdOnPanelAdd(Menu & panel)
 {
 	if (!JBVSH[Enabled].BoolValue)
 		return;
 
-	panel.AddItem("14", "Versus Saxton Hale- A nice round of VSH");
+	panel.AddItem("13", "Versus Saxton Hale- A nice round of VSH");
 }
 public void fwdOnManageTimeLeft()
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
 	JBGameMode_SetProperty("iTimeLeft", 600);
 }
 public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, int damage, int custom, int weapon, Event event)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
 	if (!IsClientValid(Victim.index) || !IsClientValid(Attacker.index) || Attacker.index == Victim.index)
@@ -2802,16 +2755,16 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, int 
 	JailBoss victim = ToJailBoss(Victim);
 	JailBoss attacker = ToJailBoss(Attacker);
 
-	if (victim.bIsBoss)
+	if (!victim.bIsBoss)
+		return;
+
+	switch (victim.iType) 
 	{
-		switch (victim.iType) 
+		case  -1: {  }
+		default: 
 		{
-			case  - 1: {  }
-			default: 
-			{
-				victim.iHealth -= damage;
-				victim.GiveRage(damage);
-			}
+			victim.iHealth -= damage;
+			victim.GiveRage(damage);
 		}
 	}
 		
@@ -2856,7 +2809,7 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, int 
 }
 public Action fwdOnHookDamage(const JBPlayer Victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iLRType") != 14 || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return Plugin_Continue;
 
 	JailBoss victim = ToJailBoss(Victim);

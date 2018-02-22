@@ -1284,3 +1284,30 @@ public Action SetPreset(int client, int args)
 	char strCmd[4]; GetCmdArg(1, strCmd, sizeof(strCmd));
 	gamemode.iLRPresetType = StringToInt(strCmd);
 }
+public Action GameModeProp(int client, int args)
+{
+	char arg[64]; GetCmdArg(1, arg, 64);
+	any val = JBGameMode_GetProperty(arg);
+	CReplyToCommand(client, "%s value: %i", arg, val);
+}
+public Action BaseProp(int client, int args)
+{
+	if (!client)
+		return Plugin_Handled;
+
+	JBPlayer player;
+	char arg1[64]; GetCmdArg(1, arg1, 64);
+	any val;
+	if (args == 1)
+	{
+		player = JBPlayer(client);
+		val = player.GetProperty(arg1);
+		CReplyToCommand(client, "%s value: %i", arg1, val);
+		return Plugin_Handled;
+	}
+	char arg2[64]; GetCmdArg(2, arg2, 64);
+	player = JBPlayer(FindTarget(client, arg1));
+	val = player.GetProperty(arg2);
+	CReplyToCommand(client, "%N's %s value: %i", player.index, arg2, val);
+	return Plugin_Handled;
+}

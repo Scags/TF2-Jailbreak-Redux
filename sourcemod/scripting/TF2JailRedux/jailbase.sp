@@ -199,19 +199,7 @@ methodmap JailFighter
 			hJailFields[this.index].SetValue("bUnableToTeleport", i);
 		}
 	}
-	property bool bIsZombie
-	{
-		public get()				
-		{
-			bool i; hJailFields[this.index].GetValue("bIsZombie", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bIsZombie", i);
-		}
-	}
-
+	
 	property float flSpeed
 	{
 		public get()
@@ -651,7 +639,6 @@ methodmap JailFighter
 		this.bIsHHH = false;
 		this.bInJump = false;
 		this.bUnableToTeleport = false;
-		this.bIsZombie = false;
 		this.flSpeed = 0.0;
 		this.flKillSpree = 0.0;
 	}
@@ -735,21 +722,5 @@ methodmap JailFighter
 
 		if (attackdelay)
 			SetPawnTimer(NoAttacking, 0.1, EntIndexToEntRef(weapon));
-	}
-	public void ConvertToZombie()
-	{
-		this.bIsZombie = true;
-		int client = this.index;
-		this.ForceTeamChange(BLU);
-		TF2_SetPlayerClass(client, TFClass_Scout);
-		this.PreEquip();
-		int weapon = this.SpawnWeapon("tf_weapon_bat", 572, 100, 5, "6 ; 0.5 ; 57 ; 15.0 ; 26 ; 75.0 ; 49 ; 1.0 ; 68 ; -2.0");
-		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
-		TF2_AddCondition(client, TFCond_Ubercharged, 3.0);
-		SetEntityHealth(client, 200);
-		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
-		SetEntProp(client, Prop_Send, "m_nBody", 0);
-		SetEntityRenderMode(client, RENDER_TRANSCOLOR);
-		SetEntityRenderColor(client, 30, 160, 255, 255);
 	}
 };

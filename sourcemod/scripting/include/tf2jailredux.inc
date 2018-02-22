@@ -131,7 +131,6 @@ methodmap JBPlayer
 	public native void WardenUnset();
 	public native void MakeHorsemann();
 	public native void WardenMenu();
-	public native void ConvertToZombie();
 	public native void ClimbWall(const int weapon, const float upwardvel, const float health, const bool attackdelay);
 };
 
@@ -287,6 +286,7 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	property float flMusicTime		// Optional, not used in core
 */
 
+native int JBGameMode_Playing(); 								// gamemode.iPlaying
 native void JBGameMode_FindRandomWarden();						// gamemode.FindRandomWarden()
 native void JBGameMode_ManageCells(const eDoorsMode status);	// gamemode.DoorHandler(status)
 native int JBGameMode_FindWarden(); 							// gamemode.FindWarden()
@@ -336,11 +336,11 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.WardenUnset");
 	MarkNativeAsOptional("JBPlayer.MakeHorsemann");
 	MarkNativeAsOptional("JBPlayer.WardenMenu");
-	MarkNativeAsOptional("JBPlayer.ConvertToZombie");
 	MarkNativeAsOptional("JBPlayer.ClimbWall");
 
 	MarkNativeAsOptional("JBGameMode_GetProperty");
 	MarkNativeAsOptional("JBGameMode_SetProperty");
+	MarkNativeAsOptional("JBGameMode_Playing");
 	MarkNativeAsOptional("JBGameMode_ManageCells");
 	MarkNativeAsOptional("JBGameMode_FindRandomWarden");
 	MarkNativeAsOptional("JBGameMode_FindWarden");
