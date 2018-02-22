@@ -78,6 +78,40 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	JailFighter attacker = JailFighter( event.GetInt("attacker"), true );
 	
 	ManagePlayerDeath(attacker, victim, event);
+
+	if (gamemode.iRoundState == StateRunning)
+	{
+		switch (cvarTF2Jail[MuteType].IntValue)
+		{
+			case 0:victim.UnmutePlayer();
+			case 1:
+			{
+				if (GetClientTeam(victim.index) == RED)
+				{
+					if (!victim.bIsVIP)
+						victim.MutePlayer();
+					else victim.UnmutePlayer();
+				}
+			}
+			case 2:
+			{
+				if (GetClientTeam(victim.index) == BLU)
+				{
+					if (!victim.bIsVIP)
+						victim.MutePlayer();
+					else victim.UnmutePlayer();
+				}
+			}
+			case 3:
+			{
+				if (!victim.bIsVIP)
+					victim.MutePlayer();
+				else victim.UnmutePlayer();
+			}
+			default:victim.MutePlayer();
+		}
+	}
+	else victim.UnmutePlayer();
 	
 	return Plugin_Continue;
 }

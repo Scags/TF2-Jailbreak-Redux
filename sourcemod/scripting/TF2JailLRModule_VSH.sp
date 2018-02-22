@@ -83,7 +83,7 @@ methodmap JailBoss < JBPlayer
 	}
 	property int bGlow
 	{
-		public get()					{ return GetEntProp(this.index, Prop_Send, "m_bGlowEnabled"); }
+		public get()				{ return GetEntProp(this.index, Prop_Send, "m_bGlowEnabled"); }
 		public set( const int i )
 		{
 			int boolean = ( (i) ? 1 : 0 ) ;
@@ -1300,7 +1300,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int & attacker, int 
 				if (pistol == 525) 
 				{  //Diamondback gives 4 crits on backstab
 					int iCrits = GetEntProp(attacker, Prop_Send, "m_iRevengeCrits");
-					SetEntProp(attacker, Prop_Send, "m_iRevengeCrits", iCrits + 4);
+					SetEntProp(attacker, Prop_Send, "m_iRevengeCrits", iCrits + 2);
 				}
 				if (wepindex == 356) 
 				{
@@ -1329,9 +1329,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int & attacker, int 
 				damage = 1024.0;
 				return Plugin_Changed;
 			}
-			if (!strcmp(classname, "tf_weapon_shotgun_hwg", false) 
-				|| !strcmp(classname, "tf_weapon_shotgun_soldier", false) 
-				&& wepindex != 415)
+			if (!strcmp(classname, "tf_weapon_shotgun_hwg", false))
 			{
 				int health = GetClientHealth(attacker);
 				int newHealth;
@@ -1340,19 +1338,6 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int & attacker, int 
 				{
 					newHealth = RoundFloat(damage + health);
 					if (damage + health > RoundFloat(maxhp * 1.5))
-						newHealth = RoundFloat(maxhp * 1.5);
-					SetEntityHealth(attacker, newHealth);
-				}
-			}
-			if (!strcmp(classname, "tf_weapon_handgun_scout_secondary", false) && wepindex == 773)
-			{
-				int health = GetClientHealth(attacker);
-				int newHealth;
-				int maxhp = GetEntProp(attacker, Prop_Data, "m_iMaxHealth");
-				if (health >= maxhp && health < RoundFloat(maxhp * 1.5) && (health >= maxhp)) 
-				{
-					newHealth = RoundFloat(damage / 3 + health);
-					if (damage / 3 + health > RoundFloat(maxhp * 1.5))
 						newHealth = RoundFloat(maxhp * 1.5);
 					SetEntityHealth(attacker, newHealth);
 				}
@@ -1451,19 +1436,19 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int & attacker, int 
 				case 132, 266, 482, 1082:IncrementHeadCount(attacker);
 				case 355:victim.flRAGE -= JBVSH[FanoWarRage].FloatValue;
 				case 317, 327:SpawnSmallHealthPackAt(attacker, GetClientTeam(attacker));
-				case 416: // Chdata's Market Gardener backstab
+				case 416, 609: // Chdata's Market Gardener backstab
 				{
 					if (JBPlayer(attacker).GetProperty("bInJump"))
 					{
-						damage = (Pow(float(victim.iMaxHealth), (0.74074))/*512.0*/-(victim.iMarketted / 128 * float(victim.iMaxHealth))) / 3.0;
+						damage = (Pow(float(victim.iMaxHealth), (0.74074))/*512.0*/-(victim.iMarketted / 128 * float(victim.iMaxHealth))) / (wepindex == 416 ? 3.0 : 2.5);
 						//divide by 3 because this is basedamage and lolcrits (0.714286)) + 1024.0)
 						damagetype |= DMG_CRIT;
 						
 						if (victim.iMarketted < 5)
 							victim.iMarketted++;
 						
-						PrintCenterText(attacker, "You Market Gardened the Boss!");
-						PrintCenterText(victim.index, "You Were Just Market Gardened!");
+						PrintCenterText(attacker, "You %s Gardened the Boss!", wepindex == 416 ? "Market" : "Sticky");
+						PrintCenterText(victim.index, "You Were Just Market Gardened!", wepindex == 416 ? "Market" : "Sticky");
 						
 						EmitSoundToAll("player/doubledonk.wav", victim.index, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 1.0, 100, _, _, NULL_VECTOR, true, 0.0);
 						SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + 2.0);
@@ -1473,32 +1458,6 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int & attacker, int 
 							damage *= 0.67;
 							TF2_RemoveCondition(attacker, TFCond_Parachute);
 						}
-						return Plugin_Changed;
-					}
-				}
-				case 609: // Sticky Gardening
-				{
-					if (JBPlayer(attacker).GetProperty("bInJump"))
-					{
-						damage = (Pow(float(victim.iMaxHealth), (0.74074))/*512.0*/-(victim.iMarketted / 128 * float(victim.iMaxHealth))) / 2.5;
-						
-						damagetype |= DMG_CRIT;
-						
-						if (victim.iMarketted < 5)
-							victim.iMarketted++;
-						
-						PrintCenterText(attacker, "You Sticky Gardened the Boss!");
-						PrintCenterText(victim.index, "You Were Just Sticky Gardened!");
-						
-						EmitSoundToAll("player/doubledonk.wav", victim.index, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 1.0, 100, _, _, NULL_VECTOR, true, 0.0);
-						SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + 2.0);
-						
-						if (TF2_IsPlayerInCondition(attacker, TFCond_Parachute))
-						{
-							damage *= 0.67;
-							TF2_RemoveCondition(attacker, TFCond_Parachute);
-						}
-						
 						return Plugin_Changed;
 					}
 				}
@@ -1585,12 +1544,6 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int & attacker, int 
 					if (TF2_IsPlayerInCondition(attacker, TFCond_Dazed))
 						TF2_RemoveCondition(attacker, TFCond_Dazed);
 				}
-				case 307:
-				{	// Caber is a meme
-					if (TF2_IsPlayerInCondition(attacker, TFCond_Ubercharged))
-						ForcePlayerSuicide(attacker);
-				}
-				case 43:TF2_AddCondition(attacker, TFCond_CritOnWin, 4.0);	// KGB
 			}
 		}
 	}
@@ -1602,7 +1555,7 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 	JailBoss fighter = JailBoss(attacker);
 	switch (fighter.iType) 
 	{
-		case  - 1: {  }
+		case  -1: {  }
 		case Hale, Vagineer, CBS, HHHjr, Bunny: 
 		{
 			if (damagetype & DMG_CRIT)
@@ -1678,15 +1631,6 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 					EmitSoundToAll("player/spy_shield_break.wav", client, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 1.0, 100, _, _, NULL_VECTOR, true, 0.0);
 					break;
 				}
-			}
-			if (IsValidEntity(FindPlayerBack(client, { 57 }, 1))	// Razorback operates as a shield
-				&& !TF2_IsPlayerInCondition(client, TFCond_Ubercharged)
-				&& weapon == GetPlayerWeaponSlot(attacker, 2))
-			{
-				TF2_AddCondition(client, TFCond_PasstimeInterception, 0.1);
-				TF2_AddCondition(client, TFCond_SpeedBuffAlly, 1.0);
-				RemovePlayerBack(client, { 57 }, 1);
-				EmitSoundToAll("player/spy_shield_break.wav", client, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 1.0, 100, _, _, NULL_VECTOR, true, 0.0);
 			}
 		}
 	}
@@ -2182,7 +2126,7 @@ public void fwdOnManageRoundStart()
 	SpawnRandomHealth();
 	SpawnRandomAmmo();
 
-	JailBoss rand = JailBoss( GetRandomClient() );
+	JailBoss rand = JailBoss( GetRandomClient(true, true) );
 	int client = rand.index;
 	int BOSS = GetRandomInt(Hale, MAXBOSS);
 	//MakePlayerBoss(rand.userid, BOSS);
@@ -2753,11 +2697,11 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, int 
 		return;
 
 	JailBoss victim = ToJailBoss(Victim);
-	JailBoss attacker = ToJailBoss(Attacker);
 
 	if (!victim.bIsBoss)
 		return;
 
+	JailBoss attacker = ToJailBoss(Attacker);
 	switch (victim.iType) 
 	{
 		case  -1: {  }

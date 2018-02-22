@@ -224,23 +224,23 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 	{
 		case MenuAction_Select:
 		{
-			JailFighter base = JailFighter(client);
+			JailFighter base;
 			char strIndex[4]; menu.GetItem(select, strIndex, sizeof(strIndex));
 			if (cvarTF2Jail[RemoveFreedayOnLR].BoolValue)
 			{
-				JailFighter player;
 				for (int i = MaxClients; i; --i)
 				{
 					if (!IsClientInGame(i))
 						continue;
-					player = JailFighter(i);
-					if (!player.bIsFreeday)
+					base = JailFighter(i);
+					if (!base.bIsFreeday)
 						continue;
 						
-					player.RemoveFreeday();
+					base.RemoveFreeday();
 				}
 				CPrintToChatAll("{red}[TF2Jail]{tan} Last request has been chosen. Freedays have been stripped.");
 			}
+			base = JailFighter(client);
 			gamemode.bIsLRInUse = true;
 			int request = StringToInt(strIndex), value;
 			if (request != -1)	// If the selection isn't random
@@ -414,26 +414,20 @@ public void ManageSpawn(const JailFighter base, Event event)
 	{
 		case TFTeam_Red:
 		{
-			switch (TF2_GetPlayerClass(client))
-			{
-				case TFClass_Scout:TF2Attrib_SetByDefIndex(client, 49, 1.0);
-				case TFClass_Pyro:TF2Attrib_SetByDefIndex(client, 823, 1.0);
-			}
-	
 			if (base.bIsQueuedFreeday)
 			{
 				base.GiveFreeday();
 				base.TeleportToPosition(FREEDAY);
 			}
 		}
-		case TFTeam_Blue:
+		case TFTeam_Blue:base.bIsQueuedFreeday = false;
+	}
+	if (gamemode.bTF2Attribs)
+	{
+		switch (TF2_GetPlayerClass(client))
 		{
-			switch (TF2_GetPlayerClass(client))
-			{
-				case TFClass_Scout:TF2Attrib_SetByDefIndex(client, 49, 1.0);
-				case TFClass_Pyro:TF2Attrib_SetByDefIndex(client, 823, 1.0);
-			}
-			base.bIsQueuedFreeday = false;
+			case TFClass_Scout:TF2Attrib_SetByDefIndex(client, 49, 1.0);
+			case TFClass_Pyro:TF2Attrib_SetByDefIndex(client, 823, 1.0);
 		}
 	}
 
@@ -454,7 +448,6 @@ public void PrepPlayer(const int userid)
 		return;
 
 	int len = hWeaponList.Length, i, index, wep;
-	TFClassType class = TF2_GetPlayerClass(client);
 	char strClassName[64];
 	if (len)
 	{
@@ -473,7 +466,7 @@ public void PrepPlayer(const int userid)
 			if (!active)
 				continue;
 
-			switch (class)
+			switch (TF2_GetPlayerClass(client))
 			{
 				case TFClass_Scout:
 				{
@@ -842,16 +835,17 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 /**
  *	Vice versa as above
 */
-public void TF2_OnConditionRemoved(int client, TFCond cond)
+/*public void TF2_OnConditionRemoved(int client, TFCond cond)
 {
 	switch (cond)
 	{
 		default: {	}
 	}
-}
+}*/
 /** 
  *	If lr requires the same think properties from both teams, set it under both team thinks
  *	Thinks will overlap if you use more than 1 Blue Team think
+ *
  *	Red Team think
 */
 public void ManageRedThink(const JailFighter player)
@@ -909,8 +903,8 @@ public void ManageWardenThink(const JailFighter player)
 	if (CanSeeTarget(i, flCpos, target, flTpos, cvarTF2Jail[NameDistance].FloatValue))
 	{
 		if (TF2_IsPlayerInCondition(target, TFCond_Cloaked) // Cloak watches are removed but meh
-			|| TF2_IsPlayerInCondition(target, TFCond_DeadRingered)
-			|| TF2_IsPlayerInCondition(target, TFCond_Disguised))
+		 || TF2_IsPlayerInCondition(target, TFCond_DeadRingered)
+		 || TF2_IsPlayerInCondition(target, TFCond_Disguised))
 			return;
 
 		SetHudTextParams(-1.0, 0.59, 0.4, 255, 100, 255, 255, 1);
@@ -939,6 +933,7 @@ public Action SoundHook(int clients[64], int & numClients, char sample[PLATFORM_
 		{
 			if (!strncmp(sample, "vo", 2, false) && base.bIsHHH)
 				return Plugin_Handled;
+				
 			if (strncmp(sample, "player/footsteps/", 17, false) != -1 && base.bIsHHH)
 			{
 				if (StrContains(sample, "1.wav", false) != -1 || StrContains(sample, "3.wav", false) != -1) 
@@ -973,42 +968,63 @@ public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victi
 */
 public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	JailFighter base = JailFighter(attacker);
-	if (base.bIsFreeday)
-	{	// Registers with Razorbacks ^^
-		base.RemoveFreeday();
-		PrintCenterTextAll("%N has attacked a guard and lost their freeday!", attacker);
-	}
-		
-	if (victim.bIsFreeday && !base.bIsWarden)
-	{
-		damage = 0.0;
-		return Plugin_Changed;
-	}
-
-	if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 2 && GetClientTeam(attacker) == BLU)
-	{
-		damagetype |= DMG_CRIT;
-		return Plugin_Changed;
-	}
-
-	switch (cvarTF2Jail[CritFallOff].IntValue)
-	{
-		case 1:
-		{
-			damagetype |= DMG_HALF_FALLOFF;
-			return Plugin_Changed;
-		}
-		case 2:
-		{
-			damagetype |= DMG_USEDISTANCEMOD;
-			return Plugin_Changed;
-		}
-	}
-
-
 	switch (gamemode.iLRType)
 	{
+		case
+			Suicide,
+			Custom,
+			FreedaySelf,
+			FreedayOther,
+			FreedayAll,
+			GuardMelee,
+			HHHDay,
+			TinyRound,
+			HotPrisoner,
+			Gravity,
+			RandomKill,
+			Warday,
+			ClassWars
+		:
+		{
+			if (!IsClientValid(attacker))
+				return Plugin_Continue;
+				
+			JailFighter base = JailFighter(attacker);
+			if (base.bIsFreeday)
+			{	// Registers with Razorbacks ^^
+				base.RemoveFreeday();
+				PrintCenterTextAll("%N has attacked a guard and lost their freeday!", attacker);
+			}
+				
+			if (victim.bIsFreeday && !base.bIsWarden)
+			{
+				damage = 0.0;
+				return Plugin_Changed;
+			}
+
+			if (GetClientTeam(attacker) == BLU)
+			{
+				if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 2)
+				{
+					damagetype |= DMG_CRIT;
+					return Plugin_Changed;
+				}
+
+				switch (cvarTF2Jail[CritFallOff].IntValue)
+				{
+					case 1:
+					{
+						damagetype |= DMG_HALF_FALLOFF;
+						return Plugin_Changed;
+					}
+					case 2:
+					{
+						damagetype |= DMG_USEDISTANCEMOD;
+						return Plugin_Changed;
+					}
+				}
+			}
+		}
 		default:return Call_OnHookDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 	}
 	return Plugin_Continue;
@@ -1037,36 +1053,6 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 				SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, gamemode.iRoundCount);
 		}
 
-		switch (cvarTF2Jail[MuteType].IntValue)
-		{
-			case 0:victim.UnmutePlayer();
-			case 1:
-			{
-				if (GetClientTeam(victim.index) == RED)
-				{
-					if (!victim.bIsVIP)
-						victim.MutePlayer();
-					else victim.UnmutePlayer();
-				}
-			}
-			case 2:
-			{
-				if (GetClientTeam(victim.index) == BLU)
-				{
-					if (!victim.bIsVIP)
-						victim.MutePlayer();
-					else victim.UnmutePlayer();
-				}
-			}
-			case 3:
-			{
-				if (!victim.bIsVIP)
-					victim.MutePlayer();
-				else victim.UnmutePlayer();
-			}
-			default:victim.MutePlayer();
-		}
-
 		switch (gamemode.iLRType)
 		{
 			case HHHDay:
@@ -1084,7 +1070,6 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 			}
 		}
 	}
-	else victim.UnmutePlayer();
 
 	if (victim.iCustom)
 		victim.iCustom = 0;

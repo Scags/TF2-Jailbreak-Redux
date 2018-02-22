@@ -24,7 +24,7 @@ methodmap JailGameMode < StringMap
 		public get()
 		{
 			int playing;
-			for (int i=MaxClients ; i ; --i) 
+			for (int i = MaxClients; i; --i) 
 			{
 				if (!IsClientInGame(i))
 					continue;
@@ -409,6 +409,9 @@ methodmap JailGameMode < StringMap
 		this.bSB = false;
 #endif
 		this.bSC = false;
+#if defined _voiceannounce_ex_included
+		this.bVA = false;
+#endif
 		this.bMarkerExists = false;
 		this.flMusicTime = 0.0;
 	}

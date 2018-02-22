@@ -16,11 +16,11 @@
  ** tf2jailredux.inc: External gamemode third-party functionality, leave it alone 				   **
  *	If you're here to give some more uniqueness to the plugin, check jailhandler 	 			   **
  *	It's fixed with a variety of not only last request examples, but gameplay event management.	   **
- *	VSH is a standalone subplugin, if there is an issue with it, simply delete it	   				**
+ *	VSH is a standalone subplugin, if there is an issue with it, simply delete it	   			   **
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.11.10"
+#define PLUGIN_VERSION		"0.11.11"
 #define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -41,6 +41,7 @@
 #tryinclude <sourcecomms>
 #tryinclude <basecomm>
 #tryinclude <clientprefs>
+#tryinclude <voiceannounce_ex>
 #define REQUIRE_PLUGIN
 
 #pragma semicolon 			1
@@ -297,9 +298,13 @@ public void OnPluginStart()
 #endif
 
 	for (int i = MaxClients; i; --i) 
+	{
 		if (IsValidClient(i))
+		{
 			OnClientPutInServer(i);
-	
+			OnClientPostAdminCheck(i);
+		}
+	}
 	hJailFields[0] = new StringMap();
 	g_hPluginsRegistered = new ArrayList();
 }
@@ -313,7 +318,7 @@ public bool WardenGroup(const char[] pattern, Handle clients)
 		{
 			if (IsClientInGame(i) && FindValueInArray(clients, i) == - 1)
 			{
-				if (bEnabled.BoolValue && JailFighter(i).bIsWarden) {
+				if (JailFighter(i).bIsWarden) {
 					if (!non)
 						PushArrayCell(clients, i);
 				}
@@ -604,7 +609,7 @@ public void HookVent(const int ref)
 
 public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (!bEnabled.BoolValue || !IsClientValid(victim) || attacker <= 0)
+	if (!bEnabled.BoolValue || !IsClientValid(victim))
 		return Plugin_Continue;
 
 	return ManageOnTakeDamage(JailFighter(victim), attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
@@ -743,11 +748,15 @@ public void ParseConfigs()
 
 public void ParseMapConfig()
 {
-	KeyValues key = new KeyValues("TF2Jail_MapConfig");
-
 	char sConfig[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sConfig, sizeof(sConfig), "configs/tf2jail/mapconfig.cfg");
+	if (!FileExists(sConfig))
+	{
+		SetFailState("~~~~~No TF2Jail map config found in %s. Exiting~~~~~", sConfig);
+		return;
+	}
 
+	KeyValues key = new KeyValues("TF2Jail_MapConfig");
 	char sMapName[128];
 	GetCurrentMap(sMapName, sizeof(sMapName));
 	if (key.ImportFromFile(sConfig))
@@ -866,11 +875,15 @@ public void ParseMapConfig()
 
 public void ParseNodeConfig()
 {
-	KeyValues key = new KeyValues("TF2Jail_Nodes");
-
 	char sConfig[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sConfig, sizeof(sConfig), "configs/tf2jail/textnodes.cfg");
+	if (!FileExists(sConfig))
+	{
+		LogError("~~~~~No TF2Jail Node Config found in path %s. Ignoring all text factors.~~~~~", sConfig);
+		return;
+	}
 
+	KeyValues key = new KeyValues("TF2Jail_Nodes");
 	if (key.ImportFromFile(sConfig))
 	{
 		if (key.GotoFirstSubKey(false))
@@ -1200,7 +1213,7 @@ public void FreeKillSystem(const JailFighter attacker)
 	
 	if (attacker.iKillCount == 3)
 	{
-		char strIP[32], strID[32];
+		char strIP[32];
 		GetClientIP(attacker.index, strIP, sizeof(strIP));
 		//GetClientAuthId(attacker.index, AuthId_Steam2, strID, sizeof(strID));
 
@@ -1210,7 +1223,7 @@ public void FreeKillSystem(const JailFighter attacker)
 				continue;
 				
 			if (JailFighter(i).bIsAdmin)
-				PrintToConsole(i, "**********\n%L\nIP:%s\n**********", attacker.index, strID, strIP);
+				PrintToConsole(i, "**********\n%L\nIP:%s\n**********", attacker.index, strIP);
 		}
 		attacker.iKillCount = 0;
 	}

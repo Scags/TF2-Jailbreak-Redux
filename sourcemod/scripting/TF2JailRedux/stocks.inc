@@ -885,7 +885,7 @@ stock int GetRandomPlayer(int team, bool alive = false)
 	}  
 	return (clientCount == 0) ? -1 : clients[GetRandomInt(0, clientCount - 1)];  
 }
-stock int GetRandomClient(bool alive = true)
+stock int GetRandomClient(bool alive = true, bool nobots = false)
 {
 	int[] clients = new int[MaxClients];
 	int clientCount;
@@ -895,6 +895,9 @@ stock int GetRandomClient(bool alive = true)
 			continue;
 		if (alive && !IsPlayerAlive(i))
 			continue;
+		if (nobots && IsFakeClient(i))
+			continue;
+			
 		clients[clientCount++] = i;
 	}  
 	return (clientCount == 0) ? -1 : clients[GetRandomInt(0, clientCount - 1)];  

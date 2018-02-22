@@ -131,7 +131,7 @@ void Call_OnWardenThink(const JailFighter player)
 void Call_OnLRTextHud(char strHud[128])
 {
 	g_hForwards[OnLRTextHud].Start();
-	Call_PushString(strHud);
+	Call_PushStringEx(strHud, 128, 0, SM_PARAM_COPYBACK);
 	Call_Finish();
 }
 void Call_OnLRPicked(const JailFighter player, const int request, const int value, ArrayList & array)
