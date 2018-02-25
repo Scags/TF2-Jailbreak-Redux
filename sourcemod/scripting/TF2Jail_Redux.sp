@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.11.11"
+#define PLUGIN_VERSION		"0.11.13"
 #define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -277,6 +277,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_ipreset", Preset, ADMFLAG_ROOT, "gamemode.iLRPresetType. (DEBUGGING)");
 	RegAdminCmd("sm_getprop", GameModeProp, ADMFLAG_ROOT, "Retrieve a gamemode property value. (DEBUGGING)");
 	RegAdminCmd("sm_getpprop", BaseProp, ADMFLAG_ROOT, "Retrieve a base player property value. (DEBUGGING)");
+	RegAdminCmd("sm_len", PluginLength, ADMFLAG_ROOT, "g_hPluginsRegistered.Length. (DEBUGGING)");
 	RegAdminCmd("sm_jailreset", AdminResetPlugin, ADMFLAG_ROOT, "Reset all plug-in global variables. (DEBUGGING)");
 
 	hEngineConVars[0] = FindConVar("mp_friendlyfire");
@@ -307,6 +308,7 @@ public void OnPluginStart()
 	}
 	hJailFields[0] = new StringMap();
 	g_hPluginsRegistered = new ArrayList();
+	arrLRS = new ArrayList();	// Registering plugins pushes indexes to arrLRS
 }
 
 public bool WardenGroup(const char[] pattern, Handle clients)
@@ -457,8 +459,9 @@ public void OnMapStart()
 		
 	gamemode.b1stRoundFreeday = true;
 		
-	LRMapStartVariables(); // Handler
 	ManageDownloads();	// Handler
+	for (int i = 0; i <= LRMAX; i++)
+		arrLRS.Push( 0 );
 
 	HookEntityOutput("item_ammopack_full", "OnPlayerTouch", OnEntTouch);
 	HookEntityOutput("item_ammopack_medium", "OnPlayerTouch", OnEntTouch);
@@ -468,9 +471,6 @@ public void OnMapStart()
 
 public void OnMapEnd()
 {
-	if (!bEnabled.BoolValue)
-		return;
-
 	gamemode.Init();
 
 	FindConVar("sv_gravity").SetInt(800);	// For admins like sans who force change the map during the low gravity LR
@@ -501,13 +501,12 @@ public void OnClientPutInServer(int client)
 	player.bUnableToTeleport = false;
 	player.flSpeed = 0.0;
 	player.flKillSpree = 0.0;
+
+	ManageClientStartVariables(player);
 }
 
 public void OnClientPostAdminCheck(int client)
 {	// Gotta make sure
-	if (!bEnabled.BoolValue)
-		return;
-
 	char strVIP[4]; cvarTF2Jail[VIPFlag].GetString(strVIP, sizeof(strVIP));
 	char strAdmin[4]; cvarTF2Jail[AdmFlag].GetString(strAdmin, sizeof(strAdmin));
 	JailFighter player = JailFighter(client);
@@ -568,12 +567,11 @@ public Action Timer_PlayerThink(Handle hTimer)
 
 public void OnClientDisconnect(int client)
 {
-	if (!bEnabled.BoolValue || !IsClientValid(client))
+	if (!IsClientValid(client))
 		return;
 
 	JailFighter player = JailFighter(client);
 	
-	player.Init_JB();
 	ManageClientDisconnect(player);	// Handler
 }
 
@@ -1048,11 +1046,15 @@ public void _MusicPlay()
 	char sound[PLATFORM_MAX_PATH] = "";
 	float time = -1.0;
 	
-	ManageMusic(sound, time);
-	
-	float vol = cvarTF2Jail[MusicVolume].FloatValue;
-	if (sound[0] != '\0') 
+	if (ManageMusic(sound, time) != Plugin_Continue)
+		return;
+
+	if (time == -1.0)
+		return;
+
+	if (sound[0] != '\0')
 	{
+		float vol = cvarTF2Jail[MusicVolume].FloatValue;
 		strcopy(BackgroundSong, PLATFORM_MAX_PATH, sound);
 		for (int i = MaxClients; i; --i) 
 		{
@@ -1066,8 +1068,7 @@ public void _MusicPlay()
 			EmitSoundToClient(i, sound, _, _, SNDLEVEL_NORMAL, SND_NOFLAGS, vol, 100, _, nullvec, nullvec, false, 0.0);
 		}
 	}
-	if (time != - 1.0)
-		gamemode.flMusicTime = currtime + time;
+	gamemode.flMusicTime = currtime + time;
 }
 
 public void StopBackGroundMusic()
@@ -1279,10 +1280,11 @@ public int RegisterPlugin(const Handle pluginhndl, const char modulename[64])
 	
 	// Push to global vector
 	g_hPluginsRegistered.Push(PluginMap);
+	// Push to core last request handle
+	arrLRS.Push(0);
 	
 	return g_hPluginsRegistered.Length - 1; // Return the index of registered plugin!
 }
-
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -1301,6 +1303,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBPlayer.SpawnWeapon", Native_JB_SpawnWep);
 	CreateNative("JBPlayer.ForceTeamChange", Native_JB_ForceTeamChange);
 	CreateNative("JBPlayer.TeleportToPosition", Native_JB_TeleportToPosition);
+	CreateNative("JBPlayer.SetWepInvis", Native_JB_SetWepInvis);
 	CreateNative("JBPlayer.ListLRS", Native_JB_ListLRS);
 	CreateNative("JBPlayer.PreEquip", Native_JB_PreEquip);
 	CreateNative("JBPlayer.WardenSet", Native_JB_WardenSet);

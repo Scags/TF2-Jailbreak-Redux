@@ -694,27 +694,11 @@ public Action AdminResetPlugin(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	JailFighter player;
 	for (int i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
 			continue;
-		
-		player = JailFighter(i);
-		player.iCustom = 0;
-		player.iKillCount = 0;
-		player.bIsWarden = false;
-		player.bIsMuted = false;
-		player.bIsQueuedFreeday = false;
-		player.bIsFreeday = false;
-		player.bLockedFromWarden = false;
-		player.bIsVIP = false;
-		player.bIsAdmin = false;
-		player.bIsHHH = false;
-		player.bInJump = false;
-		player.bUnableToTeleport = false;
-		player.flSpeed = 0.0;
-		player.flKillSpree = 0.0;
+		ResetVariables(JailFighter(i), false);
 	}
 
 	gamemode.iRoundState = 0;
@@ -1310,4 +1294,8 @@ public Action BaseProp(int client, int args)
 	val = player.GetProperty(arg2);
 	CReplyToCommand(client, "%N's %s value: %i", player.index, arg2, val);
 	return Plugin_Handled;
+}
+public Action PluginLength(int client, int args)
+{
+	CReplyToCommand(client, "%d", g_hPluginsRegistered.Length);
 }

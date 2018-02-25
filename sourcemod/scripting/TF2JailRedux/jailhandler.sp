@@ -123,15 +123,14 @@ public void ManageDownloads()
 	PrecacheSound("misc/rd_finale_beep01.wav", true);
 	Call_OnDownloads();
 }
-/**
- *	Called on map start again but this time for the starting lr count and to manage our ArrayList
- *	Because of the g_hPluginsRegistered ArrayList, we have to do this OnMapStart()
+/*
+ *	Starting variables for clients entering the server
+ *	This is just for forwards to get/set with inherited properties without either firing too early with OnClientPutInServer()
+ *	Or having to use OnClientPostAdminCheck()
 */
-public void LRMapStartVariables()
+public void ManageClientStartVariables(const JailFighter base)
 {
-	arrLRS = new ArrayList(1, LRMAX+1);
-	for (int i = 0; i <= LRMAX; i++)
-		arrLRS.Set( i, 0 );
+	Call_OnClientInduction(base);
 }
 /** 
  *	Calls on map end, resets for lr variables
@@ -156,9 +155,32 @@ public void ManageClientDisconnect(const JailFighter player)
 		PrintCenterTextAll("Warden has disconnected!");
 		gamemode.bWardenExists = false;
 	}
-	
-	if (player.bIsFreeday)
-		player.RemoveFreeday();
+}
+/**
+ *	Fires on both client disconnect and round start
+ *	Yet again another way to make a new forward
+*/
+public void ResetVariables(const JailFighter base, const bool compl)
+{
+	base.iCustom = 0;
+	base.iKillCount = 0;
+	base.bIsWarden = false;
+	base.bIsMuted = false;
+	base.bIsFreeday = false;
+	base.bLockedFromWarden = false;
+	base.bIsHHH = false;
+	base.bInJump = false;
+	base.bUnableToTeleport = false;
+	base.flSpeed = 0.0;
+	base.flKillSpree = 0.0;
+	if (compl)
+	{
+		base.bIsQueuedFreeday = false;
+		base.bIsVIP = false;
+		base.bIsAdmin = false;
+	}
+
+	Call_OnVariableReset(base);
 }
 /**
  *	Add lr to the LR menu obviously
@@ -666,7 +688,7 @@ public void ManageRoundStart()
 		case TinyRound:
 		{
 			EmitSoundToAll(TinySound);
-			CPrintToChatAll("{red}[TF2Jail]{tan} SuperSmall for everyone activated.");
+			CPrintToChatAll("{tan} SuperSmall for everyone activated.");
 			gamemode.bIsWardenLocked = true;
 		}
 		case Gravity:
@@ -794,7 +816,7 @@ public void ManageRedTouchBlue(const JailFighter toucher, const JailFighter touc
 		{
 			//TF2_AddCondition(touchee.index, TFCond_OnFire, 8.0);
 			TF2_IgnitePlayer(touchee.index, toucher.index);
-			SDKHooks_TakeDamage(touchee.index, 0, 0, 50.0, DMG_BURN, _, _, _);	
+			SDKHooks_TakeDamage(touchee.index, 0, 0, 1.0, DMG_BURN, _, _, _);	
 		}
 		default: {	}
 	}
@@ -865,7 +887,7 @@ public void ManageAllBlueThink(const JailFighter player)
 	{
 		default:
 		{
-			if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 1 && GetClientTeam(player.index) == BLU)
+			if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 1)
 				TF2_AddCondition(player.index, TFCond_Buffed, 0.2);
 		}
 	}
@@ -988,7 +1010,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 		{
 			if (!IsClientValid(attacker))
 				return Plugin_Continue;
-				
+
 			JailFighter base = JailFighter(attacker);
 			if (base.bIsFreeday)
 			{	// Registers with Razorbacks ^^
@@ -1034,7 +1056,8 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 */
 public void ManagePlayerDeath(const JailFighter attacker, const JailFighter victim, Event event)
 {
-	TF2Attrib_RemoveAll(victim.index);
+	if (gamemode.bTF2Attribs)
+		TF2Attrib_RemoveAll(victim.index);
 
 	if (gamemode.iRoundState == StateRunning)
 	{
@@ -1065,7 +1088,7 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 			}
 			case RandomKill:
 			{
-				if (!attacker)
+				if (attacker.index <= 0)
 					EmitSoundToAll(SuicideSound);
 			}
 		}
@@ -1307,7 +1330,7 @@ public void ManageOnAirblast(const JailFighter airblaster, const JailFighter air
 	{
 		default: {  }
 	}
-	Call_OnObjectDeflected(airblaster, airblasted, event);
+	Call_OnObjectDeflected(airblasted, airblaster, event);
 }
 /**
  *	Calls when a player is wetted, kinky. Memes aside remember that this also called with Mad Milk and Sydney Sleeper headshots/charged shots
@@ -1332,9 +1355,10 @@ public void ManageUberDeployed(const JailFighter patient, const JailFighter medi
 	Call_OnUberDeployed(patient, medic, event);
 }
 /**
- *	Music that can play during your LR, use the commented example as reference. Don't forget that "time" is in seconds
+ *	Music that can play during your LR, use the commented example as reference.
+ *	If you add a song to any LR, you MUST return Plugin_Continue else the music won't work at all
 */
-public void ManageMusic(char song[PLATFORM_MAX_PATH], float & time)
+public Action ManageMusic(char song[PLATFORM_MAX_PATH], float & time)
 {
 	switch (gamemode.iLRType)
 	{
@@ -1342,7 +1366,9 @@ public void ManageMusic(char song[PLATFORM_MAX_PATH], float & time)
 		{
 			song = "SomeBadassSong.mp3";
 			time = 9001.0;
+			return Plugin_Continue;
 		}*/
-		default:Call_OnMusicPlay(song, time);
+		default:return Call_OnPlayMusic(song, time);
 	}
+	return Plugin_Handled;
 }

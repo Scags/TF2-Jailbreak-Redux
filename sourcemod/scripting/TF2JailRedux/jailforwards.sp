@@ -29,7 +29,7 @@ methodmap PrivateForward < Handle
 };
 
 PrivateForward
-	g_hForwards[OnMusicPlay+1]
+	g_hForwards[OnPlayMusic+1]
 ;
 
 void InitializeForwards()
@@ -61,7 +61,9 @@ void InitializeForwards()
 	g_hForwards[OnHookDamage] 			= new PrivateForward( CreateForward(ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell) );
 	g_hForwards[OnWMenuAdd] 			= new PrivateForward( CreateForward(ET_Ignore, Param_CellByRef) );
 	g_hForwards[OnWMenuSelect] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_String) );
-	g_hForwards[OnMusicPlay]			= new PrivateForward( CreateForward(ET_Ignore, Param_String, Param_FloatByRef) );
+	g_hForwards[OnClientInduction] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
+	g_hForwards[OnVariableReset] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
+	g_hForwards[OnPlayMusic]			= new PrivateForward( CreateForward(ET_Hook, Param_String, Param_FloatByRef) );
 }
 void Call_OnDownloads()
 {
@@ -143,19 +145,19 @@ void Call_OnLRPicked(const JailFighter player, const int request, const int valu
 	Call_PushCellRef(array);
 	Call_Finish();
 }
-void Call_OnPlayerDied(const JailFighter player, const JailFighter victim, Event event)
+void Call_OnPlayerDied(const JailFighter player, const JailFighter attacker, Event event)
 {
 	g_hForwards[OnPlayerDied].Start();
 	Call_PushCell(player);
-	Call_PushCell(victim);
+	Call_PushCell(attacker);
 	Call_PushCell(event);
 	Call_Finish();
 }
-void Call_OnObjectDeflected(const JailFighter airblaster, const JailFighter airblasted, Event event)
+void Call_OnObjectDeflected(const JailFighter airblasted, const JailFighter airblaster, Event event)
 {
 	g_hForwards[OnObjectDeflected].Start();
-	Call_PushCell(airblaster);
 	Call_PushCell(airblasted);
+	Call_PushCell(airblaster);
 	Call_PushCell(event);
 	Call_Finish();
 }
@@ -254,10 +256,25 @@ void Call_OnWMenuSelect(const JailFighter player, const char[] index)
 	Call_PushString(index);
 	Call_Finish();
 }
-void Call_OnMusicPlay(char song[PLATFORM_MAX_PATH], float & time)
+Action Call_OnPlayMusic(char song[PLATFORM_MAX_PATH], float & time)
 {
-	g_hForwards[OnMusicPlay].Start();
+	Action result = Plugin_Handled;	// Start as handled because most LRs won't have a background song... probably
+	g_hForwards[OnPlayMusic].Start();
 	Call_PushStringEx(song, PLATFORM_MAX_PATH, 0, SM_PARAM_COPYBACK);
 	Call_PushFloatRef(time);
+	Call_Finish(result);
+	// CPrintToChatAll("song = \"%s\"; time = %0.1f; %s", song, time, result == Plugin_Handled ? "Handled" : "???");
+	return result;
+}
+void Call_OnClientInduction(const JailFighter player)
+{
+	g_hForwards[OnClientInduction].Start();
+	Call_PushCell(player);
+	Call_Finish();
+}
+void Call_OnVariableReset(const JailFighter player)
+{
+	g_hForwards[OnVariableReset].Start();
+	Call_PushCell(player);
 	Call_Finish();
 }

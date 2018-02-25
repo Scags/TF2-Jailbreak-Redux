@@ -38,7 +38,7 @@ Handle
 
 methodmap JailBoss < JBPlayer
 {	// Here we inherit all of the properties and functions that we made as natives
-	public JailBoss (const int q, bool userid=false)
+	public JailBoss (const int q, bool userid = false)
 	{ return view_as< JailBoss >( JBPlayer(q, userid) ); }
 
 	property int iUberTarget 
@@ -106,17 +106,11 @@ methodmap JailBoss < JBPlayer
 		public get() 				{ return this.GetProperty("bIsBoss"); }
 		public set( const bool i ) 	{ this.SetProperty("bIsBoss", i); }
 	}
-	property bool bInJump 	// Moved to core
+	property bool bInJump 	// You can also get/set properties that are in the core plugin
 	{
 		public get() 				{ return this.GetProperty("bInJump"); }
 		public set( const bool i ) 	{ this.SetProperty("bInJump", i); }
 	}
-
-	/*property float flSpeed 	// Moved to core
-	{
-		public get() 				{ return this.GetProperty("flSpeed"); }
-		public set( const float i ) { this.SetProperty("flSpeed", i); }
-	}*/
 	property float flRAGE 
 	{
 		public get() 				{ return this.GetProperty("flRAGE"); }
@@ -135,7 +129,7 @@ methodmap JailBoss < JBPlayer
 			if (i < 0.0) i = 0.0;
 			return i;
 		}
-		public set( const float i )		{ this.SetProperty("flGlowtime", i); }
+		public set( const float i )	{ this.SetProperty("flGlowtime", i); }
 	}
 	property float flCharge 
 	{
@@ -159,38 +153,22 @@ methodmap JailBoss < JBPlayer
 	{	// On player_hurt
 		this.flRAGE += ( damage/SquareRoot(30000.0)*4.0 );
 	}
-	public void Init_VSH()
-	{
-		this.bIsBoss = false;
-		this.iType = -1;
-		this.iStabbed = 0;
-		this.iMarketted = 0;
-		this.flRAGE = 0.0;
-		// this.iDamage = 0;
-		this.iAirDamage = 0;
-		this.iUberTarget = 0;
-		this.flCharge = 0.0;
-		this.bGlow = 0;
-		this.flGlowtime = 0.0;
-		SetEntityRenderColor(this.index, 255, 255, 255, 255);
-		this.iHealth = 0;
-		this.iMaxHealth = 0;
-	}
 	public void DoGenericStun(const float rageDist)
 	{
 		int i;
 		float pos[3], pos2[3], distance;
-		GetEntPropVector(this.index, Prop_Send, "m_vecOrigin", pos);
+		int client = this.index;
+		GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
 		for( i=MaxClients ; i ; --i ) {
-			if( !IsValidClient(i) || !IsPlayerAlive(i) || i == this.index )
+			if( !IsValidClient(i) || !IsPlayerAlive(i) || i == client )
 				continue;
-			else if( GetClientTeam(i) == GetClientTeam(this.index) )
+			else if( GetClientTeam(i) == GetClientTeam(client) )
 				continue;
 			GetEntPropVector(i, Prop_Send, "m_vecOrigin", pos2);
 			distance = GetVectorDistance(pos, pos2);
 			if( !TF2_IsPlayerInCondition(i, TFCond_Ubercharged) && distance < rageDist ) {
 				CreateTimer(5.0, EraseEntity, EntIndexToEntRef(AttachParticle(i, "yikes_fx", 75.0)));
-				TF2_StunPlayer(i, 5.0, _, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, this.index);
+				TF2_StunPlayer(i, 5.0, _, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
 			}
 		}
 		i = -1;
@@ -345,8 +323,11 @@ int
 ;
 
 float 
-	flHealthTime = 0.0,		// For health bar
-	flMusicTime = 0.0		// Playing the background songs 
+	flHealthTime = 0.0		// For !halehp
+;
+
+bool
+	bCanMusicPlay = false 	// Dictates if the music can play during the round
 ;
 
 public void OnPluginStart()
@@ -427,10 +408,9 @@ public bool HaleTargetFilter(const char[] pattern, Handle clients)
 	return true;
 }
 
-public void OnClientPostAdminCheck(int client)
+public void fwdOnClientInduction(const JBPlayer Player)
 {
-	// SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
-	JailBoss player = JailBoss(client);	// Has to happen after the core stringmap is initialized, else it bugs out
+	JailBoss player = ToJailBoss(Player);
 	player.bIsBoss = false;
 	player.iType = -1;
 	player.iStabbed = 0;
@@ -448,10 +428,9 @@ public void OnClientPostAdminCheck(int client)
 
 public Action BlockSuicide(int client, const char[] command, int argc)
 {
-	if (!JBVSH[Enabled].BoolValue)
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return Plugin_Continue;
-	if (JBGameMode_GetProperty("iLRType") != 13)
-		return Plugin_Continue;
+
 	if (JBGameMode_GetProperty("iRoundState") == StateRunning)
 	{
 		JailBoss player = JailBoss(client);
@@ -477,7 +456,6 @@ public void OnClientDisconnect(int client)
 public void OnMapStart()
 {
 	CreateTimer(5.0, MakeModelTimer, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);	// Model isn't always set OnPlayerSpawned() so this'll do under certain circumstances
-	CreateTimer(0.1, MusicTimerChecker, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public Action MakeModelTimer(Handle hTimer)
@@ -497,20 +475,6 @@ public Action MakeModelTimer(Handle hTimer)
 			continue;
 		ManageBossModels(player);
 	}
-	return Plugin_Continue;
-}
-
-public Action MusicTimerChecker(Handle hTimer)
-{
-	if (!JBVSH[Enabled].BoolValue || NotVSH)
-		return Plugin_Continue;
-
-	if (JBGameMode_GetProperty("iRoundState") != StateRunning || !JBVSH[EnableMusic].BoolValue)
-		return Plugin_Continue;
-
-	if (flMusicTime <= GetGameTime())
-		_MusicPlay();
-
 	return Plugin_Continue;
 }
 
@@ -833,32 +797,9 @@ public Action TimerLazor(Handle timer, any medigunid)
 	return Plugin_Continue;
 }
 
-public void _MusicPlay()
+public void MakeMusicWork()
 {
-	float currtime = GetGameTime();
-	if (!JBVSH[EnableMusic].BoolValue || flMusicTime > currtime)
-		return;
-	
-	char sound[FULLPATH] = "";
-	float time = -1.0;
-	
-	ManageMusic(sound, time);
-	
-	float vol = JBVSH[MusicVolume].FloatValue;
-	if (sound[0] !='\0') 
-	{
-		strcopy(BackgroundSong, FULLPATH, sound);
-		for (int i = MaxClients; i; --i) 
-		{
-			if (!IsClientInGame(i))
-				continue;
-			if (JailBoss(i).GetProperty("bNoMusic"))	// Wanted to get/set bNoMusic here but music could exist in core plugin if desired
-				continue;
-			EmitSoundToClient(i, sound, _, _, SNDLEVEL_NORMAL, SND_NOFLAGS, vol, 100, _, NULL_VECTOR, NULL_VECTOR, false, 0.0);
-		}
-	}
-	if (time != - 1.0) 
-		flMusicTime = (currtime + time);
+	bCanMusicPlay = true;
 }
 
 public void MakePlayerBoss(const int userid, int iBossid)
@@ -934,28 +875,6 @@ public void ManageBossModels(const JailBoss base)
 		case CBS:ToCChristian(base).SetModel();
 		case HHHjr:ToCHHHJr(base).SetModel();
 		case Bunny:ToCBunny(base).SetModel();
-	}
-}
-
-public void ManageMusic(char song[FULLPATH], float & time)
-{	// Couldn't do this with the music foward, fired too early and would overlap with starting voicelines
-	JailBoss currBoss = FindBoss(false);
-	if (currBoss) 
-	{
-		switch (currBoss.iType) 
-		{
-			case  - 1: { song = ""; time = -1.0; }
-			case CBS: 
-			{
-				strcopy(song, sizeof(song), CBSTheme);
-				time = 140.0;
-			}
-			case HHHjr: 
-			{
-				strcopy(song, sizeof(song), HHHTheme);
-				time = 90.0;
-			}
-		}
 	}
 }
 
@@ -1438,7 +1357,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int & attacker, int 
 				case 317, 327:SpawnSmallHealthPackAt(attacker, GetClientTeam(attacker));
 				case 416, 609: // Chdata's Market Gardener backstab
 				{
-					if (JBPlayer(attacker).GetProperty("bInJump"))
+					if (JailBoss(attacker).bInJump)
 					{
 						damage = (Pow(float(victim.iMaxHealth), (0.74074))/*512.0*/-(victim.iMarketted / 128 * float(victim.iMaxHealth))) / (wepindex == 416 ? 3.0 : 2.5);
 						//divide by 3 because this is basedamage and lolcrits (0.714286)) + 1024.0)
@@ -1828,17 +1747,6 @@ public void ManageUberDeploy(const JailBoss medic, const JailBoss patient)
 	}
 }
 
-public void StopBackGroundMusic()
-{
-	for (int i = MaxClients; i; --i) 
-	{
-		if (!IsClientInGame(i))
-			continue;
-
-		StopSound(i, SNDCHAN_AUTO, BackgroundSong);
-	}
-}
-
 public void PrepPlayers(const int userid)	// OnPlayerPrepped doesn't fire after round start, and I don't want it to be that way in the core plugin
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
@@ -1855,11 +1763,9 @@ public void PrepPlayers(const int userid)	// OnPlayerPrepped doesn't fire after 
 	return;
 	
 	TF2Attrib_RemoveAll(client);
-	if (GetClientTeam(client)!= RED && GetClientTeam(client) > view_as< int >(TFTeam_Spectator))
-	{
+	if (GetClientTeam(client) != RED && GetClientTeam(client) > view_as< int >(TFTeam_Spectator))
 		player.ForceTeamChange(RED);
-		TF2_RegeneratePlayer(client); // Added fix by Chdata to correct team colors
-	}
+
 	TF2_RegeneratePlayer(client);
 	SetEntityHealth(client, GetEntProp(client, Prop_Data, "m_iMaxHealth"));
 	
@@ -2076,7 +1982,7 @@ public void ManageMessageIntro()
 		if (IsValidClient(i))
 			ShowHudText(i, -1, "%s", gameMessage);
 	}
-	SetPawnTimer(_MusicPlay, 4.0);
+	SetPawnTimer(MakeMusicWork, 4.0);
 }
 
 public JailBoss ToJailBoss(const JBPlayer player)
@@ -2168,14 +2074,6 @@ public void fwdOnManageRoundStart()
 	SetPawnTimer(CheckAlivePlayers, 0.4);
 	ManageMessageIntro();
 }
-public void fwdOnLRRoundEnd(const JBPlayer Player)
-{
-	if (!JBVSH[Enabled].BoolValue || NotVSH)
-		return;
-
-	ToJailBoss(Player).Init_VSH();
-	TF2Attrib_RemoveByDefIndex(Player.index, 26);
-}
 public void fwdOnManageRoundEnd(Event event)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
@@ -2183,11 +2081,10 @@ public void fwdOnManageRoundEnd(Event event)
 
 	//JBGameMode_ManageCells(OPEN);
 	JBGameMode_SetProperty("bDisableCriticals", false);
-	flMusicTime = 0.0;
 	JBGameMode_SetProperty("bWardenLocked", true);
-	StopBackGroundMusic();
 	ShowPlayerScores();
 	SetPawnTimer(CalcScores, 3.0);
+	bCanMusicPlay = false;
 
 	ManageRoundEndBossInfo( (event.GetInt("team") == BLU) );
 }
@@ -2497,7 +2394,7 @@ public void fwdOnLRTextHud(char strHud[128])
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
-	Format(strHud, 128, "Versus Saxton Hale");
+	strcopy(strHud, 128, "Versus Saxton Hale");
 }
 public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int value, ArrayList & arrLRS)
 {
@@ -2602,7 +2499,7 @@ public void fwdOnBuildingDestroyed(const JBPlayer Attacker, const int building, 
 		}
 	}
 }
-public void fwdOnObjectDeflected(const JBPlayer Attacker, const JBPlayer Victim, Event event)
+public void fwdOnObjectDeflected(const JBPlayer Victim, const JBPlayer Attacker, Event event)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
@@ -2631,7 +2528,7 @@ public void fwdOnPlayerJarated(const JBPlayer Attacker, const JBPlayer Victim)
 }
 public void fwdOnUberDeployed(const JBPlayer Medic, const JBPlayer Patient)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iRoundState") != 13)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
 
 	ManageUberDeploy(ToJailBoss(Medic), ToJailBoss(Patient));
@@ -2780,6 +2677,53 @@ public Action fwdOnHookDamage(const JBPlayer Victim, int& attacker, int& inflict
 
 	return Plugin_Continue;
 }
+public Action fwdOnMusicPlay(char song[PLATFORM_MAX_PATH], float & time)
+{
+	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
+		return Plugin_Continue;
+	if (!bCanMusicPlay)
+		return Plugin_Handled;
+
+	JailBoss currBoss = FindBoss(false);
+	if (!currBoss)
+		return Plugin_Handled;
+
+	switch (currBoss.iType) 
+	{
+		case  - 1: { song = ""; time = -1.0; }
+		case CBS: 
+		{
+			strcopy(song, sizeof(song), CBSTheme);
+			time = 140.0;
+		}
+		case HHHjr: 
+		{
+			strcopy(song, sizeof(song), HHHTheme);
+			time = 90.0;
+		}
+	}
+	return Plugin_Continue;
+}
+public void fwdOnVariableReset(const JBPlayer Player)
+{
+	JailBoss base = ToJailBoss(Player);
+
+	base.iUberTarget = 0;
+	base.iHealth = 0;
+	base.iMaxHealth = 0;
+	base.iAirDamage = 0;
+	base.iType = 0;
+	base.iStabbed = 0;
+	base.iMarketted = 0;
+	// base.bGlow = 0;
+	base.iClimbs = 0;
+	base.bIsBoss = false;
+	base.flRAGE = 0.0;
+	base.flWeighDown = 0.0;
+	base.flGlowtime = 0.0;
+	base.flCharge = 0.0;
+	base.flKillSpree = 0.0;
+}
 
 public void CheckJBHooks()
 {
@@ -2791,8 +2735,6 @@ public void CheckJBHooks()
 		LogError("Failed to load OnManageRoundStart forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnManageRoundEnd, fwdOnManageRoundEnd))
 		LogError("Failed to load OnManageRoundEnd forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnLRRoundEnd, fwdOnLRRoundEnd))
-		LogError("Failed to load OnLRRoundEnd forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnRedThink, fwdOnRedThink))
 		LogError("Failed to load OnRedThink forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnAllBlueThink, fwdOnAllBlueThink))
@@ -2823,6 +2765,10 @@ public void CheckJBHooks()
 		LogError("Failed to load OnHurtPlayer forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnHookDamage, fwdOnHookDamage))
 		LogError("Failed to load OnHookDamage forwards for JB VSH Sub-Plugin!");
-	// if (!JB_HookEx(OnMusicPlay, fwdOnMusicPlay))
-		// LogError("Failed to load OnMusicPlay forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnClientInduction, fwdOnClientInduction))
+		LogError("Failed to load OnClientInduction forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnPlayMusic, fwdOnMusicPlay))
+		LogError("Failed to load OnMusicPlay forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnVariableReset, fwdOnVariableReset))
+		LogError("Failed to load OnVariableReset forwards for JB VSH Sub-Plugin!");
 }

@@ -625,23 +625,6 @@ methodmap JailFighter
 			ResetPlayer(client);
 		this.bIsHHH = false;
 	}
-	public void Init_JB()
-	{
-		this.iCustom = 0;
-		this.iKillCount = 0;
-		this.bIsWarden = false;
-		this.bIsMuted = false;
-		this.bIsQueuedFreeday = false;
-		this.bIsFreeday = false;
-		this.bLockedFromWarden = false;
-		this.bIsVIP = false;
-		this.bIsAdmin = false;
-		this.bIsHHH = false;
-		this.bInJump = false;
-		this.bUnableToTeleport = false;
-		this.flSpeed = 0.0;
-		this.flKillSpree = 0.0;
-	}
 	public void TeleportToPosition(const int iLocation)
 	{
 		switch (iLocation)

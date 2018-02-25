@@ -60,7 +60,7 @@ methodmap JBPlayer
 	/* **** **** [ P R O P E R T I E S ] **** **** */
 	
 	/**
-	 * gets the userid of the JB player instance
+	 * Gets the userid of the JB player instance
 	 * @return			the bare player userid integer
 	*/
 	property int userid 
@@ -69,7 +69,7 @@ methodmap JBPlayer
 	}
 	
 	/**
-	 * gets the index of the JB player instance
+	 * Gets the index of the JB player instance
 	 * @return			the bare player index integer
 	*/
 	property int index 
@@ -78,7 +78,7 @@ methodmap JBPlayer
 	}
 	
 	/**
-     * sets the property of the internal JailFighter methodmap
+     * Sets the property of the internal JailFighter methodmap
      * NOTE: You can use this to create new properties which GetProperty can access!
 	 * @param prop_name		name of property you want to access data from.
 	 * @param item			reference to use of the variable to overwrite with data from the property.
@@ -87,8 +87,7 @@ methodmap JBPlayer
 	public native any GetProperty(const char prop_name[64]);
 	
 	/**
-     * sets the property of the internal JB methodmap
-	 * NOTE: You can use this to create new properties which GetProperty can access!
+     * Gets the property of the internal JB methodmap
 	 * @param prop_name		name of the property you want to override data from (works like StringMap).
 	 * @param value			data you want the property to hold.
      * @noreturn
@@ -113,6 +112,8 @@ methodmap JBPlayer
 	*/
 		
 	public native int SpawnWeapon(char[] name, const int index, const int level, const int qual, char[] att);
+	public native int GetWeaponSlotIndex(const int slot);
+	public native void SetWepInvis(const int alpha);
 	public native void ForceTeamChange(const int team, bool spawn = true);
 	public native void TeleportToPosition(const int iLocation);
 	public native void ListLRS();
@@ -174,7 +175,9 @@ enum	// JB Hook Types
 	OnHookDamage,
 	OnWMenuAdd,
 	OnWMenuSelect,
-	OnMusicPlay
+	OnClientInduction,
+	OnVariableReset,
+	OnPlayMusic
 };
 
 /* SDKHook-Style Forwards */
@@ -189,6 +192,8 @@ typeset JBHookCB
 		OnAllBlueThink
 		OnWardenThink
 		OnPlayerPrepped
+		OnClientInduction
+		OnVariableReset
 	*/
 	function void (const JBPlayer Player);
 	
@@ -209,7 +214,7 @@ typeset JBHookCB
 		OnPlayerDied
 		OnPlayerAirblasted
 	*/
-	function void (const JBPlayer Attacker, const JBPlayer Victim, Event event);
+	function void (const JBPlayer Victim, const JBPlayer Attacker, Event event);
 
 	// 	OnManageRoundStart
 	function void ();
@@ -240,6 +245,9 @@ typeset JBHookCB
 
 	//	OnWMenuSelect
 	function void (const JBPlayer Player, const char[] index);
+
+	// OnPlayMusic
+	function Action (char song[PLATFORM_MAX_PATH], float & time);
 };
 
 // Use hooktype enum on these.
@@ -255,7 +263,6 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
 
 /** Properties
  *	property int iRoundState
- *	property int iPlaying
  *	property int iTimeLeft
  *	property int iLRPresetType
  *	property int iLRType
@@ -264,7 +271,7 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	property bool bSB 				// If has Sourcebans (Optional, not used in core)
  *	property bool bSC				// If has SourceComms
  *	property bool bVA 				// If has VoiceAnnounce_Ex (Optional, not used in core)
- *	property bool bTF2Attribs		// Not really needed but lol ok
+ *	property bool bTF2Attribs
  *	property bool bIsMapCompatible
  *	property bool bFreedayTeleportSet
  *	property bool bWardayTeleportSetBlue
@@ -281,7 +288,6 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	property bool bWardenExists
  *	property bool bAvoidTeamKills
  *	property bool bIsWarday
- *	property bool bIsVIPLR			// Optional, not used in core
  *	property bool bFirstDoorOpening
  *	property float flMusicTime		// Optional, not used in core
 */
@@ -318,6 +324,8 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.GetProperty");
 	MarkNativeAsOptional("JBPlayer.SetProperty");
 	MarkNativeAsOptional("JBPlayer.SpawnWeapon");
+	MarkNativeAsOptional("JBPlayer.GetWeaponSlotIndex");
+	MarkNativeAsOptional("JBPlayer.SetWepInvis");
 	MarkNativeAsOptional("JBPlayer.ForceTeamChange");
 	MarkNativeAsOptional("JBPlayer.TeleportToPosition");
 	MarkNativeAsOptional("JBPlayer.ListLRS");

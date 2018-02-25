@@ -123,7 +123,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 
 	if (gamemode.bIsMapCompatible)
 	{
-		if (strlen(sCellOpener) != 0)
+		if (sCellOpener[0] != '\0')
 		{
 			int CellHandler = FindEntity(sCellOpener, "func_button");
 			if (IsValidEntity(CellHandler))
@@ -131,7 +131,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 			else LogError("***TF2JB ERROR*** Entity name not found for Cell Door Opener! Please verify integrity of the config and the map.");
 		}
 
-		if (strlen(sFFButton) != 0)
+		if (sFFButton[0] != '\0')
 		{
 			int iFFButton = FindEntity(sFFButton, "func_button");
 			if (IsValidEntity(iFFButton))
@@ -139,9 +139,18 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		}
 	}
 	
+	JailFighter player;
 	for (int i = MaxClients; i; --i)
-		if (IsClientInGame(i))
-			JailFighter(i).UnmutePlayer();
+	{
+		if (!IsClientInGame(i))
+			continue;
+
+		player = JailFighter(i);
+		player.UnmutePlayer();
+		ResetVariables(player, false);
+		if (player.bIsQueuedFreeday && GetClientTeam(i) == RED)
+			player.GiveFreeday();
+	}
 
 	gamemode.DoorHandler(CLOSE);
 	gamemode.bDisableCriticals = false;
@@ -207,7 +216,6 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	ManageTimeLeft();		// Loop clients on ManageRoundStart() to set what you want, then ignore OnLRActivate()
 	// Or if you aren't using the VSH subplugin, ignore this
 	
-
 	SetPawnTimer(_MusicPlay, 1.4);
 	warday = gamemode.bIsWarday;
 	type = cvarTF2Jail[MuteType].IntValue;
@@ -300,13 +308,15 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	JailFighter player;
 	int x;
 	gamemode.iRoundCount++;
+	bool attrib = gamemode.bTF2Attribs;
 
 	for (int i = MaxClients; i; --i)
 	{
 		if (!IsValidClient(i))
 			continue;
 		
-		TF2Attrib_RemoveAll(i);
+		if (attrib)
+			TF2Attrib_RemoveAll(i);
 
 		player = JailFighter(i);
 		player.UnmutePlayer();
