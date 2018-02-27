@@ -1299,3 +1299,7 @@ public Action PluginLength(int client, int args)
 {
 	CReplyToCommand(client, "%d", g_hPluginsRegistered.Length);
 }
+public Action arrLRSLength(int client, int args)
+{
+	CReplyToCommand(client, "%d", arrLRS.Length);
+}

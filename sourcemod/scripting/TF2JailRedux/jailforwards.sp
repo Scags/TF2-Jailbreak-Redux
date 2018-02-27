@@ -133,7 +133,7 @@ void Call_OnWardenThink(const JailFighter player)
 void Call_OnLRTextHud(char strHud[128])
 {
 	g_hForwards[OnLRTextHud].Start();
-	Call_PushStringEx(strHud, 128, 0, SM_PARAM_COPYBACK);
+	Call_PushStringEx(strHud, 128, SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_Finish();
 }
 void Call_OnLRPicked(const JailFighter player, const int request, const int value, ArrayList & array)
@@ -260,10 +260,9 @@ Action Call_OnPlayMusic(char song[PLATFORM_MAX_PATH], float & time)
 {
 	Action result = Plugin_Handled;	// Start as handled because most LRs won't have a background song... probably
 	g_hForwards[OnPlayMusic].Start();
-	Call_PushStringEx(song, PLATFORM_MAX_PATH, 0, SM_PARAM_COPYBACK);
+	Call_PushStringEx(song, PLATFORM_MAX_PATH, SM_PARAM_STRING_BINARY|SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_PushFloatRef(time);
 	Call_Finish(result);
-	// CPrintToChatAll("song = \"%s\"; time = %0.1f; %s", song, time, result == Plugin_Handled ? "Handled" : "???");
 	return result;
 }
 void Call_OnClientInduction(const JailFighter player)

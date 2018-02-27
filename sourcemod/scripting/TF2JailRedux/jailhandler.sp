@@ -37,7 +37,7 @@ enum /** LRs **/
 	RandomKill = 10,
 	Warday = 11,
 	ClassWars = 12,
-	// VSH = 13			// DO NOT SET ANY NEW LRS UNDER THESE NUMBERS UNLESS YOU DISABLE OR ADJUST THE SUB PLUGIN!
+	// VSH = 13			// DO NOT SET ANY NEW LRS UNDER THESE NUMBERS UNLESS YOU DISABLE OR ADJUST THE SUB PLUGIN CONVARS!
 	// PH = 14,			// THEY WILL OVERLAP!
 };
 /** 
@@ -52,7 +52,7 @@ enum /** LRs **/
 #include "TF2JailRedux/jailbase.sp"
 #include "TF2JailRedux/jailgamemode.sp"
 
-JailGameMode gamemode; // Sticking this sucker right here because it works
+JailGameMode gamemode;	// Must be declared AFTER methodmap, but BEFORE any methods are used
 
 /** 
  *	SINCE THE PYRO UPDATE, FORCING PLAYERS AS THE SNIPER CLASS CAN AND WILL CAUSE SERVER CRASHES
@@ -83,7 +83,7 @@ char strLRNames[][] = {
 	"Low Gravity",
 	"Sniper!",
 	"Warday",
-	"Class Wars",
+	"Class Wars"
 };
 
 /** 
@@ -411,15 +411,15 @@ public void ManageHUDText()
 		case -1: {	}
 		//case FreedaySelf, FreedayOther:Format(strHudName, sizeof(strHudName), "");	// Should be blank
 		case Custom:		strcopy(strHudName, sizeof(strHudName), strCustomLR);
-		case FreedayAll:	Format(strHudName, sizeof(strHudName), "Freeday For All");
-		case GuardMelee:	Format(strHudName, sizeof(strHudName), "Guards Melee Only");
-		case HHHDay:		Format(strHudName, sizeof(strHudName), "Headless Horsemann Day");
-		case TinyRound:		Format(strHudName, sizeof(strHudName), "Tiny Round");
-		case HotPrisoner:	Format(strHudName, sizeof(strHudName), "Hot Prisoners");
-		case Gravity:		Format(strHudName, sizeof(strHudName), "Low Gravity");
-		case RandomKill:	Format(strHudName, sizeof(strHudName), "Sniper!");
-		case Warday:		Format(strHudName, sizeof(strHudName), "Warday");
-		case ClassWars:		Format(strHudName, sizeof(strHudName), "Class Warfare");
+		case FreedayAll:	strcopy(strHudName, sizeof(strHudName), "Freeday For All");
+		case GuardMelee:	strcopy(strHudName, sizeof(strHudName), "Guards Melee Only");
+		case HHHDay:		strcopy(strHudName, sizeof(strHudName), "Headless Horsemann Day");
+		case TinyRound:		strcopy(strHudName, sizeof(strHudName), "Tiny Round");
+		case HotPrisoner:	strcopy(strHudName, sizeof(strHudName), "Hot Prisoners");
+		case Gravity:		strcopy(strHudName, sizeof(strHudName), "Low Gravity");
+		case RandomKill:	strcopy(strHudName, sizeof(strHudName), "Sniper!");
+		case Warday:		strcopy(strHudName, sizeof(strHudName), "Warday");
+		case ClassWars:		strcopy(strHudName, sizeof(strHudName), "Class Warfare");
 		default: 			Call_OnLRTextHud(strHudName);
 	}
 

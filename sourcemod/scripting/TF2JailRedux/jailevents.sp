@@ -152,6 +152,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 			player.GiveFreeday();
 	}
 
+	gamemode.iLRType = -1;
 	gamemode.DoorHandler(CLOSE);
 	gamemode.bDisableCriticals = false;
 	gamemode.iFreedayLimit = 0;
@@ -173,6 +174,8 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	int i, type, livingtype;
 	bool warday;
 	JailFighter player;
+
+	CreateTimer(1.0, Timer_Round, _, FULLTIMER);
 	
 	if (gamemode.b1stRoundFreeday)
 	{
@@ -288,8 +291,6 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	
 	gamemode.iLRPresetType = -1;
 	gamemode.iRoundState = StateRunning;
-
-	CreateTimer(1.0, Timer_Round, _, FULLTIMER);
 	
 	if (gamemode.bIsMapCompatible && cvarTF2Jail[DoorOpenTimer].FloatValue != 0.0)
 	{
@@ -346,7 +347,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	gamemode.bIsLRInUse = false;
 	gamemode.bDisableCriticals = false;
 	gamemode.bIsWarday = false;
-	gamemode.iLRType = -1;
+	// gamemode.iLRType = -1;
 	gamemode.iTimeLeft = 0; // Had to set it to 0 here because it kept glitching out... odd
 	gamemode.iRoundState = StateEnding;
 

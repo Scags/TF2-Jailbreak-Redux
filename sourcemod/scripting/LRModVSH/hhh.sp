@@ -31,7 +31,10 @@ methodmap CHHHJr < JailBoss
 
 	public void Think ()
 	{
-		this.DoGenericThink(HALESPEED, 1.0);
+		if (!IsPlayerAlive(this.index))
+			return;
+
+		this.DoGenericThink();
 		int client = this.index;
 		int buttons = GetClientButtons(client);
 		float currtime = GetGameTime();
@@ -144,7 +147,7 @@ methodmap CHHHJr < JailBoss
 		this.DoGenericStun(HALERAGEDIST);
 
 		strcopy(snd, PLATFORM_MAX_PATH, HHHRage2);
-		EmitSoundToAll(snd, this.index); EmitSoundToAll(snd, this.index);
+		EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 	}
 
 	public void KilledPlayer(const JailBoss victim, Event event)
@@ -152,7 +155,7 @@ methodmap CHHHJr < JailBoss
 		int living = GetLivingPlayers(RED);
 
 		Format(snd, PLATFORM_MAX_PATH, "%s0%i.mp3", HHHAttack, GetRandomInt(1, 4));
-		EmitSoundToAll(snd);
+		EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 
 		float curtime = GetGameTime();
 		if ( curtime <= this.flKillSpree )
@@ -161,7 +164,7 @@ methodmap CHHHJr < JailBoss
 		
 		if (this.iKills == 3 && living != 1) {
 			Format(snd, PLATFORM_MAX_PATH, "%s0%i.mp3", HHHLaught, GetRandomInt(1, 4));
-			EmitSoundToAll(snd, this.index); EmitSoundToAll(snd, this.index);
+			EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 			this.iKills = 0;
 		}
 		else this.flKillSpree = curtime+5;

@@ -45,35 +45,7 @@ methodmap CVagineer < JailBoss
 
 	public void Think ()
 	{
-		this.DoGenericThink();
-		int buttons = GetClientButtons(this.index);
-
-		if ( ((buttons & IN_DUCK) || (buttons & IN_ATTACK2)) && (this.flCharge >= 0.0) )
-		{
-			if (this.flCharge+2.5 < HALE_JUMPCHARGE)
-				this.flCharge += 1.25;
-			else this.flCharge = HALE_JUMPCHARGE;
-		}
-		else if (this.flCharge < 0.0)
-			this.flCharge += 1.25;
-		else {
-			float EyeAngles[3]; GetClientEyeAngles(this.index, EyeAngles);
-			if ( this.flCharge > 1.0 && EyeAngles[0] < -5.0 ) {
-				float vel[3]; GetEntPropVector(this.index, Prop_Data, "m_vecVelocity", vel);
-				vel[2] = 750 + this.flCharge * 13.0;
-
-				SetEntProp(this.index, Prop_Send, "m_bJumping", 1);
-				vel[0] *= (1+Sine(this.flCharge * FLOAT_PI / 50));
-				vel[1] *= (1+Sine(this.flCharge * FLOAT_PI / 50));
-				TeleportEntity(this.index, NULL_VECTOR, NULL_VECTOR, vel);
-				this.flCharge = -100.0;
-				Format(snd, PLATFORM_MAX_PATH, "%s%i.wav", VagineerJump, GetRandomInt(1, 2));
-				
-				EmitSoundToAll(snd, this.index);
-				EmitSoundToAll(snd, this.index);
-			}
-			else this.flCharge = 0.0;
-		}
+		this.DoGenericThink(true, true, VagineerJump, 2, false);
 
 		if (TF2_IsPlayerInCondition(this.index, TFCond_Ubercharged))
 			SetEntProp(this.index, Prop_Data, "m_takedamage", 0);
@@ -116,15 +88,14 @@ methodmap CVagineer < JailBoss
 
 		if (GetRandomInt(0, 2))
 			strcopy(snd, PLATFORM_MAX_PATH, VagineerRageSound);
-		else
-			Format(snd, PLATFORM_MAX_PATH, "%s%i.wav", VagineerRageSound2, GetRandomInt(1, 2));
-		EmitSoundToAll(snd, this.index); EmitSoundToAll(snd, this.index);
+		else Format(snd, PLATFORM_MAX_PATH, "%s%i.wav", VagineerRageSound2, GetRandomInt(1, 2));
+		EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 	}
 
 	public void KilledPlayer(const JailBoss victim, Event event)
 	{
 		strcopy(snd, PLATFORM_MAX_PATH, VagineerHit);
-		EmitSoundToAll(snd, this.index); EmitSoundToAll(snd, this.index);
+		EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 
 		float curtime = GetGameTime();
 		if ( curtime <= this.flKillSpree )
@@ -138,7 +109,7 @@ methodmap CVagineer < JailBoss
 				case 2: strcopy(snd, PLATFORM_MAX_PATH, VagineerKSpree2);
 				default: Format(snd, PLATFORM_MAX_PATH, "%s%i.wav", VagineerKSpreeNew, GetRandomInt(1, 5));
 			}
-			EmitSoundToAll(snd, this.index); EmitSoundToAll(snd, this.index);
+			EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 			this.iKills = 0;
 		}
 		else this.flKillSpree = curtime+5;

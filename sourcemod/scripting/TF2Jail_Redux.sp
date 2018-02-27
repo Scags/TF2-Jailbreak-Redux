@@ -14,13 +14,13 @@
  **	stocks.inc: Stock functions used or could possibly be used within plugin 					   **
  **	jailforwards.sp: Contains external gamemode third-party functionality, leave it alone 		   **
  ** tf2jailredux.inc: External gamemode third-party functionality, leave it alone 				   **
- *	If you're here to give some more uniqueness to the plugin, check jailhandler 	 			   **
- *	It's fixed with a variety of not only last request examples, but gameplay event management.	   **
- *	VSH is a standalone subplugin, if there is an issue with it, simply delete it	   			   **
+ **	If you're here to give some more uniqueness to the plugin, check jailhandler 	 			   **
+ **	It's fixed with a variety of not only last request examples, but gameplay event management.	   **
+ **	VSH is a standalone subplugin, if there is an issue with it, simply delete it	   			   **
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.11.13"
+#define PLUGIN_VERSION		"0.11.14"
 #define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -111,8 +111,7 @@ Handle
 char
 	sCellNames[32],
 	sCellOpener[32],
-	sFFButton[32],
-	sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear" }
+	sFFButton[32]
 ;
 
 float
@@ -192,7 +191,6 @@ public void OnPluginStart()
 	HookEvent("teamplay_round_start", OnRoundStart);
 	HookEvent("arena_round_start", OnArenaRoundStart);
 	HookEvent("teamplay_round_win", OnRoundEnd);
-	//HookEvent("player_shield_blocked", RazorBackStab);	// SDKHooks grabs this anyways
 	// HookEvent("post_inventory_application", OnRegeneration);
 	HookEvent("player_changeclass", OnChangeClass, EventHookMode_Pre);
 	//HookEvent("player_team", OnChangeTeam, EventHookMode_Post);
@@ -278,6 +276,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_getprop", GameModeProp, ADMFLAG_ROOT, "Retrieve a gamemode property value. (DEBUGGING)");
 	RegAdminCmd("sm_getpprop", BaseProp, ADMFLAG_ROOT, "Retrieve a base player property value. (DEBUGGING)");
 	RegAdminCmd("sm_len", PluginLength, ADMFLAG_ROOT, "g_hPluginsRegistered.Length. (DEBUGGING)");
+	RegAdminCmd("sm_lrlen", arrLRSLength, ADMFLAG_ROOT, "arrLRS.Length. (DEBUGGING)");
 	RegAdminCmd("sm_jailreset", AdminResetPlugin, ADMFLAG_ROOT, "Reset all plug-in global variables. (DEBUGGING)");
 
 	hEngineConVars[0] = FindConVar("mp_friendlyfire");
@@ -308,7 +307,7 @@ public void OnPluginStart()
 	}
 	hJailFields[0] = new StringMap();
 	g_hPluginsRegistered = new ArrayList();
-	arrLRS = new ArrayList();	// Registering plugins pushes indexes to arrLRS
+	arrLRS = new ArrayList(1, LRMAX+1);	// Registering plugins pushes indexes to arrLRS, we also start at 0 so +1
 }
 
 public bool WardenGroup(const char[] pattern, Handle clients)
@@ -318,14 +317,14 @@ public bool WardenGroup(const char[] pattern, Handle clients)
 		bool non = StrContains(pattern, "!", false) != - 1;
 		for (int i = MaxClients; i; i--) 
 		{
-			if (IsClientInGame(i) && FindValueInArray(clients, i) == - 1)
+			if (IsClientInGame(i) && view_as< ArrayList >(clients).Get(i) == - 1)
 			{
 				if (JailFighter(i).bIsWarden) {
 					if (!non)
-						PushArrayCell(clients, i);
+						view_as< ArrayList >(clients).Push(i);
 				}
 				else if (non)
-					PushArrayCell(clients, i);
+					view_as< ArrayList >(clients).Push(i);
 			}
 		}
 	}
@@ -338,10 +337,10 @@ public bool FreedaysGroup(const char[] pattern, Handle clients)
 	{
 		for (int i = MaxClients; i; --i)
 		{
-			if (IsClientInGame(i) && FindValueInArray(clients, i) == -1)
+			if (IsClientInGame(i) && view_as< ArrayList >(clients).Get(i) == -1)
 			{
 				if (JailFighter(i).bIsFreeday)
-					PushArrayCell(clients, i);
+					view_as< ArrayList >(clients).Push(i);
 			}
 		}
 	}
@@ -427,7 +426,7 @@ public void OnConfigsExecuted()
 #endif
 
 	int i;
-	char strDisable[512];
+	char strDisable[256];
 
 	hWeaponList = new ArrayList();
 	cvarTF2Jail[WeaponDisabler].GetString(strDisable, sizeof(strDisable));
@@ -460,13 +459,15 @@ public void OnMapStart()
 	gamemode.b1stRoundFreeday = true;
 		
 	ManageDownloads();	// Handler
-	for (int i = 0; i <= LRMAX; i++)
-		arrLRS.Push( 0 );
 
 	HookEntityOutput("item_ammopack_full", "OnPlayerTouch", OnEntTouch);
 	HookEntityOutput("item_ammopack_medium", "OnPlayerTouch", OnEntTouch);
 	HookEntityOutput("item_ammopack_small", "OnPlayerTouch", OnEntTouch);
 	HookEntityOutput("tf_ammo_pack", "OnPlayerTouch", OnEntTouch);
+
+	int len = arrLRS.Length;
+	for (int i = 0; i < len; i++)
+		arrLRS.Set( i, 0 );
 }
 
 public void OnMapEnd()
@@ -1040,7 +1041,7 @@ public void _MusicPlay()
 		return;
 	
 	float currtime = GetGameTime();
-	if (!cvarTF2Jail[EnableMusic].BoolValue || gamemode.flMusicTime > currtime)
+	if (gamemode.flMusicTime > currtime)
 		return;
 	
 	char sound[PLATFORM_MAX_PATH] = "";
@@ -1064,7 +1065,6 @@ public void _MusicPlay()
 			if (JailFighter(i).bNoMusic)
 				continue;
 #endif
-
 			EmitSoundToClient(i, sound, _, _, SNDLEVEL_NORMAL, SND_NOFLAGS, vol, 100, _, nullvec, nullvec, false, 0.0);
 		}
 	}

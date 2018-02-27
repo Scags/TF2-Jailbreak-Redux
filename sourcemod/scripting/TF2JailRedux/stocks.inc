@@ -1125,7 +1125,7 @@ stock void RemoveAll(int client)
 			AcceptEntityInput(ent, "Kill");
 		}
 	}
-	TF2_RemoveAllWeapons(client);
+	// TF2_RemoveAllWeapons(client);
 }
 // From AimNames by -MCG-retsam & Antithasys
 int g_iFilteredEntity = -1;
@@ -1353,4 +1353,37 @@ stock Handle PrepareItemHandle(Handle hItem, char[] name = "", int index = -1, c
 
 	TF2Items_SetFlags(hWeapon, flags);
 	return hWeapon;
+}
+stock int Clamp(const int returner, const int lowest, const int highest)
+{
+	if (returner < lowest)
+		returner = lowest;
+	else if (returner > highest)
+		returner = highest;
+
+	return returner;
+}
+stock bool iIsWithin(const int num, const int lowest, const int highest, bool inclusion = false)
+{
+	if (inclusion)
+		return (num >= lowest && num <= highest);
+	return (num > lowest && num < highest);
+}
+stock bool flIsWithin(const float fl, const float lowest, const float highest, bool inclusion = false)
+{
+	if (inclusion)
+		return (fl >= lowest && fl <= highest);
+	return (fl > lowest && fl < highest);
+}
+stock void OpenAllDoors()
+{
+	int ent = -1;
+	for (int i = 0; i < sizeof(sDoorsList); i++)
+	{
+		while ((ent = FindEntityByClassname(ent, sDoorsList[i])) != -1)
+		{
+			AcceptEntityInput(ent, "Open");
+			AcceptEntityInput(ent, "Unlock");
+		}
+	}
 }

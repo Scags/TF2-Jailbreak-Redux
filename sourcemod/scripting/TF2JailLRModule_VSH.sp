@@ -15,7 +15,6 @@
 #define SPEC 				1
 #define RED 				2
 #define BLU 				3
-#define NotVSH 				(JBGameMode_GetProperty("iLRType") != 13)
 
 #define nullvec				NULL_VECTOR
 
@@ -27,7 +26,7 @@
 
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.1.2"
+#define PLUGIN_VERSION		"1.1.3"
 
 Handle
 	hHudText, 
@@ -205,19 +204,20 @@ methodmap JailBoss < JBPlayer
 			}
 		}
 	}
-	public void DoGenericThink(float halespeed = 340.0, float weighdowntime = 3.0, bool nojumpsound = false, float jumpcharge = 25.0)
+	public void DoGenericThink(bool jump = false, bool sound = false, char[] strSound = "", int random = 0, bool mp3 = true)
 	{
 		if ( !IsPlayerAlive(this.index) )
 			return;
 
 		int client = this.index;
+
 		int buttons = GetClientButtons(client);
 		//float currtime = GetGameTime();
 		int flags = GetEntityFlags(client);
 
 		//int maxhp = GetEntProp(client, Prop_Data, "m_iMaxHealth");
 		int health = this.iHealth;
-		float speed = halespeed + 0.7 * (100-health*100/this.iMaxHealth);
+		float speed = 340.0 + 0.7 * (100-health*100/this.iMaxHealth);
 		SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", speed);
 
 		if (this.flGlowtime > 0.0) {
@@ -227,16 +227,19 @@ methodmap JailBoss < JBPlayer
 		else if (this.flGlowtime <= 0.0)
 			this.bGlow = 0;
 
-		if (nojumpsound)
+		if (OnlyScoutsLeft(RED))
+			this.flRAGE += 0.25;
+
+		if (jump)
 		{
 			if ( ((buttons & IN_DUCK) || (buttons & IN_ATTACK2)) && (this.flCharge >= 0.0) )
 			{
-				if (this.flCharge+2.5 < jumpcharge)
+				if (this.flCharge+2.5 < 25.0)
 					this.flCharge += 1.25;
-				else this.flCharge = jumpcharge;
+				else this.flCharge = 25.0;
 			}
 			else if (this.flCharge < 0.0)
-				this.flCharge += 1.25;
+				this.flCharge += 2.0;
 			else {
 				float EyeAngles[3]; GetClientEyeAngles(client, EyeAngles);
 				if ( this.flCharge > 1.0 && EyeAngles[0] < -5.0 ) {
@@ -248,18 +251,24 @@ methodmap JailBoss < JBPlayer
 					vel[1] *= (1+Sine(this.flCharge * FLOAT_PI / 50));
 					TeleportEntity(client, nullvec, nullvec, vel);
 					this.flCharge = -100.0;
+					if (sound)
+					{
+						float pos[3]; GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
+						if (random)
+							Format(snd, FULLPATH, "%s%d.%s", strSound, GetRandomInt(1, random), mp3 ? "mp3" : "wav");
+						else strcopy(snd, FULLPATH, strSound);
+						EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_DISHWASHER, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, pos, NULL_VECTOR, false, 0.0);
+					}
 				}
 				else this.flCharge = 0.0;
 			}
 		}
-		if (OnlyScoutsLeft(RED))
-			this.flRAGE += 0.25;
 
 		if ( flags & FL_ONGROUND )
 			this.flWeighDown = 0.0;
 		else this.flWeighDown += 0.1;
 
-		if ( (buttons & IN_DUCK) && this.flWeighDown >= weighdowntime)
+		if ( (buttons & IN_DUCK) && this.flWeighDown >= 3.0)
 		{
 			float ang[3]; GetClientEyeAngles(client, ang);
 			if ( ang[0] > 60.0 ) {
@@ -277,8 +286,8 @@ methodmap JailBoss < JBPlayer
 		if (jmp > 0.0)
 			jmp *= 4.0;
 		if (this.flRAGE >= 100.0)
-			ShowSyncHudText(client, hHudText, "Jump: %i | Rage: FULL - Call Medic (default: E) to activate", RoundFloat(jmp));
-		else ShowSyncHudText(client, hHudText, "Jump: %i | Rage: %0.1f", RoundFloat(jmp), this.flRAGE);
+			ShowSyncHudText(client, hHudText, "Jump: %i | Rage: FULL - Call Medic (default: E) to activate", (this.iType == 3 && jmp > 0.0) ? RoundFloat(jmp)/2 : RoundFloat(jmp));
+		else ShowSyncHudText(client, hHudText, "Jump: %i | Rage: %0.1f", (this.iType == 3 && jmp > 0.0) ? RoundFloat(jmp)/2 : RoundFloat(jmp), this.flRAGE);
 	}
 };
 
@@ -288,29 +297,28 @@ public Plugin myinfo =
 	author = "Scag/Ragenewb, just about all probs to Nergal/Assyrian",
 	description = "Versus Saxton Hale embedded as an LR for TF2Jail Redux",
 	version = PLUGIN_VERSION,
-	url = ""
+	url = "https://github.com/Scags/TF2-Jailbreak-Redux"
 };
 
 enum/*CvarName*/
 {
 	Enabled = 0,
-	EnableMusic,
-	DamagePoints, 
-	MusicVolume, 
-	MedigunReset, 
-	StopTickleTime, 
-	AirStrikeDamage, 
-	AirblastRage, 
-	JarateRage, 
-	FanoWarRage, 
-	EngieBuildings, 
+	DamagePoints,
+	MedigunReset,
+	StopTickleTime,
+	AirStrikeDamage,
+	AirblastRage,
+	JarateRage,
+	FanoWarRage,
+	EngieBuildings,
 	PermOverheal,
-	DemoShieldCrits, 
-	DroppedWeapons, 
-	Anchoring, 
+	DemoShieldCrits,
+	Anchoring,
 	PickCount,
 	Ammo,
 	Health,
+	ThisPlugin,
+	TimeLeft,
 	Version
 };
 
@@ -319,23 +327,21 @@ ConVar
 ;
 
 int 
-	iHealthChecks = 0		// For !halehp
+	iHealthChecks		// For !halehp
 ;
 
 float 
-	flHealthTime = 0.0		// For !halehp
+	flHealthTime		// For !halehp
 ;
 
 bool
-	bCanMusicPlay = false 	// Dictates if the music can play during the round
+	bCanMusicPlay 		// Dictates if the music can play during the round
 ;
 
 public void OnPluginStart()
 {
 	JBVSH[Enabled] 			= CreateConVar("sm_jbvsh_enabled", "1", "Enable TF2Jail VSH Sub-Plugin?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	JBVSH[Version] 			= CreateConVar("jbvsh_version", PLUGIN_VERSION, "Versus Saxton Hale Version (Do not touch)", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
-	JBVSH[EnableMusic] 		= CreateConVar("sm_jbvsh_enable_music", "1", "Enable or disable background music.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	JBVSH[MusicVolume] 		= CreateConVar("sm_jbvsh_music_volume", "0.5", "How loud the background music should be, if enabled.", FCVAR_NOTIFY, true, 0.0, true, 20.0);
 	JBVSH[DamagePoints] 	= CreateConVar("sm_jbvsh_damage_points", "600", "Amount of damage needed to gain 1 point on the scoreboard.", FCVAR_NOTIFY, true, 1.0);
 	JBVSH[MedigunReset] 	= CreateConVar("sm_jbvsh_medigun_reset_amount", "0.31", "How much Uber percentage should Mediguns, after Uber, reset to?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	JBVSH[StopTickleTime] 	= CreateConVar("sm_jbvsh_stop_tickle_time", "3.0", "How long in seconds the tickle effect from the Holiday Punch lasts before being removed.", FCVAR_NOTIFY, true, 0.01);
@@ -350,6 +356,10 @@ public void OnPluginStart()
 	JBVSH[PickCount] 		= CreateConVar("sm_jbvsh_lr_max", "5", "What is the maximum number of times this LR can be picked in a single map?", FCVAR_NOTIFY, true, 1.0);
 	JBVSH[Ammo]				= CreateConVar("sm_jbvsh_ammo", "4", "Spawn random ammo at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0, true, 10.0);
 	JBVSH[Health] 			= CreateConVar("sm_jbvsh_health", "4", "Spawn random health at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0, true, 10.0);
+	JBVSH[ThisPlugin] 		= CreateConVar("sm_jbvsh_ilrtype", "13", "This sub-plugin's last request index. DO NOT CHANGE THIS UNLESS YOU KNOW WHAT YOU'RE DOING", FCVAR_NOTIFY, true, 0.0);
+	JBVSH[TimeLeft] 		= CreateConVar("sm_jbvsh_round_time", "600", "Round time during a VSH round IF a time limit is enabled in core plugin.", FCVAR_NOTIFY, true, 0.0);
+
+	JBVSH[ThisPlugin].AddChangeHook(OnTypeChanged);
 
 	RegConsoleCmd("sm_hale_hp", Command_GetHPCmd);
 	RegConsoleCmd("sm_halehp", Command_GetHPCmd);
@@ -373,18 +383,27 @@ public void OnPluginStart()
 
 	AddNormalSoundHook(HookSound);
 
-	AddMultiTargetFilter("@boss", HaleTargetFilter, "the current Boss/Bosses", false);
-	AddMultiTargetFilter("@hale", HaleTargetFilter, "the current Boss/Bosses", false);
-	AddMultiTargetFilter("@!boss", HaleTargetFilter, "all non-Boss players", false);
-	AddMultiTargetFilter("@!hale", HaleTargetFilter, "all non-Boss players", false);
+	AddMultiTargetFilter("@boss", HaleTargetFilter, "The current Boss/Bosses", false);
+	AddMultiTargetFilter("@hale", HaleTargetFilter, "The current Boss/Bosses", false);
+	AddMultiTargetFilter("@!boss", HaleTargetFilter, "All non-Boss players", false);
+	AddMultiTargetFilter("@!hale", HaleTargetFilter, "All non-Boss players", false);
 }
 /** Loading LR sub-plugins HAS TO HAPPEN OnAllPluginsLoaded() to assure that TF2Jail_Redux loads first **/
-//int JBVSHIndex;	// TODO, add a Forwards check to make sure proper sub-plugin is being hooked; hence the JBVSHIndex int
 public void OnAllPluginsLoaded()
 {
 	TF2JailRedux_RegisterPlugin("LRModule_VSH");
 	CheckJBHooks();
 }
+int JBVSHIndex;
+public void OnConfigsExecuted()
+{	// Considering you can just check the iLRType property, this is easier rather than pushing the type for each forward
+	JBVSHIndex = JBVSH[ThisPlugin].IntValue;
+}
+public void OnTypeChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+{	// Also adding a change hook
+	JBVSHIndex = StringToInt(newValue);
+}
+#define NotVSH 				( JBGameMode_GetProperty("iLRType") != (JBVSHIndex) )
 
 public bool HaleTargetFilter(const char[] pattern, Handle clients)
 {
@@ -393,15 +412,15 @@ public bool HaleTargetFilter(const char[] pattern, Handle clients)
 		bool non = StrContains(pattern, "!", false) != - 1;
 		for (int i = MaxClients; i; i--) 
 		{
-			if (IsClientInGame(i) && FindValueInArray(clients, i) == - 1)
+			if (IsClientInGame(i) && view_as< ArrayList >(clients).Get(i) == - 1)
 			{
 				if (JailBoss(i).bIsBoss) 
 				{
 					if (!non)
-						PushArrayCell(clients, i);
+						view_as< ArrayList >(clients).Push(i);
 				}
 				else if (non)
-					PushArrayCell(clients, i);
+					view_as< ArrayList >(clients).Push(i);
 			}
 		}
 	}
@@ -631,6 +650,7 @@ public void ShowPlayerScores()
 		if (player.bIsBoss) 
 		{
 			player.iDamage = 0;
+			player.bIsBoss = false;
 			continue;
 		}
 		
@@ -692,8 +712,9 @@ public void ShowPlayerScores()
 
 public void CalcScores()
 {
-	int j, damage, amount;
+	int j, damage, amount = JBVSH[DamagePoints].IntValue;
 	JailBoss player;
+	Event scoring;
 	for (int i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
@@ -708,15 +729,13 @@ public void CalcScores()
 			continue;
 		}
 	
-		Event scoring = CreateEvent("player_escort_score", true);	
+		scoring = CreateEvent("player_escort_score", true);	
 		damage = player.iDamage;
 		scoring.SetInt("player", i);
-		amount = JBVSH[DamagePoints].IntValue;
 		for (j = 0; damage - amount > 0; damage -= amount, j++) {  }
 		scoring.SetInt("points", j);
 		scoring.Fire();
-		CPrintToChat(i, "{red}[TF2Jail]{tan} You scored %i points.", j);
-		player.iDamage = 0;
+		CPrintToChat(i, "{red}[TF2Jail]{tan} You scored %i point%s.", j, j == 1 ? "" : "s");
 	}
 }
 
@@ -833,7 +852,7 @@ public JailBoss FindBoss(const bool balive)
 }
 
 /********************************************************************
-						COMMANDS
+						COMMAND
 ********************************************************************/
 
 public Action Command_GetHPCmd(int client, int args)
@@ -1961,7 +1980,7 @@ public void ManageMessageIntro()
 	gameMessage[0] = '\0';
 	int ent = -1;
 	while ((ent = FindEntityByClassname(ent, "func_door")) != - 1)
-	{	// Redundant but a backup in case doors don't work for some reason (which should never happen)
+	{	// Redundant but opens all doors. Chretien for example, if wardays aren't set, hale could camp at spawn
 		AcceptEntityInput(ent, "Open");
 		AcceptEntityInput(ent, "Unlock");
 	}
@@ -2017,7 +2036,7 @@ public void fwdOnLRRoundActivate(const JBPlayer Player)
 		base.ForceTeamChange(RED);
 
 	base.iDamage = 0;
-	SetPawnTimer( PrepPlayers, 0.4, base.userid );
+	SetPawnTimer( PrepPlayers, 0.2, base.userid );
 }
 public void fwdOnManageRoundStart()
 {
@@ -2052,7 +2071,6 @@ public void fwdOnManageRoundStart()
 	
 	rand.iHealth = rand.iMaxHealth;
 	SetEntityHealth(client, rand.iHealth);
-	JBGameMode_SetProperty("bDisableCriticals", true);
 
 	JailBoss player;
 	for (int i=MaxClients ; i ; --i) 
@@ -2067,7 +2085,7 @@ public void fwdOnManageRoundStart()
 		SetEntityMoveType(i, MOVETYPE_WALK);
 		if (GetClientTeam(i) != RED)
 			player.ForceTeamChange(RED);
-		SetPawnTimer( PrepPlayers, 0.4, player.userid );
+		SetPawnTimer( PrepPlayers, 0.2, player.userid );
 	}
 
 	SetPawnTimer(ManagePlayBossIntro, 0.2, rand);
@@ -2080,8 +2098,6 @@ public void fwdOnManageRoundEnd(Event event)
 		return;
 
 	//JBGameMode_ManageCells(OPEN);
-	JBGameMode_SetProperty("bDisableCriticals", false);
-	JBGameMode_SetProperty("bWardenLocked", true);
 	ShowPlayerScores();
 	SetPawnTimer(CalcScores, 3.0);
 	bCanMusicPlay = false;
@@ -2398,7 +2414,7 @@ public void fwdOnLRTextHud(char strHud[128])
 }
 public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int value, ArrayList & arrLRS)
 {
-	if (!JBVSH[Enabled].BoolValue || selection != 13)
+	if (!JBVSH[Enabled].BoolValue || selection != JBVSHIndex)
 		return;
 
 	if (value >= JBVSH[PickCount].IntValue)
@@ -2409,7 +2425,7 @@ public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int 
 	}
 	CPrintToChatAll("{red}[TF2Jail]{tan} %N has decided to play a round of {default}Versus Saxton Hale{tan}.", Player.index);
 	arrLRS.Set( selection, value+1 );
-	JBGameMode_SetProperty("iLRPresetType", 13);
+	JBGameMode_SetProperty("iLRPresetType", JBVSHIndex);
 }
 public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Event event)
 {
@@ -2558,32 +2574,34 @@ public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 	{
 		if (GetClientTeam(spawn.index) != RED)
 			spawn.ForceTeamChange(RED);
-		SetPawnTimer( PrepPlayers, 0.4, spawn.userid );
+		SetPawnTimer( PrepPlayers, 0.2, spawn.userid );
 	}
 }
 public void fwdOnMenuAdd(Menu & menu, ArrayList arrLRS)
 {
 	if (!JBVSH[Enabled].BoolValue)
 		return;
-	char strMenu[32];
+	char strMenu[32], menuitem[4];
 	int max = JBVSH[PickCount].IntValue,
-		value = arrLRS.Get(13);
+		value = arrLRS.Get(JBVSHIndex);
+	IntToString(JBVSHIndex, menuitem, sizeof(menuitem));
 	Format(strMenu, sizeof(strMenu), "Versus Saxton Hale (%d/%d)", value, max);
-	menu.AddItem("13", strMenu, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+	menu.AddItem(menuitem, strMenu, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 }
 public void fwdOnPanelAdd(Menu & panel)
 {
 	if (!JBVSH[Enabled].BoolValue)
 		return;
 
-	panel.AddItem("13", "Versus Saxton Hale- A nice round of VSH");
+	char menuitem[4]; IntToString(JBVSHIndex, menuitem, sizeof(menuitem));
+	panel.AddItem(menuitem, "Versus Saxton Hale- A nice round of VSH");
 }
 public void fwdOnManageTimeLeft()
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
-	JBGameMode_SetProperty("iTimeLeft", 600);
+	JBGameMode_SetProperty("iTimeLeft", JBVSH[TimeLeft].IntValue);
 }
 public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, int damage, int custom, int weapon, Event event)
 {
@@ -2690,7 +2708,7 @@ public Action fwdOnMusicPlay(char song[PLATFORM_MAX_PATH], float & time)
 
 	switch (currBoss.iType) 
 	{
-		case  - 1: { song = ""; time = -1.0; }
+		case  - 1: { song = ""; time = -1.0; return Plugin_Handled; }
 		case CBS: 
 		{
 			strcopy(song, sizeof(song), CBSTheme);
@@ -2714,6 +2732,7 @@ public void fwdOnVariableReset(const JBPlayer Player)
 	base.iAirDamage = 0;
 	base.iType = 0;
 	base.iStabbed = 0;
+	base.iDamage = 0;
 	base.iMarketted = 0;
 	// base.bGlow = 0;
 	base.iClimbs = 0;

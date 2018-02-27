@@ -34,35 +34,7 @@ methodmap CChristian < JailBoss
 
 	public void Think ()
 	{
-		this.DoGenericThink();
-		int buttons = GetClientButtons(this.index);
-
-		if ( ((buttons & IN_DUCK) || (buttons & IN_ATTACK2)) && (this.flCharge >= 0.0) )
-		{
-			if (this.flCharge+2.5 < HALE_JUMPCHARGE)
-				this.flCharge += 1.25;
-			else this.flCharge = HALE_JUMPCHARGE;
-		}
-		else if (this.flCharge < 0.0)
-			this.flCharge += 1.25;
-		else {
-			float EyeAngles[3]; GetClientEyeAngles(this.index, EyeAngles);
-			if ( this.flCharge > 1.0 && EyeAngles[0] < -5.0 ) {
-				float vel[3]; GetEntPropVector(this.index, Prop_Data, "m_vecVelocity", vel);
-				vel[2] = 750 + this.flCharge * 13.0;
-
-				SetEntProp(this.index, Prop_Send, "m_bJumping", 1);
-				vel[0] *= (1+Sine(this.flCharge * FLOAT_PI / 50));
-				vel[1] *= (1+Sine(this.flCharge * FLOAT_PI / 50));
-				TeleportEntity(this.index, nullvec, nullvec, vel);
-				this.flCharge = -100.0;
-				strcopy(snd, PLATFORM_MAX_PATH, CBSJump1);
-				
-				EmitSoundToAll(snd, this.index);
-				EmitSoundToAll(snd, this.index);
-			}
-			else this.flCharge = 0.0;
-		}
+		this.DoGenericThink(true, true, CBSJump1);
 	}
 	public void SetModel ()
 	{
@@ -101,7 +73,7 @@ methodmap CChristian < JailBoss
 		if (GetRandomInt(0, 1))
 			Format(snd, PLATFORM_MAX_PATH, "%s", CBS1);
 		else Format(snd, PLATFORM_MAX_PATH, "%s", CBS3);
-		EmitSoundToAll(snd);
+		EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 		TF2_RemoveWeaponSlot(this.index, TFWeaponSlot_Primary);
 		int bow = this.SpawnWeapon("tf_weapon_compound_bow", 1005, 100, 5, "2 ; 2.1 ; 6 ; 0.5 ; 37 ; 0.0 ; 280 ; 19 ; 551 ; 1");
 		SetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon", bow); //266 ; 1.0 - penetration
@@ -120,7 +92,7 @@ methodmap CChristian < JailBoss
 				case TFClass_Spy:
 				{
 					strcopy(snd, PLATFORM_MAX_PATH, "vo/sniper_dominationspy04.mp3");
-					EmitSoundToAll(snd);
+					EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 				}
 			}
 		}
@@ -161,7 +133,7 @@ methodmap CChristian < JailBoss
 			else if (!GetRandomInt(0, 3))
 				Format(snd, PLATFORM_MAX_PATH, CBS1);
 			else Format(snd, PLATFORM_MAX_PATH, "%s%02i.mp3", CBS2, GetRandomInt(1, 9));
-			EmitSoundToAll(snd);
+			EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 			this.iKills = 0;
 		}
 		else this.flKillSpree = curtime+5;
