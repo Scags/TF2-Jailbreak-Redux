@@ -1018,34 +1018,6 @@ stock void TF2_SwitchToSlot(const int client, const int slot)
 		}
 	}
 }
-
-int g_iHHHParticle[MAXPLAYERS + 1][3];
-/** ctrl+c
-	ctrl+v **/
-stock void DoHorsemannParticles(int client)
-{
-	int lefteye = MakeParticle(client, "halloween_boss_eye_glow", "lefteye");
-	if (IsValidEntity(lefteye))
-		g_iHHHParticle[client][0] = EntIndexToEntRef(lefteye);
-
-	int righteye = MakeParticle(client, "halloween_boss_eye_glow", "righteye");
-	if (IsValidEntity(righteye))
-		g_iHHHParticle[client][1] = EntIndexToEntRef(righteye);
-/*	int bodyglow = MakeParticle(client, "halloween_boss_shape_glow", "");
-	if (IsValidEntity(bodyglow))
-	{
-		g_iHHHParticle[client][2] = EntIndexToEntRef(bodyglow);
-	}*/
-}
-stock void ClearHorsemannParticles(int client)
-{
-	for (int i = 0; i < 3; i++)
-	{
-		int ent = EntRefToEntIndex(g_iHHHParticle[client][i]);
-		if (ent > MaxClients && IsValidEntity(ent)) AcceptEntityInput(ent, "Kill");
-		g_iHHHParticle[client][i] = INVALID_ENT_REFERENCE;
-	}
-}
 stock int MakeParticle(int client, char[] effect, char[] attachment)
 {
 		float pos[3];
@@ -1126,39 +1098,6 @@ stock void RemoveAll(int client)
 		}
 	}
 	// TF2_RemoveAllWeapons(client);
-}
-// From AimNames by -MCG-retsam & Antithasys
-int g_iFilteredEntity = -1;
-stock bool CanSeeTarget(any origin, float pos[3], any target, float targetPos[3], float range)
-{
-	float dist;
-	dist = GetVectorDistanceMeter(pos, targetPos);
-	if (dist >= range)
-		return false;
-	
-	Handle hTraceEx = null;
-	float hitPos[3];
-	g_iFilteredEntity = origin;
-	hTraceEx = TR_TraceRayFilterEx(pos, targetPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceFilter);
-	TR_GetEndPosition(hitPos, hTraceEx);
-	CloseHandle(hTraceEx);
-	
-	if (GetVectorDistanceMeter(hitPos, targetPos) <= 1.0)
-		return true;
-	
-	return false;
-}
-stock float UnitToMeter(float distance)
-{
-	return distance / 50.00;
-}
-stock float GetVectorDistanceMeter(const float vec1[3], const float vec2[3], bool squared=false) 
-{
-	return UnitToMeter(GetVectorDistance(vec1, vec2, squared));
-}
-stock bool TraceFilter(int ent, int contentMask)
-{
-	return (ent == g_iFilteredEntity) ? false : true;
 }
 stock bool IsClientValid(int client)
 {
@@ -1354,36 +1293,34 @@ stock Handle PrepareItemHandle(Handle hItem, char[] name = "", int index = -1, c
 	TF2Items_SetFlags(hWeapon, flags);
 	return hWeapon;
 }
-stock int Clamp(const int returner, const int lowest, const int highest)
+stock void Clamp(int & returner, const int lowest, const int highest)
 {
 	if (returner < lowest)
 		returner = lowest;
 	else if (returner > highest)
 		returner = highest;
-
-	return returner;
 }
 stock bool iIsWithin(const int num, const int lowest, const int highest, bool inclusion = false)
 {
-	if (inclusion)
-		return (num >= lowest && num <= highest);
-	return (num > lowest && num < highest);
+	return (inclusion ? num >= lowest && num <= highest : num > lowest && num < highest);
 }
 stock bool flIsWithin(const float fl, const float lowest, const float highest, bool inclusion = false)
 {
-	if (inclusion)
-		return (fl >= lowest && fl <= highest);
-	return (fl > lowest && fl < highest);
+	return (inclusion ? fl >= lowest && fl <= highest : fl > lowest && fl < highest);
 }
 stock void OpenAllDoors()
 {
-	int ent = -1;
+	int ent;
 	for (int i = 0; i < sizeof(sDoorsList); i++)
 	{
+		ent = -1;
 		while ((ent = FindEntityByClassname(ent, sDoorsList[i])) != -1)
 		{
-			AcceptEntityInput(ent, "Open");
-			AcceptEntityInput(ent, "Unlock");
+			if (IsValidEntity(ent))
+			{
+				AcceptEntityInput(ent, "Open");
+				AcceptEntityInput(ent, "Unlock");
+			}
 		}
 	}
 }

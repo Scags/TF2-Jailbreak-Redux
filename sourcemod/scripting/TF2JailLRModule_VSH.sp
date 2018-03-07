@@ -10,6 +10,8 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+//#define USE_NEW_HALE_MODEL	// Un-comment this to use the Jungle Inferno Saxton Hale model (if you have it in your server)
+
 #define UNASSIGNED 			0
 #define NEUTRAL 			0
 #define SPEC 				1
@@ -40,42 +42,42 @@ methodmap JailBoss < JBPlayer
 	public JailBoss (const int q, bool userid = false)
 	{ return view_as< JailBoss >( JBPlayer(q, userid) ); }
 
-	property int iUberTarget 
+	property int iUberTarget
 	{	// And then add new ones that we need
 		public get() 				{ return this.GetProperty("iUberTarget"); }
 		public set( const int i ) 	{ this.SetProperty("iUberTarget", i); }
 	}
-	property int iHealth 
+	property int iHealth
 	{
 		public get() 				{ return this.GetProperty("iHealth"); }
 		public set( const int i ) 	{ this.SetProperty("iHealth", i); }
 	}
-	property int iMaxHealth 
+	property int iMaxHealth
 	{
 		public get() 				{ return this.GetProperty("iMaxHealth"); }
 		public set( const int i ) 	{ this.SetProperty("iMaxHealth", i); }
 	}
-	property int iAirDamage 
+	property int iAirDamage
 	{
 		public get() 				{ return this.GetProperty("iAirDamage"); }
 		public set( const int i ) 	{ this.SetProperty("iAirDamage", i); }
 	}
-	property int iType 
+	property int iType
 	{
 		public get() 				{ return this.GetProperty("iType"); }
 		public set( const int i ) 	{ this.SetProperty("iType", i); }
 	}
-	property int iStabbed 
+	property int iStabbed
 	{
 		public get() 				{ return this.GetProperty("iStabbed"); }
 		public set( const int i ) 	{ this.SetProperty("iStabbed", i); }
 	}
-	property int iMarketted 
+	property int iMarketted
 	{
 		public get() 				{ return this.GetProperty("iMarketted"); }
 		public set( const int i ) 	{ this.SetProperty("iMarketted", i); }
 	}
-	property int iDamage 
+	property int iDamage
 	{
 		public get() 				{ return this.GetProperty("iDamage"); }
 		public set( const int i ) 	{ this.SetProperty("iDamage", i); }
@@ -83,39 +85,39 @@ methodmap JailBoss < JBPlayer
 	property int bGlow
 	{
 		public get()				{ return GetEntProp(this.index, Prop_Send, "m_bGlowEnabled"); }
-		public set( const int i )
+		public set( int i )
 		{
-			int boolean = ( (i) ? 1 : 0 ) ;
-			SetEntProp(this.index, Prop_Send, "m_bGlowEnabled", boolean);
+			Clamp(i, 0, 1);
+			SetEntProp(this.index, Prop_Send, "m_bGlowEnabled", i);
 		}
 	}
-	property int iKills 
+	property int iKills
 	{
 		public get() 				{ return this.GetProperty("iKills"); }
 		public set( const int i ) 	{ this.SetProperty("iKills", i); }
 	}
-	property int iClimbs 
+	property int iClimbs
 	{
 		public get() 				{ return this.GetProperty("iClimbs"); }
 		public set( const int i ) 	{ this.SetProperty("iClimbs", i); }
 	}
 
-	property bool bIsBoss 
+	property bool bIsBoss
 	{
 		public get() 				{ return this.GetProperty("bIsBoss"); }
 		public set( const bool i ) 	{ this.SetProperty("bIsBoss", i); }
 	}
-	property bool bInJump 	// You can also get/set properties that are in the core plugin
+	property bool bInJump	// You can also get/set properties that are in the core plugin
 	{
 		public get() 				{ return this.GetProperty("bInJump"); }
 		public set( const bool i ) 	{ this.SetProperty("bInJump", i); }
 	}
-	property float flRAGE 
+	property float flRAGE
 	{
 		public get() 				{ return this.GetProperty("flRAGE"); }
 		public set( const float i ) { this.SetProperty("flRAGE", i); }
 	}
-	property float flWeighDown 
+	property float flWeighDown
 	{
 		public get() 				{ return this.GetProperty("flWeighDown"); }
 		public set( const float i ) { this.SetProperty("flWeighDown", i); }
@@ -130,12 +132,12 @@ methodmap JailBoss < JBPlayer
 		}
 		public set( const float i )	{ this.SetProperty("flGlowtime", i); }
 	}
-	property float flCharge 
+	property float flCharge
 	{
 		public get() 				{ return this.GetProperty("flCharge"); }
 		public set( const float i ) { this.SetProperty("flCharge", i); }
 	}
-	property float flKillSpree 
+	property float flKillSpree
 	{
 		public get() 				{ return this.GetProperty("flKillSpree"); }
 		public set( const float i ) { this.SetProperty("flKillSpree", i); }
@@ -994,7 +996,7 @@ public Action HookSound(int clients[64], int & numClients, char sample[FULLPATH]
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return Plugin_Continue;
 
-	if (!IsValidClient(entity))
+	if (!IsClientValid(entity))
 		return Plugin_Continue;
 		
 	if (StrContains(sample, "fall_damage", false) != -1)
@@ -1203,7 +1205,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int & attacker, int 
 					case HHHjr:Format(snd, FULLPATH, "vo/halloween_boss/knight_pain0%d.mp3", GetRandomInt(1, 3));
 					case Bunny:strcopy(snd, PLATFORM_MAX_PATH, BunnyPain[GetRandomInt(0, sizeof(BunnyPain) - 1)]);
 				}
-				EmitSoundToAll(snd, victim.index); EmitSoundToAll(snd, victim.index);
+				EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, victim.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 				
 				float changedamage = ((Pow(float(victim.iMaxHealth) * 0.0014, 2.0) + 899.0) - (float(victim.iMaxHealth) * (float(victim.iStabbed) / 100)));
 				if (victim.iStabbed < 4)
@@ -1978,12 +1980,8 @@ public void ManageMessageIntro()
 	JailBoss base = FindBoss(false);
 
 	gameMessage[0] = '\0';
-	int ent = -1;
-	while ((ent = FindEntityByClassname(ent, "func_door")) != - 1)
-	{	// Redundant but opens all doors. Chretien for example, if wardays aren't set, hale could camp at spawn
-		AcceptEntityInput(ent, "Open");
-		AcceptEntityInput(ent, "Unlock");
-	}
+	OpenAllDoors();
+
 	if (!base)
 		return;
 	int i;
@@ -2510,7 +2508,7 @@ public void fwdOnBuildingDestroyed(const JBPlayer Attacker, const int building, 
 			if (!GetRandomInt(0, 3)) 
 			{
 				strcopy(snd, FULLPATH, HaleSappinMahSentry132);
-				EmitSoundToAll(snd, attacker.index);
+				EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, attacker.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 			}
 		}
 	}

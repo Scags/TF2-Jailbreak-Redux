@@ -370,12 +370,14 @@ public void ParsePropCFG()
 	if (!kv.ImportFromFile(Path))
 	{
 		LogError("Could not load the Prop Common file %s", Path);
+		delete kv;
 		return;
 	}
 	
 	if (!kv.GotoFirstSubKey())
 	{
 		LogError("Prop Common file is empty!");
+		delete kv;
 		return;
 	}		
 	
@@ -415,11 +417,28 @@ public void ParsePropCFG()
 	delete kv;
 }
 
+public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon, int &subtype, int &cmdnum, int &tickcount, int &seed, int mouse[2])
+{
+	if (!JBPH[Enabled].BoolValue || NotPH || JBGameMode_GetProperty("iRoundState") != StateRunning)
+		return Plugin_Continue;
+
+	JailHunter player = JailHunter(client);
+	if (!player.bFlaming)
+		return Plugin_Continue;
+
+	if (!(buttons & IN_ATTACK))
+	{
+		player.bFlaming = false;
+		player.iFlameCount = 0;
+	}
+	return Plugin_Continue;
+}
+
 public void KickCallBack(const QueryCookie cookie, const int client, const ConVarQueryResult result, const char[] cvarName, const char[] cvarValue)
 {
 	if (result == ConVarQuery_Okay)
 	{
-		if (StringToInt(cvarValue) == 0)
+		if (!StringToInt(cvarValue))
 			return;
 		KickClient(client, "Client ConVar r_staticpropinfo is enabled");
 		return;
@@ -435,7 +454,7 @@ public void CheckLivingPlayers()
 	int i;
 	bool last = GetLivingPlayers(RED) == 1,
 		 propinfo = JBPH[StaticPropInfo].BoolValue;
-	JailHunter player;
+
 	for (i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i) || !IsPlayerAlive(i))
@@ -447,17 +466,22 @@ public void CheckLivingPlayers()
 			continue;
 		if (GetClientTeam(i) == RED)
 		{
-			player = JailHunter(i);
+			JailHunter player = JailHunter(i);
 			TF2_RegeneratePlayer(i);
 			RemoveAll(i);	
-			SetEntityHealth(i, GetEntProp(i, Prop_Send, "m_iMaxHealth"));
-			player.MakeProp(JBPH[PropNameOnGive].BoolValue, true);
+			SetEntityHealth(i, GetEntProp(i, Prop_Data, "m_iMaxHealth"));
+			player.MakeProp(JBPH[PropNameOnGive].BoolValue);
 			player.SetWepInvis(0);
 		}
 		else TF2_AddCondition(i, TFCond_Jarated, 15.0);
 	}
 	if (last)
 		EmitSoundToAll("prophunt/oneandonly.mp3");
+}
+
+public void DisallowRerolls(const int roundcount)
+{
+	bAbleToReroll = false;
 }
 
 public Action Cmd_Reroll(int client, int args)
@@ -502,7 +526,7 @@ public Action Cmd_Reroll(int client, int args)
 		return Plugin_Handled;
 	}
 
-	player.MakeProp(JBPH[PropNameOnGive].BoolValue);
+	player.MakeProp(JBPH[PropNameOnGive].BoolValue, true);
 	player.iRolls++;
 
 	return Plugin_Handled;
@@ -581,7 +605,7 @@ public Action Timer_Round(Handle timer)	// Same structure as the core plugin's t
 		case 10:EmitSoundToAll("vo/announcer_dec_missionbegins10sec01.mp3");
 	}
 
-	if (!iGameTime)
+	if (!time)
 	{
 		char s[PLATFORM_MAX_PATH];
 		Format(s, sizeof(s), "vo/announcer_am_roundstart0%i.mp3", GetRandomInt(1, 4));
@@ -640,12 +664,17 @@ public void OnGameFrame()
 	if (!JBPH[Enabled].BoolValue || JBGameMode_GetProperty("iRoundState") != StateRunning || NotPH)
 		return;
 
+	JailHunter player;
 	for (int i = MaxClients; i; --i)
 	{
-		if (!IsClientValid(i) || !IsPlayerAlive(i))
+		if (!IsClientInGame(i) || !IsPlayerAlive(i))
 			continue;
 
-		if (!JailHunter(i).bFlaming)
+		player = JailHunter(i);
+		if (!player.bFlaming)
+			continue;
+
+		if (player.iFlameCount++ % 3)
 			continue;
 
 		int weapon = GetEntPropEnt(i, Prop_Send, "m_hActiveWeapon");
@@ -686,14 +715,25 @@ stock void RemoveAnimeModel(const int client)
 stock void DoSelfDamage(const int client, const int weapon)
 {
 	float damage;
-	
-	if (GetPlayerWeaponSlot(client, 0))
+
+	char classname[32]; GetEntityClassname(weapon, classname, sizeof(classname));
+
+	if (!strcmp(classname, "tf_weapon_flamethrower", false))
+		damage = 1.0;
+	else if (!strcmp(classname, "tf_weapon_pipebomblauncher", false) || !strcmp(classname, "tf_weapon_rocketlauncher", false)
+	 	  || !strcmp(classname, "tf_weapon_rocketlauncher_directhit", false) || !strcmp(classname, "tf_weapon_grenadelauncher", false))
+		damage = 6.0;
+	else if (!strcmp(classname, "tf_weapon_shotgun_primary", false) || !strcmp(classname, "tf_weapon_sentry_revenge", false)
+		  || !strcmp(classname, "tf_weapon_shotgun_hwg", false) || !strcmp(classname, "tf_weapon_flaregun", false)
+		  || !strcmp(classname, "tf_weapon_shotgun_pyro", false) || !strcmp(classname, "tf_weapon_sniperrifle", false)
+		  || !strcmp(classname, "tf_weapon_jar", false) || !strcmp(classname, "tf_weapon_shotgun_soldier", false))
+		damage = 5.0;
+	else if (!strcmp(classname, "tf_weapon_pistol", false) || !strcmp(classname, "tf_weapon_smg", false))
+		damage = 3.0;
+	else if (!strcmp(classname, "tf_weapon_minigun", false) || !strcmp(classname, "tf_weapon_syringegun_medic", false))
 		damage = 2.0;
-	else if (GetPlayerWeaponSlot(client, 1))
-		damage = 8.0;
-	else if (GetPlayerWeaponSlot(client, 2))
-		damage = 10.0;
-	
+	else damage = 10.0;
+
 	SDKHooks_TakeDamage(client, client, client, damage, DMG_PREVENT_PHYSICS_FORCE);
 }
 
@@ -864,7 +904,10 @@ public void fwdOnManageRoundStart()
 	JBGameMode_SetProperty("bFirstDoorOpening", true);
 	JBGameMode_ManageCells(OPEN);
 	OpenAllDoors();
-	
+	float rerolltime = JBPH[RerollTime].FloatValue;
+	if (rerolltime != 0.0)
+		SetPawnTimer(DisallowRerolls, rerolltime, JBGameMode_GetProperty("iRoundCount"));
+
 	bAbleToReroll = true;
 	bFirstBlood = true;
 
@@ -1082,6 +1125,12 @@ public void fwdOnResetVariables(const JBPlayer Player)
 	}
 }
 
+public Action fwdOnTimeEnd()
+{
+	ForceTeamWin(RED);
+	return Plugin_Handled;
+}
+
 public void CheckJBHooks()
 {
 	if (!JB_HookEx(OnLRRoundActivate, fwdOnLRRoundActivate))
@@ -1118,4 +1167,6 @@ public void CheckJBHooks()
 		LogError("Error loading OnDownloads Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnVariableReset, fwdOnResetVariables))
 		LogError("Error loading OnVariableReset Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnTimeEnd, fwdOnTimeEnd))
+		LogError("Error loading OnTimeEnd Forwards for JB PH Sub-Plugin!");
 }

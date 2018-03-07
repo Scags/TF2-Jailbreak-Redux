@@ -463,140 +463,11 @@ public void ManageSpawn(const JailFighter base, Event event)
 */
 public void PrepPlayer(const int userid)
 {
-	JailFighter base = JailFighter(userid, true);
-
-	int client = base.index;
+	int client = GetClientOfUserId(userid);
 	if (!IsPlayerAlive(client))
 		return;
 
-	int len = hWeaponList.Length, i, index, wep;
-	char strClassName[64];
-	if (len)
-	{
-		int u;
-		bool active;
-		for (i = 0; i < 3; i++)	// Prepare for wicked laziness and hacky coding
-		{
-			wep = GetIndexOfWeaponSlot(client, i);
-			for (u = 0; u < len; u++)
-			{
-				if (wep != hWeaponList.Get(u))
-					continue;
-				active = true;
-			}
-
-			if (!active)
-				continue;
-
-			switch (TF2_GetPlayerClass(client))
-			{
-				case TFClass_Scout:
-				{
-					strClassName = (!i ? "tf_weapon_scattergun" : (i == 1 ? "tf_weapon_pistol_scout" : "tf_weapon_bat"));
-					index = (!i ? 13 : (i == 1 ? 23 : 0));
-				}
-				case TFClass_Soldier:
-				{
-					strClassName = (!i ? "tf_weapon_rocketlauncher" : (i == 1 ? "tf_weapon_shotgun_soldier" : "tf_weapon_shovel"));
-					index = (!i ? 18 : (i == 1 ? 10 : 6));
-				}
-				case TFClass_Pyro:
-				{
-					strClassName = (!i ? "tf_weapon_flamethrower" : (i == 1 ? "tf_weapon_shotgun_pyro" : "tf_weapon_fireaxe"));
-					index = (!i ? 21 : (i == 1 ? 12 : 2));
-				}
-				case TFClass_DemoMan:
-				{
-					strClassName = (!i ? "tf_weapon_grenadelauncher" : (i == 1 ? "tf_weapon_pipebomblauncher" : "tf_weapon_bottle"));
-					index = (!i ? 19 : (i == 1 ? 20 : 1));
-				}
-				case TFClass_Heavy:
-				{
-					strClassName = (!i ? "tf_weapon_minigun" : (i == 1 ? "tf_weapon_shotgun" : "tf_weapon_fists"));
-					index = (!i ? 15 : (i == 1 ? 11 : 5));
-				}
-				case TFClass_Engineer:
-				{
-					strClassName = (!i ? "tf_weapon_shotgun_primary" : (i == 1 ? "tf_weapon_pistol" : "tf_weapon_wrench"));
-					index = (!i ? 9 : (i == 1 ? 22 : 7));
-				}
-				case TFClass_Medic:
-				{
-					strClassName = (!i ? "tf_weapon_syringegun_medic" : (i == 1 ? "tf_weapon_medigun" : "tf_weapon_bonesaw"));
-					index = (!i ? 17 : (i == 1 ? 29 : 8));
-				}
-				case TFClass_Sniper:
-				{
-					strClassName = (!i ? "tf_weapon_sniperrifle" : (i == 1 ? "tf_weapon_smg" : "tf_weapon_club"));
-					index = (!i ? 14 : (i == 1 ? 16 : 3));
-				}
-				case TFClass_Spy:
-				{
-					strClassName = (!i ? "tf_weapon_revolver" : (i == 1 ? "tf_weapon_pda_spy" : "tf_weapon_knife"));
-					index = (!i ? 24 : (i == 1 ? 735 : 4));
-				}
-			}
-
-/*	Flamethrower attributes are fucked up after Jungle Inferno, these static attribs are required whenever spawning them
-"flame_gravity"                         "0"
-"flame_drag"                            "8.5"
-"flame_up_speed"                        "50"
-"flame_speed"                           "2450"
-"flame_spread_degree"                   "2.8"
-"flame_lifetime"                        "0.6"
-"flame_random_life_time_offset"         "0.1"
-*/
-
-			TF2_RemoveWeaponSlot(client, i);
-			base.SpawnWeapon(strClassName, index, 1, 0, (index == 21 ? "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1" : ""));
-			// That was fun, let's do it again but with wearables
-		}
-	}
-
-	len = hWearableList.Length;
-	if (len)
-	{	// FORTUNATELY, there are only a few wearables per class so we can do a cleaner? switch statement
-		int[] prepwep = new int[1];
-		for (i = 0; i < len; i++)
-		{
-			prepwep[0] = hWearableList.Get(i);
-			switch (prepwep[0])
-			{
-				case 133, 444:
-				{
-					wep = 10;
-					strClassName = "tf_weapon_shotgun_soldier";
-				}
-				case 405, 608:
-				{
-					wep = 19;
-					strClassName = "tf_weapon_grenadelauncher";
-				}
-				case 131, 406:
-				{
-					wep = 20;
-					strClassName = "tf_weapon_pipebomblauncher";
-				}
-				case 203, 231, 642:
-				{
-					wep = 16;
-					strClassName = "tf_weapon_smg";
-				}
-				default:wep = 0;	// "False" because then they aren't a weapon(slot)
-			}
-			if ( IsValidEntity(FindPlayerBack(client, prepwep, 1)) )
-			{
-				RemovePlayerBack(client, prepwep, 1);
-				if (wep)
-				{
-					wep = base.SpawnWeapon(strClassName, wep, 1, 0, "");
-					if (GetClientTeam(client) == RED)
-					{ SetWeaponAmmo(wep, 0); SetWeaponClip(wep, 0); }
-				}
-			}
-		}
-	}
-
+	JailFighter base = JailFighter(userid, true);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_PDA);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Grenade);
@@ -945,7 +816,7 @@ public void ManageWardenThink(const JailFighter player)
 */
 public Action SoundHook(int clients[64], int & numClients, char sample[PLATFORM_MAX_PATH], int & entity, int & channel, float & volume, int & level, int & pitch, int & flags)
 {
-	if (!bEnabled.BoolValue  || !IsValidClient(entity))
+	if (!bEnabled.BoolValue || !IsClientValid(entity))
 		return Plugin_Continue;
 		
 	JailFighter base = JailFighter(entity);
@@ -1024,27 +895,10 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 				return Plugin_Changed;
 			}
 
-			if (GetClientTeam(attacker) == BLU)
+			if (GetClientTeam(attacker) == BLU && cvarTF2Jail[CritType].IntValue == 2 && !gamemode.bDisableCriticals)
 			{
-				if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 2)
-				{
-					damagetype |= DMG_CRIT;
-					return Plugin_Changed;
-				}
-
-				switch (cvarTF2Jail[CritFallOff].IntValue)
-				{
-					case 1:
-					{
-						damagetype |= DMG_HALF_FALLOFF;
-						return Plugin_Changed;
-					}
-					case 2:
-					{
-						damagetype |= DMG_USEDISTANCEMOD;
-						return Plugin_Changed;
-					}
-				}
+				damagetype |= DMG_CRIT;
+				return Plugin_Changed;
 			}
 		}
 		default:return Call_OnHookDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
@@ -1371,4 +1225,16 @@ public Action ManageMusic(char song[PLATFORM_MAX_PATH], float & time)
 		default:return Call_OnPlayMusic(song, time);
 	}
 	return Plugin_Handled;
+}
+/**
+ *	Manage what happens when the round time hits 0
+ *	You can override the basic round end function which forces Blue to win by returning anything but Plugin_Continue
+*/
+public Action ManageTimeEnd()
+{
+	switch (gamemode.iLRType)
+	{
+		default:return Call_OnTimeEnd();
+	}
+	return Plugin_Continue;
 }

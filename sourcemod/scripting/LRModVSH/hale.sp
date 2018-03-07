@@ -3,9 +3,14 @@
 //models
 // #define HaleModel		"models/player/saxton_hale/saxton_hale.mdl"
 // #define HaleModelPrefix		"models/player/saxton_hale/saxton_hale"
-#define HaleModel				"models/player/saxton_test4/saxton_hale_test4.mdl"
+#if defined USE_NEW_HALE_MODEL
+#define HaleModel 				"models/player/saxton_hale_jungle_inferno/saxton_hale.mdl"
+#else
+#define HaleModel 				"models/player/saxton_test4/saxton_hale_test4.mdl"
+#endif
 
 //materials
+#if defined USE_NEW_HALE_MODEL
 static const char HaleMatsV2[][] = {
 	"materials/models/player/saxton_test4/eyeball_l.vmt",
 	"materials/models/player/saxton_test4/eyeball_r.vmt",
@@ -21,6 +26,42 @@ static const char HaleMatsV2[][] = {
 	//"materials/models/player/saxton_test4/halegibs.vtf"
 };
 
+#else
+static const char HaleMatsV2[][] = {
+    "materials/models/player/hwm_saxton_hale/saxton_belt.vmt",
+    "materials/models/player/hwm_saxton_hale/saxton_belt_high.vmt",
+    "materials/models/player/hwm_saxton_hale/saxton_body.vmt",
+    "materials/models/player/hwm_saxton_hale/saxton_body_alt.vmt",
+    "materials/models/player/hwm_saxton_hale/saxton_body_saxxy.vmt",
+    "materials/models/player/hwm_saxton_hale/saxton_hat_color.vmt",
+    "materials/models/player/hwm_saxton_hale/saxton_hat_saxxy.vmt",
+    "materials/models/player/hwm_saxton_hale/tongue_saxxy.vmt",
+    "materials/models/player/hwm_saxton_hale/saxton_belt_high.vtf",
+    "materials/models/player/hwm_saxton_hale/saxton_belt_high_normal.vtf",
+    "materials/models/player/hwm_saxton_hale/saxton_body.vtf",
+    "materials/models/player/hwm_saxton_hale/saxton_body_exp.vtf",
+    "materials/models/player/hwm_saxton_hale/saxton_body_normal.vtf",
+    "materials/models/player/hwm_saxton_hale/saxton_body_saxxy.vtf",
+    "materials/models/player/hwm_saxton_hale/saxton_hat_color.vtf",
+    "materials/models/player/hwm_saxton_hale/saxton_hat_saxxy.vtf",
+    "materials/models/player/hwm_saxton_hale/hwm/saxton_head.vmt",
+    "materials/models/player/hwm_saxton_hale/hwm/saxton_head_saxxy.vmt",
+    "materials/models/player/hwm_saxton_hale/hwm/tongue.vmt",
+    "materials/models/player/hwm_saxton_hale/hwm/saxton_head.vtf",
+    "materials/models/player/hwm_saxton_hale/hwm/saxton_head_exponent.vtf",
+    "materials/models/player/hwm_saxton_hale/hwm/saxton_head_normal.vtf",
+    "materials/models/player/hwm_saxton_hale/hwm/saxton_head_saxxy.vtf",
+    "materials/models/player/hwm_saxton_hale/hwm/tongue.vtf",
+    "materials/models/player/hwm_saxton_hale/shades/eyeball_l.vmt",
+    "materials/models/player/hwm_saxton_hale/shades/eyeball_r.vmt",
+    "materials/models/player/hwm_saxton_hale/shades/eyeball_saxxy.vmt",
+    "materials/models/player/hwm_saxton_hale/shades/inv.vmt",
+    "materials/models/player/hwm_saxton_hale/shades/eye.vtf",
+    "materials/models/player/hwm_saxton_hale/shades/eye-extra.vtf",
+    "materials/models/player/hwm_saxton_hale/shades/eye-saxxy.vtf",
+    "materials/models/player/hwm_saxton_hale/shades/null.vtf"
+};
+#endif
 
 //Saxton Hale voicelines
 #define HaleComicArmsFallSound	"saxton_hale/saxton_hale_responce_2.wav"

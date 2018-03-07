@@ -51,18 +51,21 @@ stock char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_moveline
 methodmap JBPlayer
 {
 	/** [ C O N S T R U C T O R ]
-	 * Constructs an instance of the JailFighter internal methodmap
-	 * @param index			index (or the userid) of a player
-	 * @param userid		if using userid instead of player index, set this param to true
-	 * @return				a player instance of the JBPlayer methodmap
+	 * Constructs an instance of the JailFighter internal methodmap.
+	 *	 
+	 * @param index			Index (or the userid) of a player.
+	 * @param userid		If using userid instead of player index, set this param to true.
+	 *
+	 * @return				A player instance of the JBPlayer methodmap.
 	*/
-	public native JBPlayer(const int index, bool userid=false);
+	public native JBPlayer(const int index, bool userid = false);
 
 	/* **** **** [ P R O P E R T I E S ] **** **** */
 	
 	/**
-	 * Gets the userid of the JB player instance
-	 * @return			the bare player userid integer
+	 * Gets the userid of the JB player instance.
+	 *
+	 * @return				The bare player userid integer.
 	*/
 	property int userid 
 	{
@@ -70,8 +73,9 @@ methodmap JBPlayer
 	}
 	
 	/**
-	 * Gets the index of the JB player instance
-	 * @return			the bare player index integer
+	 * Gets the index of the JB player instance.
+	 *
+	 * @return				The bare player index integer.
 	*/
 	property int index 
 	{
@@ -79,23 +83,27 @@ methodmap JBPlayer
 	}
 	
 	/**
-     * Sets the property of the internal JailFighter methodmap
-     * NOTE: You can use this to create new properties which GetProperty can access!
-	 * @param prop_name		name of property you want to access data from.
-	 * @param item			reference to use of the variable to overwrite with data from the property.
-     * @return		
+     * Gets the property of the internal JailFighter methodmap.
+     *
+	 * @param prop_name		Name of property you want to access data from.
+	 * @param item			Reference to use of the variable to overwrite with data from the property.
+	 *
+     * @return				Property value called if it was valid
     */
 	public native any GetProperty(const char prop_name[64]);
 	
 	/**
-     * Gets the property of the internal JB methodmap
-	 * @param prop_name		name of the property you want to override data from (works like StringMap).
-	 * @param value			data you want the property to hold.
+     * Sets the property of the internal JB methodmap.
+     * NOTE: You can use this to create new properties which GetProperty can access!
+     *
+	 * @param prop_name		Name of the property you want to override data from (works like StringMap).
+	 * @param value			Data you want the property to hold.
+	 *
      * @noreturn
-    */	
+    */
 	public native void SetProperty(const char prop_name[64], any value);
 
-	/*		AVAILABLE PROPERTIES
+	/**		AVAILABLE PROPERTIES
 		property int iLRCustom							// For the Custom LR
 		property int iKillCount							// For the ghetto rigged freekill system
 		property bool bIsMuted							// If not bIsAdmin and dead; or not bIsVIP and alive
@@ -112,27 +120,172 @@ methodmap JBPlayer
 		property float flKillSpree 						// Also for the ghetto rigged freekill system
 	*/
 		
+	/**
+	 *	Creates and spawns a weapon to a player.
+	 *
+	 *	@param name 		Entity name of the weapon being spawned (Cannot be a wearable).
+	 *	@param index 		Item index of the weapon.
+	 *	@param level		Item level of the weapon.
+	 *	@param qual			Item quality of the weapon.
+	 *	@param att 			Item attributes separated by " ; ".
+	 *
+	 *	@return				The weapon spawned to the client.
+	*/
 	public native int SpawnWeapon(char[] name, const int index, const int level, const int qual, char[] att);
+
+	/**
+	 *	Retrieve an item definition index of a player's weaponslot.
+	 *
+	 *	@param slot 		Slot to grab the item index from.
+	 *
+	 *	@return 			Index of the valid, equipped weapon.
+	*/
 	public native int GetWeaponSlotIndex(const int slot);
+
+	/**
+	 *	Set the alpha magnitude a player's weapons.
+	 *
+	 *	@param alpha 		Number from 0 to 255 to set on the weapon.
+	 *
+	 *	@noreturn
+	*/
 	public native void SetWepInvis(const int alpha);
+
+	/**
+	 *	Silently switch a player's team.
+	 *
+	 *	@param team 		Team to switch to.
+	 *	@param spawn 		Determine whether or not to respawn the client.
+	 *
+	 *	@noreturn
+	*/
 	public native void ForceTeamChange(const int team, bool spawn = true);
+
+	/**
+	 *	Teleport a player either to a freeday or warday location.
+	 *	@NOTE 				IF GAMEMODE TELEPORT PROPERTIES ARE NOT TRUE, PLAYER WILL BE TELEPORTED TO MAP'S ORIGIN.
+	 *
+	 *	@param iLocation 	Location to teleport the client.
+	 *
+	 *	@noreturn
+	*/
 	public native void TeleportToPosition(const int iLocation);
+
+	/**
+	 *	List the last request menu to the player.
+	 *
+	 *	@noreturn
+	*/
 	public native void ListLRS();
+
+	/**
+	 *	Remove all weapons, disguises, and wearables from a client.
+	 *
+	 *	@noreturn
+	*/
 	public native void PreEquip();
-	// public native void SetAmmotable(const int wepslot, const int val);
-	// public native void SetCliptable(const int wepslot, const int val);
+
+	/**
+	 *	Teleport a player to the appropriate spawn location.
+	 *
+	 *	@param team 		Team spawn to teleport the client to.
+	 *
+	 *	@noreturn
+	*/
 	public native void TeleToSpawn(int team = 0);
+
+	/**
+	 *	Spawn a small healthpack at the client's origin.
+	 *
+	 *	@param ownerteam 	Team to give the healthpack.
+	 *
+	 *	@noreturn
+	*/
 	public native void SpawnSmallHealthPack(int ownerteam = 0);
+
+	/**
+	 *	Mute a client through the plugin.
+	 *	@NOTE 				PLAYERS THAT ARE DEEMED AS ADMINS WILL NEVER BE MUTED.
+	 *
+	 *	@noreturn
+	*/
 	public native void MutePlayer();
+
+	/**
+	 *	Initialize a player as a freeday
+	 *	@NOTE 				DOES NOT TELEPORT THEM TO THE FREEDAY LOCATION.
+	 *
+	 *	@noreturn
+	*/
 	public native void GiveFreeday();
+
+	/**
+	 *	Terminate a player as a freeday.
+	 *
+	 *	@noreturn
+	*/
 	public native void RemoveFreeday();
+
+	/**
+	 *	Remove all player weapons that are not their melee.
+	 *
+	 *	@noreturn
+	*/
 	public native void StripToMelee();
+
+	/**
+	 *	Strip a player of all of their ammo.
+	 *
+	 *	@noreturn
+	*/
 	public native void EmptyWeaponSlots();
+
+	/**
+	 *	Unmute a player through the plugin.
+	 *
+	 *	@noreturn
+	*/
 	public native void UnmutePlayer();
+
+	/**
+	 *	Initialize a player as the warden.
+	 *	@NOTE 				THIS AUTOMATICALLY GIVES THE PLAYER THE WARDEN MENU.
+	 *
+	 *	@noreturn
+	*/
 	public native void WardenSet();
+
+	/**
+	 *	Terminate a player as the warden.
+	 *
+	 *	@noreturn
+	*/
 	public native void WardenUnset();
+
+	/**
+	 *	Convert a player into the Horseless Headless Horsemann.
+	 *
+	 *	@noreturn
+	*/
 	public native void MakeHorsemann();
+
+	/**
+	 *	Give a player the warden menu.
+	 *
+	 *	@noreturn
+	*/
 	public native void WardenMenu();
+
+	/**
+	 *	Allow a player to climb walls upon hitting them.
+	 *
+	 *	@param weapon 		Weapon the client is using to attack.
+	 *	@param upwardvel	Velocity to send the client (in hammer units).
+	 *	@param health 		Health to take from the client.
+	 *	@param attackdelay 	Length in seconds to delay the player in attacking again.
+	 *
+	 *	@noreturn
+	*/
 	public native void ClimbWall(const int weapon, const float upwardvel, const float health, const bool attackdelay);
 };
 
@@ -140,9 +293,11 @@ methodmap JBPlayer
 /**
  *	Registers a plugin to be able to use TF2Jail's forwards
  *	NOTE: The purpose of this native is to register last-request subplugins, you don't need to register plugins to use forwards, simply hook what forward you need.
- *	If you add a last request and want to test it before you allow all players to use it, do NOT register the sub-plugin, and use sm_setpreset to activate the lr type for next round
- *	@param plugin_name		module name you want your calling plugin to be identified under
- *	@return					integer of the plugin array index
+ *	If you add a last request and want to test it before you allow all players to use it, do NOT register the sub-plugin, and use sm_setpreset to activate the lr type for next round.
+ *	
+ *	@param plugin_name		Module name you want your calling plugin to be identified under.
+ *
+ *	@return					Integer of the plugin array index
  */
 native int TF2JailRedux_RegisterPlugin(const char plugin_name[64]);
 
@@ -178,6 +333,7 @@ enum	// JB Hook Types
 	OnWMenuSelect,
 	OnClientInduction,
 	OnVariableReset,
+	OnTimeEnd,
 	OnPlayMusic
 };
 
@@ -217,7 +373,7 @@ typeset JBHookCB
 	*/
 	function void (const JBPlayer Victim, const JBPlayer Attacker, Event event);
 
-	// 	OnManageRoundStart
+	//	OnManageRoundStart
 	function void ();
 
 	//	OnMenuAdd
@@ -249,6 +405,9 @@ typeset JBHookCB
 
 	// OnPlayMusic
 	function Action (char song[PLATFORM_MAX_PATH], float & time);
+
+	// OnTimeEnd
+	function Action ();
 };
 
 // Use hooktype enum on these.
@@ -293,11 +452,47 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	property float flMusicTime		// Optional, not used in core
 */
 
-native int JBGameMode_Playing(); 								// gamemode.iPlaying
-native void JBGameMode_FindRandomWarden();						// gamemode.FindRandomWarden()
-native void JBGameMode_ManageCells(const eDoorsMode status);	// gamemode.DoorHandler(status)
-native int JBGameMode_FindWarden(); 							// gamemode.FindWarden()
-native void JBGamMode_FireWarden(bool prevent = true, bool announce = true); // gamemode.FireWarden(prevent, announce)
+/**
+ *	Retrieve the amount of living/playing players in the server.
+ *
+ *	@return 			The number of players currently alive.
+*/
+native int JBGameMode_Playing();
+
+/**
+ *	Find and Initialize a random player as the warden.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_FindRandomWarden();
+
+/**
+ *	Handle the cell doors.
+ *
+ *	@param status 			Type of cell door usage found in the eDoorsMode enum.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_ManageCells(const eDoorsMode status);
+
+/**
+ *	Find the current warden if one exists.
+ *
+ *	@return 				The current warden.
+ *
+*/
+native int JBGameMode_FindWarden();
+
+/** 
+ *	Find and terminate the current warden.
+ *
+ *	@param prevent 			Prevent the player from becoming warden again.
+ * 	@param announce 		Display to all players that the warden was fired.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_FireWarden(bool prevent = true, bool announce = true);
+
 
 public SharedPlugin __pl_tf2jailredux = {
 	name = "TF2Jail_Redux",

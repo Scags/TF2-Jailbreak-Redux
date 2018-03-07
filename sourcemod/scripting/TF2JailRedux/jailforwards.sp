@@ -63,6 +63,7 @@ void InitializeForwards()
 	g_hForwards[OnWMenuSelect] 			= new PrivateForward( CreateForward(ET_Ignore, Param_Cell, Param_String) );
 	g_hForwards[OnClientInduction] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
 	g_hForwards[OnVariableReset] 		= new PrivateForward( CreateForward(ET_Ignore, Param_Cell) );
+	g_hForwards[OnTimeEnd] 				= new PrivateForward( CreateForward(ET_Hook) );
 	g_hForwards[OnPlayMusic]			= new PrivateForward( CreateForward(ET_Hook, Param_String, Param_FloatByRef) );
 }
 void Call_OnDownloads()
@@ -276,4 +277,12 @@ void Call_OnVariableReset(const JailFighter player)
 	g_hForwards[OnVariableReset].Start();
 	Call_PushCell(player);
 	Call_Finish();
+}
+
+Action Call_OnTimeEnd()
+{
+	Action result = Plugin_Continue;
+	g_hForwards[OnTimeEnd].Start();
+	Call_Finish(result);
+	return result;
 }

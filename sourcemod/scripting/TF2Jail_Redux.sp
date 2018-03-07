@@ -16,11 +16,11 @@
  ** tf2jailredux.inc: External gamemode third-party functionality, leave it alone 				   **
  **	If you're here to give some more uniqueness to the plugin, check jailhandler 	 			   **
  **	It's fixed with a variety of not only last request examples, but gameplay event management.	   **
- **	VSH is a standalone subplugin, if there is an issue with it, simply delete it	   			   **
+ **	VSH and PH are standalone subplugins, if there is an issue with them, simply delete them	   **
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.11.14"
+#define PLUGIN_VERSION		"0.11.15"
 #define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -79,7 +79,6 @@ enum	// Cvar name
 	EnableMusic,
 	MusicVolume,
 	EurekaTimer,
-	CritFallOff,
 	VIPFlag,
 	AdmFlag,
 	DisableBlueMute,
@@ -130,9 +129,7 @@ public Plugin myinfo =
 };
 
 ArrayList 
-	g_hPluginsRegistered,
-	hWeaponList,
-	hWearableList
+	g_hPluginsRegistered
 ;
 
 #include "TF2JailRedux/stocks.inc"
@@ -170,12 +167,9 @@ public void OnPluginStart()
 	cvarTF2Jail[EnableMusic] 				= CreateConVar("sm_tf2jr_music_on", "1", "Enable background music that could possibly play with last requests?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[MusicVolume] 				= CreateConVar("sm_tf2jr_music_volume", ".5", "Volume in which background music plays. (If enabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[EurekaTimer] 				= CreateConVar("sm_tf2jr_eureka_teleport", "20", "How long must players wait until they are able to Eureka Effect Teleport again? (0 to disable cooldown)", FCVAR_NOTIFY, true, 0.0, true, 60.0);
-	cvarTF2Jail[CritFallOff] 				= CreateConVar("sm_tf2jr_crit_falloff", "2", "Should guard damage have falloff? 1 = Half-falloff; 2 = Full-falloff", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	cvarTF2Jail[VIPFlag] 					= CreateConVar("sm_tf2jr_vip_flag", "r", "What admin flag do VIP players fall under?", FCVAR_NOTIFY);
 	cvarTF2Jail[AdmFlag] 					= CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under?", FCVAR_NOTIFY);
 	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[WeaponDisabler] 			= CreateConVar("sm_tf2jr_disable_weapons", "", "Disable certain weapons. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"220,448\" WILL DISABLE SHORTSTOP AND SODA POPPER. NOTE THAT WEARABLES SUCH AS SNIPER BACK WEAPONS, SOLDIER/DEMO BOOTS, AND DEMO SHIELDS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_wearables\" TO DISABLE \"tf_wearable*\"s", FCVAR_NOTIFY);
-	cvarTF2Jail[WearableDisabler] 			= CreateConVar("sm_tf2jr_disable_wearables", "", "Disable certain wearables. USE ITEM INDEXES ONLY. https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes CONTAINS THE LIST OF ALL TF2 ITEM INDEXES. SEPARATE INDEXES BY COMMAS AND NO SPACES. EXAMPLE: \"133,444\" WILL DISABLE GUNBOATS AND MANTREADS. NOTE THAT WEAPONS WILL NOT REGISTER WITH THIS. USE \"sm_tf2jr_disable_weapons\" TO DISABLE \"tf_weapon*\"s", FCVAR_NOTIFY);
 	cvarTF2Jail[Markers] 					= CreateConVar("sm_tf2jr_markers", "3", "Warden markers lifetime in seconds? (0 to disable)", FCVAR_NOTIFY, true, 0.0, true, 30.0);
 	cvarTF2Jail[CritType] 					= CreateConVar("sm_tf2jr_criticals", "2", "What type of criticals should guards get? 0 = none; 1 = mini-crits; 2 = full crits", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	cvarTF2Jail[MuteType] 					= CreateConVar("sm_tf2jr_muting", "6", "What type of dead player muting should occur? 0 = no muting; 1 = red players only are muted(except VIPs); 2 = blue players only are muted(except VIPs); 3 = all players are muted(except VIPs); 4 = all red players are muted; 5 = all blue players are muted; 6 = everybody is muted. ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
@@ -424,29 +418,6 @@ public void OnConfigsExecuted()
 		Steam_SetGameDescription(sDescription);
 	}
 #endif
-
-	int i;
-	char strDisable[256];
-
-	hWeaponList = new ArrayList();
-	cvarTF2Jail[WeaponDisabler].GetString(strDisable, sizeof(strDisable));
-	if (strDisable[0] != '\0')
-	{
-		char strBuffer[32][8];
-		int disabled = ExplodeString(strDisable, ",", strBuffer, 32, 8); 	// Split all of our disabled indexes and store them into our string array...
-		for (i = 0; i < disabled; i++)										// Loop through them all...
-			hWeaponList.Push( StringToInt(strBuffer[i]) );					// Then push their values to the global array!
-	}
-
-	hWearableList = new ArrayList();
-	cvarTF2Jail[WearableDisabler].GetString(strDisable, sizeof(strDisable));
-	if (strDisable[0] != '\0')
-	{
-		char strBuffer[32][8];
-		int disabled = ExplodeString(strDisable, ",", strBuffer, 32, 8);	// And we repeat the same for our wearables
-		for (i = 0; i < disabled; i++)
-			hWearableList.Push( StringToInt(strBuffer[i]) );
-	}
 }
 
 public void OnMapStart()
@@ -911,10 +882,10 @@ public bool AlreadyMuted(const int client)
 	switch (gamemode.bSC)
 	{
 #if defined _sourcecomms_included
-		case true:return view_as<bool>(SourceComms_GetClientMuteType(client) != bNot);
+		case true:return view_as< bool >(SourceComms_GetClientMuteType(client) != bNot);
 #endif
 #if defined _basecomm_included
-		case false:return view_as<bool>(BaseComm_IsClientMuted(client));
+		case false:return BaseComm_IsClientMuted(client);
 #endif
 	}
 	return false;
@@ -958,9 +929,9 @@ public void UnHorsemannify(const JailFighter player)
 		player.UnHorsemann();
 }
 
-public void RandSniper(const int iTimer)
+public void RandSniper(const int roundcount)
 {
-	if (iTimer != gamemode.iRoundCount)
+	if (roundcount != gamemode.iRoundCount)
 		return;
 		
 	int rand = GetRandomClient();
@@ -970,12 +941,12 @@ public void RandSniper(const int iTimer)
 	if (IsPlayerAlive(rand))
 		SDKHooks_TakeDamage(rand, 0, 0, 9001.0, DMG_DIRECT, _, _, _);
 	
-	SetPawnTimer(RandSniper, GetRandomFloat(30.0, 60.0), gamemode.iRoundCount);
+	SetPawnTimer(RandSniper, GetRandomFloat(30.0, 60.0), roundcount);
 }
 
-public void EndRandSniper(const int iTimer)
+public void EndRandSniper(const int roundcount)
 {
-	if (iTimer != gamemode.iRoundCount)
+	if (roundcount != gamemode.iRoundCount)
 		return;
 
 	int rand = GetRandomClient();
@@ -985,7 +956,7 @@ public void EndRandSniper(const int iTimer)
 	if (IsPlayerAlive(rand))
 		SDKHooks_TakeDamage(rand, 0, 0, 9001.0, DMG_DIRECT, _, _, _);
 	
-	SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), gamemode.iRoundCount);
+	SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), roundcount);
 }
 
 public void ResetModelProps(const int client)
@@ -1001,9 +972,9 @@ public void Regen(const int client)
 	TF2_RegeneratePlayer(client);
 }
 
-public void DisableWarden(const int iTimer)
+public void DisableWarden(const int roundcount)
 {
-	if (iTimer != gamemode.iRoundCount 
+	if (roundcount != gamemode.iRoundCount 
 		|| gamemode.iRoundState != StateRunning 
 		|| gamemode.bWardenExists 
 		|| gamemode.bIsWardenLocked)
@@ -1050,9 +1021,6 @@ public void _MusicPlay()
 	if (ManageMusic(sound, time) != Plugin_Continue)
 		return;
 
-	if (time == -1.0)
-		return;
-
 	if (sound[0] != '\0')
 	{
 		float vol = cvarTF2Jail[MusicVolume].FloatValue;
@@ -1068,16 +1036,15 @@ public void _MusicPlay()
 			EmitSoundToClient(i, sound, _, _, SNDLEVEL_NORMAL, SND_NOFLAGS, vol, 100, _, nullvec, nullvec, false, 0.0);
 		}
 	}
-	gamemode.flMusicTime = currtime + time;
+	if (time != -1.0)
+		gamemode.flMusicTime = currtime + time;
 }
 
 public void StopBackGroundMusic()
 {
 	for (int i = MaxClients; i; --i) 
-	{
 		if (IsClientInGame(i))
 			StopSound(i, SNDCHAN_AUTO, BackgroundSong);
-	}
 }
 
 public bool CheckSet(const int client, const int iLRCount, const int iMax)
@@ -1132,6 +1099,70 @@ public bool TraceRayFilterPlayers(int ent, int mask)
 	return ent > MaxClients || !ent;
 }
 
+int g_iHHHParticle[MAXPLAYERS + 1][3];
+/** ctrl+c
+	ctrl+v **/
+public void DoHorsemannParticles(const int client)
+{
+	int lefteye = MakeParticle(client, "halloween_boss_eye_glow", "lefteye");
+	if (IsValidEntity(lefteye))
+		g_iHHHParticle[client][0] = EntIndexToEntRef(lefteye);
+
+	int righteye = MakeParticle(client, "halloween_boss_eye_glow", "righteye");
+	if (IsValidEntity(righteye))
+		g_iHHHParticle[client][1] = EntIndexToEntRef(righteye);
+/*	int bodyglow = MakeParticle(client, "halloween_boss_shape_glow", "");
+	if (IsValidEntity(bodyglow))
+	{
+		g_iHHHParticle[client][2] = EntIndexToEntRef(bodyglow);
+	}*/
+}
+public void ClearHorsemannParticles(const int client)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		int ent = EntRefToEntIndex(g_iHHHParticle[client][i]);
+		if (ent > MaxClients && IsValidEntity(ent)) AcceptEntityInput(ent, "Kill");
+		g_iHHHParticle[client][i] = INVALID_ENT_REFERENCE;
+	}
+}
+// From AimNames by -MCG-retsam & Antithasys
+int g_iFilteredEntity = -1;
+public bool CanSeeTarget(any origin, float pos[3], any target, float targetPos[3], float range)
+{
+	float dist;
+	dist = GetVectorDistanceMeter(pos, targetPos);
+	if (dist >= range)
+		return false;
+	
+	Handle hTraceEx = null;
+	float hitPos[3];
+	g_iFilteredEntity = origin;
+	hTraceEx = TR_TraceRayFilterEx(pos, targetPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceFilter);
+	TR_GetEndPosition(hitPos, hTraceEx);
+	CloseHandle(hTraceEx);
+	
+	if (GetVectorDistanceMeter(hitPos, targetPos) <= 1.0)
+		return true;
+	
+	return false;
+}
+
+public float UnitToMeter(float distance)
+{
+	return distance / 50.00;
+}
+
+float GetVectorDistanceMeter(const float vec1[3], const float vec2[3], bool squared = false) 
+{
+	return UnitToMeter(GetVectorDistance(vec1, vec2, squared));
+}
+
+public bool TraceFilter(int ent, int contentMask)
+{
+	return (ent != g_iFilteredEntity);
+}
+
 public Action Timer_Round(Handle timer)
 {
 	if (!bEnabled.BoolValue || gamemode.iRoundState == StateEnding)
@@ -1164,7 +1195,8 @@ public Action Timer_Round(Handle timer)
 		}
 		case 0:
 		{
-			ForceTeamWin(BLU);
+			if (ManageTimeEnd() == Plugin_Continue)
+				ForceTeamWin(BLU);
 			return Plugin_Stop;
 		}
 	}
