@@ -2,7 +2,8 @@
 A current WIP
 
 Born out of my dislike with the unorganized and jumbled mess the original TF2Jail plugin was, I went out and did a partial rewrite of it, combining features of different plugins to create a more unique and pristine version that combatted the bugs and issues from the original.
-The entirety of the plugin is built with developers in mind, which is why much of it (especially Last Requests) are hard coded within it rather than having a config file with limited control over gameplay. 
+The entirety of the plugin is built with developers in mind, which is why much of it (especially Last Requests) are hard coded within it rather than having a config file with limited control over gameplay. Take a look at the [wiki](https://github.com/Scags/TF2-Jailbreak-Redux/wiki/Last-Requests) for a complete guide as to how to create and craft last requests.
+
 With the building from several other plugins, props to:
 
   Nergal/Assyrian with several aspects (plus the LR module) taken from [VSH2](https://forums.alliedmods.net/showthread.php?t=286701).
@@ -26,19 +27,19 @@ The entire plugin is organized into files associated with what part of the code 
   
   **jailcommands.sp**- Commands obviously. Menus associated with them are also held in here.
   
-  **jailbase.sp**- Methodmap structure that all players are initiated into throughout the plugin. Ints, floats, bools, and functions can be referenced in the [wiki](https://github.com/Ragenewb/TF2-Jailbreak-Redux/wiki/Player-Methodmap).
+  **jailbase.sp**- Methodmap structure that all players use to store variables and methods.
   
-  **jailgamemode.sp**- Gamemode methodmap with more ints, floats, bools, and functions seen in the [wiki](https://github.com/Ragenewb/TF2-Jailbreak-Redux/wiki/GameMode-Methodmap).
+  **jailgamemode.sp**- Gamemode methodmap with more variables and methods corresponding to gameplay.
   
   **stocks.inc**- Several stock functions used and some that could be used in the plugin.
   
-  **jailforwards.sp**- Nergal saves the day! Forwards that allow events and functions to be used from third party plugins such as the VSH module.
+  **jailforwards.sp**- Nergal saves the day! Forwards that allow events and functions to be used from third party plugins such as the VSH and PH module.
   
   **tf2jailredux.inc**- Complete native and forward-hooking structure that allows third party plugins to derive from the JBPlayer methodmap and be able get/set properties from the internal stringmap.
   
   
 ## Sub Plugins ##
-Versus Saxton Hale is the only current sub-plugin that relatively works as TFJR is still a WIP. It contains usage of the methodmap derivement from JBPlayer along with hooking to function calls and events from the core plugin. More information about this can be found on the [wiki](https://github.com/Ragenewb/TF2-Jailbreak-Redux/wiki/Forwards-and-Natives). (Prophunt is next on the list)
+TF2JR uses an SDKHook-style format for its forwards. With sub-plugins such as Versus Saxton Hale and Prophunt, a developer is able to hook into the function calls that they need not only to create last requests, but to enhance regular gameplay. 
 
 ## Requirements ##
 
@@ -48,6 +49,5 @@ Versus Saxton Hale is the only current sub-plugin that relatively works as TFJR 
 
 ###### [Evil Admin: Beam](https://forums.alliedmods.net/showthread.php?p=709030) ######
 
------------------------------
-
-If you have any ideas, thoughts, feature requests, don't be shy to fork (but don't do it yet, I'm not done) or just leave me a comment on my [Steam Profile](http://steamcommunity.com/profiles/76561198085502536)
+## Installation ##
+Detailed installation can be found in the [wiki](https://github.com/Scags/TF2-Jailbreak-Redux/wiki/Installation-Guide) along with config design.
