@@ -45,7 +45,7 @@ stock char snd[PLATFORM_MAX_PATH];
 #define MAXMESSAGE	4096
 stock char gameMessage[MAXMESSAGE];	// For formatting chat/hint/center/etc messages
 stock char BackgroundSong[PLATFORM_MAX_PATH];	// If you want a sweet song with your lr, try this out
-stock char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear", "prop_door_rotating" }
+stock char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear", "prop_door_rotating" };
 
 /** Methodmaps ftw **/
 methodmap JBPlayer
