@@ -177,10 +177,7 @@ methodmap JailFighter
 		{
 			if (!AreClientCookiesCached(this.index))
 				return;
-			int value;
-			if (i)
-				value = 1;
-			else value = 0;
+			int value = (i ? 1 : 0);
 			char strMusic[6];
 			IntToString(value, strMusic, sizeof(strMusic));
 			SetClientCookie(this.index, MusicCookie, strMusic);
@@ -389,7 +386,8 @@ methodmap JailFighter
 	public void ForceTeamChange(const int team, bool spawn = true)
 	{
 		int client = this.index;
-		if (TF2_GetPlayerClass(client) > TFClass_Unknown) {
+		if (TF2_GetPlayerClass(client) > TFClass_Unknown) 
+		{
 			SetEntProp(client, Prop_Send, "m_lifeState", 2);
 			ChangeClientTeam(client, team);
 			SetEntProp(client, Prop_Send, "m_lifeState", 0);
@@ -625,9 +623,9 @@ methodmap JailFighter
 			ResetPlayer(client);
 		this.bIsHHH = false;
 	}
-	public void TeleportToPosition(const int iLocation)
+	public void TeleportToPosition(const int location)
 	{
-		switch (iLocation)
+		switch (location)
 		{
 			case 1:TeleportEntity(this.index, flFreedayPosition, nullvec, nullvec);
 			case 2:TeleportEntity(this.index, flWardayRed, nullvec, nullvec);

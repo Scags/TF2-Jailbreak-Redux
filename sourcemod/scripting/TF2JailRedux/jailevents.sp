@@ -171,9 +171,6 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	gamemode.bWardenExists = false;
 	gamemode.bIsWardenLocked = false;
 	gamemode.bFirstDoorOpening = false;
-	int i, type, livingtype;
-	bool warday;
-	JailFighter player;
 
 	CreateTimer(1.0, Timer_Round, _, FULLTIMER);
 	
@@ -183,13 +180,18 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		PrintCenterTextAll("1st round freeday");
 
 		char s1stDay[256];
-		Format(s1stDay, sizeof(s1stDay), "First Day Freeday");
+		strcopy(s1stDay, sizeof(s1stDay), "First Day Freeday");
 		SetTextNode(hTextNodes[0], s1stDay, EnumTNPS[0][fCoord_X], EnumTNPS[0][fCoord_Y], EnumTNPS[0][fHoldTime], EnumTNPS[0][iRed], EnumTNPS[0][iGreen], EnumTNPS[0][iBlue], EnumTNPS[0][iAlpha], EnumTNPS[0][iEffect], EnumTNPS[0][fFXTime], EnumTNPS[0][fFadeIn], EnumTNPS[0][fFadeOut]);
 		
 		gamemode.iTimeLeft = cvarTF2Jail[RoundTime_Freeday].IntValue;
 		gamemode.iLRType = -1;
 		return Plugin_Continue;
 	}
+
+	int i, type, livingtype;
+	bool warday;
+	JailFighter player;
+
 	if (cvarTF2Jail[Balance].BoolValue && gamemode.iPlaying > 2)
 	{
 		float flRatio, flBalance = cvarTF2Jail[BalanceRatio].FloatValue;
@@ -293,9 +295,13 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	gamemode.iRoundState = StateRunning;
 	
 	if (gamemode.bIsMapCompatible && cvarTF2Jail[DoorOpenTimer].FloatValue != 0.0)
-	{
 		SetPawnTimer(Open_Doors, cvarTF2Jail[DoorOpenTimer].FloatValue, gamemode.iRoundCount);
-		//CreateTimer(cvarTF2Jail[DoorOpenTimer].FloatValue, Open_Doors, _, TIMER_FLAG_NO_MAPCHANGE);
+
+	float delay = cvarTF2Jail[WardenDelay].FloatValue;
+	if (delay != 0.0)
+	{
+		gamemode.bIsWardenLocked = true;
+		SetPawnTimer(EnableWarden, delay, gamemode.iRoundCount);
 	}
 	return Plugin_Continue;
 }

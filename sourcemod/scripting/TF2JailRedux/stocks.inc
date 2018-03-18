@@ -1293,7 +1293,7 @@ stock Handle PrepareItemHandle(Handle hItem, char[] name = "", int index = -1, c
 	TF2Items_SetFlags(hWeapon, flags);
 	return hWeapon;
 }
-stock void Clamp(int & returner, const int lowest, const int highest)
+stock void Clamp(int &returner, const int lowest, const int highest)
 {
 	if (returner < lowest)
 		returner = lowest;

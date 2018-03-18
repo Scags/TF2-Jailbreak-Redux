@@ -83,30 +83,30 @@ methodmap JBPlayer
 	}
 	
 	/**
-     * Gets the property of the internal JailFighter methodmap.
-     *
+	 * Gets the property of the internal JailFighter methodmap.
+	 *
 	 * @param prop_name		Name of property you want to access data from.
 	 * @param item			Reference to use of the variable to overwrite with data from the property.
 	 *
-     * @return				Property value called if it was valid
+	 * @return				Property value called if it was valid
     */
 	public native any GetProperty(const char prop_name[64]);
 	
 	/**
-     * Sets the property of the internal JB methodmap.
-     * NOTE: You can use this to create new properties which GetProperty can access!
-     *
+	 * Sets the property of the internal JB methodmap.
+	 * NOTE: You can use this to create new properties which GetProperty can access!
+	 *
 	 * @param prop_name		Name of the property you want to override data from (works like StringMap).
 	 * @param value			Data you want the property to hold.
 	 *
-     * @noreturn
-    */
+	 * @noreturn
+	*/
 	public native void SetProperty(const char prop_name[64], any value);
 
 	/**		AVAILABLE PROPERTIES
 		property int iLRCustom							// For the Custom LR
 		property int iKillCount							// For the ghetto rigged freekill system
-		property bool bIsMuted							// If not bIsAdmin and dead; or not bIsVIP and alive
+		property bool bIsMuted							// Varies with CVars
 		property bool bIsQueuedFreeday					// Freeday for Self or Freeday for Others
 		property bool bIsFreeday 						// Client is/isn't a freeday
 		property bool bLockedFromWarden					// Upon being fired or retiring
@@ -163,13 +163,13 @@ methodmap JBPlayer
 
 	/**
 	 *	Teleport a player either to a freeday or warday location.
-	 *	@NOTE 				IF GAMEMODE TELEPORT PROPERTIES ARE NOT TRUE, PLAYER WILL BE TELEPORTED TO MAP'S ORIGIN.
+	 *	@NOTE 				If gamemode teleport properties are not true, player will be teleported to map's origin
 	 *
-	 *	@param iLocation 	Location to teleport the client.
+	 *	@param location 	Location to teleport the client.
 	 *
 	 *	@noreturn
 	*/
-	public native void TeleportToPosition(const int iLocation);
+	public native void TeleportToPosition(const int location);
 
 	/**
 	 *	List the last request menu to the player.
@@ -205,7 +205,7 @@ methodmap JBPlayer
 
 	/**
 	 *	Mute a client through the plugin.
-	 *	@NOTE 				PLAYERS THAT ARE DEEMED AS ADMINS WILL NEVER BE MUTED.
+	 *	@NOTE 				Players that are deemed as admins will never be muted
 	 *
 	 *	@noreturn
 	*/
@@ -213,7 +213,7 @@ methodmap JBPlayer
 
 	/**
 	 *	Initialize a player as a freeday
-	 *	@NOTE 				DOES NOT TELEPORT THEM TO THE FREEDAY LOCATION.
+	 *	@NOTE 				Does not teleport them to the freeday location
 	 *
 	 *	@noreturn
 	*/
@@ -249,7 +249,7 @@ methodmap JBPlayer
 
 	/**
 	 *	Initialize a player as the warden.
-	 *	@NOTE 				THIS AUTOMATICALLY GIVES THE PLAYER THE WARDEN MENU.
+	 *	@NOTE 				This automatically gives the player the warden menu
 	 *
 	 *	@noreturn
 	*/
@@ -377,7 +377,7 @@ typeset JBHookCB
 	function void ();
 
 	//	OnMenuAdd
-	function void (Menu & menu, ArrayList array);
+	function void (Menu &menu, ArrayList array);
 
 	// 	OnManageRoundEnd
 	function void (Event event);
@@ -398,7 +398,7 @@ typeset JBHookCB
 	function void (const JBPlayer Victim, const JBPlayer Attacker, int damage, int custom, int weapon, Event event);
 
 	// 	OnHookDamage
-	function Action (const JBPlayer Victim, int & attacker, int & inflictor, float & damage, int & damagetype, int & weapon, float damageForce[3], float damagePosition[3], int damagecustom);
+	function Action (const JBPlayer Victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom);
 
 	//	OnWMenuSelect
 	function void (const JBPlayer Player, const char[] index);
@@ -410,15 +410,68 @@ typeset JBHookCB
 	function Action ();
 };
 
-// Use hooktype enum on these.
+/**
+ *	Hook function from the core plugin and use them within another plugin
+ *
+ *	@param callbacktype 	Enum type to hook into
+ *	@param callback 		Function to call when the forward is called
+ *	
+ *	@noreturn
+*/
 native void JB_Hook(const int callbacktype, JBHookCB callback);
+
+/**
+ *	Determine if this function is hooked into forward calls.
+ *	@NOTE 					This automatically hooks functions into forwards if it wasn't already (if possible).
+ *
+ *	@param callbacktype 	Enum type to hook into.
+ *	@param callback 		Function to call when the forward is called.
+ *
+ *	@return 				True on success or if the function was already hooked.
+*/	
 native bool JB_HookEx(const int callbacktype, JBHookCB callback);
 
+/**
+ *	Unhook a function from forward calls.
+ *
+ *	@param callbacktype 	Enum type to unhook from.
+ *	@param callback 		Function to unhook calls from.
+ *
+ *	@noreturn
+*/
 native void JB_Unhook(const int callbacktype, JBHookCB callback);
+
+/**
+ *	Determine if a function is unhooked from forward calls.
+ *	@NOTE 					This automatically unhooks functions from forwards if they weren't already (if possible).
+ *	
+ *	@param callbacktype 	Enum type to unhook from.
+ *	@param callback 		Function to hunhook calls from.
+ *
+ *	@return 				True on successful unhook, false otherwise or if function wasn't hooked.
+*/
 native bool JB_UnhookEx(const int callbacktype, JBHookCB callback);
 
 
+
+/**
+ *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
+ *
+ *	@param prop_name 		Property key to call from.
+ *
+ *	@return 				Value received from called key.
+*/
 native any JBGameMode_GetProperty(const char prop_name[64]);
+
+/**
+ *	Set a property to the JailGameMode internal methodmap.
+ *	@NOTE 					This can set properties that GetProperty can access!
+ *
+ *	@param prop_name 		Property key to set into the StringMap.
+ *	@param value 			Value to set to it.
+ *
+ *	@noreturn
+*/
 native void JBGameMode_SetProperty(const char prop_name[64], any value);
 
 /** Properties
@@ -455,7 +508,7 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
 /**
  *	Retrieve the amount of living/playing players in the server.
  *
- *	@return 			The number of players currently alive.
+ *	@return 				The number of players currently alive.
 */
 native int JBGameMode_Playing();
 

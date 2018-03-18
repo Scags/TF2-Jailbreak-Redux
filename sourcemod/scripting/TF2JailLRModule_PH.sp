@@ -904,6 +904,7 @@ public void fwdOnManageRoundStart()
 	JBGameMode_SetProperty("bFirstDoorOpening", true);
 	JBGameMode_ManageCells(OPEN);
 	OpenAllDoors();
+	
 	float rerolltime = JBPH[RerollTime].FloatValue;
 	if (rerolltime != 0.0)
 		SetPawnTimer(DisallowRerolls, rerolltime, JBGameMode_GetProperty("iRoundCount"));

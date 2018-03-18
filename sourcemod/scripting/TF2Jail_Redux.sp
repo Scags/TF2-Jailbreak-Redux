@@ -13,7 +13,7 @@
  **	jailcommands.sp: Commands and some of the menus corresponding to commands 					   **
  **	stocks.inc: Stock functions used or could possibly be used within plugin 					   **
  **	jailforwards.sp: Contains external gamemode third-party functionality, leave it alone 		   **
- ** tf2jailredux.inc: External gamemode third-party functionality, leave it alone 				   **
+ **	tf2jailredux.inc: External gamemode third-party functionality, leave it alone 				   **
  **	If you're here to give some more uniqueness to the plugin, check jailhandler 	 			   **
  **	It's fixed with a variety of not only last request examples, but gameplay event management.	   **
  **	VSH and PH are standalone subplugins, if there is an issue with them, simply delete them	   **
@@ -21,7 +21,7 @@
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
 #define PLUGIN_VERSION		"0.11.15"
-#define PLUGIN_AUTHOR		"Ragenewb/Scag, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
+#define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
 #include <sourcemod>
@@ -82,13 +82,12 @@ enum	// Cvar name
 	VIPFlag,
 	AdmFlag,
 	DisableBlueMute,
-	WeaponDisabler,
-	WearableDisabler,
 	Markers,
 	CritType,
 	MuteType,
 	LivingMuteType,
 	Disguising,
+	WardenDelay,
 	Version
 };
 
@@ -167,14 +166,15 @@ public void OnPluginStart()
 	cvarTF2Jail[EnableMusic] 				= CreateConVar("sm_tf2jr_music_on", "1", "Enable background music that could possibly play with last requests?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[MusicVolume] 				= CreateConVar("sm_tf2jr_music_volume", ".5", "Volume in which background music plays. (If enabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[EurekaTimer] 				= CreateConVar("sm_tf2jr_eureka_teleport", "20", "How long must players wait until they are able to Eureka Effect Teleport again? (0 to disable cooldown)", FCVAR_NOTIFY, true, 0.0, true, 60.0);
-	cvarTF2Jail[VIPFlag] 					= CreateConVar("sm_tf2jr_vip_flag", "r", "What admin flag do VIP players fall under?", FCVAR_NOTIFY);
-	cvarTF2Jail[AdmFlag] 					= CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under?", FCVAR_NOTIFY);
+	cvarTF2Jail[VIPFlag] 					= CreateConVar("sm_tf2jr_vip_flag", "r", "What admin flag do VIP players fall under? Leave blank to disable Admin perks.", FCVAR_NOTIFY);
+	cvarTF2Jail[AdmFlag] 					= CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under? Leave blank to disable Admin perks.", FCVAR_NOTIFY);
 	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[Markers] 					= CreateConVar("sm_tf2jr_markers", "3", "Warden markers lifetime in seconds? (0 to disable)", FCVAR_NOTIFY, true, 0.0, true, 30.0);
 	cvarTF2Jail[CritType] 					= CreateConVar("sm_tf2jr_criticals", "2", "What type of criticals should guards get? 0 = none; 1 = mini-crits; 2 = full crits", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	cvarTF2Jail[MuteType] 					= CreateConVar("sm_tf2jr_muting", "6", "What type of dead player muting should occur? 0 = no muting; 1 = red players only are muted(except VIPs); 2 = blue players only are muted(except VIPs); 3 = all players are muted(except VIPs); 4 = all red players are muted; 5 = all blue players are muted; 6 = everybody is muted. ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
 	cvarTF2Jail[LivingMuteType] 			= CreateConVar("sm_tf2jr_live_muting", "1", "What type of living player muting should occur? 0 = no muting; 1 = red players only are muted(except VIPs); 2 = blue players only are muted(except VIPs and warden); 3 = all players are muted(except VIPs and warden); 4 = all red players are muted; 5 = all blue players are muted(except warden); 6 = everybody is muted(except warden). ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
-	cvarTF2Jail[Disguising] 				= CreateConVar("sm_tf2jr_disguising", "0", "What teams can disguise, if any? (Your Eternal Reward only) 0 = no disguising; 1 = only red can disguise; 2 = only blue can disguise; 3 = all players can disguise", FCVAR_NOTIFY, true, 0.0, true, 3.0);
+	cvarTF2Jail[Disguising] 				= CreateConVar("sm_tf2jr_disguising", "0", "What teams can disguise, if any? (Your Eternal Reward only) 0 = no disguising; 1 = only Red can disguise; 2 = Only blue can disguise; 3 = all players can disguise", FCVAR_NOTIFY, true, 0.0, true, 3.0);
+	cvarTF2Jail[WardenDelay] 				= CreateConVar("sm_tf2jr_warden_delay", "0", "Delay in seconds after round start until players can toggle becoming the warden. 0 to disable delay.", FCVAR_NOTIFY, true, 0.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -309,11 +309,12 @@ public bool WardenGroup(const char[] pattern, Handle clients)
 	if (bEnabled.BoolValue)
 	{
 		bool non = StrContains(pattern, "!", false) != - 1;
-		for (int i = MaxClients; i; i--) 
+		for (int i = MaxClients; i; --i) 
 		{
 			if (IsClientInGame(i) && view_as< ArrayList >(clients).Get(i) == - 1)
 			{
-				if (JailFighter(i).bIsWarden) {
+				if (JailFighter(i).bIsWarden) 
+				{
 					if (!non)
 						view_as< ArrayList >(clients).Push(i);
 				}
@@ -444,6 +445,7 @@ public void OnMapStart()
 public void OnMapEnd()
 {
 	gamemode.Init();
+	StopBackGroundMusic();
 
 	FindConVar("sv_gravity").SetInt(800);	// For admins like sans who force change the map during the low gravity LR
 	ConvarsSet(false);
@@ -485,11 +487,19 @@ public void OnClientPostAdminCheck(int client)
 
 	SetPawnTimer(WelcomeMessage, 5.0, player.userid);
 
-	if (IsValidAdmin(client, strVIP)) // Very useful stock ^^
-		player.bIsVIP = true;
+	if (strVIP[0] != '\0')
+	{
+		if (IsValidAdmin(client, strVIP)) // Very useful stock ^^
+			player.bIsVIP = true;
+	}
+	else player.bIsVIP = false;
 
-	if (IsValidAdmin(client, strAdmin))
-		player.bIsAdmin = true;
+	if (strAdmin[0] != '\0')
+	{
+		if (IsValidAdmin(client, strAdmin))
+			player.bIsAdmin = true;
+	}
+	else player.bIsVIP = false;
 
 	if (cvarTF2Jail[MuteType].IntValue >= 4)
 		player.MutePlayer();
@@ -1047,9 +1057,9 @@ public void StopBackGroundMusic()
 			StopSound(i, SNDCHAN_AUTO, BackgroundSong);
 }
 
-public bool CheckSet(const int client, const int iLRCount, const int iMax)
+public bool CheckSet(const int client, const int count, const int max)
 {
-	if (iLRCount >= iMax)
+	if (count >= max)
 	{
 		CPrintToChat(client, "{red}[TF2Jail]{tan} This LR has been picked the maximum amount of times for this map.");
 		JailFighter(client).ListLRS();
@@ -1074,7 +1084,7 @@ public void CreateMarker(const int client)
 	if (!TR_DidHit(trace))
 	{
 		CPrintToChat(client, "{red}[TF2Jail]{tan} Unable to create a marker.");
-		CloseHandle(trace);
+		delete trace;
 		return;
 	}
 
@@ -1203,16 +1213,6 @@ public Action Timer_Round(Handle timer)
 	return Plugin_Continue;
 }
 
-public Action UnmuteReds(Handle hTimer)
-{
-	for (int i = MaxClients; i; --i)
-	{
-		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Red)
-			JailFighter(i).UnmutePlayer();
-	}
-	PrintToConsoleAll("[TF2Jail] Red team has been unmuted.");
-}
-
 public void Open_Doors(const int iTimer)
 {
 	if (gamemode.bCellsOpened || iTimer != gamemode.iRoundCount || gamemode.iRoundState != StateRunning || gamemode.bFirstDoorOpening)
@@ -1261,6 +1261,15 @@ public void FreeKillSystem(const JailFighter attacker)
 		attacker.iKillCount = 0;
 	}
 	else attacker.flKillSpree = curtime + 15;
+}
+
+public void EnableWarden(const int roundcount)
+{
+	if (roundcount != gamemode.iRoundCount || gamemode.iRoundState != StateRunning || !gamemode.bIsWardenLocked)
+		return;
+
+	gamemode.bIsWardenLocked = false;
+	CPrintToChatAll("{red}[TF2Jail]{tan} Warden has been enabled.");
 }
 
 // Props to Nergal!!!
@@ -1374,7 +1383,7 @@ public int Native_RegisterPlugin(Handle plugin, int numParams)
 public int Native_JBInstance(Handle plugin, int numParams)
 {
 	JailFighter player = JailFighter(GetNativeCell(1), GetNativeCell(2));
-	return view_as<int>(player);
+	return view_as< int >(player);
 }
 public int Native_JBGetUserid(Handle plugin, int numParams)
 {
@@ -1408,7 +1417,7 @@ public int Native_Hook(Handle plugin, int numParams)
 	
 	Function Func = GetNativeFunction(2);
 	if (g_hForwards[JBHook] != null)
-		g_hForwards[JBHook].Add(plugin, Func);
+		AddToForward(g_hForwards[JBHook], plugin, Func);
 }
 public int Native_HookEx(Handle plugin, int numParams)
 {
@@ -1416,7 +1425,7 @@ public int Native_HookEx(Handle plugin, int numParams)
 	
 	Function Func = GetNativeFunction(2);
 	if (g_hForwards[JBHook] != null)
-		return g_hForwards[JBHook].Add(plugin, Func);
+		return AddToForward(g_hForwards[JBHook], plugin, Func);
 	return 0;
 }
 public int Native_Unhook(Handle plugin, int numParams)
@@ -1424,14 +1433,14 @@ public int Native_Unhook(Handle plugin, int numParams)
 	int JBHook = GetNativeCell(1);
 	
 	if (g_hForwards[JBHook] != null)
-		g_hForwards[JBHook].Remove(plugin, GetNativeFunction(2));
+		RemoveFromForward(g_hForwards[JBHook], plugin, GetNativeFunction(2));
 }
 public int Native_UnhookEx(Handle plugin, int numParams)
 {
 	int JBHook = GetNativeCell(1);
 	
 	if (g_hForwards[JBHook] != null)
-		return g_hForwards[JBHook].Remove(plugin, GetNativeFunction(2));
+		return RemoveFromForward(g_hForwards[JBHook], plugin, GetNativeFunction(2));
 	return 0;
 }
 public int Native_JB_SpawnWep(Handle plugin, int numParams)

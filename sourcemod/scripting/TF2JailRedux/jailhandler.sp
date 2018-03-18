@@ -62,7 +62,7 @@ int arrClass[8] = { 1, 3, 4, 5, 6, 7, 8, 9 };
 /** 
  *	ArrayList of LR usage
  *	You can determine the maximum picks per round under AddLRToMenu()
- *	Size is managed under LRMapStartVariables
+ *	Size is automatically managed
 */
  ArrayList arrLRS;
 // int arrLRS[LRMAX + 1] = {	/* Plus 1 to counterbalance the 0 in the enum*/ 	};
@@ -189,22 +189,22 @@ public void AddLRToMenu(Menu & menu)
 {
 	char strName[32];
 	char strID[4];
-	int iMax, value;
+	int max, value;
 
 	menu.AddItem("-1", "Random LR");
 	for (int i = 0; i < sizeof(strLRNames); i++)	// If we do '<= LRMAX' and you have a sub-plugin, array indexes will be out of bounds
 	{												// So don't add sub-plugin LR names to this plugin, simply do it within your own
-		iMax = LR_DEFAULT;	// 5
+		max = LR_DEFAULT;	// 5
 		// if (i == Warday)	// If you want a certain last request to have a different max, do something like this
-			// iMax = 3;
+			// max = 3;
 		value = arrLRS.Get(i);
-		Format(strName, sizeof(strName), "%s (%i/%i)", strLRNames[i][0], value, iMax);
+		Format(strName, sizeof(strName), "%s (%i/%i)", strLRNames[i][0], value, max);
 		IntToString(i, strID, sizeof(strID));
-		menu.AddItem(strID, strName, value >= iMax ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
+		menu.AddItem(strID, strName, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
 	}
 	Call_OnMenuAdd(menu, arrLRS);
 /**
- *	According to this, you have to have your sub-plugin(s) LR as the last in the enum, always
+ *	According to this, you have to have your sub-plugin(s) LR as the last in the enum... always... probably
  *	If you have more than one, you have to distinguish which plugin has which enum value and stick with it
  *	Secondly, you have to format strLRNames yourself on the menu item 
  *	arrLRs is able to handle lr counts in this plugin but make sure you use the ArrayList in your OnLRPicked() forward
@@ -267,7 +267,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			int request = StringToInt(strIndex), value;
 			if (request != -1)	// If the selection isn't random
 				value = arrLRS.Get(request);
-			
+
 			switch (request)
 			{
 				case -1:	// Random
@@ -464,10 +464,11 @@ public void ManageSpawn(const JailFighter base, Event event)
 public void PrepPlayer(const int userid)
 {
 	int client = GetClientOfUserId(userid);
-	if (!IsPlayerAlive(client))
+	if (!IsPlayerAlive(client) || !IsClientInGame(client))
 		return;
 
-	JailFighter base = JailFighter(userid, true);
+	JailFighter base = JailFighter(client);
+
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_PDA);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Grenade);
@@ -814,7 +815,7 @@ public void ManageWardenThink(const JailFighter player)
 /**
  *	Sound hooking for certain scenarios
 */
-public Action SoundHook(int clients[64], int & numClients, char sample[PLATFORM_MAX_PATH], int & entity, int & channel, float & volume, int & level, int & pitch, int & flags)
+public Action SoundHook(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
 {
 	if (!bEnabled.BoolValue || !IsClientValid(entity))
 		return Plugin_Continue;
