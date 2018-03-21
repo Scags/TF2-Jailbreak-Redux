@@ -1,6 +1,3 @@
-
-// StringMap hGameModeFields;
-
 methodmap JailGameMode < StringMap
 {
 	public JailGameMode()
@@ -379,7 +376,11 @@ methodmap JailGameMode < StringMap
 			this.SetValue("flMusicTime", i);
 		}
 	}
-
+	/**
+	 *	Initialize all JailGameMode Properties to a default.
+	 *
+	 *	@noreturn
+	*/
 	public void Init()	// When adding a new property, make sure you initialize it to a default 
 	{
 		this.iRoundState = 0;
@@ -415,12 +416,23 @@ methodmap JailGameMode < StringMap
 		this.bMarkerExists = false;
 		this.flMusicTime = 0.0;
 	}
-
+	/**
+	 *	Find and Initialize a random player as the warden.
+	 *
+	 *	@noreturn
+	*/
 	public void FindRandomWarden()
 	{
 		JailFighter(GetRandomPlayer(BLU, true)).WardenSet();
 		this.bWardenExists = true;
 	}
+	/**
+	 *	Handle the cell doors.
+	 *
+	 *	@param status 			Type of cell door usage found in the eDoorsMode enum.
+	 *
+	 *	@noreturn
+	*/
 	public void DoorHandler( const eDoorsMode status )
 	{
 		if (sCellNames[0] != '\0')
@@ -457,6 +469,12 @@ methodmap JailGameMode < StringMap
 			}
 		}
 	}
+	/**
+	 *	Find the current warden if one exists.
+	 *
+	 *	@return 				The current warden.
+	 *
+	*/
 	public JailFighter FindWarden()
 	{
 		JailFighter player;
@@ -471,6 +489,14 @@ methodmap JailGameMode < StringMap
 		}
 		return view_as< JailFighter >(0);
 	}
+	/** 
+	 *	Find and terminate the current warden.
+	 *
+	 *	@param prevent 			Prevent the player from becoming warden again.
+	 * 	@param announce 		Display to all players that the warden was fired.
+	 *
+	 *	@noreturn
+	*/
 	public void FireWarden( bool prevent = true, bool announce = true )
 	{
 		JailFighter player = this.FindWarden();

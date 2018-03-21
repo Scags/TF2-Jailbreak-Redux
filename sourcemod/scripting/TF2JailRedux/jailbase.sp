@@ -315,11 +315,26 @@ methodmap JailFighter
 		if (weapon > MaxClients && IsValidEntity(weapon))
 			ClipTable[weapon] = val;
 	}*/
+
+	/**
+	 *	Retrieve an item definition index of a player's weaponslot.
+	 *
+	 *	@param slot 		Slot to grab the item index from.
+	 *
+	 *	@return 			Index of the valid, equipped weapon.
+	*/
 	public int GetWeaponSlotIndex( const int slot )
 	{
 		int weapon = GetPlayerWeaponSlot(this.index, slot);
 		return GetItemIndex(weapon);
 	}
+	/**
+	 *	Set the alpha magnitude a player's weapons.
+	 *
+	 *	@param alpha 		Number from 0 to 255 to set on the weapon.
+	 *
+	 *	@noreturn
+	*/
 	public void SetWepInvis( const int alpha )
 	{
 		int transparent = alpha;
@@ -343,6 +358,13 @@ methodmap JailFighter
 		SetCommandFlags("r_screenoverlay", iFlags);
 		ClientCommand(this.index, "r_screenoverlay \"%s\"", strOverlay);
 	}*/
+	/**
+	 *	Teleport a player to the appropriate spawn location.
+	 *
+	 *	@param team 		Team spawn to teleport the client to.
+	 *
+	 *	@noreturn
+	*/
 	public void TeleToSpawn( int team = 0 )
 	{
 		int iEnt = -1;
@@ -365,6 +387,13 @@ methodmap JailFighter
 		GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
 		TeleportEntity(this.index, vPos, vAng, NULL_VECTOR);
 	}
+	/**
+	 *	Spawn a small healthpack at the client's origin.
+	 *
+	 *	@param ownerteam 	Team to give the healthpack.
+	 *
+	 *	@noreturn
+	*/
 	public void SpawnSmallHealthPack( int ownerteam = 0 )
 	{
 		if (!IsPlayerAlive(this.index))
@@ -383,6 +412,14 @@ methodmap JailFighter
 			TeleportEntity(healthpack, pos, NULL_VECTOR, vel);
 		}
 	}
+	/**
+	 *	Silently switch a player's team.
+	 *
+	 *	@param team 		Team to switch to.
+	 *	@param spawn 		Determine whether or not to respawn the client.
+	 *
+	 *	@noreturn
+	*/
 	public void ForceTeamChange( const int team, bool spawn = true )
 	{
 		int client = this.index;
@@ -395,6 +432,12 @@ methodmap JailFighter
 				TF2_RespawnPlayer(client);
 		}
 	}
+	/**
+	 *	Mute a client through the plugin.
+	 *	@NOTE 				Players that are deemed as admins will never be muted.
+	 *
+	 *	@noreturn
+	*/
 	public void MutePlayer()
 	{
 		int client = this.index;
@@ -405,6 +448,12 @@ methodmap JailFighter
 			PrintToConsole(client, "[TF2Jail] You are muted by the plugin.");
 		}
 	}
+	/**
+	 *	Initialize a player as a freeday.
+	 *	@NOTE 				Does not teleport them to the freeday location.
+	 *
+	 *	@noreturn
+	*/
 	public void GiveFreeday()
 	{
 		ServerCommand("sm_evilbeam #%d", this.userid);
@@ -415,7 +464,11 @@ methodmap JailFighter
 			this.bIsQueuedFreeday = false;
 		this.bIsFreeday = true;
 	}
-	
+	/**
+	 *	Terminate a player as a freeday.
+	 *
+	 *	@noreturn
+	*/
 	public void RemoveFreeday()
 	{
 		int client = this.index;
@@ -425,6 +478,11 @@ methodmap JailFighter
 		this.bIsFreeday = false;
 		//SetEntProp(client, Prop_Data, "m_takedamage", 2, 1);
 	}
+	/**
+	 *	Remove all player weapons that are not their melee.
+	 *
+	 *	@noreturn
+	*/
 	public void StripToMelee()
 	{
 		int client = this.index;
@@ -440,6 +498,11 @@ methodmap JailFighter
 		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
 	}
+	/**
+	 *	Strip a player of all of their ammo.
+	 *
+	 *	@noreturn
+	*/
 	public void EmptyWeaponSlots()
 	{
 		int client = this.index;
@@ -475,6 +538,11 @@ methodmap JailFighter
 		
 		//CPrintToChat(client, "{red}[TF2Jail]{tan} Your weapons and ammo have been stripped.");
 	}
+	/**
+	 *	Unmute a player through the plugin.
+	 *
+	 *	@noreturn
+	*/
 	public void UnmutePlayer()
 	{
 		if (this.bIsMuted)
@@ -485,6 +553,12 @@ methodmap JailFighter
 			PrintToConsole(client, "[TF2Jail] You are unmuted by the plugin.");
 		}
 	}
+	/**
+	 *	Initialize a player as the warden.
+	 *	@NOTE 				This automatically gives the player the warden menu
+	 *
+	 *	@noreturn
+	*/
 	public void WardenSet()
 	{
 		this.bIsWarden = true;	
@@ -505,6 +579,11 @@ methodmap JailFighter
 		SetVariantString(model);
 		AcceptEntityInput(this.index, "SetCustomModel" );
 	}
+	/**
+	 *	Terminate a player as the warden.
+	 *
+	 *	@noreturn
+	*/
 	public void WardenUnset()
 	{
 		if (!this.bIsWarden)
@@ -513,14 +592,17 @@ methodmap JailFighter
 		if (hTextNodes[2] != null)
 		{
 			for (int i = MaxClients; i; --i)
-			{
 				if (IsClientInGame(i))
 					ClearSyncHud(i, hTextNodes[2]);
-			}
 		}
 		this.bIsWarden = false;
 		this.SetCustomModel("");
 	}
+	/**
+	 *	Remove all weapons, disguises, and wearables from a client.
+	 *
+	 *	@noreturn
+	*/
 	public void PreEquip()
 	{
 		int client = this.index;
@@ -567,6 +649,11 @@ methodmap JailFighter
 		}
 		TF2_RemoveAllWeapons(client);
 	}
+	/**
+	 *	Convert a player into the Horseless Headless Horsemann.
+	 *
+	 *	@noreturn
+	*/
 	public void MakeHorsemann()
 	{
 		int client = this.index;
@@ -603,6 +690,11 @@ methodmap JailFighter
 		DoHorsemannParticles(client);
 		this.bIsHHH = true;
 	}
+	/**
+	 *	Terminate a player as the Horseless Headless Horsemann.
+	 *
+	 *	@noreturn
+	*/
 	public void UnHorsemann()
 	{
 		int client = this.index;
@@ -616,6 +708,14 @@ methodmap JailFighter
 			ResetPlayer(client);
 		this.bIsHHH = false;
 	}
+	/**
+	 *	Teleport a player either to a freeday or warday location.
+	 *	@NOTE 				If gamemode teleport properties are not true, player will be teleported to map's origin
+	 *
+	 *	@param location 	Location to teleport the client.
+	 *
+	 *	@noreturn
+	*/
 	public void TeleportToPosition( const int location )
 	{
 		switch (location)
@@ -625,6 +725,11 @@ methodmap JailFighter
 			case 3:TeleportEntity(this.index, flWardayBlu, nullvec, nullvec);
 		}
 	}
+	/**
+	 *	List the last request menu to the player.
+	 *
+	 *	@noreturn
+	*/
 	public void ListLRS()
 	{
 		if (IsVoteInProgress())
@@ -637,6 +742,11 @@ methodmap JailFighter
 		menu.ExitButton = true;
 		menu.Display(this.index, 30);
 	}
+	/**
+	 *	Give a player the warden menu.
+	 *
+	 *	@noreturn
+	*/
 	public void WardenMenu()
 	{
 		if (IsVoteInProgress())
@@ -648,6 +758,16 @@ methodmap JailFighter
 		wmenu.ExitButton = true;
 		wmenu.Display(this.index, MENU_TIME_FOREVER);
 	}
+	/**
+	 *	Allow a player to climb walls upon hitting them.
+	 *
+	 *	@param weapon 		Weapon the client is using to attack.
+	 *	@param upwardvel	Velocity to send the client (in hammer units).
+	 *	@param health 		Health to take from the client.
+	 *	@param attackdelay 	Length in seconds to delay the player in attacking again.
+	 *
+	 *	@noreturn
+	*/
 	public void ClimbWall( const int weapon, const float upwardvel, const float health, const bool attackdelay )
 	//Credit to Mecha the Slag
 	{

@@ -199,7 +199,7 @@ public void AddLRToMenu(Menu & menu)
 		value = arrLRS.Get(i);
 		if (max)
 			Format(strValue, sizeof(strValue), " (%i/%i)", value, max);
-		Format(strName, sizeof(strName), "%s%s", strLRNames[i][0], (max ? strValue : ""));	// If cvar value is 0, infinite picks
+		Format(strName, sizeof(strName), "%s%s", strLRNames[i][0], strValue);	// If cvar value is 0, infinite picks
 		IntToString(i, strID, sizeof(strID));
 		menu.AddItem(strID, strName, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
 	}
@@ -893,10 +893,9 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 				base.RemoveFreeday();
 				PrintCenterTextAll("%N has attacked a guard and lost their freeday!", attacker);
 			}
-				
+
 			if (victim.bIsFreeday && !base.bIsWarden)
 			{
-				PrintToChatAll("a");
 				damage *= 0.0;
 				return Plugin_Changed;
 			}
@@ -911,7 +910,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 	}
 	return Plugin_Continue;
 }
-/** 
+/**
  *	Called when a player dies obviously
 */
 public void ManagePlayerDeath(const JailFighter attacker, const JailFighter victim, Event event)
@@ -974,7 +973,7 @@ public void CheckLivingPlayers()
 		return;
 
 	if (GetLivingPlayers(BLU) == 1)
-	{		
+	{
 		if (!gamemode.bOneGuardLeft)
 		{
 			if (cvarTF2Jail[RemoveFreedayOnLastGuard].BoolValue)
@@ -1043,11 +1042,9 @@ public void ManageEntityCreated(int ent, const char[] classname)
 
 	if (cvarTF2Jail[KillPointServerCommand].BoolValue && StrContains(classname, "point_servercommand", false) != -1)
 		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
-		//CreateTimer(0.1, RemoveEnt, EntIndexToEntRef(ent));
-	
+
 	if (StrContains(classname, "rune") != - 1)	// oWo what's this?
 		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
-		//CreateTimer(0.1, RemoveEnt, EntIndexToEntRef(ent));
 	
 	if (cvarTF2Jail[DroppedWeapons].BoolValue && StrEqual(classname, "tf_dropped_weapon"))
 		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));

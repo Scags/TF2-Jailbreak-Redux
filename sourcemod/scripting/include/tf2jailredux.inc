@@ -89,7 +89,7 @@ methodmap JBPlayer
 	 * @param item			Reference to use of the variable to overwrite with data from the property.
 	 *
 	 * @return				Property value called if it was valid
-    */
+	*/
 	public native any GetValue(const char key[64]);
 	
 	/**
@@ -130,7 +130,7 @@ methodmap JBPlayer
 	 *
 	 *	@return				True on success, false on failure.
 	*/
- 	public native bool SetArray(const char[] key, const any[] array, int num_items, bool replace = true);
+	public native bool SetArray(const char[] key, const any[] array, int num_items, bool replace = true);
 
 	/**
 	 *	Sets a string value in this player's StringMap, either inserting a new entry or replacing an old one.
@@ -141,7 +141,7 @@ methodmap JBPlayer
 	 *
 	 *	@return				True on success, false on failure.
 	*/
- 	public native bool SetString(const char[] key, const char[] string, bool replace = true);
+	public native bool SetString(const char[] key, const char[] string, bool replace = true);
 
 	/**
 	 *	Retrieves an array in this player's StringMap.
@@ -154,7 +154,7 @@ methodmap JBPlayer
 	 *	@return				True on success.  False if the key is not set, or the key is set 
 	 *						as a value or string (not an array).
 	*/
- 	public native bool GetArray(const char[] key, any[] array, int max_size, int &size = 0);
+	public native bool GetArray(const char[] key, any[] array, int max_size, int &size = 0);
 
 	/**
 	 *	Retrieves a string in this player's StringMap.
@@ -167,7 +167,7 @@ methodmap JBPlayer
 	 *	@return				True on success.  False if the key is not set, or the key is set 
 	 *						as a value or array (not a string).
 	*/
- 	public native bool GetString(const char[] key, char[] string, int max_size, int &size = 0);
+	public native bool GetString(const char[] key, char[] string, int max_size, int &size = 0);
 
 	/**
 	 *	Removes a key entry from this player's StringMap.
@@ -176,7 +176,7 @@ methodmap JBPlayer
 	 *
 	 *	@return				True on success, false if the value was never set.
 	*/
- 	public native bool Remove(const char[] key);
+	public native bool Remove(const char[] key);
 
 	/**
 	 *	Clears all entries from this player's StringMap.
@@ -199,7 +199,7 @@ methodmap JBPlayer
 	{
 		public native get();
 	}
-		
+
 	/**
 	 *	Creates and spawns a weapon to a player.
 	 *
@@ -285,15 +285,15 @@ methodmap JBPlayer
 
 	/**
 	 *	Mute a client through the plugin.
-	 *	@NOTE 				Players that are deemed as admins will never be muted
+	 *	@NOTE 				Players that are deemed as admins will never be muted.
 	 *
 	 *	@noreturn
 	*/
 	public native void MutePlayer();
 
 	/**
-	 *	Initialize a player as a freeday
-	 *	@NOTE 				Does not teleport them to the freeday location
+	 *	Initialize a player as a freeday.
+	 *	@NOTE 				Does not teleport them to the freeday location.
 	 *
 	 *	@noreturn
 	*/
@@ -348,6 +348,13 @@ methodmap JBPlayer
 	 *	@noreturn
 	*/
 	public native void MakeHorsemann();
+
+	/**
+	 *	Terminate a player as the Horseless Headless Horsemann.
+	 *
+	 *	@noreturn
+	*/
+	public native void UnHorsemann();
 
 	/**
 	 *	Give a player the warden menu.
@@ -546,6 +553,47 @@ native bool JB_UnhookEx(const int callbacktype, JBHookCB callback);
 
 
 /**
+ *	Retrieve the amount of living/playing players in the server.
+ *
+ *	@return 				The number of players currently alive.
+*/
+native int JBGameMode_Playing();
+
+/**
+ *	Find and Initialize a random player as the warden.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_FindRandomWarden();
+
+/**
+ *	Handle the cell doors.
+ *
+ *	@param status 			Type of cell door usage found in the eDoorsMode enum.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_ManageCells(const eDoorsMode status);
+
+/**
+ *	Find the current warden if one exists.
+ *
+ *	@return 				The current warden.
+ *
+*/
+native int JBGameMode_FindWarden();
+
+/** 
+ *	Find and terminate the current warden.
+ *
+ *	@param prevent 			Prevent the player from becoming warden again.
+ * 	@param announce 		Display to all players that the warden was fired.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_FireWarden(bool prevent = true, bool announce = true);
+
+/**
  *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
  *
  *	@param prop_name 		Property key to call from.
@@ -596,46 +644,83 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	float flMusicTime		// Optional, not used in core
 */
 
-/**
- *	Retrieve the amount of living/playing players in the server.
- *
- *	@return 				The number of players currently alive.
-*/
-native int JBGameMode_Playing();
 
 /**
- *	Find and Initialize a random player as the warden.
+ *	Set an array into this the GameMode StringMap
+ *
+ *	@param key			Key string.
+ *	@param array		Array to store.
+ *	@param num_items	Number of items in the array.
+ *	@param replace		If false, operation will fail if the key is already set.
+ *
+ *	@return				True on success, false on failure.
+*/
+native bool JBGameMode_SetArray(const char[] key, const any[] array, int num_items, bool replace = true);
+
+/**
+ *	Sets a string value in the GameMode StringMap, either inserting a new entry or replacing an old one.
+ *
+ *	@param key			Key string.
+ *	@param string		String to store.
+ *	@param replace		If false, operation will fail if the key is already set.
+ *
+ *	@return				True on success, false on failure.
+*/
+native bool JBGameMode_SetString(const char[] key, const char[] string, bool replace = true);
+
+/**
+ *	Retrieves an array in the GameMode StringMap.
+ *
+ *	@param key			Key string.
+ *	@param array		Buffer to store array.
+ *	@param max_size		Maximum size of array buffer.
+ *	@param size			Optional parameter to store the number of elements written to the buffer.
+ *
+ *	@return				True on success.  False if the key is not set, or the key is set 
+ *						as a value or string (not an array).
+*/
+native bool JBGameMode_GetArray(const char[] key, any[] array, int max_size, int &size = 0);
+
+/**
+ *	Retrieves a string in the GameMode StringMap.
+ *
+ *	@param key			Key string.
+ *	@param string		Buffer to store value.
+ *	@param max_size		Maximum size of string buffer.
+ *	@param size			Optional parameter to store the number of bytes written to the buffer.
+ *
+ *	@return				True on success.  False if the key is not set, or the key is set 
+ *						as a value or array (not a string).
+*/
+native bool JBGameMode_GetString(const char[] key, char[] string, int max_size, int &size = 0);
+
+/**
+ *	Removes a key entry from the GameMode StringMap.
+ *
+ *	@param key			Key string.
+ *
+ *	@return				True on success, false if the value was never set.
+*/
+native bool JBGameMode_Remove(const char[] key);
+
+/**
+ *	Clears all entries from the GameMode StringMap.
  *
  *	@noreturn
 */
-native void JBGameMode_FindRandomWarden();
+native void JBGameMode_Clear();
 
 /**
- *	Handle the cell doors.
+ *	Create a snapshot of the GameMode StringMap's keys. See StringMapSnapshot.
  *
- *	@param status 			Type of cell door usage found in the eDoorsMode enum.
- *
- *	@noreturn
+ *	@return 			Handle to key SnapShot.
 */
-native void JBGameMode_ManageCells(const eDoorsMode status);
+native StringMapSnapshot JBGameMode_Snapshot();
 
 /**
- *	Find the current warden if one exists.
- *
- *	@return 				The current warden.
- *
+ *	Retrieves the number of elements in the GameMode StringMap.
 */
-native int JBGameMode_FindWarden();
-
-/** 
- *	Find and terminate the current warden.
- *
- *	@param prevent 			Prevent the player from becoming warden again.
- * 	@param announce 		Display to all players that the warden was fired.
- *
- *	@noreturn
-*/
-native void JBGameMode_FireWarden(bool prevent = true, bool announce = true);
+native int JBGameMode_Size();
 
 
 public SharedPlugin __pl_tf2jailredux = {
@@ -681,6 +766,7 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.WardenSet");
 	MarkNativeAsOptional("JBPlayer.WardenUnset");
 	MarkNativeAsOptional("JBPlayer.MakeHorsemann");
+	MarkNativeAsOptional("JBPlayer.UnHorsemann");
 	MarkNativeAsOptional("JBPlayer.WardenMenu");
 	MarkNativeAsOptional("JBPlayer.ClimbWall");
 
@@ -695,12 +781,21 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.Snapshot");
 	MarkNativeAsOptional("JBPlayer.Size.get");
 
-	MarkNativeAsOptional("JBGameMode_GetProperty");
-	MarkNativeAsOptional("JBGameMode_SetProperty");
 	MarkNativeAsOptional("JBGameMode_Playing");
 	MarkNativeAsOptional("JBGameMode_ManageCells");
 	MarkNativeAsOptional("JBGameMode_FindRandomWarden");
 	MarkNativeAsOptional("JBGameMode_FindWarden");
 	MarkNativeAsOptional("JBGameMode_FireWarden");
+
+	MarkNativeAsOptional("JBGameMode_GetProperty");
+	MarkNativeAsOptional("JBGameMode_SetProperty");
+	MarkNativeAsOptional("JBGameMode_SetArray");
+	MarkNativeAsOptional("JBGameMode_SetString");
+	MarkNativeAsOptional("JBGameMode_GetArray");
+	MarkNativeAsOptional("JBGameMode_GetString");
+	MarkNativeAsOptional("JBGameMode_Remove");
+	MarkNativeAsOptional("JBGameMode_Clear");
+	MarkNativeAsOptional("JBGameMode_Snapshot");
+	MarkNativeAsOptional("JBGameMode_Size");
 }
 #endif

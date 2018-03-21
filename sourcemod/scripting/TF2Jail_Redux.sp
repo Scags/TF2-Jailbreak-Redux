@@ -209,8 +209,8 @@ public void OnPluginStart()
 	AddCommandListener(EurekaTele, "eureka_teleport");
 	AddCommandListener(OnJoinTeam, "jointeam");
 
-	RegConsoleCmd("sm_jhelp", Command_Help, "Display a menu containing the major commands");
-	RegConsoleCmd("sm_jailhelp", Command_Help, "Display a menu containing the major commands");
+	RegConsoleCmd("sm_jhelp", Command_Help, "Display a menu containing the major commands.");
+	RegConsoleCmd("sm_jailhelp", Command_Help, "Display a menu containing the major commands.");
 	RegConsoleCmd("sm_w", Command_BecomeWarden, "Become the Warden.");
 	RegConsoleCmd("sm_warden", Command_BecomeWarden, "Become the Warden.");
 	RegConsoleCmd("sm_uw", Command_ExitWarden, "Remove yourself from Warden.");
@@ -236,7 +236,8 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_cw", Command_CurrentWarden, "Display the name of the current Warden.");
 	RegConsoleCmd("sm_currentwarden", Command_CurrentWarden, "Display the name of the current Warden.");
 #if defined _clientprefs_included
-	RegConsoleCmd("sm_jbmusic", Command_MusicOff, "Client cookie that disables LR background music (if it exists)");
+	RegConsoleCmd("sm_jbmusic", Command_MusicOff, "Client cookie that disables LR background music (if it exists).");
+	RegConsoleCmd("sm_jailmusic", Command_MusicOff, "Client cookie that disables LR background music (if it exists).");
 #endif
 	RegConsoleCmd("sm_wmarker", Command_WardenMarker, "Allows the warden to create a marker that players can see/hear.");
 	RegConsoleCmd("sm_wmk", Command_WardenMarker, "Allows the warden to create a marker that players can see/hear.");
@@ -256,9 +257,10 @@ public void OnPluginStart()
 	RegAdminCmd("sm_unlockcells", AdminUnlockCells, ADMFLAG_GENERIC, "Unlock the cell doors if locked.");
 	RegAdminCmd("sm_fw", AdminForceWarden, ADMFLAG_GENERIC, "Force a client to become Warden.");
 	RegAdminCmd("sm_forcewarden", AdminForceWarden, ADMFLAG_GENERIC, "Force a client to become Warden.");
-	RegAdminCmd("sm_flr", AdminForceLR, ADMFLAG_GENERIC, "Force a last request to become queued for the administrator.");
-	RegAdminCmd("sm_forcelr", AdminForceLR, ADMFLAG_GENERIC, "Force a last request to become queued for the administrator.");
+	RegAdminCmd("sm_flr", AdminForceLR, ADMFLAG_GENERIC, "Force a last request to either administrator or another, living client.");
+	RegAdminCmd("sm_forcelr", AdminForceLR, ADMFLAG_GENERIC, "Force a last request to either administrator or another, living client.");
 	RegAdminCmd("sm_compatible", AdminMapCompatibilityCheck, ADMFLAG_GENERIC, "Check if the current map is compatible with the plug-in.");
+	RegAdminCmd("sm_compat", AdminMapCompatibilityCheck, ADMFLAG_GENERIC, "Check if the current map is compatible with the plug-in.");
 	RegAdminCmd("sm_gf", AdminGiveFreeday, ADMFLAG_GENERIC, "Give a client on the server a Free day.");
 	RegAdminCmd("sm_givefreeday", AdminGiveFreeday, ADMFLAG_GENERIC, "Give a client on the server a Free day.");
 	RegAdminCmd("sm_rf", AdminRemoveFreeday, ADMFLAG_GENERIC, "Remove a client's Free day status if they have one.");
@@ -268,8 +270,11 @@ public void OnPluginStart()
 	RegAdminCmd("sm_ulw", AdminUnlockWarden, ADMFLAG_GENERIC, "Unlock Warden from being taken by clients publicly.");
 	RegAdminCmd("sm_unlockwarden", AdminUnlockWarden, ADMFLAG_GENERIC, "Unlock Warden from being taken by clients publicly.");
 	RegAdminCmd("sm_wardayred", AdminWardayRed, ADMFLAG_GENERIC, "Teleport all prisoners to their warday teleport location.");
+	RegAdminCmd("sm_wred", AdminWardayRed, ADMFLAG_GENERIC, "Teleport all prisoners to their warday teleport location.");
 	RegAdminCmd("sm_wardayblue", AdminWardayBlue, ADMFLAG_GENERIC, "Teleport all guards to their warday teleport location.");
+	RegAdminCmd("sm_wblue", AdminWardayBlue, ADMFLAG_GENERIC, "Teleport all guards to their warday teleport location.");
 	RegAdminCmd("sm_startwarday", FullWarday, ADMFLAG_GENERIC, "Teleport all players to their warday teleport location.");
+	RegAdminCmd("sm_sw", FullWarday, ADMFLAG_GENERIC, "Teleport all players to their warday teleport location.");
 
 	RegAdminCmd("sm_setpreset", SetPreset, ADMFLAG_ROOT, "Set gamemode.iLRPresetType. (DEBUGGING)");
 	RegAdminCmd("sm_itype", Type, ADMFLAG_ROOT, "gamemode.iLRType. (DEBUGGING)");
@@ -1372,6 +1377,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBPlayer.WardenSet", Native_JB_WardenSet);
 	CreateNative("JBPlayer.WardenUnset", Native_JB_WardenUnset);
 	CreateNative("JBPlayer.MakeHorsemann", Native_JB_MakeHorsemann);
+	CreateNative("JBPlayer.UnHorsemann", Native_JB_UnHorsemann);
 	CreateNative("JBPlayer.MutePlayer", Native_JB_MutePlayer);
 	CreateNative("JBPlayer.UnmutePlayer", Native_JB_UnmutePlayer);
 	CreateNative("JBPlayer.EmptyWeaponSlots", Native_JB_EmptyWeaponSlots);
@@ -1396,13 +1402,22 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBPlayer.Snapshot", Native_JB_Snapshot);
 	CreateNative("JBPlayer.Size.get", Native_JB_Size);
 		/* Gamemode */
-	CreateNative("JBGameMode_GetProperty", Native_JBGameMode_GetProperty);
-	CreateNative("JBGameMode_SetProperty", Native_JBGameMode_SetProperty);
 	CreateNative("JBGameMode_Playing", Native_JBGameMode_Playing);
 	CreateNative("JBGameMode_ManageCells", Native_JBGameMode_ManageCells);
 	CreateNative("JBGameMode_FindRandomWarden", Native_JBGameMode_FindRandomWarden);
 	CreateNative("JBGameMode_FindWarden", Native_JBGameMode_FindWarden);
 	CreateNative("JBGameMode_FireWarden", Native_JBGameMode_FireWarden);
+		/* Gamemode StringMap */
+	CreateNative("JBGameMode_GetProperty", Native_JBGameMode_GetProperty);
+	CreateNative("JBGameMode_SetProperty", Native_JBGameMode_SetProperty);
+	CreateNative("JBGameMode_SetArray", Native_JBGameMode_SetArray);
+	CreateNative("JBGameMode_SetString", Native_JBGameMode_SetString);
+	CreateNative("JBGameMode_GetArray", Native_JBGameMode_GetArray);
+	CreateNative("JBGameMode_GetString", Native_JBGameMode_GetString);
+	CreateNative("JBGameMode_Remove", Native_JBGameMode_Remove);
+	CreateNative("JBGameMode_Clear", Native_JBGameMode_Clear);
+	CreateNative("JBGameMode_Snapshot", Native_JBGameMode_Snapshot);
+	CreateNative("JBGameMode_Size", Native_JBGameMode_Size);
 
 	RegPluginLibrary("TF2Jail_Redux");
 }
@@ -1427,85 +1442,6 @@ public int Native_JBGetIndex(Handle plugin, int numParams)
 {
 	JailFighter player = GetNativeCell(1);
 	return player.index;
-}
-public int Native_JB_SetValue(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	char key[64]; GetNativeString(2, key, 64);
-	any item = GetNativeCell(3);
-	return player.SetValue(key, item);
-}
-public int Native_JB_SetArray(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	char key[64]; GetNativeString(2, key, 64);
-	int length = GetNativeCell(4);
-	any[] array = new any[length];
-	GetNativeArray(3, array, length);
-	bool replace = GetNativeCell(5);
-	return player.SetArray(key, array, length, replace);
-}
-public int Native_JB_SetString(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	char key[64]; GetNativeString(2, key, 64);
-	int len; GetNativeStringLength(3, len);
-	++len;
-	char[] val = new char[len];
-	GetNativeString(3, val, len);
-	bool replace = GetNativeCell(4);
-	return player.SetString(key, val, replace);
-}
-public int Native_JB_GetValue(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	char key[64]; GetNativeString(2, key, 64);
-	any item;
-	if (player.GetValue(key, item))
-		return item;
-	return 0;
-}
-public int Native_JB_GetArray(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	char key[64]; GetNativeString(2, key, 64);
-	int length = GetNativeCell(4);
-	any[] array = new any[length];
-	GetNativeArray(3, array, length);
-	int size = GetNativeCellRef(5);
-	return player.GetArray(key, array, length, size);
-}
-public int Native_JB_GetString(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	char key[64]; GetNativeString(2, key, 64);
-	int len; GetNativeStringLength(3, len);
-	++len;
-	char[] val = new char[len];
-	GetNativeString(3, val, len);
-	int size = GetNativeCellRef(4);
-	return player.GetString(key, val, len, size);
-}
-public int Native_JB_Remove(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	char key[64]; GetNativeString(2, key, 64);
-	return player.Remove(key);
-}
-public int Native_JB_Clear(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	player.Clear();
-}
-public int Native_JB_Snapshot(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	return view_as< int >(player.Snapshot());
-}
-public int Native_JB_Size(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(2);
-	return player.Size;
 }
 
 public int Native_Hook(Handle plugin, int numParams)
@@ -1605,6 +1541,11 @@ public int Native_JB_MakeHorsemann(Handle plugin, int numParams)
 	JailFighter player = GetNativeCell(1);
 	player.MakeHorsemann();
 }
+public int Native_JB_UnHorsemann(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.UnHorsemann();
+}
 public int Native_JB_MutePlayer(Handle plugin, int numParams)
 {
 	JailFighter player = GetNativeCell(1);
@@ -1670,20 +1611,86 @@ public int Native_JB_ClimbWall(Handle plugin, int numParams)
 	player.ClimbWall(wep, spawntime, healthdmg, attackdelay);
 }
 
-public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)
+public int Native_JB_SetValue(Handle plugin, int numParams)
 {
-	char key[64]; GetNativeString(1, key, 64);
+	JailFighter player = GetNativeCell(1);
+	char key[64]; GetNativeString(2, key, 64);
+	any item = GetNativeCell(3);
+	return player.SetValue(key, item);
+}
+public int Native_JB_SetArray(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	char key[64]; GetNativeString(2, key, 64);
+	int length = GetNativeCell(4);
+	any[] array = new any[length];
+	GetNativeArray(3, array, length);
+	bool replace = GetNativeCell(5);
+	return player.SetArray(key, array, length, replace);
+}
+public int Native_JB_SetString(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	char key[64]; GetNativeString(2, key, 64);
+	int len; GetNativeStringLength(3, len);
+	++len;
+	char[] val = new char[len];
+	GetNativeString(3, val, len);
+	bool replace = GetNativeCell(4);
+	return player.SetString(key, val, replace);
+}
+public int Native_JB_GetValue(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	char key[64]; GetNativeString(2, key, 64);
 	any item;
-	if (gamemode.GetValue(key, item))
+	if (player.GetValue(key, item))
 		return item;
 	return 0;
 }
-public int Native_JBGameMode_SetProperty(Handle plugin, int numParams)
+public int Native_JB_GetArray(Handle plugin, int numParams)
 {
-	char key[64]; GetNativeString(1, key, 64);
-	any item = GetNativeCell(2);
-	gamemode.SetValue(key, item);
+	JailFighter player = GetNativeCell(1);
+	char key[64]; GetNativeString(2, key, 64);
+	int length = GetNativeCell(4);
+	any[] array = new any[length];
+	GetNativeArray(3, array, length);
+	int size = GetNativeCellRef(5);
+	return player.GetArray(key, array, length, size);
 }
+public int Native_JB_GetString(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	char key[64]; GetNativeString(2, key, 64);
+	int len; GetNativeStringLength(3, len);
+	++len;
+	char[] val = new char[len];
+	GetNativeString(3, val, len);
+	int size = GetNativeCellRef(4);
+	return player.GetString(key, val, len, size);
+}
+public int Native_JB_Remove(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	char key[64]; GetNativeString(2, key, 64);
+	return player.Remove(key);
+}
+public int Native_JB_Clear(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	player.Clear();
+}
+public int Native_JB_Snapshot(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(1);
+	return view_as< int >(player.Snapshot());
+}
+public int Native_JB_Size(Handle plugin, int numParams)
+{
+	JailFighter player = GetNativeCell(2);
+	return player.Size;
+}
+
 public int Native_JBGameMode_Playing(Handle plugin, int numParams)
 {
 	return gamemode.iPlaying;
@@ -1706,4 +1713,73 @@ public int Native_JBGameMode_FireWarden(Handle plugin, int numParams)
 	bool prevent = GetNativeCell(1);
 	bool announce = GetNativeCell(2);
 	gamemode.FireWarden(prevent, announce);
+}
+public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)
+{
+	char key[64]; GetNativeString(1, key, 64);
+	any item;
+	if (gamemode.GetValue(key, item))
+		return item;
+	return 0;
+}
+public int Native_JBGameMode_SetProperty(Handle plugin, int numParams)
+{
+	char key[64]; GetNativeString(1, key, 64);
+	any item = GetNativeCell(2);
+	gamemode.SetValue(key, item);
+}
+public int Native_JBGameMode_SetArray(Handle plugin, int numParams)
+{
+	char key[64]; GetNativeString(1, key, 64);
+	int length = GetNativeCell(3);
+	any[] array = new any[length];
+	GetNativeArray(2, array, length);
+	bool replace = GetNativeCell(4);
+	return gamemode.SetArray(key, array, length, replace);
+}
+public int Native_JBGameMode_SetString(Handle plugin, int numParams)
+{
+	char key[64]; GetNativeString(1, key, 64);
+	int len; GetNativeStringLength(2, len);
+	++len;
+	char[] val = new char[len];
+	GetNativeString(2, val, len);
+	bool replace = GetNativeCell(3);
+	return gamemode.SetString(key, val, replace);
+}
+public int Native_JBGameMode_GetArray(Handle plugin, int numParams)
+{
+	char key[64]; GetNativeString(1, key, 64);
+	int length = GetNativeCell(3);
+	any[] array = new any[length];
+	GetNativeArray(2, array, length);
+	int size = GetNativeCellRef(4);
+	return gamemode.GetArray(key, array, length, size);
+}
+public int Native_JBGameMode_GetString(Handle plugin, int numParams)
+{
+	char key[64]; GetNativeString(1, key, 64);
+	int len; GetNativeStringLength(2, len);
+	++len;
+	char[] val = new char[len];
+	GetNativeString(2, val, len);
+	int size = GetNativeCellRef(3);
+	return gamemode.GetString(key, val, len, size);
+}
+public int Native_JBGameMode_Remove(Handle plugin, int numParams)
+{
+	char key[64]; GetNativeString(1, key, 64);
+	gamemode.Remove(key);
+}
+public int Native_JBGameMode_Clear(Handle plugin, int numParams)
+{
+	gamemode.Clear();
+}
+public int Native_JBGameMode_Snapshot(Handle plugin, int numParams)
+{
+	return view_as< int >(gamemode.Snapshot());
+}
+public int Native_JBGameMode_Size(Handle plugin, int numParams)
+{
+	return gamemode.Size;
 }

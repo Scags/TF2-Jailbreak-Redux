@@ -1158,7 +1158,13 @@ public Action AdminWardayRed(int client, int args)
 
 	if (gamemode.iRoundState > StateRunning)
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} Must be done before or during active round.");
+		CReplyToCommand(client, "{red}[TF2Jail]{tan} Must be done before or during active round.");
+		return Plugin_Handled;
+	}
+
+	if (!gamemode.bWardayTeleportSetRed)
+	{
+		CReplyToCommand(client, "{red}[TF2Jail]{tan} Warday configuration is not set for this location!");
 		return Plugin_Handled;
 	}
 
@@ -1170,6 +1176,8 @@ public Action AdminWardayRed(int client, int args)
 		TeleportEntity(i, flWardayRed, nullvec, nullvec);
 		CPrintToChat(i, "{orange}[TF2Jail]{tan} Warday has been activated!");
 	}
+
+	CReplyToCommand(client, "{orange}[TF2Jail]{tan} Teleported Red Team to Warday location.");
 	return Plugin_Handled;
 }
 
@@ -1180,7 +1188,13 @@ public Action AdminWardayBlue(int client, int args)
 
 	if (gamemode.iRoundState > StateRunning)
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} Must be done before or during active round.");
+		CReplyToCommand(client, "{red}[TF2Jail]{tan} Must be done before or during active round.");
+		return Plugin_Handled;
+	}
+
+	if (!gamemode.bWardayTeleportSetBlue)
+	{
+		CReplyToCommand(client, "{red}[TF2Jail]{tan} Warday configuration is not set for this location!");
 		return Plugin_Handled;
 	}
 
@@ -1192,6 +1206,8 @@ public Action AdminWardayBlue(int client, int args)
 		TeleportEntity(i, flWardayBlu, nullvec, nullvec);
 		CPrintToChat(i, "{orange}[TF2Jail]{tan} Warday has been activated!");
 	}
+
+	CReplyToCommand(client, "{orange}[TF2Jail]{tan} Teleported Blue Team to Warday location.");
 	return Plugin_Handled;
 }
 
@@ -1202,13 +1218,33 @@ public Action FullWarday(int client, int args)
 
 	if (gamemode.iRoundState > StateRunning)
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} Must be done before or during active round.");
+		CReplyToCommand(client, "{red}[TF2Jail]{tan} Must be done before or during active round.");
+		return Plugin_Handled;
+	}
+
+
+	bool allowred = gamemode.bWardayTeleportSetRed,
+		 allowblu = gamemode.bWardayTeleportSetBlue;
+
+	if (!allowred)
+		CReplyToCommand(client, "{red}[TF2Jail]{tan} Warday for Red Team is not configured, ignoring...");
+	else if (!allowblu)
+		CReplyToCommand(client, "{red}[TF2Jail]{tan} Warday for Blue Team is not configured, ignoring...");
+	else if (!allowblu && !allowred)
+	{
+		CReplyToCommand(client, "{red}[TF2Jail]{tan} Warday configuration is not set.");
 		return Plugin_Handled;
 	}
 
 	for (int i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i) || !IsPlayerAlive(i))
+			continue;
+
+		if (GetClientTeam(i) == RED && !allowred)
+			continue;
+
+		if (GetClientTeam(i) == BLU && !allowblu)
 			continue;
 
 		JailFighter(i).TeleportToPosition(GetClientTeam(i));
