@@ -28,7 +28,7 @@
 
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.1.3"
+#define PLUGIN_VERSION		"1.1.4"
 
 Handle
 	hHudText, 
@@ -44,43 +44,43 @@ methodmap JailBoss < JBPlayer
 
 	property int iUberTarget
 	{	// And then add new ones that we need
-		public get() 				{ return this.GetProperty("iUberTarget"); }
-		public set( const int i ) 	{ this.SetProperty("iUberTarget", i); }
+		public get() 				{ return this.GetValue("iUberTarget"); }
+		public set( const int i ) 	{ this.SetValue("iUberTarget", i); }
 	}
 	property int iHealth
 	{
-		public get() 				{ return this.GetProperty("iHealth"); }
-		public set( const int i ) 	{ this.SetProperty("iHealth", i); }
+		public get() 				{ return this.GetValue("iHealth"); }
+		public set( const int i ) 	{ this.SetValue("iHealth", i); }
 	}
 	property int iMaxHealth
 	{
-		public get() 				{ return this.GetProperty("iMaxHealth"); }
-		public set( const int i ) 	{ this.SetProperty("iMaxHealth", i); }
+		public get() 				{ return this.GetValue("iMaxHealth"); }
+		public set( const int i ) 	{ this.SetValue("iMaxHealth", i); }
 	}
 	property int iAirDamage
 	{
-		public get() 				{ return this.GetProperty("iAirDamage"); }
-		public set( const int i ) 	{ this.SetProperty("iAirDamage", i); }
+		public get() 				{ return this.GetValue("iAirDamage"); }
+		public set( const int i ) 	{ this.SetValue("iAirDamage", i); }
 	}
 	property int iType
 	{
-		public get() 				{ return this.GetProperty("iType"); }
-		public set( const int i ) 	{ this.SetProperty("iType", i); }
+		public get() 				{ return this.GetValue("iType"); }
+		public set( const int i ) 	{ this.SetValue("iType", i); }
 	}
 	property int iStabbed
 	{
-		public get() 				{ return this.GetProperty("iStabbed"); }
-		public set( const int i ) 	{ this.SetProperty("iStabbed", i); }
+		public get() 				{ return this.GetValue("iStabbed"); }
+		public set( const int i ) 	{ this.SetValue("iStabbed", i); }
 	}
 	property int iMarketted
 	{
-		public get() 				{ return this.GetProperty("iMarketted"); }
-		public set( const int i ) 	{ this.SetProperty("iMarketted", i); }
+		public get() 				{ return this.GetValue("iMarketted"); }
+		public set( const int i ) 	{ this.SetValue("iMarketted", i); }
 	}
 	property int iDamage
 	{
-		public get() 				{ return this.GetProperty("iDamage"); }
-		public set( const int i ) 	{ this.SetProperty("iDamage", i); }
+		public get() 				{ return this.GetValue("iDamage"); }
+		public set( const int i ) 	{ this.SetValue("iDamage", i); }
 	}
 	property int bGlow
 	{
@@ -93,54 +93,54 @@ methodmap JailBoss < JBPlayer
 	}
 	property int iKills
 	{
-		public get() 				{ return this.GetProperty("iKills"); }
-		public set( const int i ) 	{ this.SetProperty("iKills", i); }
+		public get() 				{ return this.GetValue("iKills"); }
+		public set( const int i ) 	{ this.SetValue("iKills", i); }
 	}
 	property int iClimbs
 	{
-		public get() 				{ return this.GetProperty("iClimbs"); }
-		public set( const int i ) 	{ this.SetProperty("iClimbs", i); }
+		public get() 				{ return this.GetValue("iClimbs"); }
+		public set( const int i ) 	{ this.SetValue("iClimbs", i); }
 	}
 
 	property bool bIsBoss
 	{
-		public get() 				{ return this.GetProperty("bIsBoss"); }
-		public set( const bool i ) 	{ this.SetProperty("bIsBoss", i); }
+		public get() 				{ return this.GetValue("bIsBoss"); }
+		public set( const bool i ) 	{ this.SetValue("bIsBoss", i); }
 	}
 	property bool bInJump	// You can also get/set properties that are in the core plugin
 	{
-		public get() 				{ return this.GetProperty("bInJump"); }
-		public set( const bool i ) 	{ this.SetProperty("bInJump", i); }
+		public get() 				{ return this.GetValue("bInJump"); }
+		public set( const bool i ) 	{ this.SetValue("bInJump", i); }
 	}
 	property float flRAGE
 	{
-		public get() 				{ return this.GetProperty("flRAGE"); }
-		public set( const float i ) { this.SetProperty("flRAGE", i); }
+		public get() 				{ return this.GetValue("flRAGE"); }
+		public set( const float i ) { this.SetValue("flRAGE", i); }
 	}
 	property float flWeighDown
 	{
-		public get() 				{ return this.GetProperty("flWeighDown"); }
-		public set( const float i ) { this.SetProperty("flWeighDown", i); }
+		public get() 				{ return this.GetValue("flWeighDown"); }
+		public set( const float i ) { this.SetValue("flWeighDown", i); }
 	}
 	property float flGlowtime
 	{
 		public get()
 		{
-			float i = this.GetProperty("flGlowtime");
+			float i = this.GetValue("flGlowtime");
 			if (i < 0.0) i = 0.0;
 			return i;
 		}
-		public set( const float i )	{ this.SetProperty("flGlowtime", i); }
+		public set( const float i )	{ this.SetValue("flGlowtime", i); }
 	}
 	property float flCharge
 	{
-		public get() 				{ return this.GetProperty("flCharge"); }
-		public set( const float i ) { this.SetProperty("flCharge", i); }
+		public get() 				{ return this.GetValue("flCharge"); }
+		public set( const float i ) { this.SetValue("flCharge", i); }
 	}
 	property float flKillSpree
 	{
-		public get() 				{ return this.GetProperty("flKillSpree"); }
-		public set( const float i ) { this.SetProperty("flKillSpree", i); }
+		public get() 				{ return this.GetValue("flKillSpree"); }
+		public set( const float i ) { this.SetValue("flKillSpree", i); }
 	}
 
 	public void ConvertToBoss(const int bossid)
@@ -780,10 +780,10 @@ public void _ResetMediCharge(const int entid)
 public void _BossDeath(const int userid)
 {
 	int client = GetClientOfUserId(userid);
-	if (IsValidClient(client, false)) {
+	if (IsValidClient(client, false)) 
+	{
 		JailBoss player = JailBoss(client);
-		if (player.iHealth <= 0)
-			player.iHealth = 0;
+		player.iHealth = 0;
 		
 		ManageBossDeath(player);
 	}
@@ -1721,28 +1721,21 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 	return Plugin_Continue;
 }
 
-public void CheckAlivePlayers()
+public void fwdOnLastPrisoner()
 {
-	if (JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iRoundState") != StateRunning || NotVSH || JBGameMode_GetProperty("iTimeLeft") < 0)
 		return;
-	
-	int living = GetLivingPlayers(RED);
-	if (!living)
-		ForceTeamWin(BLU);
-	
-	if (living == 1 && JBGameMode_GetProperty("iTimeLeft") >= 0)
+		
+	JailBoss player = FindBoss(false);
+	if (player.bIsBoss)
 	{
-		JailBoss player = FindBoss(false);
-		if (player.bIsBoss)
+		switch (player.iType)
 		{
-			switch (player.iType)
-			{
-				case  - 1: {  }
-				case Hale:ToCHale(player).LastPlayerSoundClip();
-				case Vagineer:ToCVagineer(player).LastPlayerSoundClip();
-				case CBS:ToCChristian(player).LastPlayerSoundClip();
-				case Bunny:ToCBunny(player).LastPlayerSoundClip();
-			}
+			case  - 1: {  }
+			case Hale:ToCHale(player).LastPlayerSoundClip();
+			case Vagineer:ToCVagineer(player).LastPlayerSoundClip();
+			case CBS:ToCChristian(player).LastPlayerSoundClip();
+			case Bunny:ToCBunny(player).LastPlayerSoundClip();
 		}
 	}
 }
@@ -2018,6 +2011,7 @@ public void fwdOnDownloads()
 	PrecacheSound("saxton_hale/9000.wav", true);
 	CheckDownload("sound/saxton_hale/9000.wav");
 	PrecacheSound("items/pumpkin_pickup.wav", true);
+	PrecacheModel("models/player/saxton_hale/w_easteregg.mdl", true);
 	AddHaleToDownloads();
 	AddVagToDownloads();
 	AddCBSToDownloads();
@@ -2087,7 +2081,6 @@ public void fwdOnManageRoundStart()
 	}
 
 	SetPawnTimer(ManagePlayBossIntro, 0.2, rand);
-	SetPawnTimer(CheckAlivePlayers, 0.4);
 	ManageMessageIntro();
 }
 public void fwdOnManageRoundEnd(Event event)
@@ -2410,7 +2403,7 @@ public void fwdOnLRTextHud(char strHud[128])
 
 	strcopy(strHud, 128, "Versus Saxton Hale");
 }
-public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int value, ArrayList & arrLRS)
+public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int value, ArrayList &arrLRS)
 {
 	if (!JBVSH[Enabled].BoolValue || selection != JBVSHIndex)
 		return;
@@ -2444,7 +2437,7 @@ public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Even
 			case  - 1: {  }
 			case Hale:
 			{
-				if (deathflags & TF_DEATHFLAG_DEADRINGER)
+				if (deathflags &TF_DEATHFLAG_DEADRINGER)
 					event.SetString("weapon", "fists");
 				else ToCHale(attacker).KilledPlayer(victim, event);
 			}
@@ -2454,11 +2447,8 @@ public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Even
 			case Bunny:ToCBunny(attacker).KilledPlayer(victim, event);
 		}
 	}
-
-	if (!victim.bIsBoss)
-		SetPawnTimer(CheckAlivePlayers, 0.2);
 	
-	if ( (TF2_GetPlayerClass(victim.index) == TFClass_Engineer) && !(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) )
+	if ( (TF2_GetPlayerClass(victim.index) == TFClass_Engineer) && !(event.GetInt("death_flags") &TF_DEATHFLAG_DEADRINGER) )
 	{
 		if (JBVSH[EngieBuildings].IntValue) 
 		{
@@ -2575,7 +2565,7 @@ public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 		SetPawnTimer( PrepPlayers, 0.2, spawn.userid );
 	}
 }
-public void fwdOnMenuAdd(Menu & menu, ArrayList arrLRS)
+public void fwdOnMenuAdd(Menu &menu, ArrayList arrLRS)
 {
 	if (!JBVSH[Enabled].BoolValue)
 		return;
@@ -2586,7 +2576,7 @@ public void fwdOnMenuAdd(Menu & menu, ArrayList arrLRS)
 	Format(strMenu, sizeof(strMenu), "Versus Saxton Hale (%d/%d)", value, max);
 	menu.AddItem(menuitem, strMenu, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 }
-public void fwdOnPanelAdd(Menu & panel)
+public void fwdOnPanelAdd(Menu &panel)
 {
 	if (!JBVSH[Enabled].BoolValue)
 		return;
@@ -2788,4 +2778,6 @@ public void CheckJBHooks()
 		LogError("Failed to load OnMusicPlay forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnVariableReset, fwdOnVariableReset))
 		LogError("Failed to load OnVariableReset forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnLastPrisoner, fwdOnLastPrisoner))
+		LogError("Failed to load OnLastPrisoner forwards for JB VSH Sub-Plugin!");
 }

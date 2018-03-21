@@ -10,7 +10,7 @@
 #pragma newdecls required
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.0.1"
+#define PLUGIN_VERSION		"1.0.2"
 
 #define UNASSIGNED 			0
 #define NEUTRAL 			0
@@ -42,71 +42,71 @@ enum PropData
 
 methodmap JailHunter < JBPlayer
 {
-	public JailHunter (const int w, bool userid = false)
+	public JailHunter( const int w, bool userid = false )
 	{
 		return view_as< JailHunter >( JBPlayer(w, userid) );
 	}
 
 	property int iRolls
 	{
-		public get() 				{ return this.GetProperty("iRolls"); }
-		public set(const int i) 	{ this.SetProperty("iRolls", i); }
+		public get() 				{ return this.GetValue("iRolls"); }
+		public set( const int i ) 	{ this.SetValue("iRolls", i); }
 	}
 	property int iLastProp
 	{
-		public get() 				{ return this.GetProperty("iLastProp"); }
-		public set(const int i) 	{ this.SetProperty("iLastProp", i); }
+		public get() 				{ return this.GetValue("iLastProp"); }
+		public set( const int i ) 	{ this.SetValue("iLastProp", i); }
 	}
 	property int iFlameCount
 	{
-		public get() 				{ return this.GetProperty("iFlameCount"); }
-		public set(const int i) 	{ this.SetProperty("iFlameCount", i); }
+		public get() 				{ return this.GetValue("iFlameCount"); }
+		public set( const int i ) 	{ this.SetValue("iFlameCount", i); }
 	}
 
 	property bool bTouched
 	{
-		public get() 				{ return this.GetProperty("bTouched"); }
-		public set(const bool i) 	{ this.SetProperty("bTouched", i); }
+		public get() 				{ return this.GetValue("bTouched"); }
+		public set( const bool i ) 	{ this.SetValue("bTouched", i); }
 	}
 	property bool bLast 
 	{
-		public get() 				{ return this.GetProperty("bLast"); }
-		public set(const bool i) 	{ this.SetProperty("bLast", i); }
+		public get() 				{ return this.GetValue("bLast"); }
+		public set( const bool i ) 	{ this.SetValue("bLast", i); }
 	}
 	/*property bool bRerolled 
 	{
-		public get() 				{ return this.GetProperty("bRerolled"); }
-		public set(const bool i) 	{ this.SetProperty("bRerolled", i); }
+		public get() 				{ return this.GetValue("bRerolled"); }
+		public set( const bool i ) 	{ this.SetValue("bRerolled", i); }
 	}*/
 	property bool bIsProp 
 	{
-		public get() 				{ return this.GetProperty("bIsProp"); }
-		public set(const bool i) 	{ this.SetProperty("bIsProp", i); }
+		public get() 				{ return this.GetValue("bIsProp"); }
+		public set( const bool i ) 	{ this.SetValue("bIsProp", i); }
 	}
 	property bool bFlaming 
 	{
-		public get() 				{ return this.GetProperty("bFlaming"); }
-		public set(const bool i) 	{ this.SetProperty("bFlaming", i); }
+		public get() 				{ return this.GetValue("bFlaming"); }
+		public set( const bool i ) 	{ this.SetValue("bFlaming", i); }
 	}
 	property bool bLocked 
 	{
-		public get() 				{ return this.GetProperty("bLocked"); }
-		public set(const bool i) 	{ this.SetProperty("bLocked", i); }
+		public get() 				{ return this.GetValue("bLocked"); }
+		public set( const bool i ) 	{ this.SetValue("bLocked", i); }
 	}
 	property bool bHoldingLMB 
 	{
-		public get() 				{ return this.GetProperty("bHoldingLMB"); }
-		public set(const bool i) 	{ this.SetProperty("bHoldingLMB", i); }
+		public get() 				{ return this.GetValue("bHoldingLMB"); }
+		public set( const bool i ) 	{ this.SetValue("bHoldingLMB", i); }
 	}
 	property bool bHoldingRMB 
 	{
-		public get() 				{ return this.GetProperty("bHoldingRMB"); }
-		public set(const bool i) 	{ this.SetProperty("bHoldingRMB", i); }
+		public get() 				{ return this.GetValue("bHoldingRMB"); }
+		public set( const bool i ) 	{ this.SetValue("bHoldingRMB", i); }
 	}
 	property bool bFirstPerson 
 	{
-		public get() 				{ return this.GetProperty("bFirstPerson"); }
-		public set(const bool i) 	{ this.SetProperty("bFirstPerson", i); }
+		public get() 				{ return this.GetValue("bFirstPerson"); }
+		public set( const bool i ) 	{ this.SetValue("bFirstPerson", i); }
 	}
 
 	public void MakeProp(const bool announce, bool override = true)
@@ -446,24 +446,27 @@ public void KickCallBack(const QueryCookie cookie, const int client, const ConVa
 	KickClient(client, "Could not detect client ConVar r_staticpropinfo");
 }
 
-public void CheckLivingPlayers()
+public void fwdOnCheckLivingPlayers()
 {
-	if (JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (JBGameMode_GetProperty("iRoundState") != StateRunning || NotPH || !JBPH[StaticPropInfo].BoolValue)
 		return;
 
-	int i;
-	bool last = GetLivingPlayers(RED) == 1,
-		 propinfo = JBPH[StaticPropInfo].BoolValue;
-
-	for (i = MaxClients; i; --i)
+	for (int i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i) || !IsPlayerAlive(i))
 			continue;
-		if (propinfo)
-			QueryClientConVar(i, "r_staticpropinfo", KickCallBack);
 
-		if (!last)
-			continue;
+		QueryClientConVar(i, "r_staticpropinfo", KickCallBack);
+	}
+}
+
+public Action fwdOnLastPrisoner()
+{
+	if (JBGameMode_GetProperty("iRoundState") != StateRunning || NotPH)
+		return Plugin_Continue;
+
+	for (int i = MaxClients; i; --i)
+	{
 		if (GetClientTeam(i) == RED)
 		{
 			JailHunter player = JailHunter(i);
@@ -475,8 +478,9 @@ public void CheckLivingPlayers()
 		}
 		else TF2_AddCondition(i, TFCond_Jarated, 15.0);
 	}
-	if (last)
-		EmitSoundToAll("prophunt/oneandonly.mp3");
+
+	EmitSoundToAll("prophunt/oneandonly.mp3");
+	return Plugin_Continue;
 }
 
 public void DisallowRerolls(const int roundcount)
@@ -1034,7 +1038,6 @@ public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Even
 		EmitSoundToAll(s);
 		bFirstBlood = false;
 	}
-	SetPawnTimer(CheckLivingPlayers, 0.2);
 }
 public void fwdOnPlayerSpawned(const JBPlayer player)
 {
@@ -1170,4 +1173,8 @@ public void CheckJBHooks()
 		LogError("Error loading OnVariableReset Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnTimeEnd, fwdOnTimeEnd))
 		LogError("Error loading OnTimeEnd Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnLastPrisoner, fwdOnLastPrisoner))
+		LogError("Error loading OnLastPrisoner Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
+		LogError("Error loading OnCheckLivingPlayers Forwards for JB PH Sub-Plugin!");
 }

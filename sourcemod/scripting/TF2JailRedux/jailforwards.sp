@@ -34,6 +34,9 @@ void InitializeForwards()
 	g_hForwards[OnClientInduction] 		= CreateForward(ET_Ignore, Param_Cell);
 	g_hForwards[OnVariableReset] 		= CreateForward(ET_Ignore, Param_Cell);
 	g_hForwards[OnTimeEnd] 				= CreateForward(ET_Hook);
+	g_hForwards[OnLastGuard] 			= CreateForward(ET_Hook);
+	g_hForwards[OnLastPrisoner] 		= CreateForward(ET_Hook);
+	g_hForwards[OnCheckLivingPlayers] 	= CreateForward(ET_Ignore);
 	g_hForwards[OnPlayMusic]			= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
 }
 void Call_OnDownloads()
@@ -104,7 +107,7 @@ void Call_OnWardenThink(const JailFighter player)
 void Call_OnLRTextHud(char strHud[128])
 {
 	Call_StartForward(g_hForwards[OnLRTextHud]);
-	Call_PushStringEx(strHud, 128, SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+	Call_PushStringEx(strHud, 128, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_Finish();
 }
 void Call_OnLRPicked(const JailFighter player, const int request, const int value, ArrayList &array)
@@ -254,4 +257,19 @@ Action Call_OnTimeEnd()
 	Call_StartForward(g_hForwards[OnTimeEnd]);
 	Call_Finish(result);
 	return result;
+}
+void Call_OnLastGuard(Action &result)
+{
+	Call_StartForward(g_hForwards[OnLastGuard]);
+	Call_Finish(result);
+}
+void Call_OnLastPrisoner(Action &result)
+{
+	Call_StartForward(g_hForwards[OnLastPrisoner]);
+	Call_Finish(result);
+}
+void Call_OnCheckLivingPlayers()
+{
+	Call_StartForward(g_hForwards[OnCheckLivingPlayers]);
+	Call_Finish();
 }

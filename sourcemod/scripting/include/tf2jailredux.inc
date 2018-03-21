@@ -85,23 +85,23 @@ methodmap JBPlayer
 	/**
 	 * Gets the property of the internal JailFighter methodmap.
 	 *
-	 * @param prop_name		Name of property you want to access data from.
+	 * @param key		Name of property you want to access data from.
 	 * @param item			Reference to use of the variable to overwrite with data from the property.
 	 *
 	 * @return				Property value called if it was valid
     */
-	public native any GetProperty(const char prop_name[64]);
+	public native any GetValue(const char key[64]);
 	
 	/**
 	 * Sets the property of the internal JB methodmap.
-	 * NOTE: You can use this to create new properties which GetProperty can access!
+	 * NOTE: You can use this to create new properties which GetValue can access!
 	 *
-	 * @param prop_name		Name of the property you want to override data from (works like StringMap).
+	 * @param key		Name of the property you want to override data from (works like StringMap).
 	 * @param value			Data you want the property to hold.
 	 *
 	 * @noreturn
 	*/
-	public native void SetProperty(const char prop_name[64], any value);
+	public native void SetValue(const char key[64], any value);
 
 	/**		AVAILABLE PROPERTIES
 		property int iLRCustom							// For the Custom LR
@@ -119,6 +119,86 @@ methodmap JBPlayer
 		property float flSpeed 							// Client speed, isn't used
 		property float flKillSpree 						// Also for the ghetto rigged freekill system
 	*/
+
+	/**
+	 *	Set an array into this player's StringMap
+	 *
+	 *	@param key			Key string.
+	 *	@param array		Array to store.
+	 *	@param num_items	Number of items in the array.
+	 *	@param replace		If false, operation will fail if the key is already set.
+	 *
+	 *	@return				True on success, false on failure.
+	*/
+ 	public native bool SetArray(const char[] key, const any[] array, int num_items, bool replace = true);
+
+	/**
+	 *	Sets a string value in this player's StringMap, either inserting a new entry or replacing an old one.
+	 *
+	 *	@param key			Key string.
+	 *	@param string		String to store.
+	 *	@param replace		If false, operation will fail if the key is already set.
+	 *
+	 *	@return				True on success, false on failure.
+	*/
+ 	public native bool SetString(const char[] key, const char[] string, bool replace = true);
+
+	/**
+	 *	Retrieves an array in this player's StringMap.
+	 *
+	 *	@param key			Key string.
+	 *	@param array		Buffer to store array.
+	 *	@param max_size		Maximum size of array buffer.
+	 *	@param size			Optional parameter to store the number of elements written to the buffer.
+	 *
+	 *	@return				True on success.  False if the key is not set, or the key is set 
+	 *						as a value or string (not an array).
+	*/
+ 	public native bool GetArray(const char[] key, any[] array, int max_size, int &size = 0);
+
+	/**
+	 *	Retrieves a string in this player's StringMap.
+	 *
+	 *	@param key			Key string.
+	 *	@param string		Buffer to store value.
+	 *	@param max_size		Maximum size of string buffer.
+	 *	@param size			Optional parameter to store the number of bytes written to the buffer.
+	 *
+	 *	@return				True on success.  False if the key is not set, or the key is set 
+	 *						as a value or array (not a string).
+	*/
+ 	public native bool GetString(const char[] key, char[] string, int max_size, int &size = 0);
+
+	/**
+	 *	Removes a key entry from this player's StringMap.
+	 *
+	 *	@param key			Key string.
+	 *
+	 *	@return				True on success, false if the value was never set.
+	*/
+ 	public native bool Remove(const char[] key);
+
+	/**
+	 *	Clears all entries from this player's StringMap.
+	 *
+	 *	@noreturn
+	*/
+	public native void Clear();
+
+	/**
+	 *	Create a snapshot of this player's StringMap's keys. See StringMapSnapshot.
+	 *
+	 *	@return 			Handle to key SnapShot.
+	*/
+	public native StringMapSnapshot Snapshot();
+
+	/**
+	 *	Retrieves the number of elements in this player's StringMap.
+	*/
+	property int Size
+	{
+		public native get();
+	}
 		
 	/**
 	 *	Creates and spawns a weapon to a player.
@@ -334,6 +414,9 @@ enum	// JB Hook Types
 	OnClientInduction,
 	OnVariableReset,
 	OnTimeEnd,
+	OnLastGuard,
+	OnLastPrisoner,
+	OnCheckLivingPlayers,
 	OnPlayMusic
 };
 
@@ -373,7 +456,11 @@ typeset JBHookCB
 	*/
 	function void (const JBPlayer Victim, const JBPlayer Attacker, Event event);
 
-	//	OnManageRoundStart
+	/*
+		OnDownloads
+		OnManageRoundStart
+		OnCheckLivingPlayers
+	*/
 	function void ();
 
 	//	OnMenuAdd
@@ -386,13 +473,13 @@ typeset JBHookCB
 		OnPanelAdd
 		OnWMenuAdd
 	*/
-	function void (Menu & menu);	
+	function void (Menu &menu);	
 
 	// 	OnLRTextHud
 	function void (char strHud[128]);
 
 	// 	OnLRPicked
-	function void (const JBPlayer Player, const int request, const int value, ArrayList & array);
+	function void (const JBPlayer Player, const int request, const int value, ArrayList &array);
 
 	// 	OnHurtPlayer
 	function void (const JBPlayer Victim, const JBPlayer Attacker, int damage, int custom, int weapon, Event event);
@@ -404,17 +491,21 @@ typeset JBHookCB
 	function void (const JBPlayer Player, const char[] index);
 
 	// OnPlayMusic
-	function Action (char song[PLATFORM_MAX_PATH], float & time);
+	function Action (char song[PLATFORM_MAX_PATH], float &time);
 
-	// OnTimeEnd
+	/*
+		OnTimeEnd
+		OnLastGuard		Return Handled to stop "One Guard Left" message. Return Stop to not fire OnCheckLivingPlayers
+		OnLastPrisoner	Return Stop to not fire OnCheckLivingPlayers
+	*/
 	function Action ();
 };
 
 /**
- *	Hook function from the core plugin and use them within another plugin
+ *	Hook function from the core plugin and use them within another plugin.
  *
- *	@param callbacktype 	Enum type to hook into
- *	@param callback 		Function to call when the forward is called
+ *	@param callbacktype 	Enum type to hook into.
+ *	@param callback 		Function to call when the forward is called.
  *	
  *	@noreturn
 */
@@ -475,34 +566,34 @@ native any JBGameMode_GetProperty(const char prop_name[64]);
 native void JBGameMode_SetProperty(const char prop_name[64], any value);
 
 /** Properties
- *	property int iRoundState
- *	property int iTimeLeft
- *	property int iLRPresetType
- *	property int iLRType
- *	property int iFreedayLimit		
- *	property bool bSteam			// If has SteamTools
- *	property bool bSB 				// If has Sourcebans (Optional, not used in core)
- *	property bool bSC				// If has SourceComms
- *	property bool bVA 				// If has VoiceAnnounce_Ex (Optional, not used in core)
- *	property bool bTF2Attribs
- *	property bool bIsMapCompatible
- *	property bool bFreedayTeleportSet
- *	property bool bWardayTeleportSetBlue
- *	property bool bWardayTeleportSetRed
- *	property bool bCellsOpened
- *	property bool b1stRoundFreeday
- *	property bool bIsLRInUse
- *	property bool bIsWardenLocked
- *	property bool bOneGuardLeft
- *	property bool bAdminLockWarden
- *	property bool bAdminLockedLR
- *	property bool bDisableCriticals
- *	property bool bIsFreedayRound
- *	property bool bWardenExists
- *	property bool bAvoidTeamKills
- *	property bool bIsWarday
- *	property bool bFirstDoorOpening
- *	property float flMusicTime		// Optional, not used in core
+ *	int iRoundState
+ *	int iTimeLeft
+ *	int iLRPresetType
+ *	int iLRType
+ *	bool bSteam				// If has SteamTools
+ *	bool bSB 				// If has Sourcebans (Optional, not used in core)
+ *	bool bSC				// If has SourceComms
+ *	bool bVA 				// If has VoiceAnnounce_Ex (Optional, not used in core)
+ *	bool bTF2Attribs
+ *	bool bIsMapCompatible
+ *	bool bFreedayTeleportSet
+ *	bool bWardayTeleportSetBlue
+ *	bool bWardayTeleportSetRed
+ *	bool bCellsOpened
+ *	bool b1stRoundFreeday
+ *	bool bIsLRInUse
+ *	bool bIsWardenLocked
+ *	bool bOneGuardLeft
+ *	bool bOnePrisonerLeft
+ *	bool bAdminLockWarden
+ *	bool bAdminLockedLR
+ *	bool bDisableCriticals
+ *	bool bIsFreedayRound
+ *	bool bWardenExists
+ *	bool bAvoidTeamKills
+ *	bool bIsWarday
+ *	bool bFirstDoorOpening
+ *	float flMusicTime		// Optional, not used in core
 */
 
 /**
@@ -570,8 +661,6 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.JBPlayer");
 	MarkNativeAsOptional("JBPlayer.userid.get");
 	MarkNativeAsOptional("JBPlayer.index.get");
-	MarkNativeAsOptional("JBPlayer.GetProperty");
-	MarkNativeAsOptional("JBPlayer.SetProperty");
 	MarkNativeAsOptional("JBPlayer.SpawnWeapon");
 	MarkNativeAsOptional("JBPlayer.GetWeaponSlotIndex");
 	MarkNativeAsOptional("JBPlayer.SetWepInvis");
@@ -594,6 +683,17 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.MakeHorsemann");
 	MarkNativeAsOptional("JBPlayer.WardenMenu");
 	MarkNativeAsOptional("JBPlayer.ClimbWall");
+
+	MarkNativeAsOptional("JBPlayer.SetValue");
+	MarkNativeAsOptional("JBPlayer.SetArray");
+	MarkNativeAsOptional("JBPlayer.SetString");
+	MarkNativeAsOptional("JBPlayer.GetValue");
+	MarkNativeAsOptional("JBPlayer.GetArray");
+	MarkNativeAsOptional("JBPlayer.GetString");
+	MarkNativeAsOptional("JBPlayer.Remove");
+	MarkNativeAsOptional("JBPlayer.Clear");
+	MarkNativeAsOptional("JBPlayer.Snapshot");
+	MarkNativeAsOptional("JBPlayer.Size.get");
 
 	MarkNativeAsOptional("JBGameMode_GetProperty");
 	MarkNativeAsOptional("JBGameMode_SetProperty");

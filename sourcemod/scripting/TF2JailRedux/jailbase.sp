@@ -15,19 +15,19 @@ methodmap JailFighter
 	{
 		int player;
 		if (uid && GetClientOfUserId(ind) > 0)
-			player = ( ind );
-		else if ( IsClientValid(ind) )
+			player = ind;
+		else if (IsClientValid(ind))
 			player = GetClientUserId(ind);
-		return view_as< JailFighter >( player );
+		return view_as< JailFighter >(player);
 	}
 
-	property int userid 
+	property int userid
 	{
 		public get()				{ return view_as< int >(this); }
 	}
-	property int index 
+	property int index
 	{
-		public get()				{ return GetClientOfUserId( view_as< int >(this) ); }
+		public get()				{ return GetClientOfUserId(view_as< int >(this)); }
 	}
 
 	property int iCustom
@@ -231,7 +231,7 @@ methodmap JailFighter
 	 * @param att		the nested attribute string, example: "2 ; 2.0" - increases weapon damage by 100% aka 2x.
 	 * @return			entity index of the newly created weapon
 	 */
-	public int SpawnWeapon(char[] name, int index, int level, int qual, char[] att)
+	public int SpawnWeapon( char[] name, int index, int level, int qual, char[] att )
 	{
 		Handle hWeapon = TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
 		if (hWeapon == null)
@@ -315,18 +315,18 @@ methodmap JailFighter
 		if (weapon > MaxClients && IsValidEntity(weapon))
 			ClipTable[weapon] = val;
 	}*/
-	public int GetWeaponSlotIndex(const int slot)
+	public int GetWeaponSlotIndex( const int slot )
 	{
 		int weapon = GetPlayerWeaponSlot(this.index, slot);
 		return GetItemIndex(weapon);
 	}
-	public void SetWepInvis(const int alpha)
+	public void SetWepInvis( const int alpha )
 	{
 		int transparent = alpha;
 		int entity;
 		for (int i=0; i<5; i++) {
 			entity = GetPlayerWeaponSlot(this.index, i); 
-			if ( IsValidEdict(entity) && IsValidEntity(entity) )
+			if (IsValidEdict(entity) && IsValidEntity(entity))
 			{
 				if (transparent > 255)
 					transparent = 255;
@@ -343,7 +343,7 @@ methodmap JailFighter
 		SetCommandFlags("r_screenoverlay", iFlags);
 		ClientCommand(this.index, "r_screenoverlay \"%s\"", strOverlay);
 	}*/
-	public void TeleToSpawn(int team = 0)
+	public void TeleToSpawn( int team = 0 )
 	{
 		int iEnt = -1;
 		float vPos[3], vAng[3];
@@ -358,19 +358,19 @@ methodmap JailFighter
 					hArray.Push(iEnt);
 			}
 		}
-		iEnt = hArray.Get( GetRandomInt(0, hArray.Length-1) );
+		iEnt = hArray.Get(GetRandomInt(0, hArray.Length-1));
 		delete hArray;
 
 		GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", vPos);
 		GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
 		TeleportEntity(this.index, vPos, vAng, NULL_VECTOR);
 	}
-	public void SpawnSmallHealthPack(int ownerteam=0)
+	public void SpawnSmallHealthPack( int ownerteam = 0 )
 	{
-		if (!IsValidClient(this.index) || !IsPlayerAlive(this.index))
+		if (!IsPlayerAlive(this.index))
 			return;
 		int healthpack = CreateEntityByName("item_healthkit_small");
-		if ( IsValidEntity(healthpack) ) 
+		if (IsValidEntity(healthpack))
 		{
 			float pos[3]; GetClientAbsOrigin(this.index, pos);
 			pos[2] += 20.0;
@@ -383,7 +383,7 @@ methodmap JailFighter
 			TeleportEntity(healthpack, pos, NULL_VECTOR, vel);
 		}
 	}
-	public void ForceTeamChange(const int team, bool spawn = true)
+	public void ForceTeamChange( const int team, bool spawn = true )
 	{
 		int client = this.index;
 		if (TF2_GetPlayerClass(client) > TFClass_Unknown) 
@@ -438,10 +438,7 @@ methodmap JailFighter
 		char sClassName[64];
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
 		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
-		{
-			//FakeClientCommandEx(client, "use %s", sClassName); //wtf?
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
-		}
 	}
 	public void EmptyWeaponSlots()
 	{
@@ -469,16 +466,12 @@ methodmap JailFighter
 				SetEntProp(weapon, Prop_Data, "m_iClip2", 0);
 				
 			SetWeaponAmmo(weapon, 0);
-			//Client_SetWeaponPlayerAmmoEx(client, weapon, 0, 0);
 		}
 	
 		char sClassName[64];
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
 		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
-		{
-			//FakeClientCommandEx(client, "use %s", sClassName); // wtf?
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
-		}
 		
 		//CPrintToChat(client, "{red}[TF2Jail]{tan} Your weapons and ammo have been stripped.");
 	}
@@ -509,7 +502,7 @@ methodmap JailFighter
 	*/
 	public void SetCustomModel( const char[] model )
 	{
-		SetVariantString( model );
+		SetVariantString(model);
 		AcceptEntityInput(this.index, "SetCustomModel" );
 	}
 	public void WardenUnset()
@@ -623,7 +616,7 @@ methodmap JailFighter
 			ResetPlayer(client);
 		this.bIsHHH = false;
 	}
-	public void TeleportToPosition(const int location)
+	public void TeleportToPosition( const int location )
 	{
 		switch (location)
 		{
@@ -655,10 +648,10 @@ methodmap JailFighter
 		wmenu.ExitButton = true;
 		wmenu.Display(this.index, MENU_TIME_FOREVER);
 	}
-	public void ClimbWall(const int weapon, const float upwardvel, const float health, const bool attackdelay)
+	public void ClimbWall( const int weapon, const float upwardvel, const float health, const bool attackdelay )
 	//Credit to Mecha the Slag
 	{
-		if ( GetClientHealth(this.index) <= health )	// Have to baby players so they don't accidentally kill themselves trying to escape
+		if (GetClientHealth(this.index) <= health) 	// Have to baby players so they don't accidentally kill themselves trying to escape
 			return;
 
 		int client = this.index;
@@ -671,7 +664,7 @@ methodmap JailFighter
 		// Check for colliding entities
 		TR_TraceRayFilter(vecClientEyePos, vecClientEyeAng, MASK_PLAYERSOLID, RayType_Infinite, TraceRayDontHitSelf, client);
 
-		if ( !TR_DidHit(null) )
+		if (!TR_DidHit(null))
 			return;
 
 		int TRIndex = TR_GetEntityIndex(null);
@@ -703,5 +696,135 @@ methodmap JailFighter
 
 		if (attackdelay)
 			SetPawnTimer(NoAttacking, 0.1, EntIndexToEntRef(weapon));
+	}
+
+	/***** [STRINGMAP METHODS] *****/
+
+	/**
+	 *	Set a value into this player's StringMap.
+	 *
+	 *	@param key 			Key string.
+	 *	@param i 			Value to store at the key.
+	 *	@param replace 		If false, operation will fail if the key is already set.
+	 *
+	 *	@return 			True on success, false on failure.
+	*/
+	public bool SetValue( const char[] key, const any i, bool replace = true )
+	{
+		return hJailFields[this.index].SetValue(key, i, replace);
+	}
+
+	/**
+	 *	Set an array into this player's StringMap
+	 *
+	 *	@param key			Key string.
+	 *	@param i			Array to store.
+	 *	@param num_items	Number of items in the array.
+	 *	@param replace		If false, operation will fail if the key is already set.
+	 *
+	 *	@return				True on success, false on failure.
+	*/
+	public bool SetArray( const char[] key, const any[] i, int num_items, bool replace = true )
+	{
+		return hJailFields[this.index].SetArray(key, i, num_items, replace);
+	}
+
+	/**
+	 *	Sets a string value in this player's StringMap, either inserting a new entry or replacing an old one.
+	 *
+	 *	@param key			Key string.
+	 *	@param i			String to store.
+	 *	@param replace		If false, operation will fail if the key is already set.
+	 *
+	 *	@return				True on success, false on failure.
+	*/
+	public bool SetString( const char[] key, const char[] i, bool replace = true )
+	{
+		return hJailFields[this.index].SetString(key, i, replace);
+	}
+
+	/**
+	 *	Get a value from this player's StringMap.
+	 *
+	 *	@param key 			Key string.
+	 *	@param i			Variable to store value.
+	 *
+	 *	@return 			Value stored in the key.
+	*/
+	public bool GetValue( const char[] key, any &i )
+	{
+		return hJailFields[this.index].GetValue(key, i);
+	}
+
+	/**
+	 *	Retrieves an array in this player's StringMap.
+	 *
+	 *	@param key			Key string.
+	 *	@param i			Buffer to store array.
+	 *	@param max_size		Maximum size of array buffer.
+	 *	@param size			Optional parameter to store the number of elements written to the buffer.
+	 *
+	 *	@return				True on success.  False if the key is not set, or the key is set 
+	 *						as a value or string (not an array).
+	*/
+	public bool GetArray( const char[] key, any[] i, int max_size, int &size = 0 )
+	{
+		return hJailFields[this.index].GetArray(key, i, max_size, size);
+	}
+
+	/**
+	 *	Retrieves a string in this player's StringMap.
+	 *
+	 *	@param key			Key string.
+	 *	@param i			Buffer to store value.
+	 *	@param max_size		Maximum size of string buffer.
+	 *	@param size			Optional parameter to store the number of bytes written to the buffer.
+	 *
+	 *	@return				True on success.  False if the key is not set, or the key is set 
+	 *						as a value or array (not a string).
+	*/
+	public bool GetString( const char[] key, char[] i, int max_size, int &size = 0 )
+	{
+		return hJailFields[this.index].GetString(key, i, max_size, size);
+	}
+
+	/**
+	 *	Removes a key entry from this player's StringMap.
+	 *
+	 *	@param key			Key string.
+	 *
+	 *	@return				True on success, false if the value was never set.
+	*/
+	public bool Remove( const char[] key )
+	{
+		return hJailFields[this.index].Remove(key);
+	}
+
+	/**
+	 *	Clears all entries from this player's StringMap.
+	 *
+	 *	@noreturn
+	*/
+	public void Clear()
+	{
+		hJailFields[this.index].Clear();
+	}
+
+	/**
+	 *	Create a snapshot of this player's StringMap's keys. See StringMapSnapshot.
+	 *
+	 *	@return 			Handle to key Snapshot.
+	*/
+	public StringMapSnapshot Snapshot()
+	{
+		return hJailFields[this.index].Snapshot();
+	}
+
+	/**
+	 *	Retrieves the number of elements in this player's StringMap.
+	*/
+	property int Size
+	{
+		public get() 				{ return hJailFields[this.index].Size; }
 	}
 };

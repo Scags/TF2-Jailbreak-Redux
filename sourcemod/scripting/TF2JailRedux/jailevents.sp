@@ -71,7 +71,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-	if (!bEnabled.BoolValue || gamemode.iRoundState != StateRunning)
+	if (!bEnabled.BoolValue || gamemode.iRoundState == StateDisabled)
 		return Plugin_Continue;
 
 	JailFighter victim = JailFighter( event.GetInt("userid"), true );	
@@ -155,10 +155,10 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	gamemode.iLRType = -1;
 	gamemode.DoorHandler(CLOSE);
 	gamemode.bDisableCriticals = false;
-	gamemode.iFreedayLimit = 0;
-	gamemode.iRoundState = StateStarting;
 	gamemode.bOneGuardLeft = false;
-	
+	gamemode.bOnePrisonerLeft = false;
+	gamemode.iRoundState = StateStarting;
+
 	return Plugin_Continue;
 }
 
@@ -188,29 +188,10 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		return Plugin_Continue;
 	}
 
-	int i, type, livingtype;
-	bool warday;
+	int i, type, livingtype, playing;
+	bool warday, autobalance, immunity;
+	float flRatio, flBalance, delay;
 	JailFighter player;
-
-	if (cvarTF2Jail[Balance].BoolValue && gamemode.iPlaying > 2)
-	{
-		float flRatio, flBalance = cvarTF2Jail[BalanceRatio].FloatValue;
-		int rand;
-		for (i = MaxClients; i; --i)
-		{
-			if (!IsClientInGame(i))
-				continue;
-
-			flRatio = float(GetLivingPlayers(3)) / float(GetLivingPlayers(2));
-
-			if (flRatio <= flBalance)
-				break;
-
-			rand = GetRandomPlayer(BLU, true);
-			JailFighter(rand).ForceTeamChange(RED);
-			CPrintToChat(rand, "{red}[TF2Jail]{tan} You have been autobalanced.");
-		}
-	}
 
 	gamemode.iLRType = gamemode.iLRPresetType;
 
@@ -222,25 +203,42 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	// Or if you aren't using the VSH subplugin, ignore this
 	
 	SetPawnTimer(_MusicPlay, 1.4);
+
 	warday = gamemode.bIsWarday;
 	type = cvarTF2Jail[MuteType].IntValue;
 	livingtype = cvarTF2Jail[LivingMuteType].IntValue;
+	autobalance = cvarTF2Jail[Balance].BoolValue;
+
+	if (autobalance)	// I'm no expert but below is a fuckton of code to run in a player loop, squeezing what I can out of this
+	{
+		immunity = cvarTF2Jail[AutobalanceImmunity].BoolValue;
+		playing = gamemode.iPlaying;
+		flBalance = cvarTF2Jail[BalanceRatio].FloatValue;
+	}
 
 	for (i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
 			continue;
 
-		if (!IsPlayerAlive(i))
-			continue;
+		if (autobalance && playing > 2 && IsPlayerAlive(i))
+		{
+			SetEntProp(i, Prop_Data, "m_takedamage", 0, 1);	// For shitheads like Dimmy who ruin fun
+		
+			flRatio = float(GetLivingPlayers(3)) / float(GetLivingPlayers(2));
+
+			if (flRatio > flBalance)
+			{
+				player = JailFighter(GetRandomPlayer(BLU, true));
+				if ((immunity && !player.bIsVIP) || !immunity)
+				{
+					player.ForceTeamChange(RED);
+					CPrintToChat(player.index, "{red}[TF2Jail]{tan} You have been autobalanced.");
+				}
+			}
+		}
 
 		player = JailFighter(i);
-		
-		SetEntProp(i, Prop_Data, "m_takedamage", 0, 1);	// For shitheads like Dimmy who ruin fun
-		OnLRActivate(player);
-
-		if (warday)
-			player.TeleportToPosition(GetClientTeam(i));
 
 		if (!IsPlayerAlive(i))
 		{
@@ -264,32 +262,36 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 				case 5:if (GetClientTeam(i) == BLU) player.MutePlayer();
 				default:player.MutePlayer();
 			}
+			continue;
 		}
-		else
+
+		SetPawnTimer(ResetDamage, 1.0);					// Players could teamkill with the flames upon autobalance
+		OnLRActivate(player);
+
+		if (warday)
+			player.TeleportToPosition(GetClientTeam(i));
+
+		switch (livingtype)
 		{
-			switch (livingtype)
+			case 0:player.UnmutePlayer();
+			case 1:
 			{
-				case 0:player.UnmutePlayer();
-				case 1:
-				{
-					if (GetClientTeam(i) == RED && !player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
-				}
-				case 2:
-				{
-					if (GetClientTeam(i) == BLU && !player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
-				}
-				case 3:if (!player.bIsVIP) player.MutePlayer();
-				case 4:if (GetClientTeam(i) == RED) player.MutePlayer();
-				case 5:if (GetClientTeam(i) == BLU) player.MutePlayer();
-				default:player.MutePlayer();
+				if (GetClientTeam(i) == RED && !player.bIsVIP)
+					player.MutePlayer();
+				else player.UnmutePlayer();
 			}
+			case 2:
+			{
+				if (GetClientTeam(i) == BLU && !player.bIsVIP)
+					player.MutePlayer();
+				else player.UnmutePlayer();
+			}
+			case 3:if (!player.bIsVIP) player.MutePlayer();
+			case 4:if (GetClientTeam(i) == RED) player.MutePlayer();
+			case 5:if (GetClientTeam(i) == BLU) player.MutePlayer();
+			default:player.MutePlayer();
 		}
 	}
-	SetPawnTimer(ResetDamage, 1.0);	// Players could teamkill with the flames upon autobalance
 	
 	gamemode.iLRPresetType = -1;
 	gamemode.iRoundState = StateRunning;
@@ -297,7 +299,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	if (gamemode.bIsMapCompatible && cvarTF2Jail[DoorOpenTimer].FloatValue != 0.0)
 		SetPawnTimer(Open_Doors, cvarTF2Jail[DoorOpenTimer].FloatValue, gamemode.iRoundCount);
 
-	float delay = cvarTF2Jail[WardenDelay].FloatValue;
+	delay = cvarTF2Jail[WardenDelay].FloatValue;
 	if (delay != 0.0)
 	{
 		gamemode.bIsWardenLocked = true;
@@ -338,7 +340,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 				ClearSyncHud(i, hTextNodes[x]);
 		}
 
-		if (GetClientMenu(i) != MenuSource_None)
+		if (GetClientMenu(i) != MenuSource_None && !IsVoteInProgress())
 			CancelClientMenu(i, true);
 				
 		ManageRoundEnd(player);

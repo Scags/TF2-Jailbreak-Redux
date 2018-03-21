@@ -706,7 +706,6 @@ public Action AdminResetPlugin(int client, int args)
 	gamemode.iRoundCount = 0;
 	gamemode.iLRPresetType = -1;
 	gamemode.iLRType = -1;
-	gamemode.iFreedayLimit = 0;
 	gamemode.bFreedayTeleportSet = false;
 	gamemode.bIsFreedayRound = false;
 	gamemode.bDisableCriticals = false;
@@ -716,6 +715,7 @@ public Action AdminResetPlugin(int client, int args)
 	gamemode.bAdminLockWarden = false;
 	gamemode.bIsWarday = false;
 	gamemode.bOneGuardLeft = false;
+	gamemode.bOnePrisonerLeft = false;
 	gamemode.bIsLRInUse = false;
 	gamemode.b1stRoundFreeday = false;
 	gamemode.bCellsOpened = false;
@@ -1024,6 +1024,7 @@ public int MenuHandle_FreedayForClients(Menu menu, MenuAction action, int client
 			char strCli[32];
 			menu.GetItem(select, strCli, sizeof(strCli));
 			JailFighter targ = JailFighter( StringToInt(strCli), true );
+			static int limit;
 
 			if (!IsClientInGame(targ.index))
 			{
@@ -1037,18 +1038,19 @@ public int MenuHandle_FreedayForClients(Menu menu, MenuAction action, int client
 				FreedayforClientsMenu(client);
 				return;
 			}
-			if (gamemode.iFreedayLimit < cvarTF2Jail[FreedayLimit].IntValue)
+			if (limit < cvarTF2Jail[FreedayLimit].IntValue)
 			{
 				targ.bIsQueuedFreeday = true;
-				gamemode.iFreedayLimit++;
-				CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen %N for freeday.", client, targ.index);
-				FreedayforClientsMenu(client);
-				return;
+				limit++;
+				CPrintToChatAll("{red}[TF2Jail]{tan} {default}%N{tan} has chosen {default}%N{tan} for freeday.", client, targ.index);
+				if (limit < cvarTF2Jail[FreedayLimit].IntValue)
+					FreedayforClientsMenu(client);
+				else limit = 0;
 			}
 			else 
 			{	
-				CPrintToChat(client, "{red}[TF2Jail]{tan} %N has picked the maximum amount of freedays.", client);
-				return;
+				CPrintToChat(client, "{red}[TF2Jail]{tan} You have picked the maximum amount of freedays.", client);
+				limit = 0;
 			}
 		}
 		case MenuAction_End:delete menu;
@@ -1285,13 +1287,13 @@ public Action BaseProp(int client, int args)
 	if (args == 1)
 	{
 		player = JBPlayer(client);
-		val = player.GetProperty(arg1);
+		val = player.GetValue(arg1);
 		CReplyToCommand(client, "%s value: %i", arg1, val);
 		return Plugin_Handled;
 	}
 	char arg2[64]; GetCmdArg(2, arg2, 64);
 	player = JBPlayer(FindTarget(client, arg1));
-	val = player.GetProperty(arg2);
+	val = player.GetValue(arg2);
 	CReplyToCommand(client, "%N's %s value: %i", player.index, arg2, val);
 	return Plugin_Handled;
 }

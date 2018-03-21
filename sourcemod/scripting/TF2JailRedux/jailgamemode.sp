@@ -83,18 +83,6 @@ methodmap JailGameMode < StringMap
 			this.SetValue("iLRType", i);
 		}
 	}
-	property int iFreedayLimit
-	{
-		public get()
-		{
-			int i; this.GetValue("iFreedayLimit", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			this.SetValue("iFreedayLimit", i);
-		}
-	}
 	
 #if defined _steamtools_included
 	property bool bSteam
@@ -270,6 +258,18 @@ methodmap JailGameMode < StringMap
 			this.SetValue("bOneGuardLeft", i);
 		}
 	}
+	property bool bOnePrisonerLeft
+	{
+		public get()
+		{
+			bool i; this.GetValue("bOnePrisonerLeft", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bOnePrisonerLeft", i);
+		}
+	}
 	property bool bAdminLockWarden
 	{
 		public get()
@@ -387,7 +387,6 @@ methodmap JailGameMode < StringMap
 		this.iRoundCount = 0;
 		this.iLRPresetType = -1;
 		this.iLRType = -1;
-		this.iFreedayLimit = 0;
 		this.bFreedayTeleportSet = false;
 		this.bTF2Attribs = false;
 		this.bIsFreedayRound = false;
@@ -398,6 +397,7 @@ methodmap JailGameMode < StringMap
 		this.bAdminLockWarden = false;
 		this.bIsWarday = false;
 		this.bOneGuardLeft = false;
+		this.bOnePrisonerLeft = false;
 		this.bIsLRInUse = false;
 		this.b1stRoundFreeday = false;
 		this.bCellsOpened = false;
@@ -418,10 +418,10 @@ methodmap JailGameMode < StringMap
 
 	public void FindRandomWarden()
 	{
-		JailFighter( GetRandomPlayer(BLU, true) ).WardenSet();
+		JailFighter(GetRandomPlayer(BLU, true)).WardenSet();
 		this.bWardenExists = true;
 	}
-	public void DoorHandler(const eDoorsMode status)
+	public void DoorHandler( const eDoorsMode status )
 	{
 		if (sCellNames[0] != '\0')
 		{
@@ -471,7 +471,7 @@ methodmap JailGameMode < StringMap
 		}
 		return view_as< JailFighter >(0);
 	}
-	public void FireWarden(bool prevent = true, bool announce = true)
+	public void FireWarden( bool prevent = true, bool announce = true )
 	{
 		JailFighter player = this.FindWarden();
 		player.WardenUnset();

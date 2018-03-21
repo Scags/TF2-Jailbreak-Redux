@@ -774,27 +774,6 @@ stock bool IsWeaponSlotActive(const int client, const int slot)
 {
 	return GetPlayerWeaponSlot(client, slot) == GetActiveWep(client);
 }
-stock bool MapHasMusic(bool forceRecalc = false)	// Does this even work?
-{
-	static bool hasMusic;
-	static bool found = false;
-	if (forceRecalc) {
-		found = false;
-		hasMusic = false;
-	}
-	if (!found) {
-		int i = -1;
-		char name[64];
-		while ((i = FindEntityByClassname(i, "info_target")) != -1)
-		{
-			GetEntPropString(i, Prop_Data, "m_iName", name, sizeof(name));
-			if ( !strcmp(name, "hale_no_music", false) )
-				hasMusic = true;
-		}
-		found = true;
-	}
-	return hasMusic;
-}
 stock bool IsValidAdmin(const int client, const char[] flags)
 {
 	if (!IsClientInGame(client))

@@ -187,18 +187,19 @@ public void ResetVariables(const JailFighter base, const bool compl)
 */
 public void AddLRToMenu(Menu & menu)
 {
-	char strName[32];
-	char strID[4];
-	int max, value;
+	char strName[32], strID[4], strValue[16];
+	int max, value, def = cvarTF2Jail[LRDefault].IntValue;
 
 	menu.AddItem("-1", "Random LR");
 	for (int i = 0; i < sizeof(strLRNames); i++)	// If we do '<= LRMAX' and you have a sub-plugin, array indexes will be out of bounds
 	{												// So don't add sub-plugin LR names to this plugin, simply do it within your own
-		max = LR_DEFAULT;	// 5
+		max = def;
 		// if (i == Warday)	// If you want a certain last request to have a different max, do something like this
 			// max = 3;
 		value = arrLRS.Get(i);
-		Format(strName, sizeof(strName), "%s (%i/%i)", strLRNames[i][0], value, max);
+		if (max)
+			Format(strValue, sizeof(strValue), " (%i/%i)", value, max);
+		Format(strName, sizeof(strName), "%s%s", strLRNames[i][0], (max ? strValue : ""));	// If cvar value is 0, infinite picks
 		IntToString(i, strID, sizeof(strID));
 		menu.AddItem(strID, strName, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
 	}
@@ -280,11 +281,11 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 						base.bIsQueuedFreeday = true;
 					else if (randlr == FreedayOther)
 						for (int i = 0; i < 3; i++)
-							JailFighter( GetRandomPlayer(RED) ).bIsQueuedFreeday = true;
+							JailFighter(GetRandomPlayer(RED)).bIsQueuedFreeday = true;
 				}
 				case Suicide:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to kill themselves. What a shame...", client);
 					SetPawnTimer(KillThatBitch, (GetRandomFloat(0.5, 7.0)), client);	// Meme lol
@@ -292,7 +293,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case Custom:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to type out their LR in chat.", client);
 					gamemode.iLRPresetType = Custom;
@@ -301,7 +302,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case FreedaySelf:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Freeday for Themselves{tan} next round.", client);
 					gamemode.iLRPresetType = FreedaySelf;
@@ -310,7 +311,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case FreedayOther:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N is picking Freedays for next round...", client);
 					FreedayforClientsMenu(client);
@@ -319,7 +320,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case FreedayAll:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to grant a {default}Freeday for All{tan} next round.", client);
 					gamemode.iLRPresetType = FreedayAll;
@@ -327,7 +328,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case GuardMelee:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to strip the guards of their weapons.", client);
 					gamemode.iLRPresetType = GuardMelee;
@@ -335,7 +336,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case HHHDay:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Horseless Headless Horsemann Kill Round{tan} next round.", client);
 					gamemode.iLRPresetType = HHHDay;
@@ -343,7 +344,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case TinyRound:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Super Small{tan} for everyone.", client);
 					gamemode.iLRPresetType = TinyRound;
@@ -351,7 +352,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case HotPrisoner:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to ignite all of the prisoners next round!", client);
 					gamemode.iLRPresetType = HotPrisoner;
@@ -359,7 +360,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case Gravity:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Low Gravity{tan} as their last request.", client);
 					gamemode.iLRPresetType = Gravity;
@@ -367,7 +368,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case RandomKill:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to hire a Sniper for the next round!", client);
 					gamemode.iLRPresetType = RandomKill;
@@ -375,7 +376,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case Warday:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to do a {default}Warday{tan}.", client);
 					gamemode.iLRPresetType = Warday;
@@ -383,7 +384,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case ClassWars:
 				{
-					if (!CheckSet(client, value, LR_DEFAULT))
+					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
 					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Class Warfare{tan} as their last request.", client);
 					gamemode.iLRPresetType = ClassWars;
@@ -578,7 +579,7 @@ public void ManageRoundStart()
 		case RandomKill:
 		{
 			CPrintToChatAll("{tan}Look out! Sniper!");
-			ForcePlayerSuicide( GetRandomClient() );	// Lol rip, no fun for this guy
+			SDKHooks_TakeDamage(GetRandomClient(), 0, 0, 9001.0, DMG_DIRECT|DMG_BULLET, _, _, _);	// Lol rip, no fun for this guy
 			EmitSoundToAll(SuicideSound);
 			SetPawnTimer(RandSniper, GetRandomFloat(30.0, 60.0), gamemode.iRoundCount);
 		}
@@ -612,23 +613,26 @@ public void ManageRoundStart()
 /** 
  *	Calls on round end obviously, resets should be put here as well 
 */
-public void ManageRoundEnd(const JailFighter player)
+public void ManageRoundEnd(const JailFighter base)
 {
+	if (base.bIsFreeday)
+		base.RemoveFreeday();
+
 	switch(gamemode.iLRType)
 	{
 		case HHHDay:
 		{
-			if (player.bIsHHH)
-				SetPawnTimer(UnHorsemannify, 1.0, player);	//player.UnHorsemann();
+			if (base.bIsHHH)
+				SetPawnTimer(UnHorsemannify, 1.0, base);	//base.UnHorsemann();
 		}
-		case TinyRound:SetPawnTimer(ResetModelProps, 1.0, player.index);
+		case TinyRound:SetPawnTimer(ResetModelProps, 1.0, base.index);
 		case HotPrisoner:
 		{
-			if (TF2_GetClientTeam(player.index) == TFTeam_Red)
-				SetEntityRenderColor(player.index, 255, 255, 255, 255);
+			if (TF2_GetClientTeam(base.index) == TFTeam_Red)
+				SetEntityRenderColor(base.index, 255, 255, 255, 255);
 		}
 	}
-	Call_OnLRRoundEnd(player);
+	Call_OnLRRoundEnd(base);
 }
 /**
  *	Calls on round end without players so we don't fire again for every player
@@ -892,7 +896,8 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 				
 			if (victim.bIsFreeday && !base.bIsWarden)
 			{
-				damage = 0.0;
+				PrintToChatAll("a");
+				damage *= 0.0;
 				return Plugin_Changed;
 			}
 
@@ -914,37 +919,43 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 	if (gamemode.bTF2Attribs)
 		TF2Attrib_RemoveAll(victim.index);
 
-	if (gamemode.iRoundState == StateRunning)
+	if (IsClientValid(attacker.index))
 	{
-		FreeKillSystem(attacker);
-		SetPawnTimer(CheckLivingPlayers, 0.2);
+		int killcount = cvarTF2Jail[FreeKill].IntValue;
+		if (killcount)
+			FreeKillSystem(attacker, killcount);
+	}
+	SetPawnTimer(CheckLivingPlayers, 0.2);
 
-		if (victim.bIsFreeday)
-			victim.RemoveFreeday();
-	
-		if (victim.bIsWarden)
-		{
-			victim.WardenUnset();
-			gamemode.bWardenExists = false;
-			PrintCenterTextAll("Warden has been killed!");
-			if (cvarTF2Jail[WardenTimer].BoolValue)
-				SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, gamemode.iRoundCount);
-		}
+	if (victim.bIsFreeday)
+		victim.RemoveFreeday();
 
-		switch (gamemode.iLRType)
+	if (victim.bIsWarden)
+	{
+		victim.WardenUnset();
+		gamemode.bWardenExists = false;
+		PrintCenterTextAll("Warden has been killed!");
+		if (cvarTF2Jail[WardenTimer].BoolValue)
+			SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, gamemode.iRoundCount);
+	}
+
+	switch (gamemode.iLRType)
+	{
+		case HHHDay:
 		{
-			case HHHDay:
+			if (victim.bIsHHH)
 			{
-				if (victim.bIsHHH)
-				{
-					EmitSoundToAll(DEATHVO, victim.index);
-					victim.UnHorsemann();
-				}
+				EmitSoundToAll(DEATHVO, victim.index);
+				SetPawnTimer(UnHorsemannify, 0.2, victim);
+				// victim.UnHorsemann();
 			}
-			case RandomKill:
+		}
+		case RandomKill:
+		{
+			if ((attacker.index <= 0 && event.GetInt("damagebits") & DMG_BULLET) || attacker.index == victim.index)
 			{
-				if (attacker.index <= 0)
-					EmitSoundToAll(SuicideSound);
+				event.SetString("weapon", "sniperrifle");
+				EmitSoundToAll(SuicideSound);
 			}
 		}
 	}
@@ -959,37 +970,52 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 */
 public void CheckLivingPlayers()
 {
-	if (gamemode.iRoundState < StateRunning)
+	if (gamemode.iRoundState < StateRunning || gamemode.iTimeLeft < 0)
 		return;
 
-	if (GetLivingPlayers(BLU) != 1)
-		return;
-
-	if (cvarTF2Jail[RemoveFreedayOnLastGuard].BoolValue)
-	{
-		JailFighter base;
-		for (int i = MaxClients; i; --i)
+	if (GetLivingPlayers(BLU) == 1)
+	{		
+		if (!gamemode.bOneGuardLeft)
 		{
-			if (!IsClientInGame(i))
-				continue;
-
-			base = JailFighter(i);
-			if (base.bIsFreeday)
-				base.RemoveFreeday();
-		}
-	}
-
-	switch (gamemode.iLRType)
-	{
-		default:
-		{
-			if (!gamemode.bOneGuardLeft)
+			if (cvarTF2Jail[RemoveFreedayOnLastGuard].BoolValue)
 			{
-				gamemode.bOneGuardLeft = true;
-				PrintCenterTextAll("One guard left...");
+				JailFighter base;
+				for (int i = MaxClients; i; --i)
+				{
+					if (!IsClientInGame(i))
+						continue;
+
+					base = JailFighter(i);
+					if (base.bIsFreeday)
+						base.RemoveFreeday();
+				}
 			}
+			gamemode.bOneGuardLeft = true;
+
+			Action action = Plugin_Continue;
+			Call_OnLastGuard(action);
+
+			if (action == Plugin_Continue)
+				PrintCenterTextAll("One guard left...");
+
+			else if (action == Plugin_Stop)
+				return;	// Avoid multi-calls if necessary
 		}
 	}
+	else if (GetLivingPlayers(RED) == 1)
+	{
+		if (!gamemode.bOnePrisonerLeft)
+		{
+			gamemode.bOnePrisonerLeft = true;
+
+			Action action = Plugin_Continue;
+			Call_OnLastPrisoner(action);
+
+			if (action == Plugin_Stop)
+				return;
+		}
+	}
+	Call_OnCheckLivingPlayers();
 }
 /**
  *	Determines if a player's attack is to be critical
@@ -1010,24 +1036,23 @@ public void CheckLivingPlayers()
 /**
  *	Sticking this in Handler just in case someone wants to be incredibly specific with their lr 
 */
-public void ManageEntityCreated(int ent, const char[] strClassName)
+public void ManageEntityCreated(int ent, const char[] classname)
 {
-	if (StrContains(strClassName, "tf_ammo_pack", false) != -1)
-		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
-		//CreateTimer(0.1, RemoveEnt, EntIndexToEntRef(ent));
+	if (StrContains(classname, "tf_ammo_pack", false) != -1)
+		SDKHook(ent, SDKHook_Spawn, OnEntSpawn);
 
-	if (cvarTF2Jail[KillPointServerCommand].BoolValue && StrContains(strClassName, "point_servercommand", false) != -1)
+	if (cvarTF2Jail[KillPointServerCommand].BoolValue && StrContains(classname, "point_servercommand", false) != -1)
 		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
 		//CreateTimer(0.1, RemoveEnt, EntIndexToEntRef(ent));
 	
-	if (StrContains(strClassName, "rune") != - 1)	// oWo what's this?
+	if (StrContains(classname, "rune") != - 1)	// oWo what's this?
 		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
 		//CreateTimer(0.1, RemoveEnt, EntIndexToEntRef(ent));
 	
-	if (cvarTF2Jail[DroppedWeapons].BoolValue && StrEqual(strClassName, "tf_dropped_weapon"))
+	if (cvarTF2Jail[DroppedWeapons].BoolValue && StrEqual(classname, "tf_dropped_weapon"))
 		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
 
-	if (StrEqual(strClassName, "func_breakable") && cvarTF2Jail[VentHit].BoolValue)
+	if (StrEqual(classname, "func_breakable") && cvarTF2Jail[VentHit].BoolValue)
 		RequestFrame(HookVent, EntIndexToEntRef(ent));
 }
 /**
@@ -1050,7 +1075,7 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 	if (base.iCustom > 0)
 	{
 		strcopy(strCustomLR, sizeof(strCustomLR), cArgs);
-		CPrintToChat(client, "{red}[TF2Jail]{tan} Your custom last request is {green}%s", strCustomLR);
+		CPrintToChat(client, "{red}[TF2Jail]{tan} Your custom last request is {fullred}%s", strCustomLR);
 		base.iCustom = 0;
 	}
 }
