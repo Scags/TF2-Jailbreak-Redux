@@ -12,8 +12,8 @@ void InitializeForwards()
 	g_hForwards[OnWardenGet] 			= CreateForward(ET_Ignore, Param_Cell);
 	g_hForwards[OnClientTouch]			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_hForwards[OnRedThink] 			= CreateForward(ET_Ignore, Param_Cell);
-	g_hForwards[OnAllBlueThink] 		= CreateForward(ET_Ignore, Param_Cell);
-	g_hForwards[OnBlueNotWardenThink] 	= CreateForward(ET_Ignore, Param_Cell);
+	g_hForwards[OnBlueThink] 			= CreateForward(ET_Ignore, Param_Cell);
+	// g_hForwards[OnBlueNotWardenThink] 	= CreateForward(ET_Ignore, Param_Cell);
 	g_hForwards[OnWardenThink] 			= CreateForward(ET_Ignore, Param_Cell);
 	g_hForwards[OnLRTextHud] 			= CreateForward(ET_Ignore, Param_String);
 	g_hForwards[OnLRPicked] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef);
@@ -37,6 +37,9 @@ void InitializeForwards()
 	g_hForwards[OnLastGuard] 			= CreateForward(ET_Hook);
 	g_hForwards[OnLastPrisoner] 		= CreateForward(ET_Hook);
 	g_hForwards[OnCheckLivingPlayers] 	= CreateForward(ET_Ignore);
+	g_hForwards[OnWardenKilled] 		= CreateForward(ET_Hook,   Param_Cell, Param_Cell, Param_Cell);
+	g_hForwards[OnFreedayGiven] 		= CreateForward(ET_Ignore, Param_Cell);
+	g_hForwards[OnFreedayRemoved] 		= CreateForward(ET_Ignore, Param_Cell);
 	g_hForwards[OnPlayMusic]			= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
 }
 void Call_OnDownloads()
@@ -86,18 +89,18 @@ void Call_OnRedThink(const JailFighter player)
 	Call_PushCell(player);
 	Call_Finish();
 }
-void Call_OnAllBlueThink(const JailFighter player)
+void Call_OnBlueThink(const JailFighter player)
 {
-	Call_StartForward(g_hForwards[OnAllBlueThink]);
+	Call_StartForward(g_hForwards[OnBlueThink]);
 	Call_PushCell(player);
 	Call_Finish();
 }
-void Call_OnBlueNotWardenThink(const JailFighter player)
+/*void Call_OnBlueNotWardenThink(const JailFighter player)
 {
 	Call_StartForward(g_hForwards[OnBlueNotWardenThink]);
 	Call_PushCell(player);
 	Call_Finish();
-}
+}*/
 void Call_OnWardenThink(const JailFighter player)
 {
 	Call_StartForward(g_hForwards[OnWardenThink]);
@@ -271,5 +274,27 @@ void Call_OnLastPrisoner(Action &result)
 void Call_OnCheckLivingPlayers()
 {
 	Call_StartForward(g_hForwards[OnCheckLivingPlayers]);
+	Call_Finish();
+}
+Action Call_OnWardenKilled(const JailFighter victim, const JailFighter attacker, Event event)
+{
+	Action result = Plugin_Continue;
+	Call_StartForward(g_hForwards[OnWardenKilled]);
+	Call_PushCell(victim);
+	Call_PushCell(attacker);
+	Call_PushCell(event);
+	Call_Finish(result);
+	return result;
+}
+void Call_OnFreedayGiven(const JailFighter player)
+{
+	Call_StartForward(g_hForwards[OnFreedayGiven]);
+	Call_PushCell(player);
+	Call_Finish();
+}
+void Call_OnFreedayRemoved(const JailFighter player)
+{
+	Call_StartForward(g_hForwards[OnFreedayRemoved]);
+	Call_PushCell(player);
 	Call_Finish();
 }

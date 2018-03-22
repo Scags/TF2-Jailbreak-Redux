@@ -907,7 +907,7 @@ public void fwdOnManageRoundStart()
 	JBGameMode_SetProperty("bWardenLocked", true);
 	JBGameMode_SetProperty("bFirstDoorOpening", true);
 	JBGameMode_ManageCells(OPEN);
-	OpenAllDoors();
+	JBGameMode_OpenAllDoors();
 	
 	float rerolltime = JBPH[RerollTime].FloatValue;
 	if (rerolltime != 0.0)
@@ -988,7 +988,7 @@ public void fwdOnRedThink(const JBPlayer player)
 
 	SetEntPropFloat(player.index, Prop_Send, "m_flMaxspeed", 400.0);
 }
-public void fwdOnAllBlueThink(const JBPlayer player)
+public void fwdOnBlueThink(const JBPlayer player)
 {
 	if (!JBPH[Enabled].BoolValue || NotPH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
@@ -1147,8 +1147,8 @@ public void CheckJBHooks()
 		LogError("Error Loading OnManageRoundEnd Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnRedThink, fwdOnRedThink))
 		LogError("Error Loading OnRedThink Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnAllBlueThink, fwdOnAllBlueThink))
-		LogError("Error Loading OnAllBlueThink Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnBlueThink, fwdOnBlueThink))
+		LogError("Error Loading OnBlueThink Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnPlayerDied, fwdOnPlayerDied))
 		LogError("Error loading OnPlayerDied Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnPlayerSpawned, fwdOnPlayerSpawned))

@@ -90,6 +90,10 @@ enum	// Cvar name
 	LRDefault,
 	FreeKill,
 	AutobalanceImmunity,
+	NoCharge,
+	NoAirblast,
+	NoDoubleJump,
+	DenyLR,
 	Version
 };
 
@@ -97,7 +101,7 @@ enum	// Cvar name
 ConVar 
 	cvarTF2Jail[Version + 1],
 	bEnabled = null,
-	hEngineConVars[2]
+	hEngineConVars[3]
 ;
 
 Handle 
@@ -182,6 +186,10 @@ public void OnPluginStart()
 	cvarTF2Jail[LRDefault] 					= CreateConVar("sm_tf2jr_lr_default", "5", "Default number of times the basic last requests can be picked in a single map. 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[FreeKill] 					= CreateConVar("sm_tf2jr_freekill", "3", "How many kills in a row must a player get before the freekiller system. 0 to disable. (This does not affect gameplay, prints SourceBans information to admin consoles determined by sm_tf2jr_admin_flag).", FCVAR_NOTIFY, true, 0.0, true, 33.0);
 	cvarTF2Jail[AutobalanceImmunity] 		= CreateConVar("sm_tf2jr_auto_balance_immunity", "1", "Allow VIP's/admins to have autobalance immunity? (If autobalancing is enabled).", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[NoCharge] 					= CreateConVar("sm_tf2jr_demo_charge", "3", "Disable DemoMan's charge ability? 0 = Allow; 1 = Disable for Blue team; 2 = Disable for Red team; 3 = Disable for all", FCVAR_NOTIFY, true, 0.0, true, 3.0);
+	cvarTF2Jail[NoAirblast] 				= CreateConVar("sm_tf2jr_airblast", "1", "Disable Pyro airblast? (Requires TF2Attributes)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[NoDoubleJump] 				= CreateConVar("sm_tf2jr_double_jump", "1", "Disable Scout doublejump? (Requires TF2Attributes)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[DenyLR] 					= CreateConVar("sm_tf2jr_warden_deny_lr", "1", "Allow Wardens to deny the queued last request?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -287,6 +295,7 @@ public void OnPluginStart()
 
 	hEngineConVars[0] = FindConVar("mp_friendlyfire");
 	hEngineConVars[1] = FindConVar("tf_avoidteammates_pushaway");
+	hEngineConVars[2] = FindConVar("sv_gravity");
 
 	for (int i = 0; i < sizeof(hTextNodes); i++)
 		hTextNodes[i] = CreateHudSynchronizer();
@@ -311,6 +320,7 @@ public void OnPluginStart()
 			OnClientPostAdminCheck(i);
 		}
 	}
+	
 	hJailFields[0] = new StringMap();
 	g_hPluginsRegistered = new ArrayList();
 	arrLRS = new ArrayList(1, LRMAX+1);	// Registering plugins pushes indexes to arrLRS, we also start at 0 so +1
@@ -459,7 +469,7 @@ public void OnMapEnd()
 	gamemode.Init();
 	StopBackGroundMusic();
 
-	FindConVar("sv_gravity").SetInt(800);	// For admins like sans who force change the map during the low gravity LR
+	hEngineConVars[2].SetInt(800);	// For admins like sans who force change the map during the low gravity LR
 	ConvarsSet(false);
 }
 
@@ -542,19 +552,45 @@ public Action Timer_PlayerThink(Handle hTimer)
 	JailFighter player;
 	for (int i = MaxClients; i; --i) 
 	{
-		if (!IsValidClient(i, false) || !IsPlayerAlive(i))
+		if (!IsClientInGame(i) || !IsPlayerAlive(i))
 			continue;
 		
 		player = JailFighter(i);
-		if (TF2_GetClientTeam(i) == TFTeam_Blue)
-			ManageAllBlueThink(player);
-		else if (TF2_GetClientTeam(i) == TFTeam_Blue && !player.bIsWarden)
-			ManageBlueNotWardenThink(player);
-		else if (TF2_GetClientTeam(i) == TFTeam_Red)
+		if (GetClientTeam(i) == BLU)
+		{
+			ManageBlueThink(player);
+			if (player.bIsWarden)
+			{
+				ManageWardenThink(player);
+
+				int target = GetClientAimTarget(i, true);
+				if (!IsClientValid(target))
+					continue;
+				if (GetClientTeam(i) == GetClientTeam(target))
+					continue;
+
+				float flCpos[3], flTpos[3];
+				GetClientEyePosition(i, flCpos);
+				GetClientEyePosition(target, flTpos);
+						
+				if (!CanSeeTarget(i, flCpos, target, flTpos, cvarTF2Jail[NameDistance].FloatValue))
+					continue;
+
+				if (TF2_IsPlayerInCondition(target, TFCond_Cloaked) // Cloak watches are removed but meh
+				 || TF2_IsPlayerInCondition(target, TFCond_DeadRingered)
+				 || TF2_IsPlayerInCondition(target, TFCond_Disguised))
+					continue;
+
+				SetHudTextParams(-1.0, 0.59, 0.4, 255, 100, 255, 255, 1);
+				if (cvarTF2Jail[SeeHealth].BoolValue)
+					ShowSyncHudText(i, AimHud, "%N [%d]", target, GetClientHealth(target));
+				else ShowSyncHudText(i, AimHud, "%N", target);
+			}
+		}
+		// else if (GetClientTeam(i) == BLU && !player.bIsWarden)
+			// ManageBlueNotWardenThink(player);
+		else if (GetClientTeam(i) == RED)
 			ManageRedThink(player);
-		else if (TF2_GetClientTeam(i) == TFTeam_Blue && player.bIsWarden)
-			ManageWardenThink(player);
-		/* Overcomplicated I know, but gives lrs every possible think aspect */
 	}
 	return Plugin_Continue;
 }
@@ -742,11 +778,6 @@ public void ParseMapConfig()
 {
 	char sConfig[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sConfig, sizeof(sConfig), "configs/tf2jail/mapconfig.cfg");
-	if (!FileExists(sConfig))
-	{
-		SetFailState("~~~~~No TF2Jail map config found in %s. Exiting~~~~~", sConfig);
-		return;
-	}
 
 	KeyValues key = new KeyValues("TF2Jail_MapConfig");
 	char sMapName[128];
@@ -789,7 +820,7 @@ public void ParseMapConfig()
 			{
 				if (key.JumpToKey("Teleport"))
 				{
-					gamemode.bFreedayTeleportSet = view_as<bool>(key.GetNum("Status", 1));
+					gamemode.bFreedayTeleportSet = view_as< bool >(key.GetNum("Status", 1));
 
 					if (gamemode.bFreedayTeleportSet)
 					{
@@ -809,7 +840,7 @@ public void ParseMapConfig()
 			{
 				if (key.JumpToKey("Teleport"))
 				{
-					gamemode.bWardayTeleportSetBlue = view_as<bool>(key.GetNum("Status", 1));
+					gamemode.bWardayTeleportSetBlue = view_as< bool >(key.GetNum("Status", 1));
 
 					if (gamemode.bWardayTeleportSetBlue)
 					{
@@ -828,7 +859,7 @@ public void ParseMapConfig()
 			{
 				if (key.JumpToKey("Teleport"))
 				{
-					gamemode.bWardayTeleportSetRed = view_as<bool>(key.GetNum("Status", 1));
+					gamemode.bWardayTeleportSetRed = view_as< bool >(key.GetNum("Status", 1));
 
 					if (gamemode.bWardayTeleportSetRed)
 					{
@@ -869,11 +900,6 @@ public void ParseNodeConfig()
 {
 	char sConfig[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sConfig, sizeof(sConfig), "configs/tf2jail/textnodes.cfg");
-	if (!FileExists(sConfig))
-	{
-		LogError("~~~~~No TF2Jail Node Config found in path %s. Ignoring all text factors.~~~~~", sConfig);
-		return;
-	}
 
 	KeyValues key = new KeyValues("TF2Jail_Nodes");
 	if (key.ImportFromFile(sConfig))
@@ -896,6 +922,7 @@ public void ParseNodeConfig()
 			} while (key.GotoNextKey(false));
 		}
 	}
+	else LogError("~~~~~No TF2Jail Node Config found in path %s. Ignoring all text factors.~~~~~", sConfig);
 	delete key;
 }
 
@@ -1407,6 +1434,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBGameMode_FindRandomWarden", Native_JBGameMode_FindRandomWarden);
 	CreateNative("JBGameMode_FindWarden", Native_JBGameMode_FindWarden);
 	CreateNative("JBGameMode_FireWarden", Native_JBGameMode_FireWarden);
+	CreateNative("JBGameMode_OpenAllDoors", Native_JBGameMode_OpenAllDoors);
 		/* Gamemode StringMap */
 	CreateNative("JBGameMode_GetProperty", Native_JBGameMode_GetProperty);
 	CreateNative("JBGameMode_SetProperty", Native_JBGameMode_SetProperty);
@@ -1714,6 +1742,11 @@ public int Native_JBGameMode_FireWarden(Handle plugin, int numParams)
 	bool announce = GetNativeCell(2);
 	gamemode.FireWarden(prevent, announce);
 }
+public int Native_JBGameMode_OpenAllDoors(Handle plugin, int numParams)
+{
+	gamemode.OpenAllDoors();
+}
+
 public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)
 {
 	char key[64]; GetNativeString(1, key, 64);

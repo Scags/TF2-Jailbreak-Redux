@@ -112,6 +112,7 @@ methodmap JailBoss < JBPlayer
 		public get() 				{ return this.GetValue("bInJump"); }
 		public set( const bool i ) 	{ this.SetValue("bInJump", i); }
 	}
+	
 	property float flRAGE
 	{
 		public get() 				{ return this.GetValue("flRAGE"); }
@@ -912,7 +913,7 @@ public void ManagePlayBossIntro(const JailBoss base)
 	}
 }
 
-public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool & result)
+public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool &result)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH || !IsClientValid(client))
 		return Plugin_Continue;
@@ -991,7 +992,7 @@ public void ManageRoundEndBossInfo(bool bossWon)
 }
 
 
-public Action HookSound(int clients[64], int & numClients, char sample[FULLPATH], int & entity, int & channel, float & volume, int & level, int & pitch, int & flags)
+public Action HookSound(int clients[64], int &numClients, char sample[FULLPATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return Plugin_Continue;
@@ -1164,7 +1165,7 @@ public void ManageBossTransition(const JailBoss base)/* whatever stuff needs ini
 	ManageBossEquipment(base);
 }
 
-public Action ManageOnBossTakeDamage(const JailBoss victim, int & attacker, int & inflictor, float & damage, int & damagetype, int & weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	switch (victim.iType) 
 	{
@@ -1973,7 +1974,7 @@ public void ManageMessageIntro()
 	JailBoss base = FindBoss(false);
 
 	gameMessage[0] = '\0';
-	OpenAllDoors();
+	JBGameMode_OpenAllDoors();
 
 	if (!base)
 		return;
@@ -2370,7 +2371,7 @@ public void fwdOnRedThink(const JBPlayer Player)
 		}
 	}
 }
-public void fwdOnAllBlueThink(const JBPlayer Player)
+public void fwdOnBlueThink(const JBPlayer Player)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return;
@@ -2437,7 +2438,7 @@ public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Even
 			case  - 1: {  }
 			case Hale:
 			{
-				if (deathflags &TF_DEATHFLAG_DEADRINGER)
+				if (deathflags & TF_DEATHFLAG_DEADRINGER)
 					event.SetString("weapon", "fists");
 				else ToCHale(attacker).KilledPlayer(victim, event);
 			}
@@ -2448,7 +2449,7 @@ public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Even
 		}
 	}
 	
-	if ( (TF2_GetPlayerClass(victim.index) == TFClass_Engineer) && !(event.GetInt("death_flags") &TF_DEATHFLAG_DEADRINGER) )
+	if ( (TF2_GetPlayerClass(victim.index) == TFClass_Engineer) && !(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) )
 	{
 		if (JBVSH[EngieBuildings].IntValue) 
 		{
@@ -2654,7 +2655,7 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, int 
 		else medic.iDamage += damage / (healercount + 1);
 	}
 }
-public Action fwdOnHookDamage(const JBPlayer Victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action fwdOnHookDamage(const JBPlayer Victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return Plugin_Continue;
@@ -2683,7 +2684,7 @@ public Action fwdOnHookDamage(const JBPlayer Victim, int& attacker, int& inflict
 
 	return Plugin_Continue;
 }
-public Action fwdOnMusicPlay(char song[PLATFORM_MAX_PATH], float & time)
+public Action fwdOnMusicPlay(char song[PLATFORM_MAX_PATH], float &time)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
 		return Plugin_Continue;
@@ -2744,8 +2745,8 @@ public void CheckJBHooks()
 		LogError("Failed to load OnManageRoundEnd forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnRedThink, fwdOnRedThink))
 		LogError("Failed to load OnRedThink forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnAllBlueThink, fwdOnAllBlueThink))
-		LogError("Failed to load OnAllBlueThink forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnBlueThink, fwdOnBlueThink))
+		LogError("Failed to load OnBlueThink forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnLRTextHud, fwdOnLRTextHud))
 		LogError("Failed to load OnLRTextHud forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnLRPicked, fwdOnLRPicked))

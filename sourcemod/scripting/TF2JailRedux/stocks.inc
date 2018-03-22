@@ -1182,8 +1182,7 @@ stock int FindEntity(const char[] name, const char[] className = "")
 		// Hack: Double the limit to gets none-networked entities too.
 		int realMaxEntities = GetMaxEntities() * 2;
 		for (int i = 0; i < realMaxEntities; i++) 
-		{
-			
+		{			
 			if (!IsValidEntity(i))
 				continue;
 
@@ -1286,20 +1285,4 @@ stock bool iIsWithin(const int num, const int lowest, const int highest, bool in
 stock bool flIsWithin(const float fl, const float lowest, const float highest, bool inclusion = false)
 {
 	return (inclusion ? fl >= lowest && fl <= highest : fl > lowest && fl < highest);
-}
-stock void OpenAllDoors()
-{
-	int ent;
-	for (int i = 0; i < sizeof(sDoorsList); i++)
-	{
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, sDoorsList[i])) != -1)
-		{
-			if (IsValidEntity(ent))
-			{
-				AcceptEntityInput(ent, "Open");
-				AcceptEntityInput(ent, "Unlock");
-			}
-		}
-	}
 }

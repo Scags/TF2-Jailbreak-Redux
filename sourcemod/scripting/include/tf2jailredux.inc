@@ -399,8 +399,8 @@ enum	// JB Hook Types
 	OnWardenGet,
 	OnClientTouch,
 	OnRedThink,
-	OnAllBlueThink,
-	OnBlueNotWardenThink,
+	OnBlueThink,
+	// OnBlueNotWardenThink,
 	OnWardenThink,
 	OnLRTextHud,
 	OnLRPicked,
@@ -424,6 +424,9 @@ enum	// JB Hook Types
 	OnLastGuard,
 	OnLastPrisoner,
 	OnCheckLivingPlayers,
+	OnWardenKilled,
+	OnFreedayGiven,
+	OnFreedayRemoved,
 	OnPlayMusic
 };
 
@@ -435,12 +438,13 @@ typeset JBHookCB
 		OnLRRoundEnd
 		OnWardenGet
 		OnRedThink
-		OnBlueNotWardenThink
-		OnAllBlueThink
+		OnBlueThink
 		OnWardenThink
 		OnPlayerPrepped
 		OnClientInduction
 		OnVariableReset
+		OnFreedayGiven
+		OnFreedayRemoved
 	*/
 	function void (const JBPlayer Player);
 	
@@ -506,6 +510,9 @@ typeset JBHookCB
 		OnLastPrisoner	Return Stop to not fire OnCheckLivingPlayers
 	*/
 	function Action ();
+
+	//	OnWardenKilled
+	function Action (const JBPlayer Victim, const JBPlayer Attacker, Event event);
 };
 
 /**
@@ -592,6 +599,13 @@ native int JBGameMode_FindWarden();
  *	@noreturn
 */
 native void JBGameMode_FireWarden(bool prevent = true, bool announce = true);
+
+/**
+ *	Open all doors in a map.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_OpenAllDoors();
 
 /**
  *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
@@ -786,6 +800,7 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBGameMode_FindRandomWarden");
 	MarkNativeAsOptional("JBGameMode_FindWarden");
 	MarkNativeAsOptional("JBGameMode_FireWarden");
+	MarkNativeAsOptional("JBGameMode_OpenAllDoors");
 
 	MarkNativeAsOptional("JBGameMode_GetProperty");
 	MarkNativeAsOptional("JBGameMode_SetProperty");

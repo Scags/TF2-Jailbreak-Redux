@@ -185,7 +185,7 @@ public void ResetVariables(const JailFighter base, const bool compl)
 /**
  *	Add lr to the LR menu obviously
 */
-public void AddLRToMenu(Menu & menu)
+public void AddLRToMenu(Menu &menu)
 {
 	char strName[32], strID[4], strValue[16];
 	int max, value, def = cvarTF2Jail[LRDefault].IntValue;
@@ -449,8 +449,8 @@ public void ManageSpawn(const JailFighter base, Event event)
 	{
 		switch (TF2_GetPlayerClass(client))
 		{
-			case TFClass_Scout:TF2Attrib_SetByDefIndex(client, 49, 1.0);
-			case TFClass_Pyro:TF2Attrib_SetByDefIndex(client, 823, 1.0);
+			case TFClass_Scout:if (cvarTF2Jail[NoDoubleJump].BoolValue) TF2Attrib_SetByDefIndex(client, 49, 1.0);
+			case TFClass_Pyro:if (cvarTF2Jail[NoAirblast].BoolValue) TF2Attrib_SetByDefIndex(client, 823, 1.0);
 		}
 	}
 
@@ -465,7 +465,7 @@ public void ManageSpawn(const JailFighter base, Event event)
 public void PrepPlayer(const int userid)
 {
 	int client = GetClientOfUserId(userid);
-	if (!IsPlayerAlive(client) || !IsClientInGame(client))
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
 		return;
 
 	JailFighter base = JailFighter(client);
@@ -568,8 +568,7 @@ public void ManageRoundStart()
 		{
 			CPrintToChatAll("{tan}Where did the gravity go?");
 			EmitSoundToAll(GravSound);
-			//ServerCommand("sm_cvar sv_gravity 100");
-			FindConVar("sv_gravity").SetInt(100);
+			hEngineConVars[2].SetInt(100);
 		}
 		case HotPrisoner:
 		{
@@ -647,7 +646,7 @@ public void ManageOnRoundEnd(Event event)
 			EmitSoundToAll(DEATHVO);
 			EmitSoundToAll(DEATHVO2);
 		}
-		case Gravity:FindConVar("sv_gravity").SetInt(800);
+		case Gravity:hEngineConVars[2].SetInt(800);
 		case HotPrisoner:EmitSoundToAll(Extinguish);
 		case RandomKill:SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), gamemode.iRoundCount);
 		default: {	}
@@ -728,6 +727,15 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 				case 2:if (GetClientTeam(client) == RED) TF2_RemoveCondition(client, cond);
 			}
 		}
+		case TFCond_Charging:
+		{
+			switch (cvarTF2Jail[NoCharge].IntValue)
+			{
+				case 1:if (GetClientTeam(client) == BLU) TF2_RemoveCondition(client, cond);
+				case 2:if (GetClientTeam(client) == RED) TF2_RemoveCondition(client, cond);
+				case 3:TF2_RemoveCondition(client, cond);
+			}
+		}
 	}
 }
 /**
@@ -741,9 +749,12 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 	}
 }*/
 /** 
+ *	Think: Code called every 0.1 seconds per client, aka poor man's SDKHook_Think
  *	If lr requires the same think properties from both teams, set it under both team thinks
- *	Thinks will overlap if you use more than 1 Blue Team think
- *
+ *	Thinks overlap on WardenThink and BlueThink so be wary of this
+*/
+
+/**
  *	Red Team think
 */
 public void ManageRedThink(const JailFighter player)
@@ -757,59 +768,31 @@ public void ManageRedThink(const JailFighter player)
 /**
  *	Manage complete Blue Team think 
 */
-public void ManageAllBlueThink(const JailFighter player)
+public void ManageBlueThink(const JailFighter player)
 {
 	switch (gamemode.iLRType)
 	{
-		default:
-		{
-			if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 1)
-				TF2_AddCondition(player.index, TFCond_Buffed, 0.2);
-		}
+		default:if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 1)
+			TF2_AddCondition(player.index, TFCond_Buffed, 0.2);
 	}
-	Call_OnAllBlueThink(player);
+	Call_OnBlueThink(player);
 }
 /**
  *	Blue Team think. Does NOT include warden
 */
-public void ManageBlueNotWardenThink(const JailFighter player)
+/*public void ManageBlueNotWardenThink(const JailFighter player)
 {
 	switch (gamemode.iLRType)
 	{
 		default: {	}
 	}
 	Call_OnBlueNotWardenThink(player);
-}
+}*/
 /**
  *	Warden think only
 */
 public void ManageWardenThink(const JailFighter player)
 {
-	int i = player.index;
-	int target = GetClientAimTarget(i, true);
-		
-	if (!IsClientValid(target))
-		return;
-		
-	if (GetClientTeam(i) == GetClientTeam(target))
-		return;
-	
-	float flCpos[3], flTpos[3];
-	GetClientEyePosition(i, flCpos);
-	GetClientEyePosition(target, flTpos);
-	
-	if (CanSeeTarget(i, flCpos, target, flTpos, cvarTF2Jail[NameDistance].FloatValue))
-	{
-		if (TF2_IsPlayerInCondition(target, TFCond_Cloaked) // Cloak watches are removed but meh
-		 || TF2_IsPlayerInCondition(target, TFCond_DeadRingered)
-		 || TF2_IsPlayerInCondition(target, TFCond_Disguised))
-			return;
-
-		SetHudTextParams(-1.0, 0.59, 0.4, 255, 100, 255, 255, 1);
-		if (cvarTF2Jail[SeeHealth].BoolValue)
-			ShowSyncHudText(i, AimHud, "%N [%d]", target, GetClientHealth(target));
-		else ShowSyncHudText(i, AimHud, "%N", target);
-	}
 	switch (gamemode.iLRType)
 	{
 		default: {	}
@@ -829,17 +812,20 @@ public Action SoundHook(int clients[64], int &numClients, char sample[PLATFORM_M
 	{
 		case HHHDay:
 		{
-			if (!strncmp(sample, "vo", 2, false) && base.bIsHHH)
-				return Plugin_Handled;
-				
-			if (strncmp(sample, "player/footsteps/", 17, false) != -1 && base.bIsHHH)
+			if (base.bIsHHH)
 			{
-				if (StrContains(sample, "1.wav", false) != -1 || StrContains(sample, "3.wav", false) != -1) 
-					sample = LEFTFOOT;
-				else if (StrContains(sample, "2.wav", false) != -1 || StrContains(sample, "4.wav", false) != -1) 
-					sample = RIGHTFOOT;
-				EmitSoundToAll(sample, entity);
-				return Plugin_Changed;
+				if (!strncmp(sample, "vo", 2, false))
+					return Plugin_Handled;
+				
+				if (strncmp(sample, "player/footsteps/", 17, false) != -1)
+				{
+					if (StrContains(sample, "1.wav", false) != -1 || StrContains(sample, "3.wav", false) != -1) 
+						sample = LEFTFOOT;
+					else if (StrContains(sample, "2.wav", false) != -1 || StrContains(sample, "4.wav", false) != -1) 
+						sample = RIGHTFOOT;
+					EmitSoundToAll(sample, entity);
+					return Plugin_Changed;
+				}
 			}
 		}
 		default: {	}
@@ -868,47 +854,32 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 {
 	switch (gamemode.iLRType)
 	{
-		case
-			Suicide,
-			Custom,
-			FreedaySelf,
-			FreedayOther,
-			FreedayAll,
-			GuardMelee,
-			HHHDay,
-			TinyRound,
-			HotPrisoner,
-			Gravity,
-			RandomKill,
-			Warday,
-			ClassWars
-		:
+		default:
 		{
-			if (!IsClientValid(attacker))
-				return Plugin_Continue;
-
-			JailFighter base = JailFighter(attacker);
-			if (base.bIsFreeday)
-			{	// Registers with Razorbacks ^^
-				base.RemoveFreeday();
-				PrintCenterTextAll("%N has attacked a guard and lost their freeday!", attacker);
-			}
-
-			if (victim.bIsFreeday && !base.bIsWarden)
+			if (IsClientValid(attacker))
 			{
-				damage *= 0.0;
-				return Plugin_Changed;
-			}
+				JailFighter base = JailFighter(attacker);
+				if (base.bIsFreeday)
+				{	// Registers with Razorbacks ^^
+					base.RemoveFreeday();
+					PrintCenterTextAll("%N has attacked a guard and lost their freeday!", attacker);
+				}
 
-			if (GetClientTeam(attacker) == BLU && cvarTF2Jail[CritType].IntValue == 2 && !gamemode.bDisableCriticals)
-			{
-				damagetype |= DMG_CRIT;
-				return Plugin_Changed;
+				if (victim.bIsFreeday && !base.bIsWarden)
+				{
+					damage *= 0.0;
+					return Plugin_Changed;
+				}
+
+				if (GetClientTeam(attacker) == BLU && cvarTF2Jail[CritType].IntValue == 2 && !gamemode.bDisableCriticals)
+				{
+					damagetype |= DMG_CRIT;
+					return Plugin_Changed;
+				}
 			}
 		}
-		default:return Call_OnHookDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 	}
-	return Plugin_Continue;
+	return Call_OnHookDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 }
 /**
  *	Called when a player dies obviously
@@ -933,9 +904,13 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 	{
 		victim.WardenUnset();
 		gamemode.bWardenExists = false;
-		PrintCenterTextAll("Warden has been killed!");
-		if (cvarTF2Jail[WardenTimer].BoolValue)
-			SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, gamemode.iRoundCount);
+
+		if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue)
+			PrintCenterTextAll("Warden has been killed!");
+
+		float time = cvarTF2Jail[WardenTimer].FloatValue;
+		if (time != 0.0)
+			SetPawnTimer(DisableWarden, time, gamemode.iRoundCount);
 	}
 
 	switch (gamemode.iLRType)

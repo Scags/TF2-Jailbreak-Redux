@@ -463,6 +463,8 @@ methodmap JailFighter
 		if (this.bIsQueuedFreeday)
 			this.bIsQueuedFreeday = false;
 		this.bIsFreeday = true;
+
+		Call_OnFreedayGiven(this);
 	}
 	/**
 	 *	Terminate a player as a freeday.
@@ -477,6 +479,8 @@ methodmap JailFighter
 		ServerCommand("sm_evilbeam #%d", this.userid);
 		this.bIsFreeday = false;
 		//SetEntProp(client, Prop_Data, "m_takedamage", 2, 1);
+
+		Call_OnFreedayRemoved(this);
 	}
 	/**
 	 *	Remove all player weapons that are not their melee.
@@ -567,7 +571,8 @@ methodmap JailFighter
 		int client = this.index;
 		Format(strWarden, sizeof(strWarden), "%N is the current Warden.", client);
 		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
-		CPrintToChatAll("{red}[TF2Jail]{fullred} %N{tan} is the new Warden", client);
+		CPrintToChatAll("{red}[TF2Jail]{default} %N{tan} is the new Warden", client);
+		ManageWarden(this);
 	}
 	/**	Props to VoIDed
 	 * Sets the custom model of this player.
