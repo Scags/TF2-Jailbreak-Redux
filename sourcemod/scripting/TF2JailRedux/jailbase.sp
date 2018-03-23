@@ -54,6 +54,7 @@ methodmap JailFighter
 			hJailFields[this.index].SetValue("iKillCount", i);
 		}
 	}
+
 	property bool bIsWarden
 	{
 		public get()
@@ -514,12 +515,13 @@ methodmap JailFighter
 			return;
 
 		int offset = FindDataMapInfo(client, "m_hMyWeapons") - 4;
+		int weapon;
 	
 		for (int i = 0; i < 2; i++)
 		{
 			offset += 4;
 	
-			int weapon = GetEntDataEnt2(client, offset);
+			weapon = GetEntDataEnt2(client, offset);
 	
 			if (!IsValidEntity(weapon) || i == TFWeaponSlot_Melee)
 				continue;

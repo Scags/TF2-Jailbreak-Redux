@@ -37,10 +37,12 @@ Handle
 	jumpHUD
 ;
 
+JBGameMode gamemode;
+
 methodmap JailBoss < JBPlayer
 {	// Here we inherit all of the properties and functions that we made as natives
-	public JailBoss (const int q, bool userid = false)
-	{ return view_as< JailBoss >( JBPlayer(q, userid) ); }
+	public JailBoss( const int q, bool userid = false )
+	{ return view_as< JailBoss >(JBPlayer(q, userid)); }
 
 	property int iUberTarget
 	{	// And then add new ones that we need
@@ -391,10 +393,11 @@ public void OnPluginStart()
 	AddMultiTargetFilter("@!boss", HaleTargetFilter, "All non-Boss players", false);
 	AddMultiTargetFilter("@!hale", HaleTargetFilter, "All non-Boss players", false);
 }
-/** Loading LR sub-plugins HAS TO HAPPEN OnAllPluginsLoaded() to assure that TF2Jail_Redux loads first **/
+/** Loading sub-plugins HAS TO HAPPEN OnAllPluginsLoaded() to assure that TF2Jail_Redux loads first **/
 public void OnAllPluginsLoaded()
 {
 	TF2JailRedux_RegisterPlugin("LRModule_VSH");
+	gamemode = JBGameMode();
 	CheckJBHooks();
 }
 int JBVSHIndex;
@@ -406,7 +409,7 @@ public void OnTypeChanged(ConVar convar, const char[] oldValue, const char[] new
 {	// Also adding a change hook
 	JBVSHIndex = StringToInt(newValue);
 }
-#define NotVSH 				( JBGameMode_GetProperty("iLRType") != (JBVSHIndex) )
+#define NotVSH 				( gamemode.GetProperty("iLRType") != (JBVSHIndex) )
 
 public bool HaleTargetFilter(const char[] pattern, Handle clients)
 {
@@ -453,7 +456,7 @@ public Action BlockSuicide(int client, const char[] command, int argc)
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return Plugin_Continue;
 
-	if (JBGameMode_GetProperty("iRoundState") == StateRunning)
+	if (gamemode.GetProperty("iRoundState") == StateRunning)
 	{
 		JailBoss player = JailBoss(client);
 		if (player.bIsBoss) 
@@ -471,7 +474,7 @@ public Action BlockSuicide(int client, const char[] command, int argc)
 
 public void OnClientDisconnect(int client)
 {
-	if (JailBoss(client).bIsBoss && JBGameMode_GetProperty("iRoundState") >= StateRunning)
+	if (JailBoss(client).bIsBoss && gamemode.GetProperty("iRoundState") >= StateRunning)
 		CPrintToChatAll("{tan}[TF2Jail]{fullred} Boss has disconnected!");
 }
 
@@ -653,7 +656,6 @@ public void ShowPlayerScores()
 		if (player.bIsBoss) 
 		{
 			player.iDamage = 0;
-			player.bIsBoss = false;
 			continue;
 		}
 		
@@ -793,7 +795,7 @@ public void _BossDeath(const int userid)
 public Action TimerLazor(Handle timer, any medigunid)
 {	// All mediguns give uber + crits (and crits to the medic)
 	int medigun = EntRefToEntIndex(medigunid);
-	if (medigun && IsValidEntity(medigun) && JBGameMode_GetProperty("iRoundState") == StateRunning)
+	if (medigun && IsValidEntity(medigun) && gamemode.GetProperty("iRoundState") == StateRunning)
 	{
 		int client = GetOwner(medigun);
 		float charge = GetMediCharge(medigun);
@@ -860,7 +862,7 @@ public JailBoss FindBoss(const bool balive)
 
 public Action Command_GetHPCmd(int client, int args)
 {
-	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return Plugin_Handled;
 	
 	JailBoss player = JailBoss(client);
@@ -1130,7 +1132,7 @@ public void ManageBossDeath(const JailBoss base)
 
 public void ManageEntityCreated(const int entity, const char[] classname)
 {
-	if (JBGameMode_GetProperty("iRoundState") == StateRunning && !strcmp(classname, "tf_projectile_pipe", false))
+	if (gamemode.GetProperty("iRoundState") == StateRunning && !strcmp(classname, "tf_projectile_pipe", false))
 		SDKHook(entity, SDKHook_SpawnPost, OnEggBombSpawned);
 }
 
@@ -1177,7 +1179,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 			{
 				if (damage >= 100.0)
 				{
-					if (JBGameMode_GetProperty("bWardayTeleportSetBlue"))
+					if (gamemode.GetProperty("bWardayTeleportSetBlue"))
 						victim.TeleportToPosition(WBLU);
 					else TeleportToSpawn(victim.index, BLU);
 				}
@@ -1335,7 +1337,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 					{
 						case 14, 201, 664, 792, 801, 851, 881, 890, 899, 908, 957, 966, 1098, 15000, 15007, 15019, 15023, 15033, 15059, 15070, 15071, 15072, 15111, 15112, 15135, 15136, 15154:
 						{
-							if (JBGameMode_GetProperty("iRoundState") != StateEnding)
+							if (gamemode.GetProperty("iRoundState") != StateEnding)
 							{
 								float bossGlow = victim.flGlowtime;
 								float chargelevel = (IsValidEntity(weapon) && weapon > MaxClients ? GetEntPropFloat(weapon, Prop_Send, "m_flChargedDamage") : 0.0);
@@ -1353,7 +1355,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 						if (damagecustom == TF_CUSTOM_HEADSHOT)
 							IncrementHeadCount(attacker, false);
 					}
-					if (wepindex == 752 && JBGameMode_GetProperty("iRoundState") != StateEnding)
+					if (wepindex == 752 && gamemode.GetProperty("iRoundState") != StateEnding)
 					{
 						float chargelevel = (IsValidEntity(weapon) && weapon > MaxClients ? GetEntPropFloat(weapon, Prop_Send, "m_flChargedDamage") : 0.0);
 						float add = 10 + (chargelevel / 10);
@@ -1724,7 +1726,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 
 public void fwdOnLastPrisoner()
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iRoundState") != StateRunning || NotVSH || JBGameMode_GetProperty("iTimeLeft") < 0)
+	if (!JBVSH[Enabled].BoolValue || gamemode.GetProperty("iRoundState") != StateRunning || NotVSH || gamemode.GetProperty("iTimeLeft") < 0)
 		return;
 		
 	JailBoss player = FindBoss(false);
@@ -1773,7 +1775,7 @@ public void PrepPlayers(const int userid)	// OnPlayerPrepped doesn't fire after 
 	if (!IsValidClient(client))
 		return;
 	if (!IsPlayerAlive(client)
-		|| JBGameMode_GetProperty("iRoundState") == StateEnding
+		|| gamemode.GetProperty("iRoundState") == StateEnding
 		|| player.bIsBoss)
 	return;
 	
@@ -1974,7 +1976,7 @@ public void ManageMessageIntro()
 	JailBoss base = FindBoss(false);
 
 	gameMessage[0] = '\0';
-	JBGameMode_OpenAllDoors();
+	gamemode.OpenAllDoors();
 
 	if (!base)
 		return;
@@ -2036,15 +2038,18 @@ public void fwdOnManageRoundStart()
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
-	JBGameMode_SetProperty("bWardenLocked", true);
-	JBGameMode_SetProperty("bCellsOpened", true);
-	JBGameMode_SetProperty("bOneGuardLeft", true);
-	JBGameMode_SetProperty("bDisableCriticals", true);
-	JBGameMode_ManageCells(OPEN);
+	gamemode.SetProperty("bWardenLocked", true);
+	gamemode.SetProperty("bCellsOpened", true);
+	gamemode.SetProperty("bOneGuardLeft", true);
+	gamemode.SetProperty("bDisableCriticals", true);
+	gamemode.DoorHandler(OPEN);
 	SpawnRandomHealth();
 	SpawnRandomAmmo();
 
 	JailBoss rand = JailBoss( GetRandomClient(true, true) );
+	if (!rand)
+		ForceTeamWin(RED);
+
 	int client = rand.index;
 	int BOSS = GetRandomInt(Hale, MAXBOSS);
 	//MakePlayerBoss(rand.userid, BOSS);
@@ -2054,10 +2059,10 @@ public void fwdOnManageRoundStart()
 
 	if (!IsPlayerAlive(client))
 		TF2_RespawnPlayer(client);
-	if (JBGameMode_GetProperty("bWardayTeleportSetBlue"))
+	if (gamemode.GetProperty("bWardayTeleportSetBlue"))
 		rand.TeleportToPosition(WBLU);
 	else ServerCommand("sm_freeze #%i 5", rand.userid);
-	rand.iMaxHealth = CalcBossHealth(760.8, JBGameMode_Playing(), 1.0, 1.0341, 2046.0);
+	rand.iMaxHealth = CalcBossHealth(760.8, gamemode.iPlaying, 1.0, 1.0341, 2046.0);
 	int maxhp = GetEntProp(client, Prop_Data, "m_iMaxHealth");
 	TF2Attrib_RemoveAll(client);
 	TF2Attrib_SetByDefIndex( client, 26, float(rand.iMaxHealth)-maxhp );
@@ -2089,7 +2094,7 @@ public void fwdOnManageRoundEnd(Event event)
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
-	//JBGameMode_ManageCells(OPEN);
+	//gamemode.ManageCells(OPEN);
 	ShowPlayerScores();
 	SetPawnTimer(CalcScores, 3.0);
 	bCanMusicPlay = false;
@@ -2098,7 +2103,7 @@ public void fwdOnManageRoundEnd(Event event)
 }
 public void fwdOnRedThink(const JBPlayer Player)
 {
-	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return;
 	if (GetClientTeam(Player.index) != RED)
 		return;
@@ -2373,7 +2378,7 @@ public void fwdOnRedThink(const JBPlayer Player)
 }
 public void fwdOnBlueThink(const JBPlayer Player)
 {
-	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return;
 
 	JailBoss base = ToJailBoss(Player);
@@ -2417,11 +2422,11 @@ public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int 
 	}
 	CPrintToChatAll("{red}[TF2Jail]{tan} %N has decided to play a round of {default}Versus Saxton Hale{tan}.", Player.index);
 	arrLRS.Set( selection, value+1 );
-	JBGameMode_SetProperty("iLRPresetType", JBVSHIndex);
+	gamemode.SetProperty("iLRPresetType", JBVSHIndex);
 }
 public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Event event)
 {
-	if (!JBVSH[Enabled].BoolValue || JBGameMode_GetProperty("iRoundState") == StateDisabled || NotVSH)
+	if (!JBVSH[Enabled].BoolValue || gamemode.GetProperty("iRoundState") == StateDisabled || NotVSH)
 		return;
 
 	JailBoss victim = ToJailBoss(Victim);
@@ -2485,7 +2490,7 @@ public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Even
 }
 public void fwdOnBuildingDestroyed(const JBPlayer Attacker, const int building, Event event)
 {
-	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return;
 
 	JailBoss attacker = ToJailBoss(Attacker);
@@ -2506,7 +2511,7 @@ public void fwdOnBuildingDestroyed(const JBPlayer Attacker, const int building, 
 }
 public void fwdOnObjectDeflected(const JBPlayer Victim, const JBPlayer Attacker, Event event)
 {
-	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return;
 
 	//JailBoss airblaster = ToJailBoss(Attacker);
@@ -2526,14 +2531,14 @@ public void fwdOnObjectDeflected(const JBPlayer Victim, const JBPlayer Attacker,
 }
 public void fwdOnPlayerJarated(const JBPlayer Attacker, const JBPlayer Victim)
 {
-	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return;
 
 	ManagePlayerJarated(ToJailBoss(Attacker), ToJailBoss(Victim));
 }
 public void fwdOnUberDeployed(const JBPlayer Medic, const JBPlayer Patient)
 {
-	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return;
 
 	ManageUberDeploy(ToJailBoss(Medic), ToJailBoss(Patient));
@@ -2550,7 +2555,7 @@ public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 
 	SetVariantString(""); AcceptEntityInput(spawn.index, "SetCustomModel");
 
-	/*if (spawn.bIsBoss && JBGameMode_GetProperty("iRoundState") < StateEnding && JBGameMode_GetProperty("iRoundState") != StateDisabled)
+	/*if (spawn.bIsBoss && gamemode.GetProperty("iRoundState") < StateEnding && gamemode.GetProperty("iRoundState") != StateDisabled)
 	{
 		if (GetClientTeam(spawn.index) != BLU)
 			spawn.ForceTeamChange(BLU);
@@ -2559,7 +2564,7 @@ public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 			spawn.iHealth = spawn.iMaxHealth);
 	}*/
 
-	if (JBGameMode_GetProperty("iRoundState") > StateDisabled)
+	if (gamemode.GetProperty("iRoundState") > StateDisabled)
 	{
 		if (GetClientTeam(spawn.index) != RED)
 			spawn.ForceTeamChange(RED);
@@ -2590,7 +2595,7 @@ public void fwdOnManageTimeLeft()
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
 
-	JBGameMode_SetProperty("iTimeLeft", JBVSH[TimeLeft].IntValue);
+	gamemode.SetProperty("iTimeLeft", JBVSH[TimeLeft].IntValue);
 }
 public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, int damage, int custom, int weapon, Event event)
 {
@@ -2657,7 +2662,7 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, int 
 }
 public Action fwdOnHookDamage(const JBPlayer Victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return Plugin_Continue;
 
 	JailBoss victim = ToJailBoss(Victim);
@@ -2686,7 +2691,7 @@ public Action fwdOnHookDamage(const JBPlayer Victim, int &attacker, int &inflict
 }
 public Action fwdOnMusicPlay(char song[PLATFORM_MAX_PATH], float &time)
 {
-	if (!JBVSH[Enabled].BoolValue || NotVSH || JBGameMode_GetProperty("iRoundState") != StateRunning)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return Plugin_Continue;
 	if (!bCanMusicPlay)
 		return Plugin_Handled;

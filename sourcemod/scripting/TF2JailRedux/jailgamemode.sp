@@ -25,7 +25,7 @@ methodmap JailGameMode < StringMap
 			{
 				if (!IsClientInGame(i))
 					continue;
-				else if (!IsPlayerAlive(i))
+				if (!IsPlayerAlive(i))
 					continue;
 				++playing;
 			}
@@ -522,8 +522,8 @@ methodmap JailGameMode < StringMap
 			{
 				if (IsValidEntity(ent))
 				{
-					AcceptEntityInput(ent, "Open");
 					AcceptEntityInput(ent, "Unlock");
+					AcceptEntityInput(ent, "Open");
 				}
 			}
 		}

@@ -871,7 +871,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 					return Plugin_Changed;
 				}
 
-				if (GetClientTeam(attacker) == BLU && cvarTF2Jail[CritType].IntValue == 2 && !gamemode.bDisableCriticals)
+				if (GetClientTeam(attacker) == BLU && cvarTF2Jail[CritType].IntValue == 2 && !gamemode.bDisableCriticals && !TF2_IsPlayerCritBuffed(attacker))
 				{
 					damagetype |= DMG_CRIT;
 					return Plugin_Changed;
@@ -935,7 +935,11 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 	}
 
 	if (victim.iCustom)
+	{
+		if (gamemode.iLRPresetType == Custom)
+			gamemode.iLRPresetType = -1;
 		victim.iCustom = 0;
+	}
 
 	Call_OnPlayerDied(victim, attacker, event);
 }

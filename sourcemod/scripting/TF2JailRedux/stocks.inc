@@ -130,11 +130,6 @@ stock int GetItemQuality(const int item)
 		return GetEntProp(item, Prop_Send, "m_iEntityQuality");
 	return -1;
 }
-stock int GetIndexOfWeaponSlot(const int client, const int slot)
-{
-	int weapon = GetPlayerWeaponSlot(client, slot);
-	return GetItemIndex(weapon);
-}
 stock bool IsInRange(const int entity, const int target, const float dist, bool pTrace = false)
 {
 	float entitypos[3]; GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", entitypos);
@@ -186,23 +181,6 @@ stock void CreateParticles(char[] particlename, float Pos[3] = NULL_VECTOR, floa
 		CreateTimer(time, EraseEntity, EntIndexToEntRef(particle));
 	}
 	else LogError("CreateParticles: **** Couldn't Create 'info_particle_system Entity' ****");
-}
-stock void SetWeaponInvis(const int client, const int alpha)
-{
-	int transparent = alpha;
-	for (int i = 0; i < 5; i++) {
-		int entity = GetPlayerWeaponSlot(client, i); 
-		if ( IsValidEdict(entity) && IsValidEntity(entity) )
-		{
-			if (transparent > 255)
-				transparent = 255;
-			if (transparent < 0)
-				transparent = 0;
-			SetEntityRenderMode(entity, RENDER_TRANSCOLOR); 
-			SetEntityRenderColor(entity, 150, 150, 150, transparent); 
-		}
-	}
-	return;
 }
 stock int SetWeaponAmmo(const int weapon, const int ammo)
 {
@@ -356,29 +334,6 @@ stock int GetGroundEntity(const int client)
 		return GetEntPropEnt(client, Prop_Send, "m_hGroundEntity");
 	return -1;
 }
-stock void TeleportToSpawn(const int client, int team = 0)	// Props to Chdata!
-{
-	int iEnt = -1;
-	float vPos[3], vAng[3];
-	ArrayList hArray = new ArrayList();
-	while ((iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1)
-	{
-		if (team <= 1)
-			hArray.Push(iEnt);
-		else {
-			int iSpawnTeam = GetEntProp(iEnt, Prop_Send, "m_iTeamNum");
-			if (iSpawnTeam == team)
-				hArray.Push(iEnt);
-		}
-	}
-	iEnt = hArray.Get(GetRandomInt(0, hArray.Length - 1));
-	hArray.Close();
-
-	// Technically you'll never find a map without a spawn point. not a good map at least.
-	GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", vPos);
-	GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
-	TeleportEntity(client, vPos, vAng, nullvec);
-}
 stock void DoExplosion(const int owner, const int damage, const int radius, float pos[3])
 {
 	int explode = CreateEntityByName("env_explosion");
@@ -472,25 +427,6 @@ stock void IncrementHeadCount(const int client, bool addhealth = true, int addhe
 	}
 	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.01);   // Recalc their speed
 }
-stock void SpawnSmallHealthPackAt(const int client, int ownerteam = 0)
-{
-	if (!IsValidClient(client) || !IsPlayerAlive(client))
-		return;
-	int healthpack = CreateEntityByName("item_healthkit_small");
-	if ( IsValidEntity(healthpack) ) {
-		float pos[3]; GetClientAbsOrigin(client, pos);
-		pos[2] += 20.0;
-		DispatchKeyValue(healthpack, "OnPlayerTouch", "!self,Kill,,0,-1");  //for safety, though it normally doesn't respawn
-		DispatchSpawn(healthpack);
-		SetEntProp(healthpack, Prop_Send, "m_iTeamNum", ownerteam, 4);
-		SetEntityMoveType(healthpack, MOVETYPE_VPHYSICS);
-		float vel[3];
-		vel[0] = float(GetRandomInt(-10, 10)), vel[1] = float(GetRandomInt(-10, 10)), vel[2] = 50.0;
-		TeleportEntity(healthpack, pos, NULL_VECTOR, vel);
-		//CreateTimer(17.0, Timer_RemoveCandycaneHealthPack, EntIndexToEntRef(healthpack), TIMER_FLAG_NO_MAPCHANGE);
-	}
-	return;
-}
 stock void SetNextAttack(const int weapon, float duration = 0.0)
 {
 	if (weapon <= MaxClients || !IsValidEntity(weapon))
@@ -549,13 +485,6 @@ public Action DoThink(Handle hTimer, DataPack hndl)
 
 	Call_Finish();
 	return Plugin_Continue;
-}
-stock void ForceClientTeamChange(const int client, const int iTeam) // Just use base.ForceTeamChange
-{
-	SetEntProp(client, Prop_Send, "m_lifeState", 2);
-	ChangeClientTeam(client, iTeam);
-	SetEntProp(client, Prop_Send, "m_lifeState", 0);
-	TF2_RespawnPlayer(client);
 }
 stock void SetArenaCapEnableTime(const float time)
 {
@@ -1027,56 +956,6 @@ stock int MakeParticle(int client, char[] effect, char[] attachment)
 		SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", client);
 		AcceptEntityInput(particle, "Start");
 		return particle;
-}
-stock void RemoveAll(int client)
-{
-	TF2_RemovePlayerDisguise(client);
-	int ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1)
-	{
-		if (GetOwner(ent) == client) 
-		{
-			TF2_RemoveWearable(client, ent);
-			AcceptEntityInput(ent, "Kill");
-		}
-	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
-	{
-		if (GetOwner(ent) == client) 
-		{
-			TF2_RemoveWearable(client, ent);
-			AcceptEntityInput(ent, "Kill");
-		}
-	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_powerup_bottle")) != -1)
-	{
-		if (GetOwner(ent) == client) 
-		{
-			TF2_RemoveWearable(client, ent);
-			AcceptEntityInput(ent, "Kill");
-		}
-	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_wearable_razorback")) != -1)
-	{
-		if (GetOwner(ent) == client) 
-		{
-			TF2_RemoveWearable(client, ent);
-			AcceptEntityInput(ent, "Kill");
-		}
-	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_wearable_campaign_item")) != -1)
-	{
-		if (GetOwner(ent) == client) 
-		{
-			TF2_RemoveWearable(client, ent);
-			AcceptEntityInput(ent, "Kill");
-		}
-	}
-	// TF2_RemoveAllWeapons(client);
 }
 stock bool IsClientValid(int client)
 {
