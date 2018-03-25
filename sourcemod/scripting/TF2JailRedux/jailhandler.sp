@@ -44,10 +44,10 @@ enum /** LRs **/
  *	When adding a new lr, increase the LRMAX to the proper/latest enum value
  *	Reminder that random lr grabs a random int from 2 to LRMAX
  *	Having breaks or skips within the enum will result in nothing happening the following round if that number is selected
- *	g_hPluginsRegistered.Length increases by 1 every time you 'TF2JailRedux_RegisterPlugin()' with a sub-plugin
+ *	hPlugins.Length increases by 1 every time you 'TF2JailRedux_RegisterPlugin()' with a sub-plugin
  *	Sub-Plugins *should* be completely manageable as their own plugin, with no need to touch this one
 */
-#define LRMAX		ClassWars + (g_hPluginsRegistered.Length)
+#define LRMAX		ClassWars + (hPlugins.Length)
 
 #include "TF2JailRedux/jailbase.sp"
 #include "TF2JailRedux/jailgamemode.sp"
@@ -654,7 +654,7 @@ public void ManageOnRoundEnd(Event event)
 	Call_OnManageRoundEnd(event);
 }
 /**
- *	Manage jail cell behavior on round start choose OPEN/CLOSE/LOCK/UNLOCK
+ *	Manage jail cell behavior on round start; choose OPEN/CLOSE/LOCK/UNLOCK
 */
 public void ManageCells()
 {
@@ -705,8 +705,8 @@ public void ManageFFTimer()
 	switch (gamemode.iLRType)
 	{
 		case 
-		HHHDay, 
-		TinyRound
+			HHHDay, 
+			TinyRound
 		:SetPawnTimer(EnableFFTimer, 10.0, gamemode.iRoundCount);
 		default: {	}
 	}
@@ -748,12 +748,12 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 		default: {	}
 	}
 }*/
+
 /** 
  *	Think: Code called every 0.1 seconds per client, aka poor man's SDKHook_Think
  *	If lr requires the same think properties from both teams, set it under both team thinks
  *	Thinks overlap on WardenThink and BlueThink so be wary of this
 */
-
 /**
  *	Red Team think
 */

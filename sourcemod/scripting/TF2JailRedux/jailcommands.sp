@@ -1342,7 +1342,7 @@ public Action BaseProp(int client, int args)
 }
 public Action PluginLength(int client, int args)
 {
-	CReplyToCommand(client, "%d", g_hPluginsRegistered.Length);
+	CReplyToCommand(client, "%d", hPlugins.Length);
 }
 public Action arrLRSLength(int client, int args)
 {

@@ -95,7 +95,7 @@ methodmap JailGameMode < StringMap
 		}
 	}
 #endif
-#if defined _sourcebans_included
+#if defined _sourcebans_included || defined _sourcebanspp_included
 	property bool bSB
 	{
 		public get()
@@ -406,7 +406,7 @@ methodmap JailGameMode < StringMap
 #if defined _steamtools_included
 		this.bSteam = false;
 #endif
-#if defined _sourcebans_included
+#if defined _sourcebans_included || defined _sourcebanspp_included
 		this.bSB = false;
 #endif
 		this.bSC = false;

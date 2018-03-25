@@ -173,6 +173,8 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	gamemode.bFirstDoorOpening = false;
 
 	CreateTimer(1.0, Timer_Round, _, FULLTIMER);
+
+	SetPawnTimer(CheckLivingPlayers, 0.2);
 	
 	if (gamemode.b1stRoundFreeday)
 	{

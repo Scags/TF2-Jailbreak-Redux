@@ -237,7 +237,7 @@ methodmap JailFighter
 		Handle hWeapon = TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
 		if (hWeapon == null)
 			return -1;
-		
+
 		TF2Items_SetClassname(hWeapon, name);
 		TF2Items_SetItemIndex(hWeapon, index);
 		TF2Items_SetLevel(hWeapon, level);
@@ -340,7 +340,8 @@ methodmap JailFighter
 	{
 		int transparent = alpha;
 		int entity;
-		for (int i=0; i<5; i++) {
+		for (int i = 0; i < 5; i++) 
+		{
 			entity = GetPlayerWeaponSlot(this.index, i); 
 			if (IsValidEdict(entity) && IsValidEntity(entity))
 			{
@@ -399,6 +400,7 @@ methodmap JailFighter
 	{
 		if (!IsPlayerAlive(this.index))
 			return;
+
 		int healthpack = CreateEntityByName("item_healthkit_small");
 		if (IsValidEntity(healthpack))
 		{
@@ -460,7 +462,7 @@ methodmap JailFighter
 		ServerCommand("sm_evilbeam #%d", this.userid);
 		int flags = GetEntityFlags(this.index) | FL_NOTARGET;
 		SetEntityFlags(this.index, flags);
-		
+
 		if (this.bIsQueuedFreeday)
 			this.bIsQueuedFreeday = false;
 		this.bIsFreeday = true;
@@ -497,7 +499,7 @@ methodmap JailFighter
 		TF2_RemoveWeaponSlot(client, 4);
 		TF2_RemoveWeaponSlot(client, 5);
 		//TF2_SwitchToSlot(client, TFWeaponSlot_Melee);
-		
+
 		char sClassName[64];
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
 		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
@@ -516,32 +518,31 @@ methodmap JailFighter
 
 		int offset = FindDataMapInfo(client, "m_hMyWeapons") - 4;
 		int weapon;
-	
+
 		for (int i = 0; i < 2; i++)
 		{
 			offset += 4;
-	
 			weapon = GetEntDataEnt2(client, offset);
-	
+
 			if (!IsValidEntity(weapon) || i == TFWeaponSlot_Melee)
 				continue;
-	
+
 			int clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
 			if (clip != -1)
 				SetEntProp(weapon, Prop_Data, "m_iClip1", 0);
-	
+
 			clip = GetEntProp(weapon, Prop_Data, "m_iClip2");
 			if (clip != -1)
 				SetEntProp(weapon, Prop_Data, "m_iClip2", 0);
-				
+
 			SetWeaponAmmo(weapon, 0);
 		}
-	
+
 		char sClassName[64];
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
 		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
-		
+
 		//CPrintToChat(client, "{red}[TF2Jail]{tan} Your weapons and ammo have been stripped.");
 	}
 	/**
@@ -551,13 +552,13 @@ methodmap JailFighter
 	*/
 	public void UnmutePlayer()
 	{
-		if (this.bIsMuted)
-		{
-			int client = this.index;
-			SetClientListeningFlags(client, VOICE_NORMAL);
-			this.bIsMuted = false;
-			PrintToConsole(client, "[TF2Jail] You are unmuted by the plugin.");
-		}
+		if (!this.bIsMuted)
+			return;
+
+		int client = this.index;
+		SetClientListeningFlags(client, VOICE_NORMAL);
+		this.bIsMuted = false;
+		PrintToConsole(client, "[TF2Jail] You are unmuted by the plugin.");
 	}
 	/**
 	 *	Initialize a player as the warden.
@@ -595,7 +596,7 @@ methodmap JailFighter
 	{
 		if (!this.bIsWarden)
 			return;
-		
+
 		if (hTextNodes[2] != null)
 		{
 			for (int i = MaxClients; i; --i)
@@ -664,13 +665,13 @@ methodmap JailFighter
 	public void MakeHorsemann()
 	{
 		int client = this.index;
-		
+
 		int ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
 		if (ragdoll > MaxClients && IsValidEntity(ragdoll)) 
 			AcceptEntityInput(ragdoll, "Kill");
 		char weaponname[32];
 		GetClientWeapon(client, weaponname, sizeof(weaponname));
-		if (strcmp(weaponname, "tf_weapon_minigun", false) == 0) 
+		if (!strcmp(weaponname, "tf_weapon_minigun", false)) 
 		{
 			SetEntProp(GetPlayerWeaponSlot(client, 0), Prop_Send, "m_iWeaponState", 0);
 			TF2_RemoveCondition(client, TFCond_Slowed);
@@ -683,13 +684,13 @@ methodmap JailFighter
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
 		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
-		
+
 		this.SetCustomModel("models/bots/headless_hatman.mdl");
 		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
 		SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.25);
 		SetEntProp(wep, Prop_Send, "m_iWorldModelIndex", PrecacheModel("models/weapons/c_models/c_bigaxe/c_bigaxe.mdl"));
 		SetEntProp(wep, Prop_Send, "m_nModelIndexOverrides", PrecacheModel("models/weapons/c_models/c_bigaxe/c_bigaxe.mdl"), _, 0);
-		
+
 		SetVariantInt(1);
 		AcceptEntityInput(client, "SetForcedTauntCam");
 
@@ -705,12 +706,14 @@ methodmap JailFighter
 	public void UnHorsemann()
 	{
 		int client = this.index;
+
 		SetVariantString("");
 		AcceptEntityInput(client, "SetCustomModel");
 		SetEntPropFloat(client, Prop_Data, "m_flModelScale", 1.0);
 		SetVariantInt(0);
 		AcceptEntityInput(client, "SetForcedTauntCam");
 		ClearHorsemannParticles(client);
+
 		if (IsPlayerAlive(client))
 			ResetPlayer(client);
 		this.bIsHHH = false;

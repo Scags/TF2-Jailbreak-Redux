@@ -928,34 +928,34 @@ stock void TF2_SwitchToSlot(const int client, const int slot)
 }
 stock int MakeParticle(int client, char[] effect, char[] attachment)
 {
-		float pos[3];
-		float ang[3];
-		char buffer[128];
-		GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
-		GetClientEyeAngles(client, ang);
-		ang[0] *= -1;
-		ang[1] += 180.0;
-		if (ang[1] > 180.0) ang[1] -= 360.0;
-		ang[2] = 0.0;
-	//	GetAngleVectors(ang, pos2, NULL_VECTOR, NULL_VECTOR);
-		int particle = CreateEntityByName("info_particle_system");
-		if (!IsValidEntity(particle)) return -1;
-		TeleportEntity(particle, pos, ang, NULL_VECTOR);
-		DispatchKeyValue(particle, "effect_name", effect);
-		SetVariantString("!activator");
-		AcceptEntityInput(particle, "SetParent", client, particle, 0);
-		if (attachment[0] != '\0')
-		{
-			SetVariantString(attachment);
-			AcceptEntityInput(particle, "SetParentAttachmentMaintainOffset", particle, particle, 0);
-		}
-		Format(buffer, sizeof(buffer), "%s_%s%d", effect, attachment, particle);
-		DispatchKeyValue(particle, "targetname", buffer);
-		DispatchSpawn(particle);
-		ActivateEntity(particle);
-		SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", client);
-		AcceptEntityInput(particle, "Start");
-		return particle;
+	float pos[3];
+	float ang[3];
+	char buffer[128];
+	GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
+	GetClientEyeAngles(client, ang);
+	ang[0] *= -1;
+	ang[1] += 180.0;
+	if (ang[1] > 180.0) ang[1] -= 360.0;
+	ang[2] = 0.0;
+//	GetAngleVectors(ang, pos2, NULL_VECTOR, NULL_VECTOR);
+	int particle = CreateEntityByName("info_particle_system");
+	if (!IsValidEntity(particle)) return -1;
+	TeleportEntity(particle, pos, ang, NULL_VECTOR);
+	DispatchKeyValue(particle, "effect_name", effect);
+	SetVariantString("!activator");
+	AcceptEntityInput(particle, "SetParent", client, particle, 0);
+	if (attachment[0] != '\0')
+	{
+		SetVariantString(attachment);
+		AcceptEntityInput(particle, "SetParentAttachmentMaintainOffset", particle, particle, 0);
+	}
+	Format(buffer, sizeof(buffer), "%s_%s%d", effect, attachment, particle);
+	DispatchKeyValue(particle, "targetname", buffer);
+	DispatchSpawn(particle);
+	ActivateEntity(particle);
+	SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", client);
+	AcceptEntityInput(particle, "Start");
+	return particle;
 }
 stock bool IsClientValid(int client)
 {

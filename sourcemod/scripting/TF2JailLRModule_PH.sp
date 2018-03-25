@@ -1135,6 +1135,8 @@ public void fwdOnResetVariables(const JBPlayer Player)
 
 public Action fwdOnTimeEnd()
 {
+	if (NotPH)
+		return Plugin_Continue;
 	ForceTeamWin(RED);
 	return Plugin_Handled;
 }

@@ -83,6 +83,16 @@ methodmap JBPlayer
 	{
 		public native get();
 	}
+
+	/**
+	 *	Get's player's Music Cookie.
+	 *
+	 *	@return 			True if music is toggled off. False otherwise.
+	*/
+	property int bNoMusic
+	{
+		public native get();
+	}
 	
 	/**
 	 *	Gets the property of the internal JailFighter methodmap.
@@ -106,20 +116,21 @@ methodmap JBPlayer
 	public native void SetValue(const char key[64], any value);
 
 	/**		AVAILABLE PROPERTIES
-		property int iLRCustom							// For the Custom LR
-		property int iKillCount							// For the ghetto rigged freekill system
-		property bool bIsMuted							// Varies with CVars
-		property bool bIsQueuedFreeday					// Freeday for Self or Freeday for Others
-		property bool bIsFreeday 						// Client is/isn't a freeday
-		property bool bLockedFromWarden					// Upon being fired or retiring
-		property bool bIsVIP							// Default Reserve flag
-		property bool bIsAdmin							// Default Generic flag
-		property bool bIsHHH							// For the HHHDay LR
-		property bool bInJump							// Client is rocket/sticky jumping
-		property bool bNoMusic							// LR music option (cookie)
-		property bool bUnableToTeleport 				// Client can/can't teleport with Eureka Effect
-		property float flSpeed 							// Client speed, isn't used
-		property float flKillSpree 						// Also for the ghetto rigged freekill system
+	 *	int iLRCustom							// For the Custom LR
+	 *	int iKillCount							// For the ghetto rigged freekill system
+	 *	bool bIsWarden 							// Client is/isn't Warden
+	 *	bool bIsMuted							// Varies with CVars
+	 *	bool bIsQueuedFreeday					// Freeday for Self or Freeday for Others
+	 *	bool bIsFreeday 						// Client is/isn't a freeday
+	 *	bool bLockedFromWarden					// Upon being fired or retiring
+	 *	bool bIsVIP								// Default Reserve flag
+	 *	bool bIsAdmin							// Default Generic flag
+	 *	bool bIsHHH								// For the HHHDay LR
+	 *	bool bInJump							// Client is rocket/sticky jumping
+	 *	bool bNoMusic							// LR music option (cookie)
+	 *	bool bUnableToTeleport 					// Client can/can't teleport with Eureka Effect
+	 *	float flSpeed 							// Client speed, isn't used
+	 *	float flKillSpree 						// Also for the ghetto rigged freekill system
 	*/
 
 	/**
@@ -381,7 +392,7 @@ methodmap JBPlayer
 /**	base.GetValue
  *	Gets the property of the internal JailFighter methodmap.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param key			Name of property you want to access data from.
  *	@param item			Reference to use of the variable to overwrite with data from the property.
  *
@@ -393,7 +404,7 @@ native any GetPlayerMapValue(const int client, const char key[64]);
  *	Sets the property of the internal JB methodmap.
  *	@NOTE 				You can use this to create new properties which GetValue can access!
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param key			Name of the property you want to override data from (works like StringMap).
  *	@param value		Data you want the property to hold.
  *
@@ -402,26 +413,27 @@ native any GetPlayerMapValue(const int client, const char key[64]);
 native void SetPlayerMapValue(const int client, const char key[64], any value);
 
 /**		AVAILABLE PROPERTIES
- *	property int iLRCustom							// For the Custom LR
- *	property int iKillCount							// For the ghetto rigged freekill system
- *	property bool bIsMuted							// Varies with CVars
- *	property bool bIsQueuedFreeday					// Freeday for Self or Freeday for Others
- *	property bool bIsFreeday 						// Client is/isn't a freeday
- *	property bool bLockedFromWarden					// Upon being fired or retiring
- *	property bool bIsVIP							// Default Reserve flag
- *	property bool bIsAdmin							// Default Generic flag
- *	property bool bIsHHH							// For the HHHDay LR
- *	property bool bInJump							// Client is rocket/sticky jumping
- *	property bool bNoMusic							// LR music option (cookie)
- *	property bool bUnableToTeleport 				// Client can/can't teleport with Eureka Effect
- *	property float flSpeed 							// Client speed, isn't used
- *	property float flKillSpree 						// Also for the ghetto rigged freekill system
+ *	int iLRCustom							// For the Custom LR
+ *	int iKillCount							// For the ghetto rigged freekill system
+ *	bool bIsWarden 							// Client is/isn't Warden
+ *	bool bIsMuted							// Varies with CVars
+ *	bool bIsQueuedFreeday					// Freeday for Self or Freeday for Others
+ *	bool bIsFreeday 						// Client is/isn't a freeday
+ *	bool bLockedFromWarden					// Upon being fired or retiring
+ *	bool bIsVIP								// Default Reserve flag
+ *	bool bIsAdmin							// Default Generic flag
+ *	bool bIsHHH								// For the HHHDay LR
+ *	bool bInJump							// Client is rocket/sticky jumping
+ *	bool bNoMusic							// LR music option (cookie)
+ *	bool bUnableToTeleport 					// Client can/can't teleport with Eureka Effect
+ *	float flSpeed 							// Client speed, isn't used
+ *	float flKillSpree 						// Also for the ghetto rigged freekill system
 */
 
 /**	base.SetArray
  *	Set an array into this player's StringMap
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param key			Key string.
  *	@param array		Array to store.
  *	@param num_items	Number of items in the array.
@@ -434,7 +446,7 @@ native bool SetPlayerMapArray(const int client, const char[] key, const any[] ar
 /**	base.SetString
  *	Sets a string value in this player's StringMap, either inserting a new entry or replacing an old one.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param key			Key string.
  *	@param string		String to store.
  *	@param replace		If false, operation will fail if the key is already set.
@@ -446,7 +458,7 @@ native bool SetPlayerMapString(const int client, const char[] key, const char[] 
 /**	base.GetArray
  *	Retrieves an array in this player's StringMap.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param key			Key string.
  *	@param array		Buffer to store array.
  *	@param max_size		Maximum size of array buffer.
@@ -460,7 +472,7 @@ native bool GetPlayerMapArray(const int client, const char[] key, any[] array, i
 /**	base.GetString
  *	Retrieves a string in this player's StringMap.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param key			Key string.
  *	@param string		Buffer to store value.
  *	@param max_size		Maximum size of string buffer.
@@ -474,7 +486,7 @@ native bool GetPlayerMapString(const int client, const char[] key, char[] string
 /**	base.Remove
  *	Removes a key entry from this player's StringMap.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param key			Key string.
  *
  *	@return				True on success, false if the value was never set.
@@ -484,7 +496,7 @@ native bool RemovePlayerKey(const int client, const char[] key);
 /**	base.Clear
  *	Clears all entries from this player's StringMap.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -493,7 +505,7 @@ native void ClearPlayerMap(const int client);
 /**	base.Snapshot
  *	Create a snapshot of this player's StringMap's keys. See StringMapSnapshot.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@return 			Handle to key SnapShot.
 */
@@ -502,7 +514,7 @@ native StringMapSnapshot SnapshotPlayerMapKeys(const int client);
 /**	base.Size
  *	Retrieves the number of elements in this player's StringMap.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@return 			Player's StringMap size.
 */
@@ -511,7 +523,7 @@ native int GetPlayerMapSize(const int client)
 /**	base.SpawnWeapon
  *	Creates and spawns a weapon to a player.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param name 		Entity name of the weapon being spawned (Cannot be a wearable).
  *	@param index 		Item index of the weapon.
  *	@param level		Item level of the weapon.
@@ -553,7 +565,7 @@ stock int TF2_SpawnWeapon(const int client, char[] name, int index, int level, i
 /**	base.GetWeaponSlotIndex
  *	Retrieve an item definition index of a player's weaponslot.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param slot 		Slot to grab the item index from.
  *
  *	@return 			Index of the valid, equipped weapon.
@@ -567,7 +579,7 @@ stock int GetIndexOfWeaponSlot(const int client, const int slot)
 /**	base.SetWepInvis
  *	Set the alpha magnitude a player's weapons.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param alpha 		Number from 0 to 255 to set on the weapon.
  *
  *	@noreturn
@@ -594,7 +606,7 @@ stock void SetWeaponInvis(const int client, const int alpha)
 /**	base.ForceTeamChange
  *	Silently switch a player's team.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param team 		Team to switch to.
  *	@param spawn 		Determine whether or not to respawn the client.
  *
@@ -616,7 +628,7 @@ stock void ForceClientTeamChange(const int client, const int iTeam, bool spawn =
  *	Teleport a player either to a freeday or warday location.
  *	@NOTE 				If gamemode teleport properties are not true, player will be teleported to map's origin
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param location 	Location to teleport the client.
  *
  *	@noreturn
@@ -626,7 +638,7 @@ native void TeleportPlayerToPosition(const int client, const int location);
 /**	base.ListLRS
  *	List the last request menu to the player.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -635,7 +647,7 @@ native void ListPlayerLRS(const int client);
 /**	base.PreEquip
  *	Remove all weapons, disguises, and wearables from a client.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param weps 		True to remove all weapons, false otherwise.
  *
  *	@noreturn
@@ -696,7 +708,7 @@ stock void RemoveAll(const int client, bool weps = true)
 /**	base.TeleToSpawn
  *	Teleport a player to the appropriate spawn location.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param team 		Team spawn to teleport the client to.
  *
  *	@noreturn
@@ -728,7 +740,7 @@ stock void TeleportToSpawn(const int client, int team = 0)	// Props to Chdata!
 /**	base.SpawnSmallHealthPack
  *	Spawn a small healthpack at the client's origin.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param ownerteam 	Team to give the healthpack.
  *
  *	@noreturn
@@ -757,7 +769,7 @@ stock void SpawnSmallHealthPackAt(const int client, int ownerteam = 0)
  *	Mute a client through the plugin.
  *	@NOTE 				Players that are deemed as admins will never be muted.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -767,7 +779,7 @@ native void JailMutePlayer(const int client);
  *	Initialize a player as a freeday.
  *	@NOTE 				Does not teleport them to the freeday location.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -776,7 +788,7 @@ native void GivePlayerFreeday(const int client);
 /**	base.RemoveFreeday
  *	Terminate a player as a freeday.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -785,7 +797,7 @@ native void RemovePlayerFreeday(const int client);
 /**	base.StripToMelee
  *	Remove all player weapons that are not their melee.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -805,7 +817,7 @@ stock void StripPlayerToMelee(const int client)
 /**	base.EmptyWeaponSlots
  *	Strip a player of all of their ammo.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -850,7 +862,7 @@ stock void EmptyPlayerWeaponSlots(const int client)
 /**	base.UnmutePlayer
  *	Unmute a player through the plugin.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -860,7 +872,7 @@ native void JailUnmutePlayer(const int client);
  *	Initialize a player as the warden.
  *	@NOTE 				This automatically gives the player the warden menu
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -869,7 +881,7 @@ native void JailWardenSet(const int client);
 /**	base.WardenUnset
  *	Terminate a player as the warden.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -878,7 +890,7 @@ native void JailWardenUnset(const int client);
 /**	base.MakeHorsemann
  *	Convert a player into the Horseless Headless Horsemann.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -887,7 +899,7 @@ native void MakePlayerHorsemann(const int client);
 /**	base.UnHorsemann
  *	Terminate a player as the Horseless Headless Horsemann.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -896,7 +908,7 @@ native void UnHorsemannPlayer(const int client);
 /**	base.WardenMenu
  *	Give a player the warden menu.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *
  *	@noreturn
 */
@@ -905,7 +917,7 @@ native void WardenMenuPlayer(const int client);
 /**	base.ClimbWall
  *	Allow a player to climb walls upon hitting them.
  *
- *	@param client 		Player.
+ *	@param client 		Player index.
  *	@param weapon 		Weapon the client is using to attack.
  *	@param upwardvel	Velocity to send the client (in hammer units).
  *	@param health 		Health to take from the client.
@@ -915,9 +927,17 @@ native void WardenMenuPlayer(const int client);
 */
 native void PlayerClimbWall(const int client, const int weapon, const float upwardvel, const float health, const bool attackdelay);
 
+/**
+ *	Get's player's Music Cookie.
+ *
+ *	@param client 		Player index.
+ *
+ *	@return 			True if music is toggled off. False otherwise.
+*/
+native bool NoPlayerMusic(const int client);
 
 
-methodmap JBGameMode //< StringMap
+methodmap JBGameMode
 {
 	/**
 	 *	Initialize global methodmap with a handle to the core JailGameMode methodmap.
@@ -1288,12 +1308,14 @@ native int JBGameMode_Size();
 
 /**
  *	Registers a plugin to be able to use TF2Jail's forwards
- *	NOTE: The purpose of this native is to register last-request subplugins, you don't need to register plugins to use forwards, simply hook what forward you need.
- *	If you add a last request and want to test it before you allow all players to use it, do NOT register the sub-plugin, and use sm_setpreset to activate the lr type for next round.
+ *	@NOTE 					The purpose of this native is to register last-request subplugins, you don't need to register plugins to use forwards, 
+ *							simply hook what forward you need.
+ *							If you add a last request and want to test it before you allow all players to use it, do NOT register the sub-plugin, 
+ *							and use sm_setpreset to activate the lr type for next round.
  *	
  *	@param plugin_name		Module name you want your calling plugin to be identified under.
  *
- *	@return					Integer of the plugin array index
+ *	@return					Integer of the plugin array index.
  */
 native int TF2JailRedux_RegisterPlugin(const char plugin_name[64]);
 
@@ -1514,6 +1536,7 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.UnHorsemann");
 	MarkNativeAsOptional("JBPlayer.WardenMenu");
 	MarkNativeAsOptional("JBPlayer.ClimbWall");
+	MarkNativeAsOptional("JBPlayer.bNoMusic.get");
 
 	MarkNativeAsOptional("JBPlayer.SetValue");
 	MarkNativeAsOptional("JBPlayer.SetArray");
@@ -1548,6 +1571,7 @@ public __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("UnHorsemannPlayer");
 	MarkNativeAsOptional("WardenMenuPlayer");
 	MarkNativeAsOptional("PlayerClimbWall");
+	MarkNativeAsOptional("NoPlayerMusic");
 
 	MarkNativeAsOptional("JBGameMode_Playing");
 	MarkNativeAsOptional("JBGameMode_ManageCells");
