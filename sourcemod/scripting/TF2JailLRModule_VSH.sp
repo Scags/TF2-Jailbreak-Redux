@@ -1192,7 +1192,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 				GetEntityClassname(inflictor, strEntname, sizeof(strEntname));
 			if (IsValidEdict(weapon))
 				GetEdictClassname(weapon, classname, sizeof(classname));
-	
+
 			int weap = GetPlayerWeaponSlot(victim.index, TFWeaponSlot_Melee);
 			int index = GetItemIndex(weap);
 			int active = GetEntPropEnt(victim.index, Prop_Send, "m_hActiveWeapon");

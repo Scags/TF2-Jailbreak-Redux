@@ -6,15 +6,8 @@ methodmap JailGameMode < StringMap
 	}
 	property int iRoundState
 	{
-		public get()
-		{
-			int i; this.GetValue("iRoundState", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			this.SetValue("iRoundState", i);
-		}
+		IntGet("iRoundState")
+		IntSet("iRoundState")
 	}
 	property int iPlaying
 	{
@@ -34,347 +27,151 @@ methodmap JailGameMode < StringMap
 	}
 	property int iTimeLeft
 	{
-		public get()
-		{
-			int i; this.GetValue("iTimeLeft", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			this.SetValue("iTimeLeft", i);
-		}
+		IntGet("iTimeLeft")
+		IntSet("iTimeLeft")
 	}
 	property int iRoundCount
 	{
-		public get()
-		{
-			int i; this.GetValue("iRoundCount", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			this.SetValue("iRoundCount", i);
-		}
+		IntGet("iRoundCount")
+		IntSet("iRoundCount")
 	}
 	property int iLRPresetType
 	{
-		public get()
-		{
-			int i; this.GetValue("iLRPresetType", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			this.SetValue("iLRPresetType", i);
-		}
+		IntGet("iLRPresetType")
+		IntSet("iLRPresetType")
 	}
 	property int iLRType
 	{
-		public get()
-		{
-			int i; this.GetValue("iLRType", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			this.SetValue("iLRType", i);
-		}
+		IntGet("iLRType")
+		IntSet("iLRType")
 	}
 	
 #if defined _steamtools_included
 	property bool bSteam
 	{
-		public get()
-		{
-			bool i; this.GetValue("bSteam", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bSteam", i);
-		}
+		BoolGet("bSteam")
+		BoolSet("bSteam")
 	}
 #endif
 #if defined _sourcebans_included || defined _sourcebanspp_included
 	property bool bSB
 	{
-		public get()
-		{
-			bool i; this.GetValue("bSB", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bSB", i);
-		}
+		BoolGet("bSB")
+		BoolSet("bSB")
 	}
 #endif
 	property bool bSC
 	{
-		public get()
-		{
-			bool i; this.GetValue("bSC", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bSC", i);
-		}
+		BoolGet("bSC")
+		BoolSet("bSC")
 	}
 #if defined _voiceannounce_ex_included
 	property bool bVA
 	{
-		public get()
-		{
-			bool i; this.GetValue("bVA", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bVA", i);
-		}
+		BoolGet("bVA")
+		BoolSet("bVA")
 	}
 #endif
 	property bool bTF2Attribs
 	{
-		public get()
-		{
-			bool i; this.GetValue("bTF2Attribs", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bTF2Attribs", i);
-		}
+		BoolGet("bTF2Attribs")
+		BoolSet("bTF2Attribs")
 	}
 	property bool bIsMapCompatible
 	{
-		public get()
-		{
-			bool i; this.GetValue("bIsMapCompatible", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bIsMapCompatible", i);
-		}
+		BoolGet("bIsMapCompatible")
+		BoolSet("bIsMapCompatible")
 	}
 	property bool bFreedayTeleportSet
 	{
-		public get()
-		{
-			bool i; this.GetValue("bFreedayTeleportSet", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bFreedayTeleportSet", i);
-		}
+		BoolGet("bFreedayTeleportSet")
+		BoolSet("bFreedayTeleportSet")
 	}
 	property bool bWardayTeleportSetBlue
 	{
-		public get()
-		{
-			bool i; this.GetValue("bWardayTeleportSetBlue", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bWardayTeleportSetBlue", i);
-		}
+		BoolGet("bWardayTeleportSetBlue")
+		BoolSet("bWardayTeleportSetBlue")
 	}
 	property bool bWardayTeleportSetRed
 	{
-		public get()
-		{
-			bool i; this.GetValue("bWardayTeleportSetRed", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bWardayTeleportSetRed", i);
-		}
+		BoolGet("bWardayTeleportSetRed")
+		BoolSet("bWardayTeleportSetRed")
 	}
 	property bool bCellsOpened
 	{
-		public get()
-		{
-			bool i; this.GetValue("bCellsOpened", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bCellsOpened", i);
-		}
+		BoolGet("bCellsOpened")
+		BoolSet("bCellsOpened")
 	}
 	property bool b1stRoundFreeday
 	{
-		public get()
-		{
-			bool i; this.GetValue("b1stRoundFreeday", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("b1stRoundFreeday", i);
-		}
+		BoolGet("b1stRoundFreeday")
+		BoolSet("b1stRoundFreeday")
 	}
 	property bool bIsLRInUse
 	{
-		public get()
-		{
-			bool i; this.GetValue("bIsLRInUse", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bIsLRInUse", i);
-		}
+		BoolGet("bIsLRInUse")
+		BoolSet("bIsLRInUse")
 	}
 	property bool bIsWardenLocked
 	{
-		public get()
-		{
-			bool i; this.GetValue("bIsWardenLocked", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bIsWardenLocked", i);
-		}
+		BoolGet("bIsWardenLocked")
+		BoolSet("bIsWardenLocked")
 	}
 	property bool bOneGuardLeft
 	{
-		public get()
-		{
-			bool i; this.GetValue("bOneGuardLeft", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bOneGuardLeft", i);
-		}
+		BoolGet("bOneGuardLeft")
+		BoolSet("bOneGuardLeft")
 	}
 	property bool bOnePrisonerLeft
 	{
-		public get()
-		{
-			bool i; this.GetValue("bOnePrisonerLeft", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bOnePrisonerLeft", i);
-		}
+		BoolGet("bOnePrisonerLeft")
+		BoolSet("bOnePrisonerLeft")
 	}
 	property bool bAdminLockWarden
 	{
-		public get()
-		{
-			bool i; this.GetValue("bAdminLockWarden", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bAdminLockWarden", i);
-		}
+		BoolGet("bAdminLockWarden")
+		BoolSet("bAdminLockWarden")
 	}
 	property bool bAdminLockedLR
 	{
-		public get()
-		{
-			bool i; this.GetValue("bAdminLockedLR", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bAdminLockedLR", i);
-		}
+		BoolGet("bAdminLockedLR")
+		BoolSet("bAdminLockedLR")
 	}
 	property bool bDisableCriticals
 	{
-		public get()
-		{
-			bool i; this.GetValue("bDisableCriticals", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bDisableCriticals", i);
-		}
+		BoolGet("bDisableCriticals")
+		BoolSet("bDisableCriticals")
 	}
 	property bool bIsFreedayRound
 	{
-		public get()
-		{
-			bool i; this.GetValue("bIsFreedayRound", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bIsFreedayRound", i);
-		}
+		BoolGet("bIsFreedayRound")
+		BoolSet("bIsFreedayRound")
 	}
 	property bool bWardenExists
 	{
-		public get()
-		{
-			bool i; this.GetValue("bWardenExists", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bWardenExists", i);
-		}
+		BoolGet("bWardenExists")
+		BoolSet("bWardenExists")
 	}
 	property bool bFirstDoorOpening
 	{
-		public get()
-		{
-			bool i; this.GetValue("bFirstDoorOpening", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bFirstDoorOpening", i);
-		}
+		BoolGet("bFirstDoorOpening")
+		BoolSet("bFirstDoorOpening")
 	}
 	property bool bIsWarday
 	{
-		public get()
-		{
-			bool i; this.GetValue("bIsWarday", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bIsWarday", i);
-		}
+		BoolGet("bIsWarday")
+		BoolSet("bIsWarday")
 	}
 	property bool bMarkerExists
 	{
-		public get()
-		{
-			bool i; this.GetValue("bMarkerExists", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bMarkerExists", i);
-		}
+		BoolGet("bMarkerExists")
+		BoolSet("bMarkerExists")
 	}
 
 	property float flMusicTime
 	{
-		public get()
-		{
-			float i; this.GetValue("flMusicTime", i);
-			return i;
-		}
-		public set( const float i )
-		{
-			this.SetValue("flMusicTime", i);
-		}
+		FloatGet("flMusicTime")
+		FloatSet("flMusicTime")
 	}
 	/**
 	 *	Initialize all JailGameMode Properties to a default.
@@ -512,6 +309,12 @@ methodmap JailGameMode < StringMap
 		if (announce)
 			CPrintToChatAll("{orange}[TF2Jail]{tan} Warden has been fired!");
 	}
+	/**
+	 *	Open all of the doors on a map
+	 *	@NOTE 					This ignores all name checks and opens every door possible.
+	 *
+	 *	@noreturn
+	*/
 	public void OpenAllDoors()
 	{
 		int ent;

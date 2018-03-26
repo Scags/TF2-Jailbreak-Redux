@@ -10,7 +10,7 @@
 #pragma newdecls required
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.0.2"
+#define PLUGIN_VERSION		"1.0.3"
 
 #define UNASSIGNED 			0
 #define NEUTRAL 			0
@@ -1135,10 +1135,22 @@ public void fwdOnResetVariables(const JBPlayer Player)
 
 public Action fwdOnTimeEnd()
 {
-	if (NotPH)
+	if (!JBPH[Enabled].BoolValue || NotPH)
 		return Plugin_Continue;
 	ForceTeamWin(RED);
 	return Plugin_Handled;
+}
+public void fwdOnPlayerPrepped(const JBPlayer Player, Event event)	// For safety, although OnPlayerSpawned should take care of autobalanced players
+{
+	if (!JBPH[Enabled].BoolValue || NotPH || gamemode.GetProperty("iRoundState") != StateRunning && GetLivingPlayers(RED) != 1)
+		return;
+
+	if (GetClientTeam(Player.index) != RED)
+		return;
+
+	JailHunter player = ToJailHunter(Player);
+	if (!player.bIsProp)
+		player.MakeProp(JBPH[PropNameOnGive].BoolValue);
 }
 
 public void CheckJBHooks()
@@ -1183,4 +1195,6 @@ public void CheckJBHooks()
 		LogError("Error loading OnLastPrisoner Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
 		LogError("Error loading OnCheckLivingPlayers Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnPlayerPrepped, fwdOnPlayerPrepped))
+		LogError("Error loading OnPlayerPrepped Forwards for JB PH Sub-Plugin!");
 }

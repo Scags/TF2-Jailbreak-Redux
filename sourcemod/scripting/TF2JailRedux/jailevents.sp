@@ -395,7 +395,7 @@ public void OnHookedEvent(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return;
 
-	JailFighter(event.GetInt("userid"), true).bInJump = StrEqual(name, "rocket_jump", false) || StrEqual(name, "sticky_jump", false);
+	JailFighter( event.GetInt("userid"), true ).bInJump = StrEqual(name, "rocket_jump", false) || StrEqual(name, "sticky_jump", false);
 }
 
 /** Events that aren't used in core (but are used in VSH plugin module) :^) **/
