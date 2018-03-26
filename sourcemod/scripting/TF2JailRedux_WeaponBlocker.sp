@@ -22,7 +22,7 @@ public Plugin myinfo =
 };
 
 ArrayList
-	hWeaponList
+	hWeaponList[2]	// 0 for Red team, 1 for Blue team
 ;
 
 ConVar
@@ -32,10 +32,12 @@ ConVar
 public void OnPluginStart()
 {
 	bEnabled = CreateConVar("sm_jbwb_enable", "1", "Enable the TF2Jail Redux Weapon Blocker?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	CreateConVar("jbwb_version", PLUGIN_VERSION, "TF2Jail Redux Weapon Blocker version.", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_SPONLY | FCVAR_DONTRECORD);
 
 	RegAdminCmd("sm_refreshlist", Cmd_RefreshList, ADMFLAG_GENERIC);
 
-	hWeaponList = new ArrayList();
+	hWeaponList[0] = new ArrayList();
+	hWeaponList[1] = new ArrayList();
 }
 
 public void OnAllPluginsLoaded()
@@ -68,26 +70,39 @@ public void RunConfig()
 		return;
 	}
 
-	int count, check;
+	if (!kv.GotoFirstSubKey(false))
+	{
+		delete kv;
+		SetFailState("Unable to find TF2Jail Redux Weapon Blocker config in path %s!", cfg);
+		return;
+	}
+
+	int count, check, team;
 	char index[4];
-	hWeaponList.Clear();
-	if (kv.GotoFirstSubKey(false))
+	for (count = 0; count < 2; count++)
+		hWeaponList[count].Clear();
+	count = 0;
+
+	do
 	{
 		for (;;)
 		{
 			IntToString(count, index, 4);
-			hWeaponList.Push( kv.GetNum(index, -1) );
+			hWeaponList[team].Push( kv.GetNum(index, -1) );
 			count++;
-			check = hWeaponList.Length-1;
-			if (hWeaponList.Get(check) == -1)	// Bleh
-			{ hWeaponList.Erase(check); break; }
+			check = hWeaponList[team].Length-1;
+			if (hWeaponList[team].Get(check) == -1)	// Bleh
+			{ hWeaponList[team].Erase(check); break; }
 		}
-	}
+		count = 0;
+		team++;
+	} while kv.GotoNextKey(false);
 
 	delete kv;
 
-	if (hWeaponList.Get(0) == -1)
-		hWeaponList.Clear();
+	for (count = 0; count < 2; count++)
+		if (hWeaponList[count].Get(0) == -1)
+			hWeaponList[count].Clear();
 }
 
 public void fwdOnPlayerPrepped(const JBPlayer Player)
@@ -95,7 +110,9 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 	if (!bEnabled.BoolValue)
 		return;
 
-	int len = hWeaponList.Length;
+	int team = GetClientTeam(Player.index) == RED ? 0 : 1;
+	int len = hWeaponList[team].Length;
+
 	if (len)
 	{
 		int[] prepwep = new int[1];
@@ -110,7 +127,7 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 
 			for (u = 0; u < len; u++)
 			{
-				prepwep[0] = hWeaponList.Get(u);
+				prepwep[0] = hWeaponList[team].Get(u);
 
 				if (wep == prepwep[0])
 				{ active = 1; break; }	// 1 is weapon
@@ -182,6 +199,11 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 				}
 			}
 
+			if (active == 1)
+				TF2_RemoveWeaponSlot(client, i);
+			else if (active == 2)
+				RemovePlayerBack(client, prepwep[0], 1);
+
 /*	Flamethrower attributes are fucked up after Jungle Inferno, these static attribs are required whenever spawning them
 "flame_gravity"                         "0"
 "flame_drag"                            "8.5"
@@ -191,11 +213,6 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 "flame_lifetime"                        "0.6"
 "flame_random_life_time_offset"         "0.1"
 */
-
-			if (active == 1)
-				TF2_RemoveWeaponSlot(client, i);
-			else if (active == 2)
-				RemovePlayerBack(client, prepwep[0], 1);
 
 			wep = Player.SpawnWeapon(classname, index, 1, 0, (index == 21 ? "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1" : ""));
 			if (GetClientTeam(client) == RED)
