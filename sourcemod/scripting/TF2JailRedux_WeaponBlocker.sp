@@ -10,7 +10,7 @@
 #define RED 				2
 #define BLU 				3
 
-#define PLUGIN_VERSION 		"1.0.0"
+#define PLUGIN_VERSION 		"1.1.0"
 
 public Plugin myinfo =
 {
@@ -223,110 +223,71 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 
 stock int FindPlayerBack(int client, int[] indices, int len)
 {
-    if (len <= 0)
-        return -1;
-    int edict = MaxClients+1;
-    while ((edict = FindEntityByClassname(edict, "tf_wearable")) != -1)
-    {
-        char netclass[32];
-        if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearable"))
-        {
-            int idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
-            if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-            {
-                for (int i = 0; i < len; i++)
-                    if (idx == indices[i])
-                        return edict;
-            }
-        }
-    }
-    edict = MaxClients+1;
-    while ((edict = FindEntityByClassname(edict, "tf_powerup_bottle")) != -1)
-    {
-        char netclass[32];
-        if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFPowerupBottle"))
-        {
-            int idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
-            if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-            {
-                for (int i = 0; i < len; i++) 
-                    if (idx == indices[i])
-                        return edict;
-            }
-        }
-    }
-    edict = MaxClients+1;
-    while ((edict = FindEntityByClassname(edict, "tf_wearable_razorback")) != -1)
-    {
-        char netclass[32];
-        if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearableRazorback"))
-        {
-            int idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
-            if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-            {
-                for (int i = 0; i < len; i++)
-                    if (idx == indices[i])
-                        return edict;
-            }
-        }
-    }
-    return -1;
-}
-stock void RemovePlayerBack(int client, int[] indices, int len)
-{
 	if (len <= 0)
-		return;
+		return -1;
 	int edict = MaxClients+1;
+	int i, idx;
+	char netclass[32];
 	while ((edict = FindEntityByClassname(edict, "tf_wearable")) != -1)
 	{
-		char netclass[32];
 		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearable"))
 		{
-			int idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
 			if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
 			{
-				for (int i = 0; i < len; i++) {
-					if (idx == indices[i]) {
-						TF2_RemoveWearable(client, edict);
-						//AcceptEntityInput(edict, "Kill");
-					}
-				}
-			}
-		}
-	}
-	edict = MaxClients+1;
-	while ((edict = FindEntityByClassname(edict, "tf_powerup_bottle")) != -1)
-	{
-		char netclass[32];
-		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFPowerupBottle"))
-		{
-			int idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
-			if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			{
-				for (int i=0; i < len; i++) {
-					if (idx == indices[i]) {
-						TF2_RemoveWearable(client, edict);
-						//AcceptEntityInput(edict, "Kill");
-					}
-				}
+				idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
+				for (i = 0; i < len; i++)
+					if (idx == indices[i])
+						return edict;
 			}
 		}
 	}
 	edict = MaxClients+1;
 	while ((edict = FindEntityByClassname(edict, "tf_wearable_razorback")) != -1)
 	{
-		char netclass[32];
 		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearableRazorback"))
 		{
-			int idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
 			if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
 			{
-				for (int i = 0; i < len; i++) {
-					if (idx == indices[i]) {
+				idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
+				for (i = 0; i < len; i++)
+					if (idx == indices[i])
+						return edict;
+			}
+		}
+	}
+	return -1;
+}
+stock void RemovePlayerBack(int client, int[] indices, int len)
+{
+	if (len <= 0)
+		return;
+	int edict = MaxClients+1;
+	int i, idx;
+	char netclass[32];
+	while ((edict = FindEntityByClassname(edict, "tf_wearable")) != -1)
+	{
+		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearable"))
+		{
+			if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
+			{
+				idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
+				for (i = 0; i < len; i++)
+					if (idx == indices[i])
 						TF2_RemoveWearable(client, edict);
-						//AcceptEntityInput(edict, "Kill");
-					}
-				}
+			}
+		}
+	}
+	edict = MaxClients+1;
+	while ((edict = FindEntityByClassname(edict, "tf_wearable_razorback")) != -1)
+	{
+		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearableRazorback"))
+		{
+			if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
+			{
+				idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
+				for (i = 0; i < len; i++)
+					if (idx == indices[i])
+						TF2_RemoveWearable(client, edict);
 			}
 		}
 	}
