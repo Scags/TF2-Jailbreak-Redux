@@ -1157,6 +1157,46 @@ public Action Command_WardenMarker(int client, int args)
 	return Plugin_Handled;
 }
 
+public Action Command_WardenLaser(int client, int args)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Handled;
+
+	if (!client)
+	{
+		CReplyToCommand(client, "{red}[TF2Jail]{tan} Command is in-game only.");
+		return Plugin_Handled;
+	}
+	if (!cvarTF2Jail[WardenLaser].BoolValue)
+	{
+		CPrintToChat(client, "{red}[TF2Jail]{tan} This is not enabled.");
+		return Plugin_Handled;
+	}
+	if (gamemode.iRoundState != StateRunning)
+	{
+		CPrintToChat(client, "{red}[TF2Jail]{tan} Round must be active.");
+		return Plugin_Handled;
+	}
+	JailFighter player = JailFighter(client);
+	if (!player.bIsWarden)
+	{
+		CPrintToChat(client, "{red}[TF2Jail]{tan} You are not warden.");
+		return Plugin_Handled;
+	}
+	if (player.bLasering)
+	{
+		player.bLasering = false;
+		CPrintToChat(client, "{red}[TF2Jail]{tan} You have turned Warden Lasers {default}off{tan}.");
+	}
+	else
+	{
+		player.bLasering = true;
+		CPrintToChat(client, "{red}[TF2Jail]{tan} You have turned Warden Lasers {default}on{tan}. Hold reload to activate.");
+	}
+
+	return Plugin_Handled;
+}
+
 public Action AdminWardayRed(int client, int args)
 {
 	if (!bEnabled.BoolValue)
@@ -1181,7 +1221,7 @@ public Action AdminWardayRed(int client, int args)
 		if (!IsPlayerAlive(i) || GetClientTeam(i) != RED)
 			continue;
 
-		TeleportEntity(i, flWardayRed, nullvec, nullvec);
+		TeleportEntity(i, flWardayRed, NULL_VECTOR, NULL_VECTOR);
 	}
 
 	CPrintToChatAll("{orange}[TF2Jail]{tan} Warday for Red team has been activated!");
@@ -1212,7 +1252,7 @@ public Action AdminWardayBlue(int client, int args)
 		if (!IsPlayerAlive(i) || GetClientTeam(i) != BLU)
 			continue;
 
-		TeleportEntity(i, flWardayBlu, nullvec, nullvec);
+		TeleportEntity(i, flWardayBlu, NULL_VECTOR, NULL_VECTOR);
 	}
 
 	CPrintToChatAll("{orange}[TF2Jail]{tan} Warday for Blue team has been activated!");

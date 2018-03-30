@@ -40,6 +40,7 @@ void InitializeForwards()
 	hPrivFwds[OnWardenKilled] 			= CreateForward(ET_Hook,   Param_Cell, Param_Cell, Param_Cell);
 	hPrivFwds[OnFreedayGiven] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnFreedayRemoved] 		= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnPreThink] 				= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
 	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
 }
 void Call_OnDownloads()
@@ -296,5 +297,12 @@ void Call_OnFreedayRemoved(const JailFighter player)
 {
 	Call_StartForward(hPrivFwds[OnFreedayRemoved]);
 	Call_PushCell(player);
+	Call_Finish();
+}
+void Call_OnPreThink(const JailFighter player, int buttons)
+{
+	Call_StartForward(hPrivFwds[OnPreThink]);
+	Call_PushCell(player);
+	Call_PushCell(buttons);
 	Call_Finish();
 }

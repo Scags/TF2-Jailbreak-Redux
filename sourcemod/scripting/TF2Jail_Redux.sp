@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.13.2"
+#define PLUGIN_VERSION		"0.13.3"
 #define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -48,14 +48,8 @@
 #pragma semicolon 			1
 #pragma newdecls 			required
 
-#define PLYR				MAXPLAYERS+1 
-#define UNASSIGNED 			0
-#define NEUTRAL 			0
-#define SPEC 				1
 #define RED 				2
 #define BLU 				3
-#define nullvec				NULL_VECTOR
-#define FULLTIMER			TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE
 
 enum	// Cvar name
 {
@@ -96,6 +90,7 @@ enum	// Cvar name
 	NoAirblast,
 	NoDoubleJump,
 	DenyLR,
+	WardenLaser,
 	Version
 };
 
@@ -179,7 +174,7 @@ public void OnPluginStart()
 	cvarTF2Jail[VIPFlag] 					= CreateConVar("sm_tf2jr_vip_flag", "r", "What admin flag do VIP players fall under? Leave blank to disable Admin perks.", FCVAR_NOTIFY);
 	cvarTF2Jail[AdmFlag] 					= CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under? Leave blank to disable Admin perks.", FCVAR_NOTIFY);
 	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[Markers] 					= CreateConVar("sm_tf2jr_markers", "3", "Warden markers lifetime in seconds? (0 to disable)", FCVAR_NOTIFY, true, 0.0, true, 30.0);
+	cvarTF2Jail[Markers] 					= CreateConVar("sm_tf2jr_warden_markers", "3", "Warden markers lifetime in seconds? (0 to disable them entirely)", FCVAR_NOTIFY, true, 0.0, true, 30.0);
 	cvarTF2Jail[CritType] 					= CreateConVar("sm_tf2jr_criticals", "2", "What type of criticals should guards get? 0 = none; 1 = mini-crits; 2 = full crits", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	cvarTF2Jail[MuteType] 					= CreateConVar("sm_tf2jr_muting", "6", "What type of dead player muting should occur? 0 = no muting; 1 = red players only are muted(except VIPs); 2 = blue players only are muted(except VIPs); 3 = all players are muted(except VIPs); 4 = all red players are muted; 5 = all blue players are muted; 6 = everybody is muted. ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
 	cvarTF2Jail[LivingMuteType] 			= CreateConVar("sm_tf2jr_live_muting", "1", "What type of living player muting should occur? 0 = no muting; 1 = red players only are muted(except VIPs); 2 = blue players only are muted(except VIPs and warden); 3 = all players are muted(except VIPs and warden); 4 = all red players are muted; 5 = all blue players are muted(except warden); 6 = everybody is muted(except warden). ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
@@ -193,6 +188,7 @@ public void OnPluginStart()
 	cvarTF2Jail[NoAirblast] 				= CreateConVar("sm_tf2jr_airblast", "1", "Disable Pyro airblast? (Requires TF2Attributes)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[NoDoubleJump] 				= CreateConVar("sm_tf2jr_double_jump", "1", "Disable Scout doublejump? (Requires TF2Attributes)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[DenyLR] 					= CreateConVar("sm_tf2jr_warden_deny_lr", "1", "Allow Wardens to deny the queued last request?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[WardenLaser] 				= CreateConVar("sm_tf2jr_warden_laser", "1", "Allow Wardens to use laser pointers?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -250,8 +246,10 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_jbmusic", Command_MusicOff, "Client cookie that disables LR background music (if it exists).");
 	RegConsoleCmd("sm_jailmusic", Command_MusicOff, "Client cookie that disables LR background music (if it exists).");
 #endif
-	RegConsoleCmd("sm_wmarker", Command_WardenMarker, "Allows the warden to create a marker that players can see/hear.");
-	RegConsoleCmd("sm_wmk", Command_WardenMarker, "Allows the warden to create a marker that players can see/hear.");
+	RegConsoleCmd("sm_wmarker", Command_WardenMarker, "Allows the Warden to create a marker that players can see/hear.");
+	RegConsoleCmd("sm_wmk", Command_WardenMarker, "Allows the Warden to create a marker that players can see/hear.");
+	RegConsoleCmd("sm_wlaser", Command_WardenLaser, "Allows the Warden to use a laser pointer by holding Reload.");
+	RegConsoleCmd("sm_wl", Command_WardenLaser, "Allows the Warden to use a laser pointer by holding Reload.");
 
 	RegAdminCmd("sm_rw", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
 	RegAdminCmd("sm_removewarden", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
@@ -338,15 +336,15 @@ public bool WardenGroup(const char[] pattern, Handle clients)
 		bool non = StrContains(pattern, "!", false) != - 1;
 		for (int i = MaxClients; i; --i) 
 		{
-			if (IsClientInGame(i) && view_as< ArrayList >(clients).Get(i) == - 1)
+			if (IsClientInGame(i) && FindValueInArray(clients, i) == - 1)
 			{
 				if (JailFighter(i).bIsWarden) 
 				{
 					if (!non)
-						view_as< ArrayList >(clients).Push(i);
+						PushArrayCell(clients, i);
 				}
 				else if (non)
-					view_as< ArrayList >(clients).Push(i);
+					PushArrayCell(clients, i);
 			}
 		}
 	}
@@ -356,16 +354,10 @@ public bool WardenGroup(const char[] pattern, Handle clients)
 public bool FreedaysGroup(const char[] pattern, Handle clients)
 {
 	if (bEnabled.BoolValue)
-	{
 		for (int i = MaxClients; i; --i)
-		{
-			if (IsClientInGame(i) && view_as< ArrayList >(clients).Get(i) == -1)
-			{
+			if (IsClientInGame(i) && FindValueInArray(clients, i) == -1)
 				if (JailFighter(i).bIsFreeday)
-					view_as< ArrayList >(clients).Push(i);
-			}
-		}
-	}
+					PushArrayCell(clients, i);
 	return true;
 }
 
@@ -453,7 +445,8 @@ public void OnMapStart()
 	if (!bEnabled.BoolValue)
 		return;
 
-	CreateTimer(0.1, Timer_PlayerThink, _, FULLTIMER);
+	CreateTimer(0.1, Timer_PlayerThink, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(465.0, Timer_Announce, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 
 	gamemode.b1stRoundFreeday = true;
 
@@ -482,6 +475,7 @@ public void OnClientPutInServer(int client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKHook(client, SDKHook_Touch, OnTouch);
+	SDKHook(client, SDKHook_PreThink, PreThink);
 
 	if (hJailFields[client] != null)
 		delete hJailFields[client];
@@ -500,6 +494,7 @@ public void OnClientPutInServer(int client)
 	player.bIsHHH = false;
 	player.bInJump = false;
 	player.bUnableToTeleport = false;
+	player.bLasering = false;
 	player.flSpeed = 0.0;
 	player.flKillSpree = 0.0;
 
@@ -546,7 +541,7 @@ public Action OnTouch(int toucher, int touchee)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerThink(Handle hTimer)
+public Action Timer_PlayerThink(Handle timer)
 {
 	if (!bEnabled.BoolValue || gamemode.iRoundState != StateRunning)
 		return Plugin_Continue;
@@ -598,6 +593,12 @@ public Action Timer_PlayerThink(Handle hTimer)
 			ManageRedThink(player);
 	}
 	return Plugin_Continue;
+}
+
+public Action Timer_Announce(Handle timer)
+{
+	if (bEnabled.BoolValue)
+		CPrintToChatAll("{red}[TF2Jail] Redux{tan} V%s by {default}Scag/Ragenewb{tan}.", PLUGIN_VERSION);
 }
 
 public void OnClientDisconnect(int client)
@@ -671,6 +672,44 @@ public Action OnEntTakeDamage(int victim, int &attacker, int &inflictor, float &
 		PrintCenterTextAll("%N has hit a vent and lost their freeday!", attacker);
 	}
 	return Plugin_Continue;
+}
+
+public void PreThink(int client)
+{
+	if (!bEnabled.BoolValue)
+		return;
+
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+		return;
+
+	JailFighter player = JailFighter(client);
+	int buttons = GetClientButtons(client);
+
+	if (player.bIsWarden && (buttons & IN_RELOAD) && player.bLasering && cvarTF2Jail[WardenLaser].BoolValue)
+	{
+		float vecPos[3];
+		float vecEyes[3]; GetClientEyePosition(client, vecEyes);
+		if (GetClientAimPos(client, vecPos, vecEyes, TraceRayFilterPlayersAndSelf))
+		{
+			TE_SetupBeamPoints(vecEyes, vecPos, iLaserBeam, 0, 0, 0, 0.1, 0.25, 0.0, 1, 0.0, {0, 100, 255, 255}, 0);
+			TE_SendToAll();
+
+			TE_SetupGlowSprite(vecEyes, iHalo, 0.1, 0.25, 30);
+			TE_SendToAll();
+		}
+	}
+	ManageOnPreThink(player, buttons);
+}
+
+public bool TraceRayFilterPlayersAndSelf(int entity, int mask, any data)
+{
+	if (entity > 0 && entity <= MaxClients)
+		return false;
+
+	if (entity == data)
+		return false;
+
+	return true;
 }
 
 public Action EurekaTele(int client, const char[] command, int args)
@@ -784,117 +823,116 @@ public void ParseMapConfig()
 	KeyValues key = new KeyValues("TF2Jail_MapConfig");
 	char sMapName[128];
 	GetCurrentMap(sMapName, sizeof(sMapName));
-	if (key.ImportFromFile(sConfig))
-	{
-		if (key.JumpToKey(sMapName))
-		{
-			char CellNames[32], CellsButton[32], ffButton[32];
-
-			key.GetString("CellNames", CellNames, sizeof(CellNames));
-			if (CellNames[0] != '\0')
-			{
-				int iCelldoors = FindEntity(CellNames, "func_door");
-				if (IsValidEntity(iCelldoors))
-				{
-					sCellNames = CellNames;
-					gamemode.bIsMapCompatible = true;
-				}
-				else gamemode.bIsMapCompatible = false;
-			}
-			else gamemode.bIsMapCompatible = false;
-
-			key.GetString("CellsButton", CellsButton, sizeof(CellsButton));
-			if (CellsButton[0] != '\0')
-			{
-				int iCellOpener = FindEntity(CellsButton, "func_button");
-				if (IsValidEntity(iCellOpener))
-					sCellOpener = CellsButton;
-			}
-			key.GetString("FFButton", ffButton, sizeof(ffButton));
-			if (ffButton[0] != '\0')
-			{
-				int iFFButton = FindEntity(ffButton, "func_button");
-				if (IsValidEntity(iFFButton))
-					sCellOpener = ffButton;
-			}
-
-			if (key.JumpToKey("Freeday"))
-			{
-				if (key.JumpToKey("Teleport"))
-				{
-					gamemode.bFreedayTeleportSet = view_as< bool >(key.GetNum("Status", 1));
-
-					if (gamemode.bFreedayTeleportSet)
-					{
-						flFreedayPosition[0] = key.GetFloat("Coordinate_X");
-						flFreedayPosition[1] = key.GetFloat("Coordinate_Y");
-						flFreedayPosition[2] = key.GetFloat("Coordinate_Z");
-					}
-
-					key.GoBack();
-				}
-				else gamemode.bFreedayTeleportSet = false;
-				key.GoBack();
-			}
-			else gamemode.bFreedayTeleportSet = false;
-
-			if (key.JumpToKey("Warday - Guards"))
-			{
-				if (key.JumpToKey("Teleport"))
-				{
-					gamemode.bWardayTeleportSetBlue = view_as< bool >(key.GetNum("Status", 1));
-
-					if (gamemode.bWardayTeleportSetBlue)
-					{
-						flWardayBlu[0] = key.GetFloat("Coordinate_X");
-						flWardayBlu[1] = key.GetFloat("Coordinate_Y");
-						flWardayBlu[2] = key.GetFloat("Coordinate_Z");
-					}
-					key.GoBack();
-				}
-				else gamemode.bWardayTeleportSetBlue = false;
-				key.GoBack();
-			}
-			else gamemode.bWardayTeleportSetBlue = false;
-
-			if (key.JumpToKey("Warday - Reds"))
-			{
-				if (key.JumpToKey("Teleport"))
-				{
-					gamemode.bWardayTeleportSetRed = view_as< bool >(key.GetNum("Status", 1));
-
-					if (gamemode.bWardayTeleportSetRed)
-					{
-						flWardayRed[0] = key.GetFloat("Coordinate_X");
-						flWardayRed[1] = key.GetFloat("Coordinate_Y");
-						flWardayRed[2] = key.GetFloat("Coordinate_Z");
-					}
-					key.GoBack();
-				}
-				else gamemode.bWardayTeleportSetRed = false;
-				key.GoBack();
-			}
-			else gamemode.bWardayTeleportSetRed = false;
-		}
-		else
-		{
-			gamemode.bIsMapCompatible = false;
-			gamemode.bFreedayTeleportSet = false;
-			gamemode.bWardayTeleportSetBlue = false;
-			gamemode.bWardayTeleportSetRed = false;
-			LogError("~~~~~No TF2Jail Map Config set, dismantling teleportation~~~~~");
-			LogAction(0, -1, "~~~~~No TF2Jail Map Config set, dismantling teleportation~~~~~");
-		}
-	}
-	else
+	if (!key.ImportFromFile(sConfig))
 	{
 		gamemode.bIsMapCompatible = false;
 		gamemode.bFreedayTeleportSet = false;
 		gamemode.bWardayTeleportSetBlue = false;
 		gamemode.bWardayTeleportSetRed = false;
 		LogError("~~~~~No TF2Jail Map Config set, dismantling teleportation~~~~~");
-		LogAction(0, -1, "~~~~~No TF2Jail Map Config set, dismantling teleportation~~~~~");
+
+		delete key;
+		return;
 	}
+	if (!key.JumpToKey(sMapName))
+	{
+		gamemode.bIsMapCompatible = false;
+		gamemode.bFreedayTeleportSet = false;
+		gamemode.bWardayTeleportSetBlue = false;
+		gamemode.bWardayTeleportSetRed = false;
+		LogError("~~~~~No TF2Jail Map Config set, dismantling teleportation~~~~~");
+
+		delete key;
+		return;
+	}
+	char CellNames[32], CellsButton[32], ffButton[32];
+
+	key.GetString("CellNames", CellNames, sizeof(CellNames));
+	if (CellNames[0] != '\0')
+	{
+		int iCelldoors = FindEntity(CellNames, "func_door");
+		if (IsValidEntity(iCelldoors))
+		{
+			sCellNames = CellNames;
+			gamemode.bIsMapCompatible = true;
+		}
+		else gamemode.bIsMapCompatible = false;
+	}
+	else gamemode.bIsMapCompatible = false;
+
+	key.GetString("CellsButton", CellsButton, sizeof(CellsButton));
+	if (CellsButton[0] != '\0')
+	{
+		int iCellOpener = FindEntity(CellsButton, "func_button");
+		if (IsValidEntity(iCellOpener))
+			sCellOpener = CellsButton;
+	}
+	key.GetString("FFButton", ffButton, sizeof(ffButton));
+	if (ffButton[0] != '\0')
+	{
+		int iFFButton = FindEntity(ffButton, "func_button");
+		if (IsValidEntity(iFFButton))
+			sCellOpener = ffButton;
+	}
+
+	if (key.JumpToKey("Freeday"))
+	{
+		if (key.JumpToKey("Teleport"))
+		{
+			gamemode.bFreedayTeleportSet = view_as< bool >(key.GetNum("Status", 1));
+
+			if (gamemode.bFreedayTeleportSet)
+			{
+				flFreedayPosition[0] = key.GetFloat("Coordinate_X");
+				flFreedayPosition[1] = key.GetFloat("Coordinate_Y");
+				flFreedayPosition[2] = key.GetFloat("Coordinate_Z");
+			}
+
+			key.GoBack();
+		}
+		else gamemode.bFreedayTeleportSet = false;
+		key.GoBack();
+	}
+	else gamemode.bFreedayTeleportSet = false;
+
+	if (key.JumpToKey("Warday - Guards"))
+	{
+		if (key.JumpToKey("Teleport"))
+		{
+			gamemode.bWardayTeleportSetBlue = view_as< bool >(key.GetNum("Status", 1));
+
+			if (gamemode.bWardayTeleportSetBlue)
+			{
+				flWardayBlu[0] = key.GetFloat("Coordinate_X");
+				flWardayBlu[1] = key.GetFloat("Coordinate_Y");
+				flWardayBlu[2] = key.GetFloat("Coordinate_Z");
+			}
+			key.GoBack();
+		}
+		else gamemode.bWardayTeleportSetBlue = false;
+		key.GoBack();
+	}
+	else gamemode.bWardayTeleportSetBlue = false;
+
+	if (key.JumpToKey("Warday - Reds"))
+	{
+		if (key.JumpToKey("Teleport"))
+		{
+			gamemode.bWardayTeleportSetRed = view_as< bool >(key.GetNum("Status", 1));
+
+			if (gamemode.bWardayTeleportSetRed)
+			{
+				flWardayRed[0] = key.GetFloat("Coordinate_X");
+				flWardayRed[1] = key.GetFloat("Coordinate_Y");
+				flWardayRed[2] = key.GetFloat("Coordinate_Z");
+			}
+			key.GoBack();
+		}
+		else gamemode.bWardayTeleportSetRed = false;
+		key.GoBack();
+	}
+	else gamemode.bWardayTeleportSetRed = false;
+
 	delete key;
 }
 
@@ -1086,7 +1124,7 @@ public void _MusicPlay()
 			if (JailFighter(i).bNoMusic)
 				continue;
 #endif
-			EmitSoundToClient(i, sound, _, _, SNDLEVEL_NORMAL, SND_NOFLAGS, vol, 100, _, nullvec, nullvec, false, 0.0);
+			EmitSoundToClient(i, sound, _, _, SNDLEVEL_NORMAL, SND_NOFLAGS, vol, 100, _, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 		}
 	}
 	if (time != -1.0)
@@ -1138,7 +1176,7 @@ public void CreateMarker(const int client)
 	flPos[2] += 5.0;
 	delete trace;
 
-	TE_SetupBeamRingPoint(flPos, 300.0, 300.1, PrecacheModel("materials/sprites/laserbeam.vmt"), PrecacheModel("materials/sprites/glow01.vmt"), 0, 10, cvarTF2Jail[Markers].FloatValue, 2.0, 0.0, {255, 255, 255, 255}, 10, 0);
+	TE_SetupBeamRingPoint(flPos, 300.0, 300.1, iLaserBeam, iHalo, 0, 10, cvarTF2Jail[Markers].FloatValue, 2.0, 0.0, {255, 255, 255, 255}, 10, 0);
 	TE_SendToAll();
 	gamemode.bMarkerExists = true;
 	SetPawnTimer(ResetMarker, 1.0);

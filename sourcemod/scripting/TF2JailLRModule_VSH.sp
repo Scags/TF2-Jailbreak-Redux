@@ -12,19 +12,8 @@
 
 //#define USE_NEW_HALE_MODEL	// Un-comment this to use the Jungle Inferno Saxton Hale model (if you have it in your server)
 
-#define UNASSIGNED 			0
-#define NEUTRAL 			0
-#define SPEC 				1
 #define RED 				2
 #define BLU 				3
-
-#define nullvec				NULL_VECTOR
-
-#define PLYR				MAXPLAYERS+1
-#define PATH				64
-#define FULLPATH			PLATFORM_MAX_PATH
-#define repeat(%1)			for (int xyz=0; xyz<%1; ++xyz)
-#define FULLTIMER			TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE
 
 #include "TF2JailRedux/stocks.inc"
 
@@ -114,7 +103,12 @@ methodmap JailBoss < JBPlayer
 		public get() 				{ return this.GetValue("bInJump"); }
 		public set( const bool i ) 	{ this.SetValue("bInJump", i); }
 	}
-	
+	property bool bNeedsToGoBackToBlue
+	{
+		public get() 				{ return this.GetValue("bNeedsToGoBackToBlue"); }
+		public set( const bool i ) 	{ this.SetValue("bNeedsToGoBackToBlue", i); }
+	}
+
 	property float flRAGE
 	{
 		public get() 				{ return this.GetValue("flRAGE"); }
@@ -254,14 +248,14 @@ methodmap JailBoss < JBPlayer
 					SetEntProp(client, Prop_Send, "m_bJumping", 1);
 					vel[0] *= (1+Sine(this.flCharge * FLOAT_PI / 50));
 					vel[1] *= (1+Sine(this.flCharge * FLOAT_PI / 50));
-					TeleportEntity(client, nullvec, nullvec, vel);
+					TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, vel);
 					this.flCharge = -100.0;
 					if (sound)
 					{
 						float pos[3]; GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
 						if (random)
-							Format(snd, FULLPATH, "%s%d.%s", strSound, GetRandomInt(1, random), mp3 ? "mp3" : "wav");
-						else strcopy(snd, FULLPATH, strSound);
+							Format(snd, PLATFORM_MAX_PATH, "%s%d.%s", strSound, GetRandomInt(1, random), mp3 ? "mp3" : "wav");
+						else strcopy(snd, PLATFORM_MAX_PATH, strSound);
 						EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_DISHWASHER, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, pos, NULL_VECTOR, false, 0.0);
 					}
 				}
@@ -418,15 +412,15 @@ public bool HaleTargetFilter(const char[] pattern, Handle clients)
 		bool non = StrContains(pattern, "!", false) != - 1;
 		for (int i = MaxClients; i; i--) 
 		{
-			if (IsClientInGame(i) && view_as< ArrayList >(clients).Get(i) == - 1)
+			if (IsClientInGame(i) && FindValueInArray(clients, i) == - 1)
 			{
 				if (JailBoss(i).bIsBoss) 
 				{
 					if (!non)
-						view_as< ArrayList >(clients).Push(i);
+						PushArrayCell(clients, i);
 				}
 				else if (non)
-					view_as< ArrayList >(clients).Push(i);
+					PushArrayCell(clients, i);
 			}
 		}
 	}
@@ -437,6 +431,7 @@ public void fwdOnClientInduction(const JBPlayer Player)
 {
 	JailBoss player = ToJailBoss(Player);
 	player.bIsBoss = false;
+	player.bNeedsToGoBackToBlue = false;
 	player.iType = -1;
 	player.iStabbed = 0;
 	player.iMarketted = 0;
@@ -604,9 +599,8 @@ stock void SpawnRandomAmmo()
 		return;
 
 	while( (iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1 ) {
-		if( limit )
-			if( spawned >= limit )
-				break;
+		if( spawned >= limit )
+			break;
 		// Technically you'll never find a map without a spawn point.
 		GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", vPos);
 		GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
@@ -627,9 +621,8 @@ stock void SpawnRandomHealth()
 		return;
 
 	while( (iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1 ) {
-		if( limit )
-			if( spawned >= limit )
-				break;
+		if( spawned >= limit )
+			break;
 		// Technically you'll never find a map without a spawn point.
 		GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", vPos);
 		GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
@@ -676,33 +669,33 @@ public void ShowPlayerScores()
 	if (hTop[0].iDamage > 9000)
 		SetPawnTimer(OverNineThousand, 1.0);
 	
-	char score1[PATH], score2[PATH], score3[PATH];
+	char score1[64], score2[64], score3[64];
 	if (IsValidClient(hTop[0].index) && (GetClientTeam(hTop[0].index) > 1))
-		GetClientName(hTop[0].index, score1, PATH);
+		GetClientName(hTop[0].index, score1, 64);
 	else 
 	{
-		Format(score1, PATH, "---");
+		Format(score1, 64, "---");
 		hTop[0] = view_as< JailBoss >(0);
 	}
 	
 	if (IsValidClient(hTop[1].index) && (GetClientTeam(hTop[1].index) > 1))
-		GetClientName(hTop[1].index, score2, PATH);
+		GetClientName(hTop[1].index, score2, 64);
 	else 
 	{
-		Format(score2, PATH, "---");
+		Format(score2, 64, "---");
 		hTop[1] = view_as< JailBoss >(0);
 	}
 	
 	if (IsValidClient(hTop[2].index) && (GetClientTeam(hTop[2].index) > 1))
-		GetClientName(hTop[2].index, score3, PATH);
+		GetClientName(hTop[2].index, score3, 64);
 	else 
 	{
-		Format(score3, PATH, "---");
+		Format(score3, 64, "---");
 		hTop[2] = view_as< JailBoss >(0);
 	}
 	SetHudTextParams(-1.0, 0.4, 10.0, 255, 255, 255, 255);
 	PrintCenterTextAll("");
-	
+
 	for (int i = MaxClients; i; --i) 
 	{
 		if (!IsClientInGame(i))
@@ -952,7 +945,7 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 
 public void ManageRoundEndBossInfo(bool bossWon)
 {
-	char victory[FULLPATH];
+	char victory[PLATFORM_MAX_PATH];
 	gameMessage[0] = '\0';
 	int i;
 	JailBoss base = FindBoss(false);
@@ -973,9 +966,9 @@ public void ManageRoundEndBossInfo(bool bossWon)
 		switch (base.iType) 
 		{
 			case  - 1: {  }
-			case Vagineer:Format(victory, FULLPATH, "%s%i.wav", VagineerKSpreeNew, GetRandomInt(1, 5));
-			case Bunny:strcopy(victory, FULLPATH, BunnyWin[GetRandomInt(0, sizeof(BunnyWin) - 1)]);
-			case Hale:Format(victory, FULLPATH, "%s%i.wav", HaleWin, GetRandomInt(1, 2));
+			case Vagineer:Format(victory, PLATFORM_MAX_PATH, "%s%i.wav", VagineerKSpreeNew, GetRandomInt(1, 5));
+			case Bunny:strcopy(victory, PLATFORM_MAX_PATH, BunnyWin[GetRandomInt(0, sizeof(BunnyWin) - 1)]);
+			case Hale:Format(victory, PLATFORM_MAX_PATH, "%s%i.wav", HaleWin, GetRandomInt(1, 2));
 		}
 		if (victory[0] != '\0')
 			EmitSoundToAll(victory);
@@ -994,7 +987,7 @@ public void ManageRoundEndBossInfo(bool bossWon)
 }
 
 
-public Action HookSound(int clients[64], int &numClients, char sample[FULLPATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
+public Action HookSound(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return Plugin_Continue;
@@ -1021,7 +1014,7 @@ public Action HookSound(int clients[64], int &numClients, char sample[FULLPATH],
 		{
 			if (StrContains(sample, "vo/engineer_laughlong01", false) != - 1)
 			{
-				strcopy(sample, FULLPATH, VagineerKSpree);
+				strcopy(sample, PLATFORM_MAX_PATH, VagineerKSpree);
 				return Plugin_Changed;
 			}
 			
@@ -1030,12 +1023,12 @@ public Action HookSound(int clients[64], int &numClients, char sample[FULLPATH],
 				if (StrContains(sample, "positivevocalization01", false) != - 1) // For backstab sound
 					return Plugin_Continue;
 				if (StrContains(sample, "engineer_moveup", false) != - 1)
-					Format(sample, FULLPATH, "%s%i.wav", VagineerJump, GetRandomInt(1, 2));
+					Format(sample, PLATFORM_MAX_PATH, "%s%i.wav", VagineerJump, GetRandomInt(1, 2));
 				
 				else if (StrContains(sample, "engineer_no", false) != - 1 || GetRandomInt(0, 9) > 6)
-					strcopy(sample, FULLPATH, "vo/engineer_no01.mp3");
+					strcopy(sample, PLATFORM_MAX_PATH, "vo/engineer_no01.mp3");
 				
-				else strcopy(sample, FULLPATH, "vo/engineer_jeers02.mp3");
+				else strcopy(sample, PLATFORM_MAX_PATH, "vo/engineer_jeers02.mp3");
 				return Plugin_Changed;
 			}
 			else return Plugin_Continue;
@@ -1046,7 +1039,7 @@ public Action HookSound(int clients[64], int &numClients, char sample[FULLPATH],
 			{
 				if (GetRandomInt(0, 30) <= 10) 
 				{
-					Format(sample, FULLPATH, "%s0%i.mp3", HHHLaught, GetRandomInt(1, 4));
+					Format(sample, PLATFORM_MAX_PATH, "%s0%i.mp3", HHHLaught, GetRandomInt(1, 4));
 					return Plugin_Changed;
 				}
 				if (StrContains(sample, "halloween_boss") == - 1)
@@ -1203,9 +1196,9 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 			{
 				switch (victim.iType) 
 				{
-					case Hale:Format(snd, FULLPATH, "%s%i.wav", HaleStubbed132, GetRandomInt(1, 4));
-					case Vagineer:strcopy(snd, FULLPATH, "vo/engineer_positivevocalization01.mp3");
-					case HHHjr:Format(snd, FULLPATH, "vo/halloween_boss/knight_pain0%d.mp3", GetRandomInt(1, 3));
+					case Hale:Format(snd, PLATFORM_MAX_PATH, "%s%i.wav", HaleStubbed132, GetRandomInt(1, 4));
+					case Vagineer:strcopy(snd, PLATFORM_MAX_PATH, "vo/engineer_positivevocalization01.mp3");
+					case HHHjr:Format(snd, PLATFORM_MAX_PATH, "vo/halloween_boss/knight_pain0%d.mp3", GetRandomInt(1, 3));
 					case Bunny:strcopy(snd, PLATFORM_MAX_PATH, BunnyPain[GetRandomInt(0, sizeof(BunnyPain) - 1)]);
 				}
 				EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, victim.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
@@ -1265,7 +1258,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 			}
 			if (damagecustom == TF_CUSTOM_TAUNT_BARBARIAN_SWING) // Gives 4 heads if successful sword killtaunt!
 			{
-				repeat(4)IncrementHeadCount(attacker);
+				for (int i = 0; i < 4; ++i)IncrementHeadCount(attacker);
 			}
 			if (damagecustom == TF_CUSTOM_BOOTS_STOMP && IsValidEntity(FindPlayerBack(attacker, { 405, 444, 608 }, 3)))
 			{
@@ -2028,7 +2021,14 @@ public void fwdOnLRRoundActivate(const JBPlayer Player)
 
 	JailBoss base = ToJailBoss(Player);
 	if (GetClientTeam(base.index) != RED && GetClientTeam(base.index) > view_as< int >(TFTeam_Spectator) && !base.bIsBoss)
-		base.ForceTeamChange(RED);
+	{
+		SetEntityMoveType(base.index, MOVETYPE_WALK);
+		if (GetClientTeam(base.index) != RED)
+		{
+			base.ForceTeamChange(RED);
+			base.bNeedsToGoBackToBlue = true;
+		}
+	}
 
 	base.iDamage = 0;
 	SetPawnTimer( PrepPlayers, 0.2, base.userid );
@@ -2047,7 +2047,7 @@ public void fwdOnManageRoundStart()
 	SpawnRandomAmmo();
 
 	JailBoss rand = JailBoss( GetRandomClient(true, true) );
-	if (!rand)
+	if (rand.index == -1)
 		ForceTeamWin(RED);
 
 	int client = rand.index;
@@ -2070,22 +2070,6 @@ public void fwdOnManageRoundStart()
 	rand.iHealth = rand.iMaxHealth;
 	SetEntityHealth(client, rand.iHealth);
 
-	JailBoss player;
-	for (int i=MaxClients ; i ; --i) 
-	{
-		if (!IsValidClient(i) || GetClientTeam(i) <= view_as< int >(TFTeam_Spectator))
-			continue;
-
-		player = JailBoss(i);
-		if (player.bIsBoss)
-			continue;
-
-		SetEntityMoveType(i, MOVETYPE_WALK);
-		if (GetClientTeam(i) != RED)
-			player.ForceTeamChange(RED);
-		SetPawnTimer( PrepPlayers, 0.2, player.userid );
-	}
-
 	SetPawnTimer(ManagePlayBossIntro, 0.2, rand);
 	ManageMessageIntro();
 }
@@ -2104,8 +2088,6 @@ public void fwdOnManageRoundEnd(Event event)
 public void fwdOnRedThink(const JBPlayer Player)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
-		return;
-	if (GetClientTeam(Player.index) != RED)
 		return;
 
 	JailBoss fighter = ToJailBoss(Player);
@@ -2503,7 +2485,7 @@ public void fwdOnBuildingDestroyed(const JBPlayer Attacker, const int building, 
 			event.SetString("weapon", "fists");
 			if (!GetRandomInt(0, 3)) 
 			{
-				strcopy(snd, FULLPATH, HaleSappinMahSentry132);
+				strcopy(snd, PLATFORM_MAX_PATH, HaleSappinMahSentry132);
 				EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, attacker.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 			}
 		}
@@ -2736,6 +2718,26 @@ public void fwdOnVariableReset(const JBPlayer Player)
 	base.flGlowtime = 0.0;
 	base.flCharge = 0.0;
 	base.flKillSpree = 0.0;
+
+	if (base.bNeedsToGoBackToBlue && GetClientTeam(base.index) != BLU)
+		ChangeClientTeam(base.index, BLU);
+	base.bNeedsToGoBackToBlue = false;
+}
+public void fwdOnCheckLivingPlayers()
+{
+	JailBoss base;
+	for (int i = MaxClients; i; --i)
+	{
+		if (!IsClientInGame(i))
+			continue;
+
+		base = JailBoss(i);
+		if (base.bNeedsToGoBackToBlue && GetClientTeam(i) != BLU && !IsPlayerAlive(i))
+		{
+			ChangeClientTeam(i, BLU);
+			base.bNeedsToGoBackToBlue = false;
+		}
+	}
 }
 
 public void CheckJBHooks()
@@ -2786,4 +2788,6 @@ public void CheckJBHooks()
 		LogError("Failed to load OnVariableReset forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnLastPrisoner, fwdOnLastPrisoner))
 		LogError("Failed to load OnLastPrisoner forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
+		LogError("Failed to load OnCheckLivingPlayers forwards for JB VSH Sub-Plugin");
 }

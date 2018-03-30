@@ -1505,11 +1505,12 @@ enum	// JB Hook Types
 	OnWardenKilled,
 	OnFreedayGiven,
 	OnFreedayRemoved,
+	OnPreThink,
 	OnPlayMusic
 };
 
 /* SDKHook-Style Forwards */
-typeset JBHookCB 
+typeset JBHookCB
 {
 	/*
 		OnLRRoundActivate
@@ -1591,6 +1592,9 @@ typeset JBHookCB
 
 	//	OnWardenKilled		Return anything but Continue to stop "Warden has been killed" message
 	function Action (const JBPlayer Victim, const JBPlayer Attacker, Event event);
+
+	// OnPreThink
+	function void (const JBPlayer Player, int buttons);
 };
 
 /**
@@ -1671,6 +1675,7 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JB_Clear");
 	MarkNativeAsOptional("JB_Snapshot");
 	MarkNativeAsOptional("JB_Size");
+
 	MarkNativeAsOptional("JB_TeleportToPosition");
 	MarkNativeAsOptional("JB_ListLRS");
 	MarkNativeAsOptional("JB_MutePlayer");

@@ -1,10 +1,10 @@
 #include <sourcemod>
-#include <tf2jailredux>
 #include <sdkhooks>
 #include <sdktools>
 #include <morecolors>
 #include <tf2_stocks>
 #include <tf2attributes>
+#include <tf2jailredux>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -12,13 +12,8 @@
 
 #define PLUGIN_VERSION		"1.0.3"
 
-#define UNASSIGNED 			0
-#define NEUTRAL 			0
-#define SPEC 				1
 #define RED 				2
 #define BLU 				3
-
-#define nullvec				NULL_VECTOR
 
 char g_PlayerModel[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 
@@ -470,12 +465,16 @@ public Action fwdOnLastPrisoner()
 
 	for (int i = MaxClients; i; --i)
 	{
+		if (!IsClientInGame(i) || !IsPlayerAlive(i))
+			continue;
+
 		if (GetClientTeam(i) == RED)
 		{
-			JailHunter player = JailHunter(i);
 			TF2_RegeneratePlayer(i);
-			RemoveAll(i, false);
 			SetEntityHealth(i, GetEntProp(i, Prop_Data, "m_iMaxHealth"));
+
+			JailHunter player = JailHunter(i);
+			player.PreEquip(false);
 			player.MakeProp(JBPH[PropNameOnGive].BoolValue);
 			player.SetWepInvis(0);
 		}
@@ -488,7 +487,8 @@ public Action fwdOnLastPrisoner()
 
 public void DisallowRerolls(const int roundcount)
 {
-	bAbleToReroll = false;
+	if (gamemode.GetProperty("iRoundCount") == roundcount)
+		bAbleToReroll = false;
 }
 
 public Action Cmd_Reroll(int client, int args)
@@ -749,30 +749,31 @@ stock void AddVelocity(const int client, const float speed)
 	float velocity[3];
 	GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
 
-	if(velocity[0] < 200 && velocity[0] > -200)
-	velocity[0] *= (1.08 * speed);
-	if(velocity[1] < 200 && velocity[1] > -200)
-	velocity[1] *= (1.08 * speed);
-	if(velocity[2] > 0 && velocity[2] < 400)
-	velocity[2] = velocity[2] * 1.15 * speed;
+	if (velocity[0] < 200 && velocity[0] > -200)
+		velocity[0] *= (1.08 * speed);
+	if (velocity[1] < 200 && velocity[1] > -200)
+		velocity[1] *= (1.08 * speed);
+	if (velocity[2] > 0 && velocity[2] < 400)
+		velocity[2] = velocity[2] * 1.15 * speed;
 
-	TeleportEntity(client, nullvec, nullvec, velocity);
+	TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 }
 
 
-public void OnPreThink(int client)
+public void fwdOnPreThink(const JBPlayer Player, int buttons)
 {
-	if (!IsClientInGame(client) || !IsPlayerAlive(client))
-	{
-		SDKUnhook(client, SDKHook_PreThink, OnPreThink);
+	if (!JBPH[Enabled].BoolValue || NotPH)
 		return;
-	}
 
-	JailHunter player = JailHunter(client);
-	int buttons = GetClientButtons(client);
+	int client = Player.index;
+
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+		return;
+
+	JailHunter player = ToJailHunter(Player);
 	if (GetClientTeam(client) == BLU)
 	{
-		if (buttons & IN_ATTACK != IN_ATTACK)
+		if (!(buttons & IN_ATTACK))
 		{
 			player.bFlaming = false;
 			player.iFlameCount = 0;
@@ -808,7 +809,7 @@ public void OnPreThink(int client)
 			player.bLocked = false;
 		}
 
-		if ((buttons & IN_ATTACK2) == IN_ATTACK2 && !player.bHoldingRMB)
+		if ((buttons & IN_ATTACK2) && !player.bHoldingRMB)
 		{
 			player.bHoldingRMB = true;
 			if (player.bFirstPerson)
@@ -828,8 +829,8 @@ public void OnPreThink(int client)
 }
 
 // Same as in jailhandler.sp, forcing people as the sniper class crashes servers
-int NoSS[6] = { 3, 4, 5, 6, 7, 9 };
-int NoHvy[5] = {3, 4, 5, 6, 9 };
+int NoSS[6]  = { 3, 4, 5, 6, 7, 9 };
+int NoHvy[5] = { 3, 4, 5, 6, 9 };
 public void fwdOnLRRoundActivate(const JBPlayer player)
 {
 	if (!JBPH[Enabled].BoolValue || NotPH)
@@ -837,7 +838,17 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 
 	JailHunter base = ToJailHunter(player);
 	int client = base.index;
-	TF2Attrib_RemoveAll(client);
+	if (gamemode.GetProperty("bTF2Attribs"))
+	{
+		TF2Attrib_RemoveAll(client);
+
+		switch (JBPH[FallDamage].IntValue)
+		{
+			case 1:TF2Attrib_SetByDefIndex(client, 275, 1.0);
+			case 2:if (GetClientTeam(client) == BLU) TF2Attrib_SetByDefIndex(client, 275, 1.0);
+			case 3:if (GetClientTeam(client) == RED) TF2Attrib_SetByDefIndex(client, 275, 1.0);
+		}
+	}
 	switch (TF2_GetClientTeam(client))
 	{
 		case TFTeam_Red:
@@ -876,7 +887,7 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 					CPrintToChat(client, "{red}[TF2Jail]{tan} There are too many Heavies on Blue team.");
 				}
 			}
-			if (TF2_GetPlayerClass(client) == TFClass_Pyro && JBPH[Airblast].BoolValue)
+			if (TF2_GetPlayerClass(client) == TFClass_Pyro && JBPH[Airblast].BoolValue && gamemode.GetProperty("bTF2Attribs"))
 				TF2Attrib_SetByDefIndex(client, 823, 1.0);
 			TF2_RegeneratePlayer(client);
 
@@ -887,20 +898,9 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 			}
 		}
 	}
-	if (JBPH[FallDamage].BoolValue)
-	{
-		switch (JBPH[FallDamage].IntValue)
-		{
-			case 1:TF2Attrib_SetByDefIndex(client, 275, 1.0);
-			case 2:if (GetClientTeam(client) == BLU) TF2Attrib_SetByDefIndex(client, 275, 1.0);
-			case 3:if (GetClientTeam(client) == RED) TF2Attrib_SetByDefIndex(client, 275, 1.0);
-		}
-	}
+
 	if (JBPH[StaticPropInfo].BoolValue)
 		QueryClientConVar(client, "r_staticpropinfo", KickCallBack);
-
-	if (IsPlayerAlive(client))
-		SDKHook(client, SDKHook_PreThink, OnPreThink);
 }
 public void fwdOnManageRoundStart()
 {
@@ -964,14 +964,6 @@ public void fwdOnManageRoundEnd()
 
 	FindConVar("sv_gravity").SetInt(800);
 	bAbleToReroll = false;
-}
-public void fwdOnLRRoundEnd(const JBPlayer player)
-{
-	if (!JBPH[Enabled].BoolValue || NotPH)
-		return;
-
-	if (SDKHookEx(player.index, SDKHook_PreThink, OnPreThink))
-		SDKUnhook(player.index, SDKHook_PreThink, OnPreThink);	// I'm a freak when it comes to running code during frames, just freeing up some server memory
 }
 public void fwdOnBlueTouchRed(const JBPlayer player, const JBPlayer victim)
 {
@@ -1058,7 +1050,7 @@ public void fwdOnManageTimeLeft()
 
 	gamemode.SetProperty("iTimeLeft", JBPH[RoundTime].IntValue + JBPH[FreezeTime].IntValue);
 }
-public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int value, ArrayList & arrLRS)
+public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int value, ArrayList &arrLRS)
 {
 	if (!JBPH[Enabled].BoolValue || selection != JBPHIndex)
 		return;
@@ -1080,7 +1072,7 @@ public void fwdOnLRTextHud(char strHud[128])
 
 	strcopy(strHud, 128, "Prophunt");
 }
-public void fwdOnPanelAdd(Menu & menu)
+public void fwdOnPanelAdd(Menu &menu)
 {
 	if (!JBPH[Enabled].BoolValue)
 		return;
@@ -1088,7 +1080,7 @@ public void fwdOnPanelAdd(Menu & menu)
 	char menuitem[4]; IntToString(JBPHIndex, menuitem, sizeof(menuitem));
 	menu.AddItem(menuitem, "Prophunt- Find and kill all the cowardly props!");
 }
-public void fwdOnMenuAdd(Menu & menu, ArrayList arrLRS)
+public void fwdOnMenuAdd(Menu &menu, ArrayList arrLRS)
 {
 	if (!JBPH[Enabled].BoolValue)
 		return;
@@ -1159,8 +1151,6 @@ public void CheckJBHooks()
 		LogError("Error Loading OnLRRoundActivate Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnManageRoundStart, fwdOnManageRoundStart))
 		LogError("Error Loading OnManageRoundStart, Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnLRRoundEnd, fwdOnLRRoundEnd))
-		LogError("Error Loading OnLRRoundEnd Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnManageRoundEnd, fwdOnManageRoundEnd))
 		LogError("Error Loading OnManageRoundEnd Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnRedThink, fwdOnRedThink))
@@ -1197,4 +1187,6 @@ public void CheckJBHooks()
 		LogError("Error loading OnCheckLivingPlayers Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnPlayerPrepped, fwdOnPlayerPrepped))
 		LogError("Error loading OnPlayerPrepped Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnPreThink, fwdOnPreThink))
+		LogError("Error Loading OnPreThink Forwards for JB PH Sub-Plugin!");
 }

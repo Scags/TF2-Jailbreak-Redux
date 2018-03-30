@@ -2,37 +2,7 @@ public char strCustomLR[64];	// Used for formatting the player custom lr say hoo
 
 int EnumTNPS[4][eTextNodeParams];
 
-StringMap hJailFields[PLYR];
-
-// Where the laziness magic happens
-#define IntGet(%1) 		public get()\
-{\
-	int i; this.GetValue(%1, i);\
-	return i;\
-}
-#define IntSet(%1) 		public set( const int i )\
-{\
-	this.SetValue(%1, i);\
-}
-#define BoolGet(%1) 	public get()\
-{\
-	bool i; this.GetValue(%1, i);\
-	return i;\
-}
-#define BoolSet(%1) 	public set( const bool i )\
-{\
-	this.SetValue(%1, i);\
-}
-#define FloatGet(%1) 	public get()\
-{\
-	float i; this.GetValue(%1, i);\
-	return i;\
-}
-#define FloatSet(%1) 	public set( const float i )\
-{\
-	this.SetValue(%1, i);\
-}
-
+StringMap hJailFields[MAXPLAYERS+1];
 
 methodmap JailFighter
 {
@@ -55,93 +25,162 @@ methodmap JailFighter
 		public get()				{ return GetClientOfUserId(view_as< int >(this)); }
 	}
 
-	/**
-	 *	Get a value from this player's StringMap.
-	 *
-	 *	@param key 			Key string.
-	 *	@param i			Variable to store value.
-	 *
-	 *	@return 			Value stored in the key.
-	*/
-	public bool GetValue( const char[] key, any &i )
-	{
-		return hJailFields[this.index].GetValue(key, i);
-	}
-
-	/**
-	 *	Set a value into this player's StringMap.
-	 *
-	 *	@param key 			Key string.
-	 *	@param i 			Value to store at the key.
-	 *	@param replace 		If false, operation will fail if the key is already set.
-	 *
-	 *	@return 			True on success, false on failure.
-	*/
-	public bool SetValue( const char[] key, const any i, bool replace = true )
-	{
-		return hJailFields[this.index].SetValue(key, i, replace);
-	}
-
 	property int iCustom
 	{
-		IntGet("iCustom")	// No semicolons if using the fancy shmancy macros
-		IntSet("iCustom")
+		public get()
+		{
+			int i; hJailFields[this.index].GetValue("iCustom", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			hJailFields[this.index].SetValue("iCustom", i);
+		}
 	}
 	property int iKillCount
 	{
-		IntGet("iKillCount")
-		IntSet("iKillCount")
+		public get()
+		{
+			int i; hJailFields[this.index].GetValue("iKillCount", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			hJailFields[this.index].SetValue("iKillCount", i);
+		}
 	}
 
 	property bool bIsWarden
 	{
-		BoolGet("bIsWarden")
-		BoolSet("bIsWarden")
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bIsWarden", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bIsWarden", i);
+		}
 	}
 	property bool bIsMuted
 	{
-		BoolGet("bIsMuted")
-		BoolSet("bIsMuted")
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bIsMuted", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bIsMuted", i);
+		}
 	}
 	property bool bIsQueuedFreeday
 	{
-		BoolGet("bIsQueuedFreeday")
-		BoolSet("bIsQueuedFreeday")
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bIsQueuedFreeday", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bIsQueuedFreeday", i);
+		}
 	}
 	property bool bIsFreeday
 	{
-		BoolGet("bIsFreeday")
-		BoolSet("bIsFreeday")
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bIsFreeday", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bIsFreeday", i);
+		}
 	}
 	property bool bLockedFromWarden
 	{
-		BoolGet("bLockedFromWarden")
-		BoolSet("bLockedFromWarden")
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bLockedFromWarden", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bLockedFromWarden", i);
+		}
 	}
 	property bool bIsVIP
 	{
-		BoolGet("bIsVIP")
-		BoolSet("bIsVIP")
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bIsVIP", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bIsVIP", i);
+		}
 	}
 	property bool bIsAdmin
 	{
-		BoolGet("bIsAdmin")
-		BoolSet("bIsAdmin")
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bIsAdmin", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bIsAdmin", i);
+		}
 	}
 	property bool bIsHHH
 	{
-		BoolGet("bIsHHH")
-		BoolSet("bIsHHH")
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bIsHHH", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bIsHHH", i);
+		}
 	}
 	property bool bInJump
 	{
-		BoolGet("bInJump")
-		BoolSet("bInJump")
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bInJump", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bInJump", i);
+		}
 	}
 	property bool bUnableToTeleport
 	{
-		BoolGet("bUnableToTeleport")
-		BoolSet("bUnableToTeleport")
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bUnableToTeleport", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bUnableToTeleport", i);
+		}
+	}
+	property bool bLasering
+	{
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bLasering", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bLasering", i);
+		}
 	}
 #if defined _clientprefs_included
 	property bool bNoMusic
@@ -168,13 +207,27 @@ methodmap JailFighter
 	
 	property float flSpeed
 	{
-		FloatGet("flSpeed")
-		FloatSet("flSpeed")
+		public get()
+		{
+			float i; hJailFields[this.index].GetValue("flSpeed", i);
+			return i;
+		}
+		public set( const float i )
+		{
+			hJailFields[this.index].SetValue("flSpeed", i);
+		}
 	}
 	property float flKillSpree
 	{
-		FloatGet("flKillSpree")
-		FloatSet("flKillSpree")
+		public get()
+		{
+			float i; hJailFields[this.index].GetValue("flKillSpree", i);
+			return i;
+		}
+		public set( const float i )
+		{
+			hJailFields[this.index].SetValue("flKillSpree", i);
+		}
 	}
 	/**
 	 * Creates and spawns a weapon to a player
@@ -354,17 +407,20 @@ methodmap JailFighter
 	/**
 	 *	Initialize a player as a freeday.
 	 *	@NOTE 				Does not teleport them to the freeday location.
-	 *W
+	 *
+	 *	@param togglequeued Remove player's bIsQueuedFreeday property
+	 *
 	 *	@noreturn
 	*/
-	public void GiveFreeday()
+	public void GiveFreeday(bool togglequeued = false)
 	{
 		ServerCommand("sm_evilbeam #%d", this.userid);
 		int flags = GetEntityFlags(this.index) | FL_NOTARGET;
 		SetEntityFlags(this.index, flags);
 
-		if (this.bIsQueuedFreeday)
-			this.bIsQueuedFreeday = false;
+		if (togglequeued)
+			if (this.bIsQueuedFreeday)
+				this.bIsQueuedFreeday = false;
 		this.bIsFreeday = true;
 
 		Call_OnFreedayGiven(this);
@@ -498,12 +554,11 @@ methodmap JailFighter
 			return;
 
 		if (hTextNodes[2] != null)
-		{
 			for (int i = MaxClients; i; --i)
 				if (IsClientInGame(i))
 					ClearSyncHud(i, hTextNodes[2]);
-		}
 		this.bIsWarden = false;
+		this.bLasering = false;
 		this.SetCustomModel("");
 	}
 	/**
@@ -511,7 +566,7 @@ methodmap JailFighter
 	 *
 	 *	@noreturn
 	*/
-	public void PreEquip(bool weps = true)
+	public void PreEquip( bool weps = true )
 	{
 		int client = this.index;
 		TF2_RemovePlayerDisguise(client);
@@ -631,9 +686,9 @@ methodmap JailFighter
 	{
 		switch (location)
 		{
-			case 1:TeleportEntity(this.index, flFreedayPosition, nullvec, nullvec);
-			case 2:TeleportEntity(this.index, flWardayRed, nullvec, nullvec);
-			case 3:TeleportEntity(this.index, flWardayBlu, nullvec, nullvec);
+			case 1:TeleportEntity(this.index, flFreedayPosition, NULL_VECTOR, NULL_VECTOR);
+			case 2:TeleportEntity(this.index, flWardayRed, NULL_VECTOR, NULL_VECTOR);
+			case 3:TeleportEntity(this.index, flWardayBlu, NULL_VECTOR, NULL_VECTOR);
 		}
 	}
 	/**
@@ -730,6 +785,33 @@ methodmap JailFighter
 	}
 
 	/***** [STRINGMAP METHODS] *****/
+
+	/**
+	 *	Get a value from this player's StringMap.
+	 *
+	 *	@param key 			Key string.
+	 *	@param i			Variable to store value.
+	 *
+	 *	@return 			Value stored in the key.
+	*/
+	public bool GetValue( const char[] key, any &i )
+	{
+		return hJailFields[this.index].GetValue(key, i);
+	}
+
+	/**
+	 *	Set a value into this player's StringMap.
+	 *
+	 *	@param key 			Key string.
+	 *	@param i 			Value to store at the key.
+	 *	@param replace 		If false, operation will fail if the key is already set.
+	 *
+	 *	@return 			True on success, false on failure.
+	*/
+	public bool SetValue( const char[] key, const any i, bool replace = true )
+	{
+		return hJailFields[this.index].SetValue(key, i, replace);
+	}
 
 	/**
 	 *	Set an array into this player's StringMap

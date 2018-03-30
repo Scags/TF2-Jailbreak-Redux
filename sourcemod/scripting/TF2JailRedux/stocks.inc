@@ -1165,3 +1165,18 @@ stock bool flIsWithin(const float fl, const float lowest, const float highest, b
 {
 	return (inclusion ? fl >= lowest && fl <= highest : fl > lowest && fl < highest);
 }
+stock bool GetClientAimPos(const int client, float vecPos[3], float vecOrigin[3], TraceEntityFilter tracefilter)
+{
+	float vecAng[3]; GetClientEyeAngles(client, vecAng);
+	Handle trace = TR_TraceRayFilterEx(vecOrigin, vecAng, MASK_PLAYERSOLID, RayType_Infinite, tracefilter, client);
+
+	if (!TR_DidHit(trace))
+	{
+		delete trace;
+		return false;
+	}
+
+	TR_GetEndPosition(vecPos, trace);
+	delete trace;
+	return true;
+}

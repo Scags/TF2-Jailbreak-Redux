@@ -96,8 +96,8 @@ methodmap CHHHJr < JailBoss
 					float vPos[3];
 					GetEntPropVector(target, Prop_Send, "m_vecOrigin", vPos);
 
-					//EmitSound("misc/halloween/spell_teleport.wav", _, _, SNDLEVEL_SCREAMING, SND_NOFLAGS, SNDVOL_NORMAL, 100, _, vPos, nullvec, false, 0.0);
-					EmitSoundToClient(target, "misc/halloween/spell_teleport.wav", _, _, SNDLEVEL_SCREAMING, SND_NOFLAGS, SNDVOL_NORMAL, 100, _, vPos, nullvec, false, 0.0);
+					//EmitSound("misc/halloween/spell_teleport.wav", _, _, SNDLEVEL_SCREAMING, SND_NOFLAGS, SNDVOL_NORMAL, 100, _, vPos, NULL_VECTOR, false, 0.0);
+					EmitSoundToClient(target, "misc/halloween/spell_teleport.wav", _, _, SNDLEVEL_SCREAMING, SND_NOFLAGS, SNDVOL_NORMAL, 100, _, vPos, NULL_VECTOR, false, 0.0);
 					PrintCenterText(target, "You've been teleported!");
 
 					this.flCharge = -1100.0;

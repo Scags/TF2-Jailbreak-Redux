@@ -94,11 +94,13 @@ public void ManageDownloads()
 	PrecacheSound("vo/announcer_ends_60sec.mp3", true);
 	PrecacheSound("vo/announcer_ends_30sec.mp3", true);
 	PrecacheSound("vo/announcer_ends_10sec.mp3", true);
+
 	for (int s = 1; s <= 5; s++)
 	{
 		Format(snd, PLATFORM_MAX_PATH, "vo/announcer_ends_%isec.mp3", s);
 		PrecacheSound(snd, true);
 	}
+
 	PrecacheSound(GravSound, true);
 	PrecacheModel(HHH, true);
 	PrecacheModel(AXE, true);
@@ -118,8 +120,9 @@ public void ManageDownloads()
 	PrecacheSound(TinySound, true);
 	PrecacheSound(NO, true);
 
-	PrecacheModel("materials/sprites/laserbeam.vmt", true);
-	PrecacheModel("materials/sprites/glow01.vmt", true);
+	iLaserBeam = PrecacheModel("materials/sprites/laserbeam.vmt", true);
+	iHalo = PrecacheModel("materials/sprites/glow01.vmt", true);
+
 	PrecacheSound("misc/rd_finale_beep01.wav", true);
 	Call_OnDownloads();
 }
@@ -214,7 +217,7 @@ public void AddLRToMenu(Menu &menu)
 /**
  *	Add a 'short' description to your last request for the !listlrs command
 */
-public void AddLRToPanel(Menu & panel)
+public void AddLRToPanel(Menu &panel)
 {
 	panel.AddItem("0", "Suicide- Kill yourself on the spot");
 	panel.AddItem("1", "Custom- Type your own last request");
@@ -432,30 +435,7 @@ public void ManageHUDText()
 */
 public void ManageSpawn(const JailFighter base, Event event)
 {
-	int client = base.index;
-	switch (TF2_GetClientTeam(client))
-	{
-		case TFTeam_Red:
-		{
-			if (base.bIsQueuedFreeday)
-			{
-				base.GiveFreeday();
-				base.TeleportToPosition(FREEDAY);
-			}
-		}
-		case TFTeam_Blue:base.bIsQueuedFreeday = false;
-	}
-	if (gamemode.bTF2Attribs)
-	{
-		switch (TF2_GetPlayerClass(client))
-		{
-			case TFClass_Scout:if (cvarTF2Jail[NoDoubleJump].BoolValue) TF2Attrib_SetByDefIndex(client, 49, 1.0);
-			case TFClass_Pyro:if (cvarTF2Jail[NoAirblast].BoolValue) TF2Attrib_SetByDefIndex(client, 823, 1.0);
-		}
-	}
-
-	if (gamemode.bIsWarday)
-		base.TeleportToPosition(GetClientTeam(client));	// Enum value is the same as team value, so we can cheat it
+	// int client = base.index;
 
 	Call_OnPlayerSpawned(base, event);
 }
@@ -485,6 +465,7 @@ public void PrepPlayer(const int userid)
 public void OnLRActivate(const JailFighter player)
 {
 	int client = player.index;
+
 	switch (gamemode.iLRType)
 	{
 		case FreedaySelf, FreedayOther:
@@ -602,7 +583,6 @@ public void ManageRoundStart()
 					TF2_SetPlayerClass(i, view_as< TFClassType >(iClassRED));
 				else TF2_SetPlayerClass(i, view_as< TFClassType >(iClassBLU));
 			}
-			// EmitSoundToAll(WardaySound);
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
 		}
@@ -614,9 +594,6 @@ public void ManageRoundStart()
 */
 public void ManageRoundEnd(const JailFighter base)
 {
-	if (base.bIsFreeday)
-		base.RemoveFreeday();
-
 	switch(gamemode.iLRType)
 	{
 		case HHHDay:
@@ -833,6 +810,18 @@ public Action SoundHook(int clients[64], int &numClients, char sample[PLATFORM_M
 	return Plugin_Continue;
 }
 /**
+ *	PreThink management, will not fire for dead players
+*/
+public void ManageOnPreThink(const JailFighter base, int buttons)
+{
+	switch (gamemode.iLRType)
+	{
+		default: {	}
+	}
+
+	Call_OnPreThink(base, buttons);
+}
+/**
  *	Calls when a a player is hurt without SDKHooks
 */
 public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victim, Event event)
@@ -886,33 +875,6 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 */
 public void ManagePlayerDeath(const JailFighter attacker, const JailFighter victim, Event event)
 {
-	if (gamemode.bTF2Attribs)
-		TF2Attrib_RemoveAll(victim.index);
-
-	if (IsClientValid(attacker.index))
-	{
-		int killcount = cvarTF2Jail[FreeKill].IntValue;
-		if (killcount)
-			FreeKillSystem(attacker, killcount);
-	}
-	SetPawnTimer(CheckLivingPlayers, 0.2);
-
-	if (victim.bIsFreeday)
-		victim.RemoveFreeday();
-
-	if (victim.bIsWarden)
-	{
-		victim.WardenUnset();
-		gamemode.bWardenExists = false;
-
-		if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue)
-			PrintCenterTextAll("Warden has been killed!");
-
-		float time = cvarTF2Jail[WardenTimer].FloatValue;
-		if (time != 0.0)
-			SetPawnTimer(DisableWarden, time, gamemode.iRoundCount);
-	}
-
 	switch (gamemode.iLRType)
 	{
 		case HHHDay:
@@ -934,13 +896,6 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 		}
 	}
 
-	if (victim.iCustom)
-	{
-		if (gamemode.iLRPresetType == Custom)
-			gamemode.iLRPresetType = -1;
-		victim.iCustom = 0;
-	}
-
 	Call_OnPlayerDied(victim, attacker, event);
 }
 /**
@@ -951,9 +906,9 @@ public void CheckLivingPlayers()
 	if (gamemode.iRoundState < StateRunning || gamemode.iTimeLeft < 0)
 		return;
 
-	if (GetLivingPlayers(BLU) == 1)
+	if (!gamemode.bOneGuardLeft)
 	{
-		if (!gamemode.bOneGuardLeft)
+		if (GetLivingPlayers(BLU) == 1)
 		{
 			if (cvarTF2Jail[RemoveFreedayOnLastGuard].BoolValue)
 			{
@@ -980,9 +935,9 @@ public void CheckLivingPlayers()
 				return;	// Avoid multi-calls if necessary
 		}
 	}
-	else if (GetLivingPlayers(RED) == 1)
+	if (!gamemode.bOnePrisonerLeft)
 	{
-		if (!gamemode.bOnePrisonerLeft)
+		if (GetLivingPlayers(RED) == 1)
 		{
 			gamemode.bOnePrisonerLeft = true;
 
@@ -1066,6 +1021,8 @@ public void ManageWardenMenu(Menu & menu)
 	menu.AddItem("3", "Enable/Disable Collisions");
 	if (cvarTF2Jail[Markers].BoolValue)
 		menu.AddItem("4", "Marker");
+	if (cvarTF2Jail[WardenLaser].BoolValue)
+		menu.AddItem("5", "Laser");
 
 	Call_OnWMenuAdd(menu);
 }
@@ -1155,6 +1112,23 @@ public void ManageWardenMenu(Menu & menu)
 							return;
 						}
 						CreateMarker(client);
+					}
+					player.WardenMenu();
+				}
+				case 5:
+				{
+					if (cvarTF2Jail[WardenLaser].BoolValue)
+					{
+						if (player.bLasering)
+						{
+							player.bLasering = false;
+							CPrintToChat(client, "{red}[TF2Jail]{tan} You have turned Warden Lasers {default}off{tan}.");
+						}
+						else
+						{
+							player.bLasering = true;
+							CPrintToChat(client, "{red}[TF2Jail]{tan} You have turned Warden Lasers {default}on{tan}. Hold reload to activate.");
+						}
 					}
 					player.WardenMenu();
 				}
