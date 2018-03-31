@@ -45,8 +45,7 @@ enum
 };
 
 stock char snd[PLATFORM_MAX_PATH];
-#define MAXMESSAGE	4096
-stock char gameMessage[MAXMESSAGE];	// For formatting chat/hint/center/etc messages
+stock char gameMessage[4096];	// For formatting chat/hint/center/etc messages
 stock char BackgroundSong[PLATFORM_MAX_PATH];	// If you want a sweet song with your lr, try this out
 stock char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear", "prop_door_rotating" };
 
@@ -518,7 +517,7 @@ stock void EmptyPlayerWeaponSlots(const int client)
 	if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
 		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
 	
-	//CPrintToChat(client, "{red}[TF2Jail]{tan} Your weapons and ammo have been stripped.");
+	//CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Your weapons and ammo have been stripped.");
 }
 
 /**	base.UnmutePlayer
@@ -1554,7 +1553,7 @@ typeset JBHookCB
 	function void ();
 
 	//	OnMenuAdd
-	function void (Menu &menu, ArrayList array);
+	function void (const int index, int &max, char strName[32]);
 
 	// 	OnManageRoundEnd
 	function void (Event event);

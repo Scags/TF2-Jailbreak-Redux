@@ -1,6 +1,5 @@
 #include <sourcemod>
 #include <sdkhooks>
-#include <sdktools>
 #include <tf2items>
 #include <morecolors>
 #include <tf2_stocks>
@@ -352,7 +351,7 @@ public void OnPluginStart()
 	JBVSH[PermOverheal] 	= CreateConVar("sm_jbvsh_permanent_overheal", "0", "If enabled, Mediguns give permanent overheal.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	JBVSH[DemoShieldCrits] 	= CreateConVar("sm_jbvsh_demoman_shield_crits", "1", "Sets Demoman Shield crit behaviour. 0 - No crits, 1 - Mini-crits, 2 - Crits, 3 - Scale with Charge Meter (Losing the Shield results in no more (mini)crits.)", FCVAR_NOTIFY, true, 0.0, true, 3.0);
 	JBVSH[Anchoring] 		= CreateConVar("sm_jbvsh_allow_boss_anchor", "1", "When enabled, reduces all knockback bosses experience when crouching.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	JBVSH[PickCount] 		= CreateConVar("sm_jbvsh_lr_max", "5", "What is the maximum number of times this LR can be picked in a single map?", FCVAR_NOTIFY, true, 1.0);
+	JBVSH[PickCount] 		= CreateConVar("sm_jbvsh_lr_max", "5", "What is the maximum number of times this LR can be picked in a single map? 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
 	JBVSH[Ammo]				= CreateConVar("sm_jbvsh_ammo", "4", "Spawn random ammo at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0, true, 10.0);
 	JBVSH[Health] 			= CreateConVar("sm_jbvsh_health", "4", "Spawn random health at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0, true, 10.0);
 	JBVSH[ThisPlugin] 		= CreateConVar("sm_jbvsh_ilrtype", "13", "This sub-plugin's last request index. DO NOT CHANGE THIS UNLESS YOU KNOW WHAT YOU'RE DOING", FCVAR_NOTIFY, true, 0.0);
@@ -470,7 +469,7 @@ public Action BlockSuicide(int client, const char[] command, int argc)
 public void OnClientDisconnect(int client)
 {
 	if (JailBoss(client).bIsBoss && gamemode.GetProperty("iRoundState") >= StateRunning)
-		CPrintToChatAll("{tan}[TF2Jail]{fullred} Boss has disconnected!");
+		CPrintToChatAll("{burlywood}[TF2Jail]{fullred} Boss has disconnected!");
 }
 
 public void OnMapStart()
@@ -733,7 +732,7 @@ public void CalcScores()
 		for (j = 0; damage - amount > 0; damage -= amount, j++) {  }
 		scoring.SetInt("points", j);
 		scoring.Fire();
-		CPrintToChat(i, "{red}[TF2Jail]{tan} You scored %i point%s.", j, j == 1 ? "" : "s");
+		CPrintToChat(i, "{crimson}[TF2Jail]{burlywood} You scored %i point%s.", j, j == 1 ? "" : "s");
 	}
 }
 
@@ -976,7 +975,7 @@ public void ManageRoundEndBossInfo(bool bossWon)
 
 	if (gameMessage[0] !='\0') 
 	{
-		CPrintToChatAll("{red}[TF2Jail] End of Round{tan} %s", gameMessage);
+		CPrintToChatAll("{crimson}[TF2Jail] End of Round{burlywood} %s", gameMessage);
 		SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
 		for (i = MaxClients; i; --i) 
 		{
@@ -1957,11 +1956,11 @@ public void ManageBossCheckHealth(const JailBoss base)
 			totalHealth += boss.iHealth;
 		}
 		PrintCenterTextAll(gameMessage);
-		CPrintToChatAll("{red}[TF2Jail] Boss Health Check{tan} %s", gameMessage);
+		CPrintToChatAll("{crimson}[TF2Jail] Boss Health Check{burlywood} %s", gameMessage);
 		LastBossTotalHealth = totalHealth;
 		flHealthTime = currtime + (iHealthChecks < 3 ? 10.0 : 60.0);
 	}
-	else CPrintToChat(base.index, "{red}[TF2Jail]{tan} You can see the Boss HP now (wait %i seconds). Last known total health was %i.", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
+	else CPrintToChat(base.index, "{crimson}[TF2Jail]{burlywood} You can see the Boss HP now (wait %i seconds). Last known total health was %i.", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
 }
 
 public void ManageMessageIntro()
@@ -2398,11 +2397,11 @@ public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int 
 
 	if (value >= JBVSH[PickCount].IntValue)
 	{
-		CPrintToChat(Player.index, "{red}[TF2Jail]{tan} This LR has been picked the maximum amount of times for this map.");
+		CPrintToChat(Player.index, "{crimson}[TF2Jail]{burlywood} This LR has been picked the maximum amount of times for this map.");
 		Player.ListLRS();
 		return;
 	}
-	CPrintToChatAll("{red}[TF2Jail]{tan} %N has decided to play a round of {default}Versus Saxton Hale{tan}.", Player.index);
+	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has decided to play a round of {default}Versus Saxton Hale{burlywood}.", Player.index);
 	arrLRS.Set( selection, value+1 );
 	gamemode.SetProperty("iLRPresetType", JBVSHIndex);
 }
@@ -2553,16 +2552,13 @@ public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 		SetPawnTimer( PrepPlayers, 0.2, spawn.userid );
 	}
 }
-public void fwdOnMenuAdd(Menu &menu, ArrayList arrLRS)
+public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 {
-	if (!JBVSH[Enabled].BoolValue)
+	if (!JBVSH[Enabled].BoolValue || index != JBVSHIndex)
 		return;
-	char strMenu[32], menuitem[4];
-	int max = JBVSH[PickCount].IntValue,
-		value = arrLRS.Get(JBVSHIndex);
-	IntToString(JBVSHIndex, menuitem, sizeof(menuitem));
-	Format(strMenu, sizeof(strMenu), "Versus Saxton Hale (%d/%d)", value, max);
-	menu.AddItem(menuitem, strMenu, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+
+	max = JBVSH[PickCount].IntValue;	// Everything else is managed in core, even if max is 0
+	strcopy(strName, sizeof(strName), "Versus Saxton Hale");
 }
 public void fwdOnPanelAdd(Menu &panel)
 {

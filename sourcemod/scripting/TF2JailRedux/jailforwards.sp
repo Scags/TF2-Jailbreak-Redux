@@ -23,7 +23,7 @@ void InitializeForwards()
 	hPrivFwds[OnPlayerJarated] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	hPrivFwds[OnUberDeployed] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	hPrivFwds[OnPlayerSpawned]			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
-	hPrivFwds[OnMenuAdd] 				= CreateForward(ET_Ignore, Param_CellByRef, Param_Cell);
+	hPrivFwds[OnMenuAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_CellByRef, Param_String);
 	hPrivFwds[OnPanelAdd] 				= CreateForward(ET_Ignore, Param_CellByRef);
 	hPrivFwds[OnManageTimeLeft] 		= CreateForward(ET_Ignore);
 	hPrivFwds[OnPlayerPrepped] 			= CreateForward(ET_Ignore, Param_Cell);
@@ -170,14 +170,15 @@ void Call_OnPlayerSpawned(const JailFighter player, Event event)
 	Call_PushCell(event);
 	Call_Finish();
 }
-void Call_OnMenuAdd(Menu & menu, ArrayList array)
+void Call_OnMenuAdd(const int index, int &max, char strName[32])
 {
 	Call_StartForward(hPrivFwds[OnMenuAdd]);
-	Call_PushCellRef(menu);
-	Call_PushCell(array);
+	Call_PushCell(index);
+	Call_PushCellRef(max);
+	Call_PushStringEx(strName, 32, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_Finish();
 }
-void Call_OnPanelAdd(Menu & panel)
+void Call_OnPanelAdd(Menu &panel)
 {
 	Call_StartForward(hPrivFwds[OnPanelAdd]);
 	Call_PushCellRef(panel);

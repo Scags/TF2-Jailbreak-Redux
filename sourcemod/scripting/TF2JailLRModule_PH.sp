@@ -1,6 +1,5 @@
 #include <sourcemod>
 #include <sdkhooks>
-#include <sdktools>
 #include <morecolors>
 #include <tf2_stocks>
 #include <tf2attributes>
@@ -150,7 +149,7 @@ methodmap JailHunter < JBPlayer
 		}
 		
 		if (announce)
-			CPrintToChat(client, "{red}[TF2Jail]{tan} You are now disguised as {default}%s{tan}.", modelName);
+			CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are now disguised as {default}%s{burlywood}.", modelName);
 		
 		// This is to kill the particle effects from the Harvest Ghost prop and the like
 		SetVariantString("ParticleEffectStop");
@@ -272,7 +271,7 @@ public void OnPluginStart()
 	JBPH[FreezeTime] 			 = CreateConVar("sm_jbph_freeze_time", "30", "Freeze BLU team for 'x' seconds", FCVAR_NOTIFY, true, 0.0, true, 120.0);
 	JBPH[Teleportation] 		 = CreateConVar("sm_jbph_teleport", "1", "Teleport players to warday/freeday locations? (0: Disabed, 1: BLU to Warday, 2: BLU to Freeday, 3: RED to Warday, 4: RED to Freeday, 5: BOTH to Warday)", FCVAR_NOTIFY, true, 0.0, true, 5.0);	
 	JBPH[RoundTime] 			 = CreateConVar("sm_jbph_round_time", "300", "Round time in seconds. THIS ADDS TO YOUR \"sm_jbph_freeze_time\" CVAR.", FCVAR_NOTIFY, true, 0.0);
-	JBPH[PickCount] 			 = CreateConVar("sm_jbvsh_lr_max", "5", "How many times can Prophunt be picked in a single map?", FCVAR_NOTIFY, true, 0.0);
+	JBPH[PickCount] 			 = CreateConVar("sm_jbvsh_lr_max", "5", "How many times can Prophunt be picked in a single map? 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
 	JBPH[ThisPlugin] 			 = CreateConVar("sm_jbph_ilrtype", "14", "This sub-plugin's last request index. DO NOT CHANGE THIS UNLESS YOU KNOW WHAT YOU'RE DOING", FCVAR_NOTIFY, true, 0.0);
 
 	JBPH[ThisPlugin].AddChangeHook(OnTypeChanged);
@@ -498,28 +497,28 @@ public Action Cmd_Reroll(int client, int args)
 
 	if (!JBPH[Reroll].BoolValue)
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} Rerolling has been disabled.");
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Rerolling has been disabled.");
 		return Plugin_Handled;
 	}
 	JailHunter player = JailHunter(client);
 	if (!player.bIsProp)
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} You are not a prop.");
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are not a prop.");
 		return Plugin_Handled;
 	}
 	if (GetClientTeam(client) != RED)
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} You are not on Red team.");
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are not on Red team.");
 		return Plugin_Handled;
 	}
 	if (!bAbleToReroll)
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} You are not allowed to reroll at this time.");
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are not allowed to reroll at this time.");
 		return Plugin_Handled;
 	}
 	if (player.iRolls >= JBPH[RerollCount].IntValue)
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} You have rerolled the maximum amount of times this round.");
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You have rerolled the maximum amount of times this round.");
 		return Plugin_Handled;
 	}
 	if ( JBPH[DamageBlocksPropChange].BoolValue 
@@ -529,7 +528,7 @@ public Action Cmd_Reroll(int client, int args)
 	  || TF2_IsPlayerInCondition(client, TFCond_Jarated) 
 	  || TF2_IsPlayerInCondition(client, TFCond_Milked)) ) 
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} You are under effects and can't change!");
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are under effects and can't change!");
 		return Plugin_Handled;
 	}
 
@@ -617,7 +616,7 @@ public Action Timer_Round(Handle timer)	// Same structure as the core plugin's t
 		char s[PLATFORM_MAX_PATH];
 		Format(s, sizeof(s), "vo/announcer_am_roundstart0%i.mp3", GetRandomInt(1, 4));
 		EmitSoundToAll(s);
-		CPrintToChatAll("{tan}Ready or not, here they come!");
+		CPrintToChatAll("{burlywood}Ready or not, here they come!");
 
 		for (int i = MaxClients; i; --i)
 		{
@@ -874,7 +873,7 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 			if (TF2_GetPlayerClass(client) == TFClass_Scout || TF2_GetPlayerClass(client) == TFClass_Spy)
 			{
 				TF2_SetPlayerClass(client, view_as< TFClassType >(NoSS[GetRandomInt(0, 5)]));
-				CPrintToChat(client, "{red}[TF2Jail]{tan} Your illegal class has been changed.");
+				CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Your illegal class has been changed.");
 			}
 			if (TF2_GetPlayerClass(client) == TFClass_Heavy)
 			{
@@ -883,7 +882,7 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 				else
 				{
 					TF2_SetPlayerClass(client, view_as< TFClassType >(NoHvy[GetRandomInt(0, 4)]));
-					CPrintToChat(client, "{red}[TF2Jail]{tan} There are too many Heavies on Blue team.");
+					CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} There are too many Heavies on Blue team.");
 				}
 			}
 			if (TF2_GetPlayerClass(client) == TFClass_Pyro && JBPH[Airblast].BoolValue && gamemode.GetProperty("bTF2Attribs"))
@@ -926,7 +925,7 @@ public void fwdOnManageRoundStart()
 		char s[PLATFORM_MAX_PATH];
 		Format(s, sizeof(s), "vo/announcer_am_roundstart0%i.mp3", GetRandomInt(1, 4));
 		EmitSoundToAll(s);
-		CPrintToChatAll("{tan}Ready or not, here they come!");
+		CPrintToChatAll("{burlywood}Ready or not, here they come!");
 		return;
 	}
 
@@ -958,7 +957,7 @@ public void fwdOnManageRoundStart()
 
 	iGameTime = freeze;
 	CreateTimer(1.0, Timer_Round, _, TIMER_REPEAT);
-	CPrintToChatAll("{tan}Hunters will be released in %i seconds.", freeze);
+	CPrintToChatAll("{burlywood}Hunters will be released in %i seconds.", freeze);
 }
 public void fwdOnManageRoundEnd()
 {
@@ -1064,11 +1063,11 @@ public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int 
 
 	if (value >= JBPH[PickCount].IntValue)
 	{
-		CPrintToChat(Player.index, "{red}[TF2Jail]{tan} This LR has been picked the maximum amount of times for this map.");
+		CPrintToChat(Player.index, "{crimson}[TF2Jail]{burlywood} This LR has been picked the maximum amount of times for this map.");
 		Player.ListLRS();
 		return;
 	}
-	CPrintToChatAll("{red}[TF2Jail]{tan} %N has decided to play a round of {default}Prophunt{tan}.", Player.index);
+	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has decided to play a round of {default}Prophunt{burlywood}.", Player.index);
 	arrLRS.Set( selection, value+1 );
 	gamemode.SetProperty("iLRPresetType", JBPHIndex);
 }
@@ -1087,17 +1086,13 @@ public void fwdOnPanelAdd(Menu &menu)
 	char menuitem[4]; IntToString(JBPHIndex, menuitem, sizeof(menuitem));
 	menu.AddItem(menuitem, "Prophunt- Find and kill all the cowardly props!");
 }
-public void fwdOnMenuAdd(Menu &menu, ArrayList arrLRS)
+public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 {
-	if (!JBPH[Enabled].BoolValue)
+	if (!JBPH[Enabled].BoolValue || index != JBPHIndex)
 		return;
 
-	char strMenu[32], menuitem[4];
-	int max = JBPH[PickCount].IntValue,
-		value = arrLRS.Get(JBPHIndex);
-	IntToString(JBPHIndex, menuitem, sizeof(menuitem));
-	Format(strMenu, sizeof(strMenu), "Prophunt (%d/%d)", value, max);
-	menu.AddItem(menuitem, strMenu, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+	max = JBPH[PickCount].IntValue;
+	strcopy(strName, sizeof(strName), "Prophunt");
 }
 public void fwdOnResetVariables(const JBPlayer Player)
 {

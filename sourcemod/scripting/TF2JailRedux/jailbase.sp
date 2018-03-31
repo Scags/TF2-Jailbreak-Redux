@@ -532,7 +532,7 @@ methodmap JailFighter
 		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
 
-		//CPrintToChat(client, "{red}[TF2Jail]{tan} Your weapons and ammo have been stripped.");
+		//CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Your weapons and ammo have been stripped.");
 	}
 	/**	Props to VoIDed
 	 * Sets the custom model of this player.
@@ -558,7 +558,7 @@ methodmap JailFighter
 		int client = this.index;
 		Format(strWarden, sizeof(strWarden), "%N is the current Warden.", client);
 		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
-		CPrintToChatAll("{red}[TF2Jail]{default} %N{tan} is the new Warden", client);
+		CPrintToChatAll("{crimson}[TF2Jail]{default} %N{burlywood} is the new Warden", client);
 		ManageWarden(this);
 	}
 	/**

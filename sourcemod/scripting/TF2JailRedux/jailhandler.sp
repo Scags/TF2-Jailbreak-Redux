@@ -84,6 +84,9 @@ char strLRNames[][] = {
 	"Sniper!",
 	"Warday",
 	"Class Wars"
+	// "",	// VSH
+	// ""	// PH
+	// Be aware of sub-plugin indices
 };
 
 /** 
@@ -195,22 +198,28 @@ public void AddLRToMenu(Menu &menu)
 	int i, max, value, def = cvarTF2Jail[LRDefault].IntValue;
 
 	menu.AddItem("-1", "Random LR");
-	for (i = 0; i < sizeof(strLRNames); i++)	// If we do '<= LRMAX' and you have a sub-plugin, array indexes will be out of bounds
-	{												// So don't add sub-plugin LR names to this plugin, simply do it within your own
+	for (i = 0; i <= LRMAX; i++)
+	{
 		max = def;
 		strValue[0] = '\0';
+		strName[0] = '\0';
 		// if (i == Warday)	// If you want a certain last request to have a different max, do something like this
 			// max = 3;
+		Call_OnMenuAdd(i, max, strName);
+
 		if (max)
 		{
 			value = arrLRS.Get(i);
 			Format(strValue, sizeof(strValue), " (%i/%i)", value, max);
 		}
-		Format(strName, sizeof(strName), "%s%s", strLRNames[i][0], strValue);	// If cvar value is 0, infinite picks
+
+		if (i < sizeof(strLRNames))	// If not a sub-plugin
+			Format(strName, sizeof(strName), "%s%s", strName, strLRNames[i][0]);
+		Format(strName, sizeof(strName), "%s%s", strName, strValue);	// Forward pre-formats strName
+
 		IntToString(i, strID, sizeof(strID));
 		menu.AddItem(strID, strName, (max && value >= max) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
 	}
-	Call_OnMenuAdd(menu, arrLRS);
 /**
  *	According to this, you have to have your sub-plugin(s) LR as the last in the enum... always... probably
  *	If you have more than one, you have to distinguish which plugin has which enum value and stick with it
@@ -268,7 +277,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 						
 					base.RemoveFreeday();
 				}
-				CPrintToChatAll("{red}[TF2Jail]{tan} Last request has been chosen. Freedays have been stripped.");
+				CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Last request has been chosen. Freedays have been stripped.");
 			}
 			base = JailFighter(client);
 			gamemode.bIsLRInUse = true;
@@ -280,7 +289,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			{
 				case -1:	// Random
 				{
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen a {default}Random Last Request{tan} as their last request!", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen a {default}Random Last Request{burlywood} as their last request!", client);
 					int randlr = GetRandomInt(2, LRMAX);
 					gamemode.iLRPresetType = randlr;
 					arrLRS.Set( randlr, arrLRS.Get(randlr)+1 );
@@ -294,7 +303,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to kill themselves. What a shame...", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to kill themselves. What a shame...", client);
 					SetPawnTimer(KillThatBitch, (GetRandomFloat(0.5, 7.0)), client);	// Meme lol
 					arrLRS.Set( request, value+1 );
 				}
@@ -302,7 +311,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to type out their LR in chat.", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to type out their LR in chat.", client);
 					gamemode.iLRPresetType = Custom;
 					arrLRS.Set( request, value+1 );
 					base.iCustom = base.userid;
@@ -311,7 +320,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Freeday for Themselves{tan} next round.", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Freeday for Themselves{burlywood} next round.", client);
 					gamemode.iLRPresetType = FreedaySelf;
 					base.bIsQueuedFreeday = true;
 					arrLRS.Set( request, value+1 );
@@ -320,7 +329,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N is picking Freedays for next round...", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N is picking Freedays for next round...", client);
 					FreedayforClientsMenu(client);
 					gamemode.iLRPresetType = FreedayOther;
 					arrLRS.Set( request, value+1 );
@@ -329,7 +338,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to grant a {default}Freeday for All{tan} next round.", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to grant a {default}Freeday for All{burlywood} next round.", client);
 					gamemode.iLRPresetType = FreedayAll;
 					arrLRS.Set( request, value+1 );
 				}
@@ -337,7 +346,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to strip the guards of their weapons.", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to strip the guards of their weapons.", client);
 					gamemode.iLRPresetType = GuardMelee;
 					arrLRS.Set( request, value+1 );
 				}
@@ -345,7 +354,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Horseless Headless Horsemann Kill Round{tan} next round.", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Horseless Headless Horsemann Kill Round{burlywood} next round.", client);
 					gamemode.iLRPresetType = HHHDay;
 					arrLRS.Set( request, value+1 );
 				}
@@ -353,7 +362,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Super Small{tan} for everyone.", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Super Small{burlywood} for everyone.", client);
 					gamemode.iLRPresetType = TinyRound;
 					arrLRS.Set( request, value+1 );
 				}
@@ -361,7 +370,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to ignite all of the prisoners next round!", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to ignite all of the prisoners next round!", client);
 					gamemode.iLRPresetType = HotPrisoner;
 					arrLRS.Set( request, value+1 );
 				}
@@ -369,7 +378,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Low Gravity{tan} as their last request.", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Low Gravity{burlywood} as their last request.", client);
 					gamemode.iLRPresetType = Gravity;
 					arrLRS.Set( request, value+1 );
 				}
@@ -377,7 +386,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to hire a Sniper for the next round!", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to hire a Sniper for the next round!", client);
 					gamemode.iLRPresetType = RandomKill;
 					arrLRS.Set( request, value+1 );
 				}
@@ -385,7 +394,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen to do a {default}Warday{tan}.", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to do a {default}Warday{burlywood}.", client);
 					gamemode.iLRPresetType = Warday;
 					arrLRS.Set( request, value+1 );
 				}
@@ -393,7 +402,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				{
 					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
 						return;
-					CPrintToChatAll("{red}[TF2Jail]{tan} %N has chosen {default}Class Warfare{tan} as their last request.", client);
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Class Warfare{burlywood} as their last request.", client);
 					gamemode.iLRPresetType = ClassWars;
 					arrLRS.Set( request, value+1 );
 				}
@@ -475,7 +484,7 @@ public void OnLRActivate(const JailFighter player)
 		case FreedaySelf, FreedayOther:
 		{
 			if (player.bIsQueuedFreeday)
-				CPrintToChatAll("{tan}Freeday is now active for {default}%N{tan}.", client);
+				CPrintToChatAll("{burlywood}Freeday is now active for {default}%N{burlywood}.", client);
 		}
 		case GuardMelee:
 		{
@@ -531,7 +540,7 @@ public void ManageRoundStart()
 		{
 			gamemode.bIsWardenLocked = true;
 			gamemode.bIsFreedayRound = true;
-			CPrintToChatAll("{tan}Freeday is now active for {default}ALL players{tan}.");
+			CPrintToChatAll("{burlywood}Freeday is now active for {default}ALL players{burlywood}.");
 		}
 		case GuardMelee:EmitSoundToAll(GunSound);
 		case HHHDay:
@@ -539,37 +548,37 @@ public void ManageRoundStart()
 			gamemode.bIsWardenLocked = true;
 			gamemode.bIsWarday = true;
 			gamemode.bDisableCriticals = true;
-			CPrintToChatAll("{tan}BOO!");
+			CPrintToChatAll("{burlywood}BOO!");
 			EmitSoundToAll(SPAWN);
 			EmitSoundToAll(SPAWNRUMBLE);
 		}
 		case TinyRound:
 		{
 			EmitSoundToAll(TinySound);
-			CPrintToChatAll("{tan} SuperSmall for everyone activated.");
+			CPrintToChatAll("{burlywood} SuperSmall for everyone activated.");
 			gamemode.bIsWardenLocked = true;
 		}
 		case Gravity:
 		{
-			CPrintToChatAll("{tan}Where did the gravity go?");
+			CPrintToChatAll("{burlywood}Where did the gravity go?");
 			EmitSoundToAll(GravSound);
 			hEngineConVars[2].SetInt(100);
 		}
 		case HotPrisoner:
 		{
-			CPrintToChatAll("{tan}I'm too hot! Hot damn!");
+			CPrintToChatAll("{burlywood}I'm too hot! Hot damn!");
 			EmitSoundToAll(Engulf);
 		}
 		case RandomKill:
 		{
-			CPrintToChatAll("{tan}Look out! Sniper!");
+			CPrintToChatAll("{burlywood}Look out! Sniper!");
 			SDKHooks_TakeDamage(GetRandomClient(), 0, 0, 9001.0, DMG_DIRECT|DMG_BULLET, _, _, _);	// Lol rip, no fun for this guy
 			EmitSoundToAll(SuicideSound);
 			SetPawnTimer(RandSniper, GetRandomFloat(30.0, 60.0), gamemode.iRoundCount);
 		}
 		case Warday:
 		{
-			CPrintToChatAll("{tan} *War kazoo sounds*");
+			CPrintToChatAll("{burlywood} *War kazoo sounds*");
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
 			// EmitSoundToAll(WardaySound);
@@ -1010,7 +1019,7 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 	if (base.iCustom > 0)
 	{
 		strcopy(strCustomLR, sizeof(strCustomLR), cArgs);
-		CPrintToChat(client, "{red}[TF2Jail]{tan} Your custom last request is {fullred}%s", strCustomLR);
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Your custom last request is {fullred}%s", strCustomLR);
 		base.iCustom = 0;
 	}
 }
@@ -1048,7 +1057,7 @@ public void ManageWardenMenu(Menu & menu)
 			JailFighter player = JailFighter(client);
 			if (!player.bIsWarden)
 			{
-				CPrintToChat(client, "{red}[TF2Jail]{tan} You are not warden.");
+				CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are not warden.");
 				return;
 			}
 			char index[32]; menu.GetItem(select, index, sizeof(index));
@@ -1060,10 +1069,10 @@ public void ManageWardenMenu(Menu & menu)
 					if (!gamemode.bCellsOpened)
 					{
 						gamemode.DoorHandler(OPEN);
-						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has opened cells.");
+						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has opened cells.");
 						gamemode.bCellsOpened = true;
 					}
-					else CPrintToChat(client, "{red}[TF2Jail]{tan} Cells are already open.");
+					else CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Cells are already open.");
 					player.WardenMenu();
 				}
 				case 1:
@@ -1071,10 +1080,10 @@ public void ManageWardenMenu(Menu & menu)
 					if (gamemode.bCellsOpened)
 					{
 						gamemode.DoorHandler(CLOSE);
-						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has closed cells.");
+						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has closed cells.");
 						gamemode.bCellsOpened = false;
 					}
-					else CPrintToChat(client, "{red}[TF2Jail]{tan} Cells are not open.");
+					else CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Cells are not open.");
 					player.WardenMenu();
 				}
 				case 2:
@@ -1082,12 +1091,12 @@ public void ManageWardenMenu(Menu & menu)
 					if (hEngineConVars[0].BoolValue == false)
 					{
 						hEngineConVars[0].SetBool(true);
-						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has enabled Friendly-Fire!");
+						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has enabled Friendly-Fire!");
 					}
 					else 
 					{
 						hEngineConVars[0].SetBool(false);
-						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has disabled Friendly-Fire.");
+						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has disabled Friendly-Fire.");
 					}
 					player.WardenMenu();
 				}
@@ -1096,12 +1105,12 @@ public void ManageWardenMenu(Menu & menu)
 					if (hEngineConVars[1].BoolValue == false)
 					{
 						hEngineConVars[1].SetBool(true);
-						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has enabled collisions!");
+						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has enabled collisions!");
 					}
 					else
 					{
 						hEngineConVars[1].SetBool(false);
-						CPrintToChatAll("{red}[TF2Jail]{tan} Warden has disabled collisions.");
+						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has disabled collisions.");
 					}
 					player.WardenMenu();
 				}
@@ -1111,7 +1120,7 @@ public void ManageWardenMenu(Menu & menu)
 					{
 						if (gamemode.bMarkerExists)
 						{
-							CPrintToChat(client, "{red}[TF2Jail]{tan} Slow down there cowboy.");
+							CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Slow down there cowboy.");
 							player.WardenMenu();
 							return;
 						}
@@ -1126,12 +1135,12 @@ public void ManageWardenMenu(Menu & menu)
 						if (player.bLasering)
 						{
 							player.bLasering = false;
-							CPrintToChat(client, "{red}[TF2Jail]{tan} You have turned Warden Lasers {default}off{tan}.");
+							CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You have turned Warden Lasers {default}off{burlywood}.");
 						}
 						else
 						{
 							player.bLasering = true;
-							CPrintToChat(client, "{red}[TF2Jail]{tan} You have turned Warden Lasers {default}on{tan}. Hold reload to activate.");
+							CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You have turned Warden Lasers {default}on{burlywood}. Hold reload to activate.");
 						}
 					}
 					player.WardenMenu();

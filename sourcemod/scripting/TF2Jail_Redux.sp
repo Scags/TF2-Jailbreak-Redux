@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.13.3"
+#define PLUGIN_VERSION		"0.13.4"
 #define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -95,7 +95,7 @@ enum	// Cvar name
 };
 
 // If adding new cvars put them above Version in the enum
-ConVar 
+ConVar
 	cvarTF2Jail[Version + 1],
 	bEnabled,
 	hEngineConVars[3]
@@ -559,32 +559,34 @@ public Action Timer_PlayerThink(Handle timer)
 			continue;
 
 		player = JailFighter(i);
-		if (!IsPlayerAlive(i) && state == StateRunning)
+		if (!IsPlayerAlive(i))
 		{
-			switch (type)
+			if (state == StateRunning)
 			{
-				case 0:player.UnmutePlayer();
-				case 1:
+				switch (type)
 				{
-					if (GetClientTeam(i) == RED && !player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
+					case 0:player.UnmutePlayer();
+					case 1:
+					{
+						if (GetClientTeam(i) == RED && !player.bIsVIP)
+							player.MutePlayer();
+						else player.UnmutePlayer();
+					}
+					case 2:
+					{
+						if (GetClientTeam(i) == BLU && !player.bIsVIP)
+							player.MutePlayer();
+						else player.UnmutePlayer();
+					}
+					case 3:if (!player.bIsVIP) player.MutePlayer();
+					case 4:if (GetClientTeam(i) == RED) player.MutePlayer();
+					case 5:if (GetClientTeam(i) == BLU) player.MutePlayer();
+					default:player.MutePlayer();
 				}
-				case 2:
-				{
-					if (GetClientTeam(i) == BLU && !player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
-				}
-				case 3:if (!player.bIsVIP) player.MutePlayer();
-				case 4:if (GetClientTeam(i) == RED) player.MutePlayer();
-				case 5:if (GetClientTeam(i) == BLU) player.MutePlayer();
-				default:player.MutePlayer();
 			}
+			else player.UnmutePlayer();
 			continue;
 		}
-		else if (state != StateRunning)
-			player.UnmutePlayer();
 
 		if (state == StateRunning)
 		{
@@ -656,7 +658,7 @@ public Action Timer_PlayerThink(Handle timer)
 public Action Timer_Announce(Handle timer)
 {
 	if (bEnabled.BoolValue)
-		CPrintToChatAll("{red}[TF2Jail] Redux{tan} V%s by {default}Scag/Ragenewb{tan}.", PLUGIN_VERSION);
+		CPrintToChatAll("{crimson}[TF2Jail Redux]{burlywood} V%s by {default}Scag/Ragenewb{burlywood}.", PLUGIN_VERSION);
 }
 
 public void OnClientDisconnect(int client)
@@ -784,7 +786,7 @@ public Action EurekaTele(int client, const char[] command, int args)
 
 	if (player.bUnableToTeleport)
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} You can't teleport yet!");
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You can't teleport yet!");
 		return Plugin_Handled;
 	}
 
@@ -976,7 +978,7 @@ public void WelcomeMessage(const int userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (IsClientInGame(client))
-		CPrintToChat(client, "{red}[TF2Jail]{tan} Welcome to TF2 Jailbreak Redux. Type \"!jhelp\" for help.");
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Welcome to TF2 Jailbreak Redux. Type \"!jhelp\" for help.");
 }
 
 public void ResetDamage()
@@ -1056,7 +1058,7 @@ public void DisableWarden(const int roundcount)
 	 || gamemode.bIsWardenLocked)
 		return;
 
-	CPrintToChatAll("{red}[TF2Jail]{tan} Warden has been locked due to lack of warden.");
+	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has been locked due to lack of warden.");
 	gamemode.DoorHandler(OPEN);
 	gamemode.bIsWardenLocked = true;
 }
@@ -1130,7 +1132,7 @@ public bool CheckSet(const int client, const int count, const int max)
 
 	if (count >= max)
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} This LR has been picked the maximum amount of times for this map.");
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} This LR has been picked the maximum amount of times for this map.");
 		JailFighter(client).ListLRS();
 		//ListLastRequests(client);
 		return false;
@@ -1152,7 +1154,7 @@ public void CreateMarker(const int client)
 
 	if (!TR_DidHit(trace))
 	{
-		CPrintToChat(client, "{red}[TF2Jail]{tan} Unable to create a marker.");
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Unable to create a marker.");
 		delete trace;
 		return;
 	}
@@ -1297,7 +1299,7 @@ public void Open_Doors(const int roundcount)
 		return;
 
 	gamemode.DoorHandler(OPEN);
-	CPrintToChatAll("{red}[TF2Jail]{tan} The cell doors have opened after %i seconds of remaining closed.", cvarTF2Jail[DoorOpenTimer].IntValue);
+	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} The cell doors have opened after %i seconds of remaining closed.", cvarTF2Jail[DoorOpenTimer].IntValue);
 	gamemode.bCellsOpened = true;
 }
 
@@ -1307,7 +1309,7 @@ public void EnableFFTimer(const int roundcount)
 		return;
 
 	hEngineConVars[0].SetBool(true);
-	CPrintToChatAll("{red}[TF2Jail]{tan} Friendly-Fire has been enabled!");
+	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Friendly-Fire has been enabled!");
 }
 
 public void FreeKillSystem(const JailFighter attacker, const int killcount)
@@ -1340,7 +1342,7 @@ public void FreeKillSystem(const JailFighter attacker, const int killcount)
 			if (JailFighter(i).bIsAdmin)
 			{
 				if (messagetype)
-					CPrintToChat(i, "{red}**********\n%L\nIP:%s\n**********");
+					CPrintToChat(i, "{crimson}**********\n%L\nIP:%s\n**********");
 				else PrintToConsole(i, "**********\n%L\nIP:%s\n**********", attacker.index, strIP);
 			}
 		}
@@ -1358,7 +1360,7 @@ public void EnableWarden(const int roundcount)
 		return;
 
 	gamemode.bIsWardenLocked = false;
-	CPrintToChatAll("{red}[TF2Jail]{tan} Warden has been enabled.");
+	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has been enabled.");
 }
 
 public Action OnEntSpawn(int ent)

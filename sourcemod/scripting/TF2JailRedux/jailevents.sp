@@ -22,11 +22,11 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		}
 		case BLU:
 		{
-			if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue)
+			if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue && gamemode.iRoundState == StateStarting)
 			{
 				player.ForceTeamChange(RED);
 				EmitSoundToClient(client, NO);
-				CPrintToChat(client, "{red}[TF2Jail]{tan} You are muted, therefore you cannot join Blue Team.");
+				CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are muted, therefore you cannot join Blue Team.");
 			}
 		}
 	}
@@ -206,7 +206,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 							AcceptEntityInput(flamemanager, "Kill");
 					}
 					player.ForceTeamChange(RED);
-					CPrintToChat(player.index, "{red}[TF2Jail]{tan} You have been autobalanced.");
+					CPrintToChat(player.index, "{crimson}[TF2Jail]{burlywood} You have been autobalanced.");
 
 					lBlue--;	// Avoid loopception
 					lRed++;

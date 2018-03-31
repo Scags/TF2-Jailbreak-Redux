@@ -469,8 +469,8 @@ methodmap JailGameMode < StringMap
 						this.bFirstDoorOpening = true;
 				}
 				case CLOSE:this.bCellsOpened = false;
-				// case LOCK:CPrintToChatAll("{red}[TF2Jail]{tan} Cell doors have been locked.");
-				// case UNLOCK:CPrintToChatAll("{red}[TF2Jail]{tan} Cell doors have been unlocked.");
+				// case LOCK:CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Cell doors have been locked.");
+				// case UNLOCK:CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Cell doors have been unlocked.");
 			}
 		}
 	}
@@ -515,7 +515,7 @@ methodmap JailGameMode < StringMap
 		if (prevent)
 			player.bLockedFromWarden = true;
 		if (announce)
-			CPrintToChatAll("{orange}[TF2Jail]{tan} Warden has been fired!");
+			CPrintToChatAll("{orange}[TF2Jail]{burlywood} Warden has been fired!");
 	}
 	/**
 	 *	Open all of the doors on a map
