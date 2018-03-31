@@ -168,16 +168,17 @@ public void ResetVariables(const JailFighter base, const bool compl)
 	base.iCustom = 0;
 	base.iKillCount = 0;
 	base.bIsWarden = false;
-	base.bIsMuted = false;
 	base.bIsFreeday = false;
 	base.bLockedFromWarden = false;
 	base.bIsHHH = false;
 	base.bInJump = false;
 	base.bUnableToTeleport = false;
+	base.bEvilBeamed = false;
 	base.flSpeed = 0.0;
 	base.flKillSpree = 0.0;
 	if (compl)
 	{
+		base.bIsMuted = false;
 		base.bIsQueuedFreeday = false;
 		base.bIsVIP = false;
 		base.bIsAdmin = false;
@@ -191,20 +192,23 @@ public void ResetVariables(const JailFighter base, const bool compl)
 public void AddLRToMenu(Menu &menu)
 {
 	char strName[32], strID[4], strValue[16];
-	int max, value, def = cvarTF2Jail[LRDefault].IntValue;
+	int i, max, value, def = cvarTF2Jail[LRDefault].IntValue;
 
 	menu.AddItem("-1", "Random LR");
-	for (int i = 0; i < sizeof(strLRNames); i++)	// If we do '<= LRMAX' and you have a sub-plugin, array indexes will be out of bounds
+	for (i = 0; i < sizeof(strLRNames); i++)	// If we do '<= LRMAX' and you have a sub-plugin, array indexes will be out of bounds
 	{												// So don't add sub-plugin LR names to this plugin, simply do it within your own
 		max = def;
+		strValue[0] = '\0';
 		// if (i == Warday)	// If you want a certain last request to have a different max, do something like this
 			// max = 3;
-		value = arrLRS.Get(i);
 		if (max)
+		{
+			value = arrLRS.Get(i);
 			Format(strValue, sizeof(strValue), " (%i/%i)", value, max);
+		}
 		Format(strName, sizeof(strName), "%s%s", strLRNames[i][0], strValue);	// If cvar value is 0, infinite picks
 		IntToString(i, strID, sizeof(strID));
-		menu.AddItem(strID, strName, value >= max ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
+		menu.AddItem(strID, strName, (max && value >= max) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
 	}
 	Call_OnMenuAdd(menu, arrLRS);
 /**

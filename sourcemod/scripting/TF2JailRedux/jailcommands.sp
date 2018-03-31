@@ -347,7 +347,7 @@ public Action Command_GiveLastRequest(int client, int args)
 
 		Menu menu = new Menu(MenuHandle_ForceLR);
 		menu.SetTitle("Choose a Player");
-		AddClientsToMenu(menu);
+		AddClientsToMenu(menu, true);
 		menu.ExitButton = true;
 		menu.Display(client, 30);
 

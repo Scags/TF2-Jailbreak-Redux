@@ -214,7 +214,6 @@ public void OnPluginStart()
 	HookEvent("player_chargedeployed", UberDeployed);
 
 	AddCommandListener(EurekaTele, "eureka_teleport");
-	AddCommandListener(OnJoinTeam, "jointeam");
 
 	RegConsoleCmd("sm_jhelp", Command_Help, "Display a menu containing the major commands.");
 	RegConsoleCmd("sm_jailhelp", Command_Help, "Display a menu containing the major commands.");
@@ -495,6 +494,7 @@ public void OnClientPutInServer(int client)
 	player.bInJump = false;
 	player.bUnableToTeleport = false;
 	player.bLasering = false;
+	player.bEvilBeamed = false;
 	player.flSpeed = 0.0;
 	player.flKillSpree = 0.0;
 
@@ -523,8 +523,8 @@ public void OnClientPostAdminCheck(int client)
 	}
 	else player.bIsVIP = false;
 
-	if (cvarTF2Jail[MuteType].IntValue >= 4)
-		player.MutePlayer();
+	// if (cvarTF2Jail[MuteType].IntValue >= 4)
+		// player.MutePlayer();
 }
 
 public Action OnTouch(int toucher, int touchee)
@@ -543,19 +543,77 @@ public Action OnTouch(int toucher, int touchee)
 
 public Action Timer_PlayerThink(Handle timer)
 {
-	if (!bEnabled.BoolValue || gamemode.iRoundState != StateRunning)
+	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
 	if (gamemode.flMusicTime <= GetGameTime() && cvarTF2Jail[EnableMusic].BoolValue)
 		_MusicPlay();
 
 	JailFighter player;
-	for (int i = MaxClients; i; --i) 
+	int type = cvarTF2Jail[MuteType].IntValue;
+	int livingtype = cvarTF2Jail[LivingMuteType].IntValue;
+	int state = gamemode.iRoundState;
+	for (int i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i) || !IsPlayerAlive(i))
 			continue;
 
 		player = JailFighter(i);
+		if (!IsPlayerAlive(i) && state == StateRunning)
+		{
+			switch (type)
+			{
+				case 0:player.UnmutePlayer();
+				case 1:
+				{
+					if (GetClientTeam(i) == RED && !player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+				case 2:
+				{
+					if (GetClientTeam(i) == BLU && !player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+				case 3:if (!player.bIsVIP) player.MutePlayer();
+				case 4:if (GetClientTeam(i) == RED) player.MutePlayer();
+				case 5:if (GetClientTeam(i) == BLU) player.MutePlayer();
+				default:player.MutePlayer();
+			}
+			continue;
+		}
+		else if (state != StateRunning)
+			player.UnmutePlayer();
+
+		if (state == StateRunning)
+		{
+			switch (livingtype)
+			{
+				case 0:player.UnmutePlayer();
+				case 1:
+				{
+					if (GetClientTeam(i) == RED && !player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+				case 2:
+				{
+					if (GetClientTeam(i) == BLU && !player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				}
+				case 3:if (!player.bIsVIP) player.MutePlayer();
+				case 4:if (GetClientTeam(i) == RED) player.MutePlayer();
+				case 5:if (GetClientTeam(i) == BLU) player.MutePlayer();
+				default:player.MutePlayer();
+			}
+		}
+		else player.UnmutePlayer();
+
+		if (state != StateRunning)
+			continue;
+
 		if (GetClientTeam(i) == BLU)
 		{
 			ManageBlueThink(player);
@@ -733,79 +791,6 @@ public Action EurekaTele(int client, const char[] command, int args)
 	player.bUnableToTeleport = true;
 	SetPawnTimer(EnableEureka, time, player.userid);
 
-	return Plugin_Continue;
-}
-
-public Action OnJoinTeam(int client, const char[] command, int args)
-{
-	if (!bEnabled.BoolValue || !IsClientValid(client))
-		return Plugin_Continue;
-
-	char arg[8]; GetCmdArg(1, arg, 8);
-	JailFighter player = JailFighter(client);
-	int type = cvarTF2Jail[MuteType].IntValue;
-
-	if (StrStarts(arg, "blu", false) || StrEqual(arg, "3", false))
-	{
-		if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue)
-		{
-			EmitSoundToClient(client, NO);
-			TF2_ChangeClientTeam(client, TFTeam_Red);
-			return Plugin_Handled;
-		}
-		if (gamemode.iRoundState == StateRunning)
-		{
-			switch (type)
-			{
-				case 0, 1:player.UnmutePlayer();
-				case 2, 3:
-				{
-					if (!player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
-				}
-				default:player.MutePlayer();
-			}
-		}
-		return Plugin_Continue;
-	}
-	if (StrEqual(arg, "2", false) || StrEqual(arg, "red", false))
-	{
-		if (gamemode.iRoundState == StateRunning)
-		{
-			switch (type)
-			{
-				case 0, 2:player.UnmutePlayer();
-				case 1, 3:
-				{
-					if (!player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
-				}
-				default:player.MutePlayer();
-			}
-		}
-		return Plugin_Continue;
-	}
-	if (StrEqual(arg, "auto", false) && AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue)
-	{
-		TF2_ChangeClientTeam(client, TFTeam_Red);
-		return Plugin_Handled;
-	}
-	if (gamemode.iRoundState == StateRunning)
-	{
-		switch (type)
-		{
-			case 0:player.UnmutePlayer();
-			case 1, 2, 3:
-			{
-				if (!player.bIsVIP)
-					player.MutePlayer();
-				else player.UnmutePlayer();
-			}
-			default:player.MutePlayer();
-		}
-	}
 	return Plugin_Continue;
 }
 

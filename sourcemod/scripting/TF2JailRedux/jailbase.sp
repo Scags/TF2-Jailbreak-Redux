@@ -182,6 +182,18 @@ methodmap JailFighter
 			hJailFields[this.index].SetValue("bLasering", i);
 		}
 	}
+	property bool bEvilBeamed
+	{
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bEvilBeamed", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bEvilBeamed", i);
+		}
+	}
 #if defined _clientprefs_included
 	property bool bNoMusic
 	{
@@ -396,13 +408,30 @@ methodmap JailFighter
 	*/
 	public void MutePlayer()
 	{
+		if (this.bIsMuted)
+			return;
+		if (this.bIsAdmin)
+			return;
 		int client = this.index;
-		if (!this.bIsMuted && !this.bIsAdmin && !AlreadyMuted(client))
+		if (!AlreadyMuted(client))
 		{
 			SetClientListeningFlags(client, VOICE_MUTED);
 			this.bIsMuted = true;
-			PrintToConsole(client, "[TF2Jail] You are muted by the plugin.");
 		}
+	}
+	/**
+	 *	Unmute a player through the plugin.
+	 *
+	 *	@noreturn
+	*/
+	public void UnmutePlayer()
+	{
+		if (!this.bIsMuted)
+			return;
+
+		int client = this.index;
+		SetClientListeningFlags(client, VOICE_NORMAL);
+		this.bIsMuted = false;
 	}
 	/**
 	 *	Initialize a player as a freeday.
@@ -412,9 +441,10 @@ methodmap JailFighter
 	 *
 	 *	@noreturn
 	*/
-	public void GiveFreeday(bool togglequeued = false)
+	public void GiveFreeday( bool togglequeued = false )
 	{
-		ServerCommand("sm_evilbeam #%d", this.userid);
+		if (!this.bEvilBeamed)	// Failsafe
+			ServerCommand("sm_evilbeam #%d", this.userid);
 		int flags = GetEntityFlags(this.index) | FL_NOTARGET;
 		SetEntityFlags(this.index, flags);
 
@@ -422,6 +452,7 @@ methodmap JailFighter
 			if (this.bIsQueuedFreeday)
 				this.bIsQueuedFreeday = false;
 		this.bIsFreeday = true;
+		this.bEvilBeamed = true;
 
 		Call_OnFreedayGiven(this);
 	}
@@ -435,7 +466,9 @@ methodmap JailFighter
 		int client = this.index;
 		int flags = GetEntityFlags(client) & ~FL_NOTARGET;
 		SetEntityFlags(client, flags);
-		ServerCommand("sm_evilbeam #%d", this.userid);
+		if (this.bEvilBeamed)
+			ServerCommand("sm_evilbeam #%d", this.userid);
+		this.bEvilBeamed = false;
 		this.bIsFreeday = false;
 		//SetEntProp(client, Prop_Data, "m_takedamage", 2, 1);
 
@@ -501,20 +534,15 @@ methodmap JailFighter
 
 		//CPrintToChat(client, "{red}[TF2Jail]{tan} Your weapons and ammo have been stripped.");
 	}
-	/**
-	 *	Unmute a player through the plugin.
+	/**	Props to VoIDed
+	 * Sets the custom model of this player.
 	 *
-	 *	@noreturn
+	 * @param model		The model to set on this player.
 	*/
-	public void UnmutePlayer()
+	public void SetCustomModel( const char[] model )
 	{
-		if (!this.bIsMuted)
-			return;
-
-		int client = this.index;
-		SetClientListeningFlags(client, VOICE_NORMAL);
-		this.bIsMuted = false;
-		PrintToConsole(client, "[TF2Jail] You are unmuted by the plugin.");
+		SetVariantString(model);
+		AcceptEntityInput(this.index, "SetCustomModel" );
 	}
 	/**
 	 *	Initialize a player as the warden.
@@ -532,16 +560,6 @@ methodmap JailFighter
 		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
 		CPrintToChatAll("{red}[TF2Jail]{default} %N{tan} is the new Warden", client);
 		ManageWarden(this);
-	}
-	/**	Props to VoIDed
-	 * Sets the custom model of this player.
-	 *
-	 * @param model		The model to set on this player.
-	*/
-	public void SetCustomModel( const char[] model )
-	{
-		SetVariantString(model);
-		AcceptEntityInput(this.index, "SetCustomModel" );
 	}
 	/**
 	 *	Terminate a player as the warden.
@@ -706,7 +724,7 @@ methodmap JailFighter
 		//menu.AddItem("-1", "Random LR");	// Moved to handler
 		AddLRToMenu(menu);
 		menu.ExitButton = true;
-		menu.Display(this.index, 30);
+		menu.Display(this.index, -1);
 	}
 	/**
 	 *	Give a player the warden menu.

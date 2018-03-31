@@ -20,6 +20,15 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 				player.TeleportToPosition(FREEDAY);
 			}
 		}
+		case BLU:
+		{
+			if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue)
+			{
+				player.ForceTeamChange(RED);
+				EmitSoundToClient(client, NO);
+				CPrintToChat(client, "{red}[TF2Jail]{tan} You are muted, therefore you cannot join Blue Team.");
+			}
+		}
 	}
 	if (gamemode.bTF2Attribs)
 	{
@@ -34,42 +43,6 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		player.TeleportToPosition(GetClientTeam(client));	// Enum value is the same as team value, so we can cheat it
 
 	ManageSpawn(player, event);
-
-	if (gamemode.iRoundState == StateRunning)
-	{
-		switch (cvarTF2Jail[LivingMuteType].IntValue)
-		{
-			case 0:player.UnmutePlayer();
-			case 1:
-			{
-				if (GetClientTeam(client) == RED)
-				{
-					if (!player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
-				}
-			}
-			case 2:
-			{
-				if (GetClientTeam(client) == BLU)
-				{
-					if (!player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
-				}
-			}
-			case 3:
-			{
-				if (!player.bIsVIP)
-					player.UnmutePlayer();
-				else player.MutePlayer();
-			}
-			case 4:if (GetClientTeam(client) == RED) player.MutePlayer();
-			case 5:if (GetClientTeam(client) == BLU) player.MutePlayer();
-			case 6:player.MutePlayer();
-		}
-	}
-	else player.UnmutePlayer();
 
 	SetPawnTimer(PrepPlayer, 0.2, player.userid);
 
@@ -121,12 +94,15 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		victim.WardenUnset();
 		gamemode.bWardenExists = false;
 
-		if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue)
-			PrintCenterTextAll("Warden has been killed!");
+		if (gamemode.iRoundState == StateRunning)
+		{
+			if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue)
+				PrintCenterTextAll("Warden has been killed!");
 
-		float time = cvarTF2Jail[WardenTimer].FloatValue;
-		if (time != 0.0)
-			SetPawnTimer(DisableWarden, time, gamemode.iRoundCount);
+			float time = cvarTF2Jail[WardenTimer].FloatValue;
+			if (time != 0.0)
+				SetPawnTimer(DisableWarden, time, gamemode.iRoundCount);
+		}
 	}
 
 	if (victim.iCustom)
@@ -138,40 +114,6 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 
 	ManagePlayerDeath(attacker, victim, event);
 
-	if (gamemode.iRoundState == StateRunning)
-	{
-		switch (cvarTF2Jail[MuteType].IntValue)
-		{
-			case 0:victim.UnmutePlayer();
-			case 1:
-			{
-				if (GetClientTeam(victim.index) == RED)
-				{
-					if (!victim.bIsVIP)
-						victim.MutePlayer();
-					else victim.UnmutePlayer();
-				}
-			}
-			case 2:
-			{
-				if (GetClientTeam(victim.index) == BLU)
-				{
-					if (!victim.bIsVIP)
-						victim.MutePlayer();
-					else victim.UnmutePlayer();
-				}
-			}
-			case 3:
-			{
-				if (!victim.bIsVIP)
-					victim.MutePlayer();
-				else victim.UnmutePlayer();
-			}
-			default:victim.MutePlayer();
-		}
-	}
-	else victim.UnmutePlayer();
-	
 	return Plugin_Continue;
 }
 
@@ -205,7 +147,6 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 			continue;
 
 		player = JailFighter(i);
-		player.UnmutePlayer();
 		ResetVariables(player, false);
 	}
 
@@ -288,16 +229,12 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		return Plugin_Continue;
 	}
 
-	int type, livingtype;
 	bool warday;
 	float delay;
 
 	gamemode.iLRType = gamemode.iLRPresetType;
 	gamemode.iRoundState = StateRunning;
 
-	warday = gamemode.bIsWarday;
-	type = cvarTF2Jail[MuteType].IntValue;
-	livingtype = cvarTF2Jail[LivingMuteType].IntValue;
 
 	ManageRoundStart();		// THESE FIRE BEFORE INITIALIZATION FUNCTIONS IN THE PLAYER LOOP
 	ManageCells();			// This is the only (easy) way for the VSH sub-plugin to grab a random player
@@ -308,64 +245,21 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	SetPawnTimer(_MusicPlay, 1.4);
 
+	warday = gamemode.bIsWarday;
 	for (i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
+			continue;
+		if (!IsPlayerAlive(i))
 			continue;
 
 		player = JailFighter(i);
 		player.bIsQueuedFreeday = false;
 
-		if (!IsPlayerAlive(i))
-		{
-			switch (type)
-			{
-				case 0:player.UnmutePlayer();
-				case 1:
-				{
-					if (GetClientTeam(i) == RED && !player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
-				}
-				case 2:
-				{
-					if (GetClientTeam(i) == BLU && !player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
-				}
-				case 3:if (!player.bIsVIP) player.MutePlayer();
-				case 4:if (GetClientTeam(i) == RED) player.MutePlayer();
-				case 5:if (GetClientTeam(i) == BLU) player.MutePlayer();
-				default:player.MutePlayer();
-			}
-			continue;
-		}
-
 		OnLRActivate(player);
 
 		if (warday)
 			player.TeleportToPosition(GetClientTeam(i));
-
-		switch (livingtype)
-		{
-			case 0:player.UnmutePlayer();
-			case 1:
-			{
-				if (GetClientTeam(i) == RED && !player.bIsVIP)
-					player.MutePlayer();
-				else player.UnmutePlayer();
-			}
-			case 2:
-			{
-				if (GetClientTeam(i) == BLU && !player.bIsVIP)
-					player.MutePlayer();
-				else player.UnmutePlayer();
-			}
-			case 3:if (!player.bIsVIP) player.MutePlayer();
-			case 4:if (GetClientTeam(i) == RED) player.MutePlayer();
-			case 5:if (GetClientTeam(i) == BLU) player.MutePlayer();
-			default:player.MutePlayer();
-		}
 	}
 
 	gamemode.iLRPresetType = -1;
@@ -390,8 +284,8 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	StopBackGroundMusic();
 	JailFighter player;
 	int i, x;
-	gamemode.iRoundCount++;
 	bool attrib = gamemode.bTF2Attribs;
+	gamemode.iRoundCount++;
 
 	for (i = MaxClients; i; --i)
 	{
@@ -402,7 +296,6 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 			TF2Attrib_RemoveAll(i);
 
 		player = JailFighter(i);
-		player.UnmutePlayer();
 		player.bLockedFromWarden = false;
 
 		if (player.bIsFreeday)

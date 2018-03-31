@@ -1959,7 +1959,7 @@ public void ManageBossCheckHealth(const JailBoss base)
 		PrintCenterTextAll(gameMessage);
 		CPrintToChatAll("{red}[TF2Jail] Boss Health Check{tan} %s", gameMessage);
 		LastBossTotalHealth = totalHealth;
-		flHealthTime = (iHealthChecks < 3 ? 10.0 : 60.0);
+		flHealthTime = currtime + (iHealthChecks < 3 ? 10.0 : 60.0);
 	}
 	else CPrintToChat(base.index, "{red}[TF2Jail]{tan} You can see the Boss HP now (wait %i seconds). Last known total health was %i.", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
 }
@@ -2706,7 +2706,7 @@ public void fwdOnVariableReset(const JBPlayer Player)
 	base.iHealth = 0;
 	base.iMaxHealth = 0;
 	base.iAirDamage = 0;
-	base.iType = 0;
+	base.iType = -1;
 	base.iStabbed = 0;
 	base.iDamage = 0;
 	base.iMarketted = 0;

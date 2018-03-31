@@ -831,6 +831,7 @@ public void fwdOnPreThink(const JBPlayer Player, int buttons)
 // Same as in jailhandler.sp, forcing people as the sniper class crashes servers
 int NoSS[6]  = { 3, 4, 5, 6, 7, 9 };
 int NoHvy[5] = { 3, 4, 5, 6, 9 };
+int iHeavy;
 public void fwdOnLRRoundActivate(const JBPlayer player)
 {
 	if (!JBPH[Enabled].BoolValue || NotPH)
@@ -838,10 +839,10 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 
 	JailHunter base = ToJailHunter(player);
 	int client = base.index;
+	TF2Attrib_RemoveAll(client);
+
 	if (gamemode.GetProperty("bTF2Attribs"))
 	{
-		TF2Attrib_RemoveAll(client);
-
 		switch (JBPH[FallDamage].IntValue)
 		{
 			case 1:TF2Attrib_SetByDefIndex(client, 275, 1.0);
@@ -854,21 +855,19 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 		case TFTeam_Red:
 		{
 			TF2_SetPlayerClass(client, TFClass_Scout);
-
 			base.MakeProp(JBPH[PropNameOnGive].BoolValue);
 
 			switch (JBPH[Teleportation].IntValue)
 			{
-				case 3, 5:base.TeleportToPosition(WRED);
-				case 4:base.TeleportToPosition(FREEDAY);
+				case 3, 5:if (gamemode.GetProperty("bWardayTeleportSetRed")) base.TeleportToPosition(WRED);
+				case 4:if (gamemode.GetProperty("bFreedayTeleportSet")) base.TeleportToPosition(FREEDAY);
 			}
 
 			base.bTouched = false;
-			base.iRolls = true;
+			base.iRolls = 0;
 		}
 		case TFTeam_Blue:
 		{
-			int heavy;
 			if (JBPH[ForceBluePyro].BoolValue)
 				TF2_SetPlayerClass(client, TFClass_Pyro);
 
@@ -879,8 +878,8 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 			}
 			if (TF2_GetPlayerClass(client) == TFClass_Heavy)
 			{
-				if (heavy < 2)
-					heavy++;
+				if (iHeavy < 2)
+					iHeavy++;
 				else
 				{
 					TF2_SetPlayerClass(client, view_as< TFClassType >(NoHvy[GetRandomInt(0, 4)]));
@@ -893,12 +892,11 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 
 			switch (JBPH[Teleportation].IntValue)
 			{
-				case 1, 5:base.TeleportToPosition(WBLU);
-				case 2:base.TeleportToPosition(FREEDAY);
+				case 1, 5:if (gamemode.GetProperty("bWardayTeleportSetBlue")) base.TeleportToPosition(WBLU);
+				case 2:if (gamemode.GetProperty("bFreedayTeleportSet")) base.TeleportToPosition(FREEDAY);
 			}
 		}
 	}
-
 	if (JBPH[StaticPropInfo].BoolValue)
 		QueryClientConVar(client, "r_staticpropinfo", KickCallBack);
 }
@@ -908,11 +906,11 @@ public void fwdOnManageRoundStart()
 		return;
 
 	gamemode.SetProperty("bDisableCriticals", true);
-	gamemode.SetProperty("bWardenLocked", true);
+	gamemode.SetProperty("bIsWardenLocked", true);
 	gamemode.SetProperty("bFirstDoorOpening", true);
 	gamemode.DoorHandler(OPEN);
 	gamemode.OpenAllDoors();
-	
+
 	float rerolltime = JBPH[RerollTime].FloatValue;
 	if (rerolltime != 0.0)
 		SetPawnTimer(DisallowRerolls, rerolltime, gamemode.GetProperty("iRoundCount"));
@@ -924,7 +922,13 @@ public void fwdOnManageRoundStart()
 	int freeze = JBPH[FreezeTime].IntValue;
 	// ServerCommand("sm_freeze @blue %i", freeze);
 	if (!freeze)
+	{
+		char s[PLATFORM_MAX_PATH];
+		Format(s, sizeof(s), "vo/announcer_am_roundstart0%i.mp3", GetRandomInt(1, 4));
+		EmitSoundToAll(s);
+		CPrintToChatAll("{tan}Ready or not, here they come!");
 		return;
+	}
 
 	for (int i = MaxClients; i; --i)
 	{
@@ -934,7 +938,7 @@ public void fwdOnManageRoundStart()
 			continue;
 		SetEntityMoveType(i, MOVETYPE_NONE);
 	}
-	
+
 	switch (freeze)
 	{
 		case 60:
@@ -954,7 +958,6 @@ public void fwdOnManageRoundStart()
 
 	iGameTime = freeze;
 	CreateTimer(1.0, Timer_Round, _, TIMER_REPEAT);
-
 	CPrintToChatAll("{tan}Hunters will be released in %i seconds.", freeze);
 }
 public void fwdOnManageRoundEnd()
@@ -962,6 +965,7 @@ public void fwdOnManageRoundEnd()
 	if (!JBPH[Enabled].BoolValue || NotPH)
 		return;
 
+	iHeavy = 0;
 	FindConVar("sv_gravity").SetInt(800);
 	bAbleToReroll = false;
 }
@@ -1017,12 +1021,15 @@ public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Even
 	JailHunter player = ToJailHunter(victim);
 	player.Init_PH(true);
 
-	if (ToJailHunter(attacker).bIsProp)
+	if (!player.bIsProp)
 		return;
 
 	RequestFrame(RemoveRagdoll, victim.index);
 	if (player.index != attacker.index)
 		EmitSoundToClient(player.index, "prophunt/snaaake.mp3");
+
+	if (!IsClientValid(attacker.index))
+		return;
 
 	SetEntityHealth(attacker.index, GetEntProp(attacker.index, Prop_Data, "m_iMaxHealth"));
 
