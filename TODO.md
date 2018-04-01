@@ -6,7 +6,7 @@
 - I've added ip detection to the prototype plugin I've written, however considering that bans times run down while a player is actively in the server, alternate account bans would remain after unban. Therefore I would have to search for ip addresses on unban. Not eactly hard per se, but seems unnecessary.
 
 ### ~~Better AddLRToMenu() Forward~~ ###
-- ~~In the plugin's current state, sub-plugin last requests must have indexes that are last in the enumeration.
+- ~~In the plugin's current state, sub-plugin last requests must have indexes that are last in the enumeration.~~
 - ~~This comes out of laziness as there's an array of the current, included last request names.~~
 - ~~Only idea I have currently is firing the forward in the loop itself with the index being passed.~~ ✅
 
