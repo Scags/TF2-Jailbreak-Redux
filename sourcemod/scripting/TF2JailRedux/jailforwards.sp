@@ -24,7 +24,7 @@ void InitializeForwards()
 	hPrivFwds[OnUberDeployed] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	hPrivFwds[OnPlayerSpawned]			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
 	hPrivFwds[OnMenuAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_CellByRef, Param_String);
-	hPrivFwds[OnPanelAdd] 				= CreateForward(ET_Ignore, Param_CellByRef);
+	hPrivFwds[OnPanelAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_String);
 	hPrivFwds[OnManageTimeLeft] 		= CreateForward(ET_Ignore);
 	hPrivFwds[OnPlayerPrepped] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnHurtPlayer] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
@@ -41,6 +41,7 @@ void InitializeForwards()
 	hPrivFwds[OnFreedayGiven] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnFreedayRemoved] 		= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnPreThink] 				= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
+	hPrivFwds[OnManageFFTimer] 			= CreateForward(ET_Ignore, Param_FloatByRef);
 	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
 }
 void Call_OnDownloads()
@@ -178,10 +179,11 @@ void Call_OnMenuAdd(const int index, int &max, char strName[32])
 	Call_PushStringEx(strName, 32, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_Finish();
 }
-void Call_OnPanelAdd(Menu &panel)
+void Call_OnPanelAdd(const int index, char name[64])
 {
 	Call_StartForward(hPrivFwds[OnPanelAdd]);
-	Call_PushCellRef(panel);
+	Call_PushCell(index);
+	Call_PushStringEx(name, 64, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_Finish();
 }
 void Call_OnManageTimeLeft()
@@ -305,5 +307,11 @@ void Call_OnPreThink(const JailFighter player, int buttons)
 	Call_StartForward(hPrivFwds[OnPreThink]);
 	Call_PushCell(player);
 	Call_PushCell(buttons);
+	Call_Finish();
+}
+void Call_OnManageFFTimer(float &time)
+{
+	Call_StartForward(hPrivFwds[OnManageFFTimer]);
+	Call_PushFloatRef(time);
 	Call_Finish();
 }

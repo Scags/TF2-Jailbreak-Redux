@@ -44,6 +44,11 @@ public Action Command_BecomeWarden(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
+	if (gamemode.bWardenExists)
+	{
+		CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.FindWarden().index);
+		return Plugin_Handled;
+	}
 	if (!client)
 	{
 		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Command is in-game only.");
@@ -79,11 +84,6 @@ public Action Command_BecomeWarden(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	if (gamemode.bWardenExists)
-	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.FindWarden().index);
-		return Plugin_Handled;
-	}
 	JailFighter player = JailFighter(client);
 	if (player.bLockedFromWarden)
 	{
@@ -127,6 +127,7 @@ public Action Command_ExitWarden(int client, int args)
 
 	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden {default}%N{burlywood} has retired!", client);
 	PrintCenterTextAll("Warden has retired!");
+
 	player.bLockedFromWarden = true;
 	player.WardenUnset();
 	gamemode.bWardenExists = false;
@@ -349,7 +350,7 @@ public Action Command_GiveLastRequest(int client, int args)
 		menu.SetTitle("Choose a Player");
 		AddClientsToMenu(menu, true);
 		menu.ExitButton = true;
-		menu.Display(client, 30);
+		menu.Display(client, -1);
 
 		return Plugin_Handled;
 	}
@@ -808,9 +809,9 @@ public void Admin_GiveFreedaysMenu(const int client)
 	Menu menu = new Menu(ForceFreedayMenu);
 	menu.SetTitle("Select Player(s) for Freeday");
 
-	AddClientsToMenu(menu, false);
+	AddClientsToMenu(menu);
 	menu.ExitButton = true;
-	menu.Display(client, 30);
+	menu.Display(client, -1);
 }
 
 public int ForceFreedayMenu(Menu menu, MenuAction action, int client, int select)
@@ -831,7 +832,7 @@ public int ForceFreedayMenu(Menu menu, MenuAction action, int client, int select
 			}
 
 			JailFighter(target).GiveFreeday();
-			CPrintToChatAll("{orange}[TF2Jail] Admin has forced {default}%N{burlywood} to receive a Freeday!", target);
+			CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has forced {default}%N{burlywood} to receive a Freeday!", target);
 		}
 		case MenuAction_End:delete menu;
 	}
@@ -897,7 +898,7 @@ public void RemoveFreedaysMenu(int client)
 		}
 	}
 	menu.ExitButton = true;
-	menu.Display(client, 30);
+	menu.Display(client, -1);
 }
 
 public int MenuHandle_RemoveFreedays(Menu menu, MenuAction action, int client, int select)
@@ -1023,7 +1024,7 @@ public void FreedayforClientsMenu(const int client)
 	
 	AddClientsToMenu(menu, false);
 	menu.ExitButton = true;
-	menu.Display(client, 30);
+	menu.Display(client, -1);
 }
 
 public int MenuHandle_FreedayForClients(Menu menu, MenuAction action, int client, int select)
@@ -1265,7 +1266,7 @@ public Action AdminWardayBlue(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action FullWarday(int client, int args)
+public Action AdminFullWarday(int client, int args)
 {
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
@@ -1305,6 +1306,13 @@ public Action FullWarday(int client, int args)
 
 	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Warday has been activated!");
 
+	return Plugin_Handled;
+}
+
+public Action AdminReloadCFG(int client, int args)
+{
+	ServerCommand("exec sourcemod/TF2JailRedux.cfg");
+	CReplyToCommand(client, "{orange}[TF2Jail]{fullred} Reloading plugin CFG.");
 	return Plugin_Handled;
 }
 #if defined _clientprefs_included

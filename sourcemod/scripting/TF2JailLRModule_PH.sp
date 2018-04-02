@@ -102,6 +102,11 @@ methodmap JailHunter < JBPlayer
 		public get() 				{ return this.GetValue("bFirstPerson"); }
 		public set( const bool i ) 	{ this.SetValue("bFirstPerson", i); }
 	}
+	property TFClassType iOldClass
+	{
+		public get() 				{ return this.GetValue("iOldClass"); }
+		public set( const TFClassType i ){ this.SetValue("iOldClass", i); }
+	}
 
 	public void MakeProp(const bool announce, bool override = true)
 	{
@@ -110,7 +115,7 @@ methodmap JailHunter < JBPlayer
 		PropData propData[PropData];
 		if (override)
 			this.iLastProp = -1;
-		
+
 		// fire in a nice random model
 		char model[PLATFORM_MAX_PATH];
 		char offset[32] = "0 0 0";
@@ -326,6 +331,7 @@ public void fwdOnClientInduction(const JBPlayer Player)
 	base.bHoldingLMB = false;
 	base.bHoldingRMB = false;
 	base.bFirstPerson = false;
+	base.iOldClass = TFClass_Unknown;
 }
 
 public void fwdOnDownloads()
@@ -448,10 +454,21 @@ public void fwdOnCheckLivingPlayers()
 	if (gamemode.GetProperty("iRoundState") != StateRunning || NotPH || !JBPH[StaticPropInfo].BoolValue)
 		return;
 
+	JailHunter base;
+
 	for (int i = MaxClients; i; --i)
 	{
-		if (!IsClientInGame(i) || !IsPlayerAlive(i))
+		if (!IsClientInGame(i))
 			continue;
+		if (!IsPlayerAlive(i))
+		{
+			base = JailHunter(i);
+			if (base.iOldClass != TFClass_Unknown)
+			{
+				TF2_SetPlayerClass(i, base.iOldClass);
+				base.iOldClass = TFClass_Unknown;
+			}
+		}
 
 		QueryClientConVar(i, "r_staticpropinfo", KickCallBack);
 	}
@@ -853,6 +870,7 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 	{
 		case TFTeam_Red:
 		{
+			base.iOldClass = TF2_GetPlayerClass(client);
 			TF2_SetPlayerClass(client, TFClass_Scout);
 			base.MakeProp(JBPH[PropNameOnGive].BoolValue);
 
@@ -1020,7 +1038,7 @@ public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Even
 	JailHunter player = ToJailHunter(victim);
 	player.Init_PH(true);
 
-	if (!player.bIsProp)
+	if (GetClientTeam(victim.index) == BLU)
 		return;
 
 	RequestFrame(RemoveRagdoll, victim.index);
@@ -1032,7 +1050,7 @@ public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Even
 
 	SetEntityHealth(attacker.index, GetEntProp(attacker.index, Prop_Data, "m_iMaxHealth"));
 
-	if (bFirstBlood && IsClientValid(attacker.index) && attacker.index != victim.index)
+	if (bFirstBlood && attacker.index != victim.index)
 	{
 		TF2_AddCondition(attacker.index, TFCond_Kritzkrieged, 8.0);
 		char s[PLATFORM_MAX_PATH];
@@ -1078,13 +1096,12 @@ public void fwdOnLRTextHud(char strHud[128])
 
 	strcopy(strHud, 128, "Prophunt");
 }
-public void fwdOnPanelAdd(Menu &menu)
+public void fwdOnPanelAdd(const int index, char name[64])
 {
-	if (!JBPH[Enabled].BoolValue)
+	if (!JBPH[Enabled].BoolValue || index != JBPHIndex)
 		return;
 
-	char menuitem[4]; IntToString(JBPHIndex, menuitem, sizeof(menuitem));
-	menu.AddItem(menuitem, "Prophunt- Find and kill all the cowardly props!");
+	strcopy(name, sizeof(name), "Prophunt- Find and kill all the cowardly props!");
 }
 public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 {
@@ -1112,6 +1129,7 @@ public void fwdOnResetVariables(const JBPlayer Player)
 	player.bHoldingLMB = false;
 	player.bHoldingRMB = false;
 	player.bFirstPerson = false;
+	player.iOldClass = TFClass_Unknown;
 	
 	if (GetClientTeam(client) == RED)
 	{

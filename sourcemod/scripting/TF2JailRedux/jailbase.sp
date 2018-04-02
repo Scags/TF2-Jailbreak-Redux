@@ -1,6 +1,7 @@
 public char strCustomLR[64];	// Used for formatting the player custom lr say hook
 
 int EnumTNPS[4][eTextNodeParams];
+float vecOld[MAXPLAYERS+1][3];
 
 StringMap hJailFields[MAXPLAYERS+1];
 
@@ -180,18 +181,6 @@ methodmap JailFighter
 		public set( const bool i )
 		{
 			hJailFields[this.index].SetValue("bLasering", i);
-		}
-	}
-	property bool bEvilBeamed
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bEvilBeamed", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bEvilBeamed", i);
 		}
 	}
 #if defined _clientprefs_included
@@ -412,6 +401,7 @@ methodmap JailFighter
 			return;
 		if (this.bIsAdmin)
 			return;
+
 		int client = this.index;
 		if (!AlreadyMuted(client))
 		{
@@ -441,18 +431,13 @@ methodmap JailFighter
 	 *
 	 *	@noreturn
 	*/
-	public void GiveFreeday( bool togglequeued = false )
+	public void GiveFreeday()
 	{
-		if (!this.bEvilBeamed)	// Failsafe
-			ServerCommand("sm_evilbeam #%d", this.userid);
 		int flags = GetEntityFlags(this.index) | FL_NOTARGET;
 		SetEntityFlags(this.index, flags);
 
-		if (togglequeued)
-			if (this.bIsQueuedFreeday)
-				this.bIsQueuedFreeday = false;
+		this.bIsQueuedFreeday = false;
 		this.bIsFreeday = true;
-		this.bEvilBeamed = true;
 
 		Call_OnFreedayGiven(this);
 	}
@@ -466,11 +451,7 @@ methodmap JailFighter
 		int client = this.index;
 		int flags = GetEntityFlags(client) & ~FL_NOTARGET;
 		SetEntityFlags(client, flags);
-		if (this.bEvilBeamed)
-			ServerCommand("sm_evilbeam #%d", this.userid);
-		this.bEvilBeamed = false;
 		this.bIsFreeday = false;
-		//SetEntProp(client, Prop_Data, "m_takedamage", 2, 1);
 
 		Call_OnFreedayRemoved(this);
 	}
@@ -578,6 +559,13 @@ methodmap JailFighter
 		this.bIsWarden = false;
 		this.bLasering = false;
 		this.SetCustomModel("");
+
+		if (JBGameMode_GetProperty("iRoundState") == StateRunning)
+		{
+			float time = cvarTF2Jail[WardenTimer].FloatValue;
+			if (time != 0.0)
+				SetPawnTimer(DisableWarden, time, JBGameMode_GetProperty("iRoundCount"));
+		}
 	}
 	/**
 	 *	Remove all weapons, disguises, and wearables from a client.
@@ -704,9 +692,9 @@ methodmap JailFighter
 	{
 		switch (location)
 		{
-			case 1:TeleportEntity(this.index, flFreedayPosition, NULL_VECTOR, NULL_VECTOR);
-			case 2:TeleportEntity(this.index, flWardayRed, NULL_VECTOR, NULL_VECTOR);
-			case 3:TeleportEntity(this.index, flWardayBlu, NULL_VECTOR, NULL_VECTOR);
+			case 1:if (JBGameMode_GetProperty("bFreedayTeleportSet")) TeleportEntity(this.index, flFreedayPosition, NULL_VECTOR, NULL_VECTOR);
+			case 2:if (JBGameMode_GetProperty("bWardayTeleportSetRed")) TeleportEntity(this.index, flWardayRed, NULL_VECTOR, NULL_VECTOR);
+			case 3:if (JBGameMode_GetProperty("bWardayTeleportSetBlue")) TeleportEntity(this.index, flWardayBlu, NULL_VECTOR, NULL_VECTOR);
 		}
 	}
 	/**

@@ -1,6 +1,7 @@
-int
+int	// Particles
 	iHalo,
-	iLaserBeam
+	iLaserBeam,
+	iHalo2
 ;
 
 methodmap JailGameMode < StringMap
@@ -507,11 +508,7 @@ methodmap JailGameMode < StringMap
 		JailFighter player = this.FindWarden();
 		player.WardenUnset();
 		this.bWardenExists = false;
-		if (this.iRoundState == StateRunning)
-		{
-			if (cvarTF2Jail[WardenTimer].BoolValue)
-				SetPawnTimer(DisableWarden, cvarTF2Jail[WardenTimer].FloatValue, this.iRoundCount);
-		}
+
 		if (prevent)
 			player.bLockedFromWarden = true;
 		if (announce)
@@ -533,6 +530,9 @@ methodmap JailGameMode < StringMap
 			{
 				if (IsValidEntity(ent))
 				{
+					if (GetEntProp(ent, Prop_Data, "m_eSpawnPosition"))	// If already open, ignore
+						continue;
+
 					AcceptEntityInput(ent, "Unlock");
 					AcceptEntityInput(ent, "Open");
 				}

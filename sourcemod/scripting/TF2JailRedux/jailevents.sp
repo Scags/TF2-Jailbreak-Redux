@@ -8,13 +8,16 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	if (!IsClientValid(client))
 		return Plugin_Continue;
 
+	ResetPlayer(client);
+
 	JailFighter player = JailFighter(client);
+	player.SetCustomModel("");
 
 	switch (GetClientTeam(client))
 	{
 		case RED:
 		{
-			if (player.bIsQueuedFreeday && gamemode.iRoundState == StateStarting)	// Only teleport at round start
+			if (player.bIsQueuedFreeday)
 			{
 				player.GiveFreeday();
 				player.TeleportToPosition(FREEDAY);
@@ -22,7 +25,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		}
 		case BLU:
 		{
-			if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue && gamemode.iRoundState == StateStarting)
+			if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue && (gamemode.iRoundState == StateStarting || gamemode.iRoundState == StateEnding))
 			{
 				player.ForceTeamChange(RED);
 				EmitSoundToClient(client, NO);
@@ -95,14 +98,8 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		gamemode.bWardenExists = false;
 
 		if (gamemode.iRoundState == StateRunning)
-		{
 			if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue)
 				PrintCenterTextAll("Warden has been killed!");
-
-			float time = cvarTF2Jail[WardenTimer].FloatValue;
-			if (time != 0.0)
-				SetPawnTimer(DisableWarden, time, gamemode.iRoundCount);
-		}
 	}
 
 	if (victim.iCustom)
@@ -147,14 +144,18 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 			continue;
 
 		player = JailFighter(i);
+		if (player.bIsQueuedFreeday && IsPlayerAlive(i))
+		{
+			player.GiveFreeday();
+			player.TeleportToPosition(FREEDAY);
+		}
+
 		ResetVariables(player, false);
 	}
 
-	gamemode.iLRType = -1;
+	// gamemode.iLRType = -1;
 	gamemode.DoorHandler(CLOSE);
 	gamemode.bDisableCriticals = false;
-	gamemode.bOneGuardLeft = false;
-	gamemode.bOnePrisonerLeft = false;
 	gamemode.iRoundState = StateStarting;
 
 	return Plugin_Continue;
@@ -220,7 +221,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		gamemode.DoorHandler(OPEN);
 		PrintCenterTextAll("1st round freeday");
 
-		char s1stDay[256];
+		char s1stDay[32];
 		strcopy(s1stDay, sizeof(s1stDay), "First Day Freeday");
 		SetTextNode(hTextNodes[0], s1stDay, EnumTNPS[0][fCoord_X], EnumTNPS[0][fCoord_Y], EnumTNPS[0][fHoldTime], EnumTNPS[0][iRed], EnumTNPS[0][iGreen], EnumTNPS[0][iBlue], EnumTNPS[0][iAlpha], EnumTNPS[0][iEffect], EnumTNPS[0][fFXTime], EnumTNPS[0][fFadeIn], EnumTNPS[0][fFadeOut]);
 		
@@ -230,11 +231,11 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	}
 
 	bool warday;
-	float delay;
+	float delay, dooropen;
+	int cloak;
 
 	gamemode.iLRType = gamemode.iLRPresetType;
 	gamemode.iRoundState = StateRunning;
-
 
 	ManageRoundStart();		// THESE FIRE BEFORE INITIALIZATION FUNCTIONS IN THE PLAYER LOOP
 	ManageCells();			// This is the only (easy) way for the VSH sub-plugin to grab a random player
@@ -246,6 +247,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	SetPawnTimer(_MusicPlay, 1.4);
 
 	warday = gamemode.bIsWarday;
+
 	for (i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
@@ -254,18 +256,35 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 			continue;
 
 		player = JailFighter(i);
-		player.bIsQueuedFreeday = false;
-
 		OnLRActivate(player);
 
 		if (warday)
+		{
 			player.TeleportToPosition(GetClientTeam(i));
+
+			if (GetIndexOfWeaponSlot(i, TFWeaponSlot_Melee) == 589 && GetClientTeam(i) == BLU)
+			{
+				TF2_RemoveWeaponSlot(i, TFWeaponSlot_Melee);
+				player.SpawnWeapon("tf_weapon_wrench", 7, 1, 0, "");
+			}
+
+			cloak = GetPlayerWeaponSlot(i, 4);
+			if (cloak > MaxClients && IsValidEdict(cloak) && GetEntProp(cloak, Prop_Send, "m_iItemDefinitionIndex") == 60)
+			{
+				TF2_RemoveWeaponSlot(i, 4);
+				player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "");
+			}
+		}
 	}
 
 	gamemode.iLRPresetType = -1;
-	
-	if (gamemode.bIsMapCompatible && cvarTF2Jail[DoorOpenTimer].FloatValue != 0.0)
-		SetPawnTimer(Open_Doors, cvarTF2Jail[DoorOpenTimer].FloatValue, gamemode.iRoundCount);
+
+	if (gamemode.bIsMapCompatible)
+	{
+		dooropen = cvarTF2Jail[DoorOpenTimer].FloatValue;
+		if (dooropen != 0.0)
+			SetPawnTimer(Open_Doors, dooropen, gamemode.iRoundCount);
+	}
 
 	delay = cvarTF2Jail[WardenDelay].FloatValue;
 	if (delay != 0.0)
@@ -289,23 +308,20 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 
 	for (i = MaxClients; i; --i)
 	{
-		if (!IsValidClient(i))
+		if (!IsClientValid(i))
 			continue;
 		
 		if (attrib)
 			TF2Attrib_RemoveAll(i);
 
 		player = JailFighter(i);
-		player.bLockedFromWarden = false;
 
 		if (player.bIsFreeday)
 			player.RemoveFreeday();
 
 		for (x = 0; x < sizeof(hTextNodes); x++)
-		{
 			if (hTextNodes[x] != null)
 				ClearSyncHud(i, hTextNodes[x]);
-		}
 
 		if (GetClientMenu(i) != MenuSource_None && !IsVoteInProgress())
 			CancelClientMenu(i, true);
@@ -322,7 +338,9 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	gamemode.bIsLRInUse = false;
 	gamemode.bDisableCriticals = false;
 	gamemode.bIsWarday = false;
-	// gamemode.iLRType = -1;
+	gamemode.bOneGuardLeft = false;
+	gamemode.bOnePrisonerLeft = false;
+	gamemode.iLRType = -1;
 	gamemode.iTimeLeft = 0; // Had to set it to 0 here because it kept glitching out... odd
 	gamemode.iRoundState = StateEnding;
 

@@ -775,11 +775,10 @@ public void _ResetMediCharge(const int entid)
 public void _BossDeath(const int userid)
 {
 	int client = GetClientOfUserId(userid);
-	if (IsValidClient(client, false)) 
+	if (IsClientValid(client)) 
 	{
 		JailBoss player = JailBoss(client);
 		player.iHealth = 0;
-		
 		ManageBossDeath(player);
 	}
 }
@@ -953,11 +952,11 @@ public void ManageRoundEndBossInfo(bool bossWon)
 
 	switch (base.iType) 
 	{
-		case Vagineer:Format(gameMessage, MAXMESSAGE, "\nThe Vagineer (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case HHHjr:Format(gameMessage, MAXMESSAGE, "\nThe Horseless Headless Horsemann Jr. (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case CBS:Format(gameMessage, MAXMESSAGE, "\nThe Christian Brutal Sniper (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case Bunny:Format(gameMessage, MAXMESSAGE, "\nThe Easter Bunny (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case Hale:Format(gameMessage, MAXMESSAGE, "\nSaxton Hale (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case Vagineer:Format(gameMessage, 4096, "\nThe Vagineer (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case HHHjr:Format(gameMessage, 4096, "\nThe Horseless Headless Horsemann Jr. (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case CBS:Format(gameMessage, 4096, "\nThe Christian Brutal Sniper (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case Bunny:Format(gameMessage, 4096, "\nThe Easter Bunny (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case Hale:Format(gameMessage, 4096, "\nSaxton Hale (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
 	}
 	if (bossWon) 
 	{
@@ -1947,11 +1946,11 @@ public void ManageBossCheckHealth(const JailBoss base)
 			
 			switch (boss.iType) 
 			{
-				case Vagineer:Format(gameMessage, MAXMESSAGE, "%s\nThe Vagineer's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case HHHjr:Format(gameMessage, MAXMESSAGE, "%s\nThe Horseless Headless Horsemann Jr's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case CBS:Format(gameMessage, MAXMESSAGE, "%s\nThe Christian Brutal Sniper's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case Hale:Format(gameMessage, MAXMESSAGE, "%s\nSaxton Hale's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case Bunny:Format(gameMessage, MAXMESSAGE, "%s\nThe Easter Bunny's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case Vagineer:Format(gameMessage, 4096, "%s\nThe Vagineer's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case HHHjr:Format(gameMessage, 4096, "%s\nThe Horseless Headless Horsemann Jr's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case CBS:Format(gameMessage, 4096, "%s\nThe Christian Brutal Sniper's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case Hale:Format(gameMessage, 4096, "%s\nSaxton Hale's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case Bunny:Format(gameMessage, 4096, "%s\nThe Easter Bunny's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
 			}
 			totalHealth += boss.iHealth;
 		}
@@ -1976,11 +1975,11 @@ public void ManageMessageIntro()
 	switch (base.iType) 
 	{
 		case  - 1: {  }
-		case Hale:Format(gameMessage, MAXMESSAGE, "\n%N has become Saxton Hale with %i Health", base.index, base.iHealth);
-		case Vagineer:Format(gameMessage, MAXMESSAGE, "\n%N has become the Vagineer with %i Health", base.index, base.iHealth);
-		case CBS:Format(gameMessage, MAXMESSAGE, "\n%N has become the Christian Brutal Sniper with %i Health", base.index, base.iHealth);
-		case HHHjr:Format(gameMessage, MAXMESSAGE, "\n%N has become The Horseless Headless Horsemann Jr. with %i Health", base.index, base.iHealth);
-		case Bunny:Format(gameMessage, MAXMESSAGE, "\n%N has become The Easter Bunny with %i Health", base.index, base.iHealth);
+		case Hale:Format(gameMessage, 4096, "\n%N has become Saxton Hale with %i Health", base.index, base.iHealth);
+		case Vagineer:Format(gameMessage, 4096, "\n%N has become the Vagineer with %i Health", base.index, base.iHealth);
+		case CBS:Format(gameMessage, 4096, "\n%N has become the Christian Brutal Sniper with %i Health", base.index, base.iHealth);
+		case HHHjr:Format(gameMessage, 4096, "\n%N has become The Horseless Headless Horsemann Jr. with %i Health", base.index, base.iHealth);
+		case Bunny:Format(gameMessage, 4096, "\n%N has become The Easter Bunny with %i Health", base.index, base.iHealth);
 	}
 	SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
 	for (i = MaxClients; i; --i) {
@@ -2041,6 +2040,7 @@ public void fwdOnManageRoundStart()
 	gamemode.SetProperty("bCellsOpened", true);
 	gamemode.SetProperty("bOneGuardLeft", true);
 	gamemode.SetProperty("bDisableCriticals", true);
+	gamemode.SetProperty("bIsWarday", true);
 	gamemode.DoorHandler(OPEN);
 	SpawnRandomHealth();
 	SpawnRandomAmmo();
@@ -2058,9 +2058,7 @@ public void fwdOnManageRoundStart()
 
 	if (!IsPlayerAlive(client))
 		TF2_RespawnPlayer(client);
-	if (gamemode.GetProperty("bWardayTeleportSetBlue"))
-		rand.TeleportToPosition(WBLU);
-	else ServerCommand("sm_freeze #%i 5", rand.userid);
+
 	rand.iMaxHealth = CalcBossHealth(760.8, gamemode.iPlaying, 1.0, 1.0341, 2046.0);
 	int maxhp = GetEntProp(client, Prop_Data, "m_iMaxHealth");
 	TF2Attrib_RemoveAll(client);
@@ -2121,7 +2119,7 @@ public void fwdOnRedThink(const JBPlayer Player)
 		strcopy(wepclassname, sizeof(wepclassname), "");
 	bool validwep = (!strncmp(wepclassname, "tf_wea", 6, false));
 	int index = GetItemIndex(weapon);
-	
+
 	switch (TFClass) 
 	{	// Chdata's Deadringer Notifier
 		case TFClass_Spy:
@@ -2526,31 +2524,26 @@ public void fwdOnUberDeployed(const JBPlayer Medic, const JBPlayer Patient)
 }
 public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 {
-	if (!JBVSH[Enabled].BoolValue || NotVSH)
+	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return;
-
+		
 	JailBoss spawn = ToJailBoss(Player);
 
 	if (spawn.bIsBoss)
-		return;
-
-	SetVariantString(""); AcceptEntityInput(spawn.index, "SetCustomModel");
-
-	/*if (spawn.bIsBoss && gamemode.GetProperty("iRoundState") < StateEnding && gamemode.GetProperty("iRoundState") != StateDisabled)
 	{
 		if (GetClientTeam(spawn.index) != BLU)
 			spawn.ForceTeamChange(BLU);
-		spawn.ConvertToBoss();
-		if (spawn.iHealth == 0)
-			spawn.iHealth = spawn.iMaxHealth);
-	}*/
+		ManageBossModels(spawn);
 
-	if (gamemode.GetProperty("iRoundState") > StateDisabled)
-	{
-		if (GetClientTeam(spawn.index) != RED)
-			spawn.ForceTeamChange(RED);
-		SetPawnTimer( PrepPlayers, 0.2, spawn.userid );
+		if (!spawn.iHealth)
+			spawn.iHealth = spawn.iMaxHealth;
+		return;
 	}
+
+	SetVariantString(""); AcceptEntityInput(spawn.index, "SetCustomModel");
+	if (GetClientTeam(spawn.index) != RED)
+		spawn.ForceTeamChange(RED);
+	SetPawnTimer( PrepPlayers, 0.2, spawn.userid );
 }
 public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 {
@@ -2560,13 +2553,12 @@ public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 	max = JBVSH[PickCount].IntValue;	// Everything else is managed in core, even if max is 0
 	strcopy(strName, sizeof(strName), "Versus Saxton Hale");
 }
-public void fwdOnPanelAdd(Menu &panel)
+public void fwdOnPanelAdd(const int index, char name[64])
 {
-	if (!JBVSH[Enabled].BoolValue)
+	if (!JBVSH[Enabled].BoolValue || index != JBVSHIndex)
 		return;
 
-	char menuitem[4]; IntToString(JBVSHIndex, menuitem, sizeof(menuitem));
-	panel.AddItem(menuitem, "Versus Saxton Hale- A nice round of VSH");
+	strcopy(name, sizeof(name), "Versus Saxton Hale- A nice round of VSH");
 }
 public void fwdOnManageTimeLeft()
 {
@@ -2721,6 +2713,9 @@ public void fwdOnVariableReset(const JBPlayer Player)
 }
 public void fwdOnCheckLivingPlayers()
 {
+	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
+		return;
+
 	JailBoss base;
 	for (int i = MaxClients; i; --i)
 	{
@@ -2734,6 +2729,17 @@ public void fwdOnCheckLivingPlayers()
 			base.bNeedsToGoBackToBlue = false;
 		}
 	}
+}
+public void fwdOnLRRoundEnd(const JBPlayer Player)
+{
+	if (!JBVSH[Enabled].BoolValue || NotVSH)
+		return;
+
+	JailBoss player = ToJailBoss(Player);
+	player.iHealth = 0;	// BUG patch; bosses could wait until round ended and carry health over to next round
+	player.iMaxHealth = 0;
+	// player.bIsBoss = false;
+	TF2Attrib_RemoveAll(Player.index);
 }
 
 public void CheckJBHooks()
@@ -2785,5 +2791,7 @@ public void CheckJBHooks()
 	if (!JB_HookEx(OnLastPrisoner, fwdOnLastPrisoner))
 		LogError("Failed to load OnLastPrisoner forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
-		LogError("Failed to load OnCheckLivingPlayers forwards for JB VSH Sub-Plugin");
+		LogError("Failed to load OnCheckLivingPlayers forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnLRRoundEnd, fwdOnLRRoundEnd))
+		LogError("Failed to load OnLRRoundEnd forwards for JB VSH Sub-Plugin!");
 }

@@ -44,6 +44,12 @@ enum
 	WBLU = 3
 };
 
+/**
+ *	Forward declared methodmap
+ *	Allows the JBGameMode_Initialize() native to return a handle to sub-plugin methodmaps
+*/
+enum JailGameMode {};
+
 stock char snd[PLATFORM_MAX_PATH];
 stock char gameMessage[4096];	// For formatting chat/hint/center/etc messages
 stock char BackgroundSong[PLATFORM_MAX_PATH];	// If you want a sweet song with your lr, try this out
@@ -1505,6 +1511,8 @@ enum	// JB Hook Types
 	OnFreedayGiven,
 	OnFreedayRemoved,
 	OnPreThink,
+	OnManageFFTimer,
+	OnLRInitialized,
 	OnPlayMusic
 };
 
@@ -1555,13 +1563,13 @@ typeset JBHookCB
 	//	OnMenuAdd
 	function void (const int index, int &max, char strName[32]);
 
+	//	OnPanelAdd
+	function void (const int index, char name[64]);
+
 	// 	OnManageRoundEnd
 	function void (Event event);
 
-	/* 
-		OnPanelAdd
-		OnWMenuAdd
-	*/
+	//	OnWMenuAdd
 	function void (Menu &menu);	
 
 	// 	OnLRTextHud
@@ -1592,8 +1600,14 @@ typeset JBHookCB
 	//	OnWardenKilled		Return anything but Continue to stop "Warden has been killed" message
 	function Action (const JBPlayer Victim, const JBPlayer Attacker, Event event);
 
-	// OnPreThink
+	//	OnPreThink
 	function void (const JBPlayer Player, int buttons);
+
+	//	OnManageFFTimer
+	function void (float &time);
+
+	//	OnLRInitialize
+	function JailGameMode (const int type, Handle handle);
 };
 
 /**
