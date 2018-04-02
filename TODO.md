@@ -14,9 +14,9 @@
 - The `*PlayerBack` stocks are shoddy and are fairly expensive to run a multitude of times in a loop, especially if configs are chock full of indexes.
 
 ## Low Priority ##
-### Depecrating SetPawnTimer() ###
-- Another method made out of laziness. A regular timer would suffice.
-- Global handles would be helpful as I could kill them during parts of the round, especially on round end.
+### ~~Depecrating SetPawnTimer()~~ ###
+- ~~Another method made out of laziness. A regular timer would suffice.~~
+- ~~Global handles would be helpful as I could kill them during parts of the round, especially on round end.~~ ❌ Works too well with both timed and async function calls. Oh well.
 
 ### ~~Undoing Macro Laziness~~ ###
 ~~- After the methodmap macro addition, I concluded that they're fairly ugly.~~
