@@ -47,7 +47,5 @@ TF2JR uses an SDKHook-style format for its forwards. With sub-plugins such as Ve
 
 ###### [TF2Attributes](https://forums.alliedmods.net/showthread.php?t=210221) ######
 
-###### [Evil Admin: Beam](https://forums.alliedmods.net/showthread.php?p=709030) ######
-
 ## Installation ##
 Detailed installation can be found in the [wiki](https://github.com/Scags/TF2-Jailbreak-Redux/wiki/Installation-Guide) along with config design.
