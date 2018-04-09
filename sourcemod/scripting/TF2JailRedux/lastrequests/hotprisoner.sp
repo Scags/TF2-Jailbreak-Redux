@@ -1,11 +1,6 @@
 
 methodmap CHotPrisoner < JailGameMode
 {
-	public CHotPrisoner( JailGameMode handle )
-	{
-		return view_as< CHotPrisoner >(handle);
-	}
-
 	public void Initialize()
 	{
 		CPrintToChatAll("{burlywood}I'm too hot! Hot damn!");

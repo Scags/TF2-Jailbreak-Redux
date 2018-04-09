@@ -108,9 +108,9 @@ methodmap JailHunter < JBPlayer
 		public set( const TFClassType i ){ this.SetValue("iOldClass", i); }
 	}
 
-	public void MakeProp(const bool announce, bool override = true)
+	public void MakeProp(const bool announce, bool override = true, bool loseweps = true)
 	{
-		this.PreEquip();
+		this.PreEquip(loseweps);
 		int client = this.index;
 		PropData propData[PropData];
 		if (override)
@@ -181,7 +181,6 @@ methodmap JailHunter < JBPlayer
 	}
 	public void Init_PH(bool compl = false)
 	{
-		int client = this.index;
 		this.iRolls = 0;
 		this.iLastProp = -1;
 		this.iFlameCount = 0;
@@ -195,6 +194,7 @@ methodmap JailHunter < JBPlayer
 		this.bFirstPerson = false;
 		if (compl)
 		{
+			int client = this.index;
 			if (GetClientTeam(client) == RED)
 			{
 				SetVariantString("ParticleEffectStop");
@@ -242,6 +242,7 @@ enum
 	Enabled,
 	PickCount,
 	ThisPlugin,
+	MedicToggling,
 	Version
 };
 
@@ -264,7 +265,7 @@ public void OnPluginStart()
 {
 	JBPH[Enabled]				 = CreateConVar("sm_jbph_enabled", "1", "Enabled the TF2Jail PH Sub-Plugin?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	JBPH[Version] 				 = CreateConVar("jbph_version", PLUGIN_VERSION, "PropHunt Version (Do not touch)", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
-	JBPH[FallDamage]			 = CreateConVar("sm_jbph_fall_damage", "1", "Enabled/Disable fall damage? (3: RED only, 2: BLU only, 1: ALL, 0: NONE", FCVAR_NOTIFY, true, 0.0, true, 3.0); 
+	JBPH[FallDamage]			 = CreateConVar("sm_jbph_fall_damage", "1", "Enabled/Disable fall damage? (3: RED only, 2: BLU only, 1: ALL, 0: NONE)", FCVAR_NOTIFY, true, 0.0, true, 3.0); 
 	JBPH[Airblast] 				 = CreateConVar("sm_jbph_airblast", "1", "Disable pyro's ability to airblast? (This doesn't matter if you've disabled it under the core TF2Jail plugin cfg)", FCVAR_NOTIFY, true, 0.0, true, 1.0); 
 	JBPH[Reroll] 				 = CreateConVar("sm_jbph_propreroll", "1", "Allow players to reroll their props?", FCVAR_NOTIFY, true, 0.0, true, 1.0); 
 	JBPH[RerollCount] 			 = CreateConVar("sm_jbph_propreroll_count", "1", "If enabled, how many times can players \"!propreroll\"?", FCVAR_NOTIFY, true, 0.0);
@@ -278,6 +279,7 @@ public void OnPluginStart()
 	JBPH[RoundTime] 			 = CreateConVar("sm_jbph_round_time", "300", "Round time in seconds. THIS ADDS TO YOUR \"sm_jbph_freeze_time\" CVAR.", FCVAR_NOTIFY, true, 0.0);
 	JBPH[PickCount] 			 = CreateConVar("sm_jbvsh_lr_max", "5", "How many times can Prophunt be picked in a single map? 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
 	JBPH[ThisPlugin] 			 = CreateConVar("sm_jbph_ilrtype", "14", "This sub-plugin's last request index. DO NOT CHANGE THIS UNLESS YOU KNOW WHAT YOU'RE DOING", FCVAR_NOTIFY, true, 0.0);
+	JBPH[MedicToggling] 		 = CreateConVar("sm_jbph_medic_toggle", "1", "Disable the medic room?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	JBPH[ThisPlugin].AddChangeHook(OnTypeChanged);
 
@@ -451,10 +453,11 @@ public void KickCallBack(const QueryCookie cookie, const int client, const ConVa
 
 public void fwdOnCheckLivingPlayers()
 {
-	if (gamemode.GetProperty("iRoundState") != StateRunning || NotPH || !JBPH[StaticPropInfo].BoolValue)
+	if (gamemode.GetProperty("iRoundState") != StateRunning || NotPH)
 		return;
 
 	JailHunter base;
+	bool query = JBPH[StaticPropInfo].BoolValue;
 
 	for (int i = MaxClients; i; --i)
 	{
@@ -468,9 +471,10 @@ public void fwdOnCheckLivingPlayers()
 				TF2_SetPlayerClass(i, base.iOldClass);
 				base.iOldClass = TFClass_Unknown;
 			}
+			continue;
 		}
-
-		QueryClientConVar(i, "r_staticpropinfo", KickCallBack);
+		if (query)
+			QueryClientConVar(i, "r_staticpropinfo", KickCallBack);
 	}
 }
 
@@ -490,8 +494,7 @@ public Action fwdOnLastPrisoner()
 			SetEntityHealth(i, GetEntProp(i, Prop_Data, "m_iMaxHealth"));
 
 			JailHunter player = JailHunter(i);
-			player.PreEquip(false);
-			player.MakeProp(JBPH[PropNameOnGive].BoolValue);
+			player.MakeProp(JBPH[PropNameOnGive].BoolValue, false, false);
 			player.SetWepInvis(0);
 		}
 		else TF2_AddCondition(i, TFCond_Jarated, 15.0);
@@ -712,9 +715,13 @@ public void OnGameFrame()
 
 public void RemoveRagdoll(const int client)
 {
+	if (!IsClientValid(client))
+		return;
+
 	int rag = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
 	if (rag > MaxClients && IsValidEntity(rag))
 		AcceptEntityInput(rag, "Kill");
+
 	RemoveAnimeModel(client);
 }
 
@@ -855,10 +862,10 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 
 	JailHunter base = ToJailHunter(player);
 	int client = base.index;
-	TF2Attrib_RemoveAll(client);
 
 	if (gamemode.GetProperty("bTF2Attribs"))
 	{
+		TF2Attrib_RemoveAll(client);
 		switch (JBPH[FallDamage].IntValue)
 		{
 			case 1:TF2Attrib_SetByDefIndex(client, 275, 1.0);
@@ -873,6 +880,7 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 			base.iOldClass = TF2_GetPlayerClass(client);
 			TF2_SetPlayerClass(client, TFClass_Scout);
 			base.MakeProp(JBPH[PropNameOnGive].BoolValue);
+			SetEntityHealth(client, 125);
 
 			switch (JBPH[Teleportation].IntValue)
 			{
@@ -909,8 +917,8 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 
 			switch (JBPH[Teleportation].IntValue)
 			{
-				case 1, 5:if (gamemode.GetProperty("bWardayTeleportSetBlue")) base.TeleportToPosition(WBLU);
-				case 2:if (gamemode.GetProperty("bFreedayTeleportSet")) base.TeleportToPosition(FREEDAY);
+				case 1, 5:base.TeleportToPosition(WBLU);
+				case 2:base.TeleportToPosition(FREEDAY);
 			}
 		}
 	}
@@ -928,6 +936,9 @@ public void fwdOnManageRoundStart()
 	gamemode.DoorHandler(OPEN);
 	gamemode.OpenAllDoors();
 
+	if (JBPH[MedicToggling].BoolValue)
+		gamemode.ToggleMedic(false);
+		
 	float rerolltime = JBPH[RerollTime].FloatValue;
 	if (rerolltime != 0.0)
 		SetPawnTimer(DisallowRerolls, rerolltime, gamemode.GetProperty("iRoundCount"));
@@ -1074,20 +1085,11 @@ public void fwdOnManageTimeLeft()
 
 	gamemode.SetProperty("iTimeLeft", JBPH[RoundTime].IntValue + JBPH[FreezeTime].IntValue);
 }
-public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int value, ArrayList &arrLRS)
+public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
 {
-	if (!JBPH[Enabled].BoolValue || selection != JBPHIndex)
-		return;
-
-	if (value >= JBPH[PickCount].IntValue)
-	{
-		CPrintToChat(Player.index, "{crimson}[TF2Jail]{burlywood} This LR has been picked the maximum amount of times for this map.");
-		Player.ListLRS();
-		return;
-	}
-	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has decided to play a round of {default}Prophunt{burlywood}.", Player.index);
-	arrLRS.Set( selection, value+1 );
-	gamemode.SetProperty("iLRPresetType", JBPHIndex);
+	if (JBPH[Enabled].BoolValue && selection == JBPHIndex)
+		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has decided to play a round of {default}Prophunt{burlywood}.", Player.index);
+	return Plugin_Continue;
 }
 public void fwdOnLRTextHud(char strHud[128])
 {

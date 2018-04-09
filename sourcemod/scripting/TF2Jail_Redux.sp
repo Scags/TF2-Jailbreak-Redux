@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.13.6"
+#define PLUGIN_VERSION		"0.13.8"
 #define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -91,6 +91,7 @@ enum	// Cvar name
 	NoDoubleJump,
 	DenyLR,
 	WardenLaser,
+	WardenToggleMedic,
 	Version
 };
 
@@ -189,6 +190,7 @@ public void OnPluginStart()
 	cvarTF2Jail[NoDoubleJump] 				= CreateConVar("sm_tf2jr_double_jump", "1", "Disable Scout doublejump? (Requires TF2Attributes)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[DenyLR] 					= CreateConVar("sm_tf2jr_warden_deny_lr", "1", "Allow Wardens to deny the queued last request?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WardenLaser] 				= CreateConVar("sm_tf2jr_warden_laser", "1", "Allow Wardens to use laser pointers?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[WardenToggleMedic] 			= CreateConVar("sm_tf2jr_warden_toggle_medic", "0", "Allow Wardens to toggle the medic room?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -249,6 +251,9 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_wmk", Command_WardenMarker, "Allows the Warden to create a marker that players can see/hear.");
 	RegConsoleCmd("sm_wlaser", Command_WardenLaser, "Allows the Warden to use a laser pointer by holding Reload.");
 	RegConsoleCmd("sm_wl", Command_WardenLaser, "Allows the Warden to use a laser pointer by holding Reload.");
+	RegConsoleCmd("sm_wtm", Command_WardenToggleMedic, "Allows the Warden to toggle the medic room.");
+	RegConsoleCmd("sm_wtmedic", Command_WardenToggleMedic, "Allows the Warden to toggle the medic room.");
+	RegConsoleCmd("sm_wtogglemedic", Command_WardenToggleMedic, "Allows the Warden to toggle the medic room.");
 
 	RegAdminCmd("sm_rw", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
 	RegAdminCmd("sm_removewarden", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
@@ -284,6 +289,9 @@ public void OnPluginStart()
 	RegAdminCmd("sm_startwarday", AdminFullWarday, ADMFLAG_GENERIC, "Teleport all players to their warday teleport location.");
 	RegAdminCmd("sm_sw", AdminFullWarday, ADMFLAG_GENERIC, "Teleport all players to their warday teleport location.");
 	RegAdminCmd("sm_reloadjailcfg", AdminReloadCFG, ADMFLAG_GENERIC, "Reload TF2Jail Redux's config file.");
+	RegAdminCmd("sm_tm", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
+	RegAdminCmd("sm_tmedic", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
+	RegAdminCmd("sm_togglemedic", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
 
 	RegAdminCmd("sm_setpreset", SetPreset, ADMFLAG_ROOT, "Set gamemode.iLRPresetType. (DEBUGGING)");
 	RegAdminCmd("sm_itype", Type, ADMFLAG_ROOT, "gamemode.iLRType. (DEBUGGING)");
@@ -508,22 +516,13 @@ public void OnClientPostAdminCheck(int client)
 
 	SetPawnTimer(WelcomeMessage, 5.0, player.userid);
 
-	if (strVIP[0] != '\0')
-	{
-		if (IsValidAdmin(client, strVIP)) // Very useful stock ^^
-			player.bIsVIP = true;
-	}
+	if (strVIP[0] != '\0' && IsValidAdmin(client, strVIP)) // Very useful stock ^^
+		player.bIsVIP = true;
 	else player.bIsVIP = false;
 
-	if (strAdmin[0] != '\0')
-	{
-		if (IsValidAdmin(client, strAdmin))
-			player.bIsAdmin = true;
-	}
+	if (strAdmin[0] != '\0' && IsValidAdmin(client, strAdmin))
+		player.bIsAdmin = true;
 	else player.bIsVIP = false;
-
-	// if (cvarTF2Jail[MuteType].IntValue >= 4)
-		// player.MutePlayer();
 }
 
 public Action OnTouch(int toucher, int touchee)
@@ -546,7 +545,7 @@ public Action Timer_PlayerThink(Handle timer)
 		return Plugin_Continue;
 
 	if (gamemode.flMusicTime <= GetGameTime() && cvarTF2Jail[EnableMusic].BoolValue)
-		_MusicPlay();
+		MusicPlay();
 
 	JailFighter player;
 	int type = cvarTF2Jail[MuteType].IntValue;
@@ -726,6 +725,11 @@ public void OnEntTouch(const char[] output, int touchee, int toucher, float dela
 		player.RemoveFreeday();
 		PrintCenterTextAll("%N has taken ammo and lost their freeday!", toucher);
 	}
+}
+
+public void OnFirstCellOpening(const char[] output, int touchee, int toucher, float delay)
+{
+	gamemode.bFirstDoorOpening = true;
 }
 
 public Action OnEntTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -1053,11 +1057,6 @@ public void ResetModelProps(const int client)
 	SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
 }
 
-public void Regen(const int client)
-{
-	TF2_RegeneratePlayer(client);
-}
-
 public void DisableWarden(const int roundcount)
 {
 	if (roundcount != gamemode.iRoundCount 
@@ -1092,13 +1091,9 @@ public void RemoveEnt(any data)
 		AcceptEntityInput(ent, "Kill");
 }
 
-public void _MusicPlay()
+public void MusicPlay()
 {
 	if (gamemode.iRoundState != StateRunning)
-		return;
-
-	float currtime = GetGameTime();
-	if (gamemode.flMusicTime > currtime)
 		return;
 
 	char sound[PLATFORM_MAX_PATH] = "";
@@ -1123,7 +1118,7 @@ public void _MusicPlay()
 		}
 	}
 	if (time != -1.0)
-		gamemode.flMusicTime = currtime + time;
+		gamemode.flMusicTime = GetGameTime() + time;
 }
 
 public void StopBackGroundMusic()
@@ -1142,7 +1137,6 @@ public bool CheckSet(const int client, const int count, const int max)
 	{
 		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} This LR has been picked the maximum amount of times for this map.");
 		JailFighter(client).ListLRS();
-		//ListLastRequests(client);
 		return false;
 	}
 	return true;
@@ -1378,6 +1372,14 @@ public Action OnEntSpawn(int ent)
 	return Plugin_Handled;
 }
 
+public Action OnBuildingSpawn(int ent)
+{
+	if (IsValidEntity(ent))
+		if (!gamemode.bAllowBuilding)
+			AcceptEntityInput(ent, "Kill");
+	return Plugin_Continue;
+}
+
 // Props to Nergal!!!
 stock Handle FindPluginByName(const char name[64]) // Searches in linear time or O(n) but it only searches when TF2Jail's plugin's loaded
 {
@@ -1475,9 +1477,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBGameMode_Playing", Native_JBGameMode_Playing);
 	CreateNative("JBGameMode_ManageCells", Native_JBGameMode_ManageCells);
 	CreateNative("JBGameMode_FindRandomWarden", Native_JBGameMode_FindRandomWarden);
-	CreateNative("JBGameMode_FindWarden", Native_JBGameMode_FindWarden);
+	CreateNative("JBGameMode_Warden", Native_JBGameMode_Warden);
 	CreateNative("JBGameMode_FireWarden", Native_JBGameMode_FireWarden);
 	CreateNative("JBGameMode_OpenAllDoors", Native_JBGameMode_OpenAllDoors);
+	CreateNative("JBGameMode_ToggleMedic", Native_JBGameMode_ToggleMedic);
+	// CreateNative("JBGameMode_ToggleMedicTeam", Native_JBGameMode_ToggleMedicTeam);
 		/* Gamemode StringMap */
 	CreateNative("JBGameMode_GetProperty", Native_JBGameMode_GetProperty);
 	CreateNative("JBGameMode_SetProperty", Native_JBGameMode_SetProperty);
@@ -1709,9 +1713,9 @@ public int Native_JBGameMode_ManageCells(Handle plugin, int numParams)
 	eDoorsMode status = GetNativeCell(1);
 	gamemode.DoorHandler(status);
 }
-public int Native_JBGameMode_FindWarden(Handle plugin, int numParams)
+public int Native_JBGameMode_Warden(Handle plugin, int numParams)
 {
-	return view_as< int >(gamemode.FindWarden());
+	return view_as< int >(gamemode.Warden);
 }
 public int Native_JBGameMode_FireWarden(Handle plugin, int numParams)
 {
@@ -1723,6 +1727,16 @@ public int Native_JBGameMode_OpenAllDoors(Handle plugin, int numParams)
 {
 	gamemode.OpenAllDoors();
 }
+public int Native_JBGameMode_ToggleMedic(Handle plugin, int numParams)
+{
+	bool status = GetNativeCell(1);
+	gamemode.ToggleMedic(status);
+}
+/*public int Native_JBGameMode_ToggleMedicTeam(Handle plugin, int numParams)
+{
+	int team = GetNativeCell(1);
+	gamemode.ToggleMedicTeam(team);
+}*/
 
 public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)
 {

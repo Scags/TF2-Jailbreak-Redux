@@ -210,14 +210,9 @@ public void ManageRoundStart()
 			int iClassRED = arrClass[GetRandomInt(0, 7)];
 			int iClassBLU = arrClass[GetRandomInt(0, 7)];
 			for (int i = MaxClients; i; --i)
-			{
-				if (!IsClientInGame(i) || !IsPlayerAlive(i))
-					continue;
+				if (IsClientInGame(i) && IsPlayerAlive(i))
+					TF2_SetPlayerClass(i, view_as< TFClassType >( (GetClientTeam(i) == RED ? iClassRED : iClassBLU)) );
 
-				if (GetClientTeam(i) == RED)
-					TF2_SetPlayerClass(i, view_as< TFClassType >(iClassRED));
-				else TF2_SetPlayerClass(i, view_as< TFClassType >(iClassBLU));
-			}
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
 		}
@@ -259,6 +254,17 @@ public void OnLRActivate(const JailFighter player)
 	Call_OnLRRoundActivate(player);
 }
 /**
+ *	Self explanatory, set the gamemode.iTimeLeft to whatever time (in seconds) you desire
+*/
+public void ManageTimeLeft()
+{
+	switch (gamemode.iLRType)
+	{
+		default:gamemode.iTimeLeft = cvarTF2Jail[RoundTime].IntValue;
+	}
+	Call_OnManageTimeLeft();
+}
+/**
  *	Calls on round end without players so we don't fire again for every player
 */
 public void ManageOnRoundEnd(Event event)
@@ -267,7 +273,7 @@ public void ManageOnRoundEnd(Event event)
 	{
 		case Gravity:hEngineConVars[2].SetInt(800);
 		case RandomKill:SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), gamemode.iRoundCount);
-		case HHHDay: ToCHHHDay(gamemode).Terminate(event);
+		case HHHDay:ToCHHHDay(gamemode).Terminate(event);
 		case HotPrisoner:ToCHotPrisoner(gamemode).Terminate(event);
 	}
 	Call_OnManageRoundEnd(event);
@@ -283,7 +289,6 @@ public void ManageRoundEnd(const JailFighter base)
 		case HHHDay:ToCHHHDay(gamemode).ManageEnd(base);
 		case HotPrisoner:ToCHotPrisoner(gamemode).ManageEnd(base);
 	}
-
 	Call_OnLRRoundEnd(base);
 }
 /**
@@ -310,7 +315,6 @@ public void ManageWarden(const JailFighter base)
 	{
 		default: {	}
 	}
-
 	Call_OnWardenGet(base);
 }
 /**
@@ -338,7 +342,6 @@ public void ManageFFTimer()
 		:time = 10.0;
 		default: {	}
 	}
-
 	Call_OnManageFFTimer(time);
 
 	if (time != 0.0)
@@ -445,6 +448,7 @@ public Action SoundHook(int clients[64], int &numClients, char sample[PLATFORM_M
 	{
 		case HHHDay:return ToCHHHDay(gamemode).HookSound(base, sample, entity);
 	}
+
 	return Plugin_Continue;
 }
 /**
@@ -456,7 +460,6 @@ public void ManageOnPreThink(const JailFighter base, int buttons)
 	{
 		default: {	}
 	}
-
 	Call_OnPreThink(base, buttons);
 }
 /**
@@ -525,7 +528,6 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 			}
 		}
 	}
-
 	Call_OnPlayerDied(victim, attacker, event);
 }
 /**
@@ -579,254 +581,6 @@ public void CheckLivingPlayers()
 		}
 	}
 	Call_OnCheckLivingPlayers();
-}
-/**
- *	Determines if a player's attack is to be critical
-*/
-/*public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool & result)
-{
-	if (!bEnabled.BoolValue)
-		return Plugin_Continue;
-
- 	if (!IsClientValid(client))
- 		return Plugin_Continue;
-
- 	JailFighter base = JailFighter(client);
- 	switch (gamemode.iLRType)
- 	{ 	}
- 	return Plugin_Continue;
-}*/
-/**
- *	Add lr to the LR menu obviously
-*/
-public void AddLRToMenu(Menu &menu)
-{
-	char strName[32], strID[4], strValue[16];
-	int i, max, value, def = cvarTF2Jail[LRDefault].IntValue;
-
-	menu.AddItem("-1", "Random LR");
-	for (i = 0; i <= LRMAX; i++)
-	{
-		max = def;
-		strValue[0] = '\0';
-		strName[0] = '\0';
-		// if (i == Warday)	// If you want a certain last request to have a different max, do something like this
-			// max = 3;
-		Call_OnMenuAdd(i, max, strName);
-
-		if (max)
-		{
-			value = arrLRS.Get(i);
-			Format(strValue, sizeof(strValue), " (%i/%i)", value, max);
-		}
-
-		if (i < sizeof(strLRNames))	// If not a sub-plugin
-			Format(strName, sizeof(strName), "%s%s", strName, strLRNames[i]);
-		Format(strName, sizeof(strName), "%s%s", strName, strValue);	// Forward pre-formats strName
-
-		IntToString(i, strID, sizeof(strID));
-		menu.AddItem(strID, strName, (max && value >= max) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
-	}
-}
-/**
- *	Add a 'short' description to your last request for the !listlrs command
-*/
-public void AddLRToPanel(Menu &panel)
-{
-	char id[4], name[64];
-	for (int i = 0; i < LRMAX; i++)
-	{
-		name[0] = '\0';
-		switch (i)
-		{
-			case 0:name = "Suicide- Kill yourself on the spot";
-			case 1:name = "Custom- Type your own last request";
-			case 2:name = "Freeday for Yourself- Give yourself a freeday";
-			case 3:Format(name, sizeof(name), "Freeday for Others- Give up to %d freedays to others", cvarTF2Jail[FreedayLimit].IntValue);
-			case 4:name = "Freeday for All- Give everybody a freeday";
-			case 5:name = "Guards Melee Only- Those guns are for babies!";
-			case 6:name = "Headless Horsemann Day- Turns all players into the HHH";
-			case 7:name = "Tiny Round- Honey I shrunk the players";
-			case 8:name = "Hot Prisoner- Prisoners are too hot to touch";
-			case 9:name = "Low Gravity- Where did the gravity go";
-			case 10:name = "Sniper- A hired gun to take out some folks";
-			case 11:name = "Warday- Team Deathmatch";
-			case 12:name = "Class Wars- Class versus class Warday";
-		}
-
-		Call_OnPanelAdd(i, name);
-
-		IntToString(i, id, sizeof(id));
-		panel.AddItem(id, name);
-	}
-}
-/** 
- *	Called when player is given lr and is selecting. Place your lr under the MenuAction_Select case
- *	Use the already given lr's as a guide if you need help
- *	CheckSet() is purely used for safety
-*/
-public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
-{
-	if (!IsClientValid(client) || !IsPlayerAlive(client))
-		return;
-		
-	switch (action)
-	{
-		case MenuAction_Select:
-		{
-			JailFighter base;
-			char strIndex[4]; menu.GetItem(select, strIndex, sizeof(strIndex));
-			if (cvarTF2Jail[RemoveFreedayOnLR].BoolValue)
-			{
-				for (int i = MaxClients; i; --i)
-				{
-					if (!IsClientInGame(i))
-						continue;
-					base = JailFighter(i);
-					if (!base.bIsFreeday)
-						continue;
-						
-					base.RemoveFreeday();
-				}
-				CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Last request has been chosen. Freedays have been stripped.");
-			}
-			base = JailFighter(client);
-			gamemode.bIsLRInUse = true;
-			int request = StringToInt(strIndex), value;
-			if (request != -1)	// If the selection isn't random
-				value = arrLRS.Get(request);
-
-			switch (request)
-			{
-				case -1:	// Random
-				{
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen a {default}Random Last Request{burlywood} as their last request!", client);
-					int randlr = GetRandomInt(2, LRMAX);
-					gamemode.iLRPresetType = randlr;
-					arrLRS.Set( randlr, arrLRS.Get(randlr)+1 );
-					if (randlr == FreedaySelf)
-						base.bIsQueuedFreeday = true;
-					else if (randlr == FreedayOther)
-						for (int i = 0; i < 3; i++)
-							JailFighter(GetRandomPlayer(RED)).bIsQueuedFreeday = true;
-				}
-				case Suicide:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to kill themselves. What a shame...", client);
-					SetPawnTimer(KillThatBitch, (GetRandomFloat(0.5, 7.0)), client);	// Meme lol
-					arrLRS.Set( request, value+1 );
-				}
-				case Custom:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to type out their LR in chat.", client);
-					gamemode.iLRPresetType = Custom;
-					arrLRS.Set( request, value+1 );
-					base.iCustom = base.userid;
-				}
-				case FreedaySelf:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Freeday for Themselves{burlywood} next round.", client);
-					gamemode.iLRPresetType = FreedaySelf;
-					base.bIsQueuedFreeday = true;
-					arrLRS.Set( request, value+1 );
-				}
-				case FreedayOther:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N is picking Freedays for next round...", client);
-					FreedayforClientsMenu(client);
-					gamemode.iLRPresetType = FreedayOther;
-					arrLRS.Set( request, value+1 );
-				}
-				case FreedayAll:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to grant a {default}Freeday for All{burlywood} next round.", client);
-					gamemode.iLRPresetType = FreedayAll;
-					arrLRS.Set( request, value+1 );
-				}
-				case GuardMelee:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to strip the guards of their weapons.", client);
-					gamemode.iLRPresetType = GuardMelee;
-					arrLRS.Set( request, value+1 );
-				}
-				case HHHDay:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Horseless Headless Horsemann Kill Round{burlywood} next round.", client);
-					gamemode.iLRPresetType = HHHDay;
-					arrLRS.Set( request, value+1 );
-				}
-				case TinyRound:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Super Small{burlywood} for everyone.", client);
-					gamemode.iLRPresetType = TinyRound;
-					arrLRS.Set( request, value+1 );
-				}
-				case HotPrisoner:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to ignite all of the prisoners next round!", client);
-					gamemode.iLRPresetType = HotPrisoner;
-					arrLRS.Set( request, value+1 );
-				}
-				case Gravity:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Low Gravity{burlywood} as their last request.", client);
-					gamemode.iLRPresetType = Gravity;
-					arrLRS.Set( request, value+1 );
-				}
-				case RandomKill:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to hire a Sniper for the next round!", client);
-					gamemode.iLRPresetType = RandomKill;
-					arrLRS.Set( request, value+1 );
-				}
-				case Warday:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to do a {default}Warday{burlywood}.", client);
-					gamemode.iLRPresetType = Warday;
-					arrLRS.Set( request, value+1 );
-				}
-				case ClassWars:
-				{
-					if (!CheckSet(client, value, cvarTF2Jail[LRDefault].IntValue))
-						return;
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Class Warfare{burlywood} as their last request.", client);
-					gamemode.iLRPresetType = ClassWars;
-					arrLRS.Set( request, value+1 );
-				}
-				default:
-				{
-					// arrLRS.Set( request, value+1 );
-					Call_OnLRPicked(base, request, value, arrLRS);		// Menu functions aren't needed
-					// I went through so much effort to give this extra parameter even though you could easily get that value in your own plugin...
-				}
-			}
-		}
-		case MenuAction_End:delete menu;
-	}
 }
 /** 
  *	This is all VSH stuff. Doing this to make more of a grasp with forwards
@@ -903,6 +657,177 @@ public Action ManageTimeEnd()
 		default:return Call_OnTimeEnd();
 	}
 	return Plugin_Continue;
+}
+/**
+ *	Determines if a player's attack is to be critical
+*/
+/*public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool & result)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Continue;
+
+ 	if (!IsClientValid(client))
+ 		return Plugin_Continue;
+
+ 	JailFighter base = JailFighter(client);
+ 	switch (gamemode.iLRType)
+ 	{ 	}
+ 	return Plugin_Continue;
+}*/
+/**
+ *	Add lr to the LR menu obviously
+*/
+public void AddLRToMenu(Menu &menu)
+{
+	char strName[32], strID[4], strValue[16];
+	int i, max, value, def = cvarTF2Jail[LRDefault].IntValue;
+
+	menu.AddItem("-1", "Random LR");
+	for (i = 0; i <= LRMAX; i++)
+	{
+		max = def;
+		strValue[0] = '\0';
+		strName[0] = '\0';
+		// if (i == Warday)	// If you want a certain last request to have a different max, do something like this
+			// max = 3;
+		Call_OnMenuAdd(i, max, strName);
+
+		if (max)
+		{
+			value = arrLRS.Get(i);
+			Format(strValue, sizeof(strValue), " (%i/%i)", value, max);
+		}
+
+		if (i < sizeof(strLRNames))	// If not a sub-plugin
+			Format(strName, sizeof(strName), "%s%s", strName, strLRNames[i]);
+		Format(strName, sizeof(strName), "%s%s", strName, strValue);	// Forward pre-formats strName
+
+		IntToString(i, strID, sizeof(strID));
+		menu.AddItem(strID, strName, (max && value >= max) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
+	}
+}
+/**
+ *	Add a 'short' description to your last request for the !listlrs command
+*/
+public void AddLRToPanel(Menu &panel)
+{
+	char id[4], name[64];
+	for (int i = 0; i <= LRMAX; i++)
+	{
+		name[0] = '\0';
+		switch (i)
+		{
+			case 0:name = "Suicide- Kill yourself on the spot";
+			case 1:name = "Custom- Type your own last request";
+			case 2:name = "Freeday for Yourself- Give yourself a freeday";
+			case 3:Format(name, sizeof(name), "Freeday for Others- Give up to %d freedays to others", cvarTF2Jail[FreedayLimit].IntValue);
+			case 4:name = "Freeday for All- Give everybody a freeday";
+			case 5:name = "Guards Melee Only- Those guns are for babies!";
+			case 6:name = "Headless Horsemann Day- Turns all players into the HHH";
+			case 7:name = "Tiny Round- Honey I shrunk the players";
+			case 8:name = "Hot Prisoner- Prisoners are too hot to touch";
+			case 9:name = "Low Gravity- Where did the gravity go";
+			case 10:name = "Sniper- A hired gun to take out some folks";
+			case 11:name = "Warday- Team Deathmatch";
+			case 12:name = "Class Wars- Class versus class Warday";
+		}
+		Call_OnPanelAdd(i, name);
+
+		IntToString(i, id, sizeof(id));
+		panel.AddItem(id, name);
+	}
+}
+/** 
+ *	Called when player is given lr and is selecting. Place your lr under the MenuAction_Select case
+ *	Use the already given lr's as a guide if you need help
+ *	CheckSet() is purely used for safety
+*/
+public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
+{
+	if (!IsClientValid(client) || !IsPlayerAlive(client))
+		return;
+		
+	switch (action)
+	{
+		case MenuAction_Select:
+		{
+			JailFighter base;
+			char strIndex[4]; menu.GetItem(select, strIndex, sizeof(strIndex));
+			if (cvarTF2Jail[RemoveFreedayOnLR].BoolValue)
+			{
+				for (int i = MaxClients; i; --i)
+				{
+					if (!IsClientInGame(i))
+						continue;
+					base = JailFighter(i);
+					if (!base.bIsFreeday)
+						continue;
+						
+					base.RemoveFreeday();
+				}
+				CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Last request has been chosen. Freedays have been stripped.");
+			}
+			base = JailFighter(client);
+			gamemode.bIsLRInUse = true;
+			int request = StringToInt(strIndex), value;
+			if (request != -1)	// If the selection isn't random
+				value = arrLRS.Get(request);
+
+			switch (request)
+			{
+				case -1:	// Random
+				{
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen a {default}Random Last Request{burlywood} as their last request!", client);
+					int randlr = GetRandomInt(2, LRMAX);
+					gamemode.iLRPresetType = randlr;
+					arrLRS.Set( randlr, arrLRS.Get(randlr)+1 );
+					if (randlr == FreedaySelf)
+						base.bIsQueuedFreeday = true;
+					else if (randlr == FreedayOther)
+						for (int i = 0; i < 3; i++)
+							JailFighter(GetRandomPlayer(RED)).bIsQueuedFreeday = true;
+					return;
+				}
+				case Suicide:
+				{
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to kill themselves. What a shame...", client);
+					SetPawnTimer(KillThatBitch, (GetRandomFloat(0.5, 7.0)), client);	// Meme lol
+					arrLRS.Set( request, value+1 );
+					return;
+				}
+				case Custom:
+				{
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to type out their LR in chat.", client);
+					base.iCustom = base.userid;
+				}
+				case FreedaySelf:
+				{
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Freeday for Themselves{burlywood} next round.", client);
+					base.bIsQueuedFreeday = true;
+				}
+				case FreedayOther:
+				{
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N is picking Freedays for next round...", client);
+					FreedayforClientsMenu(client);
+				}
+				case FreedayAll:	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to grant a {default}Freeday for All{burlywood} next round.", client);
+				case GuardMelee:	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to strip the guards of their weapons.", client);
+				case HHHDay:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Horseless Headless Horsemann Kill Round{burlywood} next round.", client);
+				case TinyRound:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Super Small{burlywood} for everyone.", client);
+				case HotPrisoner:	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to ignite all of the prisoners next round!", client);
+				case Gravity:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Low Gravity{burlywood} as their last request.", client);
+				case RandomKill:	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to hire a Sniper for the next round!", client);
+				case Warday:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to do a {default}Warday{burlywood}.", client);
+				case ClassWars:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Class Warfare{burlywood} as their last request.", client);
+			}
+			if (Call_OnLRPicked(base, request, arrLRS) != Plugin_Continue)
+				return;
+
+			gamemode.iLRPresetType = request;
+			arrLRS.Set( request, value+1 );
+		}
+		case MenuAction_End:delete menu;
+	}
 }
 /*
  *	Starting variables for clients entering the server
@@ -981,17 +906,9 @@ public void ManageEntityCreated(int ent, const char[] classname)
 
 	if (StrEqual(classname, "func_breakable") && cvarTF2Jail[VentHit].BoolValue)
 		RequestFrame(HookVent, EntIndexToEntRef(ent));
-}
-/**
- *	Self explanatory, set the gamemode.iTimeLeft to whatever time (in seconds) you desire
-*/
-public void ManageTimeLeft()
-{
-	switch (gamemode.iLRType)
-	{
-		default:gamemode.iTimeLeft = cvarTF2Jail[RoundTime].IntValue;
-	}
-	Call_OnManageTimeLeft();
+
+	if (StrContains(classname, "obj_", false) != -1)
+		SDKHook(ent, SDKHook_Spawn, OnBuildingSpawn);
 }
 /**
  *	Unique to the player Custom lr, formats the public char sCustomLR
@@ -1002,7 +919,7 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 	if (base.iCustom > 0)
 	{
 		strcopy(strCustomLR, sizeof(strCustomLR), cArgs);
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Your custom last request is {fullred}%s", strCustomLR);
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Your custom last request is {default}%s", strCustomLR);
 		base.iCustom = 0;
 	}
 }
@@ -1019,6 +936,8 @@ public void ManageWardenMenu(Menu & menu)
 		menu.AddItem("4", "Marker");
 	if (cvarTF2Jail[WardenLaser].BoolValue)
 		menu.AddItem("5", "Laser");
+	if (cvarTF2Jail[WardenToggleMedic].BoolValue)
+		menu.AddItem("6", "Toggle Medic Room");
 
 	Call_OnWMenuAdd(menu);
 }
@@ -1128,7 +1047,16 @@ public void ManageWardenMenu(Menu & menu)
 					}
 					player.WardenMenu();
 				}
-				default:Call_OnWMenuSelect(player, index);	// In case you set something wacky in the first AddItem() parameter
+				case 6:
+				{
+					if (cvarTF2Jail[WardenToggleMedic].BoolValue)
+					{
+						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden {default}%N{burlywood} has toggled Medic {default}%s{burlywood}!", client, gamemode.bMedicDisabled ? "On" : "Off");
+						gamemode.ToggleMedic(gamemode.bMedicDisabled);
+					}
+					player.WardenMenu();
+				}
+				default:Call_OnWMenuSelect(player, index);	// Passing string in case you set something wacky in the first AddItem() parameter
 			}
 		}
 		case MenuAction_End:delete menu;

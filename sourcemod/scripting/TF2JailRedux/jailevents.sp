@@ -25,7 +25,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		}
 		case BLU:
 		{
-			if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue && (gamemode.iRoundState == StateStarting || gamemode.iRoundState == StateEnding))
+			if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue && gamemode.iRoundState != StateRunning)
 			{
 				player.ForceTeamChange(RED);
 				EmitSoundToClient(client, NO);
@@ -46,7 +46,6 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		player.TeleportToPosition(GetClientTeam(client));	// Enum value is the same as team value, so we can cheat it
 
 	ManageSpawn(player, event);
-
 	SetPawnTimer(PrepPlayer, 0.2, player.userid);
 
 	return Plugin_Continue;
@@ -98,7 +97,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		gamemode.bWardenExists = false;
 
 		if (gamemode.iRoundState == StateRunning)
-			if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue)
+			if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue || !gamemode.bSilentWardenKills)
 				PrintCenterTextAll("Warden has been killed!");
 	}
 
@@ -119,26 +118,43 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
+	JailFighter player;
+	int i;
 	if (gamemode.bIsMapCompatible)
 	{
+		int ent;
 		if (sCellOpener[0] != '\0')
 		{
-			int CellHandler = FindEntity(sCellOpener, "func_button");
-			if (IsValidEntity(CellHandler))
-				SetEntProp(CellHandler, Prop_Data, "m_bLocked", 1, 1);
+			ent = FindEntity(sCellOpener, "func_button");
+			if (IsValidEntity(ent))
+				SetEntProp(ent, Prop_Data, "m_bLocked", 1, 1);
 			else LogError("***TF2JB ERROR*** Entity name not found for Cell Door Opener! Please verify integrity of the config and the map.");
 		}
 
 		if (sFFButton[0] != '\0')
 		{
-			int iFFButton = FindEntity(sFFButton, "func_button");
-			if (IsValidEntity(iFFButton))
-				SetEntProp(iFFButton, Prop_Data, "m_bLocked", 1, 1);
+			ent = FindEntity(sFFButton, "func_button");
+			if (IsValidEntity(ent))
+				SetEntProp(ent, Prop_Data, "m_bLocked", 1, 1);
+		}
+
+		if (sCellNames[0] != '\0')
+		{
+			for (i = 0; i < sizeof(sDoorsList); i++)
+			{
+				char sEntityName[32];
+				ent = -1;
+				while ((ent = FindEntityByClassnameSafe(ent, sDoorsList[i])) != -1)
+				{
+					GetEntPropString(ent, Prop_Data, "m_iName", sEntityName, sizeof(sEntityName));
+					if (StrEqual(sEntityName, sCellNames, false))	// Laziness, hook first cell door opening so open door timer catches and doesn't open on its own
+						HookSingleEntityOutput(ent, "OnOpen", OnFirstCellOpening, true);
+				}
+			}
 		}
 	}
-	
-	JailFighter player;
-	for (int i = MaxClients; i; --i)
+
+	for (i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
 			continue;
@@ -156,6 +172,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	// gamemode.iLRType = -1;
 	gamemode.DoorHandler(CLOSE);
 	gamemode.bDisableCriticals = false;
+	gamemode.bMedicDisabled = false;
 	gamemode.iRoundState = StateStarting;
 
 	return Plugin_Continue;
@@ -183,8 +200,8 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		bool immunity = cvarTF2Jail[AutobalanceImmunity].BoolValue;
 		float ratio;
 		float balance = cvarTF2Jail[BalanceRatio].FloatValue;
-		float lBlue = float(GetLivingPlayers(BLU));
-		float lRed = float(GetLivingPlayers(RED));
+		float lBlue = float( GetLivingPlayers(BLU) );
+		float lRed = float( GetLivingPlayers(RED) );
 
 		for (i = MaxClients; i; --i)	// 2 player loops so that autobalance doesn't fuck over ManageRoundStart()
 		{
@@ -244,8 +261,6 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	ManageTimeLeft();		// Loop clients on ManageRoundStart() to set what you want, then ignore OnLRActivate()
 	// Or if you aren't using the VSH subplugin, ignore this
 
-	SetPawnTimer(_MusicPlay, 1.4);
-
 	warday = gamemode.bIsWarday;
 
 	for (i = MaxClients; i; --i)
@@ -292,6 +307,8 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		gamemode.bIsWardenLocked = true;
 		SetPawnTimer(EnableWarden, delay, gamemode.iRoundCount);
 	}
+
+	gamemode.flMusicTime = GetGameTime() + 1.4;
 	return Plugin_Continue;
 }
 
@@ -340,6 +357,8 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	gamemode.bIsWarday = false;
 	gamemode.bOneGuardLeft = false;
 	gamemode.bOnePrisonerLeft = false;
+	gamemode.bAllowBuilding = false;
+	gamemode.bSilentWardenKills = false;
 	gamemode.iLRType = -1;
 	gamemode.iTimeLeft = 0; // Had to set it to 0 here because it kept glitching out... odd
 	gamemode.iRoundState = StateEnding;

@@ -332,10 +332,6 @@ float
 	flHealthTime		// For !halehp
 ;
 
-bool
-	bCanMusicPlay 		// Dictates if the music can play during the round
-;
-
 public void OnPluginStart()
 {
 	JBVSH[Enabled] 			= CreateConVar("sm_jbvsh_enabled", "1", "Enable TF2Jail VSH Sub-Plugin?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -812,11 +808,6 @@ public Action TimerLazor(Handle timer, any medigunid)
 	return Plugin_Continue;
 }
 
-public void MakeMusicWork()
-{
-	bCanMusicPlay = true;
-}
-
 public void MakePlayerBoss(const int userid, int iBossid)
 {
 	JailBoss player = JailBoss(userid, true);
@@ -1173,6 +1164,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 					if (gamemode.GetProperty("bWardayTeleportSetBlue"))
 						victim.TeleportToPosition(WBLU);
 					else TeleportToSpawn(victim.index, BLU);
+					victim.iHealth -= 1000;
 				}
 			}
 			if (attacker <= 0 || attacker > MaxClients)
@@ -1986,7 +1978,7 @@ public void ManageMessageIntro()
 		if (IsValidClient(i))
 			ShowHudText(i, -1, "%s", gameMessage);
 	}
-	SetPawnTimer(MakeMusicWork, 4.0);
+	gamemode.SetProperty("flMusicTime", GetGameTime() + 4.0);
 }
 
 public JailBoss ToJailBoss(const JBPlayer player)
@@ -2041,6 +2033,7 @@ public void fwdOnManageRoundStart()
 	gamemode.SetProperty("bOneGuardLeft", true);
 	gamemode.SetProperty("bDisableCriticals", true);
 	gamemode.SetProperty("bIsWarday", true);
+	gamemode.SetProperty("bAllowBuilding", true);
 	gamemode.DoorHandler(OPEN);
 	SpawnRandomHealth();
 	SpawnRandomAmmo();
@@ -2078,7 +2071,6 @@ public void fwdOnManageRoundEnd(Event event)
 	//gamemode.ManageCells(OPEN);
 	ShowPlayerScores();
 	SetPawnTimer(CalcScores, 3.0);
-	bCanMusicPlay = false;
 
 	ManageRoundEndBossInfo( (event.GetInt("team") == BLU) );
 }
@@ -2388,20 +2380,12 @@ public void fwdOnLRTextHud(char strHud[128])
 
 	strcopy(strHud, 128, "Versus Saxton Hale");
 }
-public void fwdOnLRPicked(const JBPlayer Player, const int selection, const int value, ArrayList &arrLRS)
+public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
 {
-	if (!JBVSH[Enabled].BoolValue || selection != JBVSHIndex)
-		return;
+	if (JBVSH[Enabled].BoolValue && selection == JBVSHIndex)
+		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has decided to play a round of {default}Versus Saxton Hale{burlywood}.", Player.index);
 
-	if (value >= JBVSH[PickCount].IntValue)
-	{
-		CPrintToChat(Player.index, "{crimson}[TF2Jail]{burlywood} This LR has been picked the maximum amount of times for this map.");
-		Player.ListLRS();
-		return;
-	}
-	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has decided to play a round of {default}Versus Saxton Hale{burlywood}.", Player.index);
-	arrLRS.Set( selection, value+1 );
-	gamemode.SetProperty("iLRPresetType", JBVSHIndex);
+	return Plugin_Continue;
 }
 public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Event event)
 {
@@ -2595,12 +2579,16 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, int 
 		damage = (IsPlayerAlive(attacker.index) ? 9001 : 1); // Telefrags normally 1-shot the boss but let's cap damage at 9k
 	
 	attacker.iDamage += damage;
-	if (GetIndexOfWeaponSlot(attacker.index, TFWeaponSlot_Primary) == 1104)
+	int primary = GetPlayerWeaponSlot(attacker.index, TFWeaponSlot_Primary);
+	if (IsValidEntity(primary))
 	{
-		if (weapon == TF_WEAPON_ROCKETLAUNCHER)
-			attacker.iAirDamage += damage;
-		int div = JBVSH[AirStrikeDamage].IntValue;
-		SetEntProp(attacker.index, Prop_Send, "m_iDecapitations", attacker.iAirDamage / div);
+		if (GetItemIndex(primary) == 1104)
+		{
+			if (weapon == TF_WEAPON_ROCKETLAUNCHER)
+				attacker.iAirDamage += damage;
+			int div = JBVSH[AirStrikeDamage].IntValue;
+			SetEntProp(attacker.index, Prop_Send, "m_iDecapitations", attacker.iAirDamage / div);
+		}
 	}
 	
 	int healers[MAXPLAYERS];
@@ -2663,8 +2651,6 @@ public Action fwdOnMusicPlay(char song[PLATFORM_MAX_PATH], float &time)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return Plugin_Continue;
-	if (!bCanMusicPlay)
-		return Plugin_Handled;
 
 	JailBoss currBoss = FindBoss(false);
 	if (!currBoss)
@@ -2730,17 +2716,6 @@ public void fwdOnCheckLivingPlayers()
 		}
 	}
 }
-public void fwdOnLRRoundEnd(const JBPlayer Player)
-{
-	if (!JBVSH[Enabled].BoolValue || NotVSH)
-		return;
-
-	JailBoss player = ToJailBoss(Player);
-	player.iHealth = 0;	// BUG patch; bosses could wait until round ended and carry health over to next round
-	player.iMaxHealth = 0;
-	// player.bIsBoss = false;
-	TF2Attrib_RemoveAll(Player.index);
-}
 
 public void CheckJBHooks()
 {
@@ -2792,6 +2767,4 @@ public void CheckJBHooks()
 		LogError("Failed to load OnLastPrisoner forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
 		LogError("Failed to load OnCheckLivingPlayers forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnLRRoundEnd, fwdOnLRRoundEnd))
-		LogError("Failed to load OnLRRoundEnd forwards for JB VSH Sub-Plugin!");
 }

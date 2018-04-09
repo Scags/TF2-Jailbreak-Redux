@@ -10,11 +10,6 @@
 
 methodmap CHHHDay < JailGameMode
 {
-	public CHHHDay( JailGameMode handle )
-	{
-		return view_as< CHHHDay >(handle);
-	}
-
 	public void Initialize()
 	{
 		this.bIsWardenLocked = true;

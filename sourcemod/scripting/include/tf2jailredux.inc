@@ -44,12 +44,6 @@ enum
 	WBLU = 3
 };
 
-/**
- *	Forward declared methodmap
- *	Allows the JBGameMode_Initialize() native to return a handle to sub-plugin methodmaps
-*/
-enum JailGameMode {};
-
 stock char snd[PLATFORM_MAX_PATH];
 stock char gameMessage[4096];	// For formatting chat/hint/center/etc messages
 stock char BackgroundSong[PLATFORM_MAX_PATH];	// If you want a sweet song with your lr, try this out
@@ -293,7 +287,7 @@ stock void ForceClientTeamChange(const int client, const int iTeam, bool spawn =
 
 /**	base.TeleportToPosition
  *	Teleport a player either to a freeday or warday location.
- *	@NOTE 				If gamemode teleport properties are not true, player will be teleported to map's origin
+ *	@NOTE 				If gamemode teleport properties are not true, teleportation will fail
  *
  *	@param client 		Player index.
  *	@param location 	Location to teleport the client.
@@ -855,7 +849,7 @@ methodmap JBPlayer
 
 	/**
 	 *	Teleport a player either to a freeday or warday location.
-	 *	@NOTE 				If gamemode teleport properties are not true, player will be teleported to map's origin
+	 *	@NOTE 				If gamemode teleport properties are not true, teleportation will fail
 	 *
 	 *	@param location 	Location to teleport the client.
 	 *
@@ -1067,9 +1061,8 @@ native void JBGameMode_ManageCells(const eDoorsMode status);
  *	Find the current warden if one exists.
  *
  *	@return 				The current warden.
- *
 */
-native int JBGameMode_FindWarden();
+native int JBGameMode_Warden();
 
 /** 
  *	Find and terminate the current warden.
@@ -1088,6 +1081,24 @@ native void JBGameMode_FireWarden(bool prevent = true, bool announce = true);
  *	@noreturn
 */
 native void JBGameMode_OpenAllDoors();
+
+/**
+ *	Enable/Disable the medic room in a map
+ *
+ *	@param status 			True to enable it, False otherwise
+ *
+ *	@noreturn
+*/
+native void JBGameMode_ToggleMedic(const bool status);
+
+/**
+ *	Toggle team filtering on the medic room
+ *
+ *	@param team 			Team to toggle
+ *
+ *	@noreturn
+*/
+// native void JBGameMode_ToggleMedicTeam(int team = 0);
 
 /**
  *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
@@ -1137,6 +1148,8 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	bool bAvoidTeamKills
  *	bool bIsWarday
  *	bool bFirstDoorOpening
+ *	bool bSilentWardenKills
+ *	bool bMedicDisabled
  *	float flMusicTime		// Optional, not used in core
 */
 
@@ -1266,11 +1279,13 @@ methodmap JBGameMode
 	 *	Find the current warden if one exists.
 	 *
 	 *	@return 				The current warden.
-	 *
 	*/
-	public int FindWarden()
+	property int Warden
 	{
-		return JBGameMode_FindWarden();
+		public get()
+		{
+			return JBGameMode_Warden();
+		}
 	}
 
 	/** 
@@ -1295,6 +1310,29 @@ methodmap JBGameMode
 	{
 		JBGameMode_OpenAllDoors();
 	}
+	/**
+	 *	Enable/Disable the medic room in a map
+	 *
+	 *	@param status 			True to enable it, False otherwise
+	 *
+	 *	@noreturn
+	*/
+	public void ToggleMedic(const bool status)
+	{
+		JBGameMode_ToggleMedic(status);
+	}
+
+	/**
+	 *	Toggle team filtering on the medic room
+	 *
+	 *	@param team 			Team to toggle
+	 *
+	 *	@noreturn
+	*/
+	/*public void ToggleMedicTeam(int team = 0)
+	{
+		JBGameMode_ToggleMedicTeam(team);
+	}*/
 
 	/**
 	 *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
@@ -1350,6 +1388,8 @@ methodmap JBGameMode
 	 *	bool bAvoidTeamKills
 	 *	bool bIsWarday
 	 *	bool bFirstDoorOpening
+	 *	bool bSilentWardenKills
+	 *	bool bMedicDisabled
 	 *	float flMusicTime		// Optional, not used in core
 	*/
 	/**
@@ -1575,8 +1615,8 @@ typeset JBHookCB
 	// 	OnLRTextHud
 	function void (char strHud[128]);
 
-	// 	OnLRPicked
-	function void (const JBPlayer Player, const int request, const int value, ArrayList &array);
+	// 	OnLRPicked			Return anything but continue to prevent setting the next iLRPresetType to index
+	function Action (const JBPlayer Player, const int index, ArrayList array);
 
 	// 	OnHurtPlayer
 	function void (const JBPlayer Victim, const JBPlayer Attacker, int damage, int custom, int weapon, Event event);
@@ -1605,9 +1645,6 @@ typeset JBHookCB
 
 	//	OnManageFFTimer
 	function void (float &time);
-
-	//	OnLRInitialize
-	function JailGameMode (const int type, Handle handle);
 };
 
 /**
@@ -1706,9 +1743,11 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBGameMode_Playing");
 	MarkNativeAsOptional("JBGameMode_ManageCells");
 	MarkNativeAsOptional("JBGameMode_FindRandomWarden");
-	MarkNativeAsOptional("JBGameMode_FindWarden");
+	MarkNativeAsOptional("JBGameMode_Warden");
 	MarkNativeAsOptional("JBGameMode_FireWarden");
 	MarkNativeAsOptional("JBGameMode_OpenAllDoors");
+	MarkNativeAsOptional("JBGameMode_ToggleMedic");
+	// MarkNativeAsOptional("JBGameMode_ToggleMedicTeam");
 
 	MarkNativeAsOptional("JBGameMode_GetProperty");
 	MarkNativeAsOptional("JBGameMode_SetProperty");

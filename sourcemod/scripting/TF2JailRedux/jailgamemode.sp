@@ -369,6 +369,42 @@ methodmap JailGameMode < StringMap
 			this.SetValue("bMarkerExists", i);
 		}
 	}
+	property bool bAllowBuilding
+	{
+		public get()
+		{
+			bool i; this.GetValue("bAllowBuilding", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bAllowBuilding", i);
+		}
+	}
+	property bool bSilentWardenKills
+	{
+		public get()
+		{
+			bool i; this.GetValue("bSilentWardenKills", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bSilentWardenKills", i);
+		}
+	}
+	property bool bMedicDisabled
+	{
+		public get()
+		{
+			bool i; this.GetValue("bMedicDisabled", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bMedicDisabled", i);
+		}
+	}
 
 	property float flMusicTime
 	{
@@ -381,6 +417,32 @@ methodmap JailGameMode < StringMap
 		{
 			this.SetValue("flMusicTime", i);
 		}
+	}
+
+	property JailFighter Warden
+	{
+		public get()
+		{
+			// JailFighter i; this.GetValue("Warden", i);
+			// return i;
+			JailFighter player;
+			for (int i = MaxClients; i; --i)
+			{
+				if (!IsClientInGame(i))
+					continue;
+				player = JailFighter(i);
+				if (!player.bIsWarden)
+					continue;
+				return player;
+			}
+			return view_as< JailFighter >(0);
+		}
+		/*public set( const JailFighter i )
+		{
+			this.SetValue("Warden", i);
+			this.bWardenExists = true;
+			i.WardenSet();
+		}*/
 	}
 	/**
 	 *	Initialize all JailGameMode Properties to a default.
@@ -409,6 +471,9 @@ methodmap JailGameMode < StringMap
 		this.b1stRoundFreeday = false;
 		this.bCellsOpened = false;
 		this.bIsMapCompatible = false;
+		this.bAllowBuilding = false;
+		this.bSilentWardenKills = false;
+		this.bMedicDisabled = false;
 #if defined _steamtools_included
 		this.bSteam = false;
 #endif
@@ -445,7 +510,8 @@ methodmap JailGameMode < StringMap
 		{
 			for (int i = 0; i < sizeof(sDoorsList); i++)
 			{
-				char sEntityName[128]; int ent = -1;
+				char sEntityName[32];
+				int ent = -1;
 				while ((ent = FindEntityByClassnameSafe(ent, sDoorsList[i])) != -1)
 				{
 					GetEntPropString(ent, Prop_Data, "m_iName", sEntityName, sizeof(sEntityName));
@@ -475,26 +541,6 @@ methodmap JailGameMode < StringMap
 			}
 		}
 	}
-	/**
-	 *	Find the current warden if one exists.
-	 *
-	 *	@return 				The current warden.
-	 *
-	*/
-	public JailFighter FindWarden()
-	{
-		JailFighter player;
-		for (int i = MaxClients; i; --i)
-		{
-			if (!IsClientInGame(i))
-				continue;
-			player = JailFighter(i);
-			if (!player.bIsWarden)
-				continue;
-			return player;
-		}
-		return view_as< JailFighter >(0);
-	}
 	/** 
 	 *	Find and terminate the current warden.
 	 *
@@ -505,7 +551,7 @@ methodmap JailGameMode < StringMap
 	*/
 	public void FireWarden( bool prevent = true, bool announce = true )
 	{
-		JailFighter player = this.FindWarden();
+		JailFighter player = this.Warden;
 		player.WardenUnset();
 		this.bWardenExists = false;
 
@@ -530,13 +576,51 @@ methodmap JailGameMode < StringMap
 			{
 				if (IsValidEntity(ent))
 				{
-					if (GetEntProp(ent, Prop_Data, "m_eSpawnPosition"))	// If already open, ignore
-						continue;
-
 					AcceptEntityInput(ent, "Unlock");
 					AcceptEntityInput(ent, "Open");
 				}
 			}
 		}
 	}
+	/**
+	 *	Enable/Disable the medic room in a map
+	 *
+	 *	@param status 			True to enable it, False otherwise
+	 *
+	 *	@noreturn
+	*/
+	//	Props to Dr.Doctor
+	public void ToggleMedic( const bool status )
+	{
+		int ent = -1;
+		while ((ent = FindEntityByClassname(ent, "trigger_hurt")) != -1)
+		{
+			if (IsValidEntity(ent))
+			{
+				if (GetEntPropFloat(ent, Prop_Data, "m_flDamage") < 0)
+				{
+					switch (status)
+					{
+						case true: { AcceptEntityInput(ent, "Enable");  this.bMedicDisabled = false; }
+						case false:{ AcceptEntityInput(ent, "Disable"); this.bMedicDisabled = true;  }
+					}
+				}
+			}
+		}
+	}
+	/**
+	 *	Toggle team filtering on the medic room
+	 *
+	 *	@param team 			Team to toggle
+	 *
+	 *	@noreturn
+	*/
+	/*public void ToggleMedicTeam( int team = 0 )
+	{
+		int ent = -1;
+		while ((ent = FindEntityByClassname(ent, "trigger_hurt")) != -1)
+			if (IsValidEntity(ent))
+				if (GetEntPropFloat(ent, Prop_Data, "m_flDamage") < 0)
+					SetEntProp(ent, Prop_Data, "m_iTeamNum", team);
+	}*/
 };

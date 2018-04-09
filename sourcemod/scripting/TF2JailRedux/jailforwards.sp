@@ -16,7 +16,7 @@ void InitializeForwards()
 	// hPrivFwds[OnBlueNotWardenThink] 	= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnWardenThink] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnLRTextHud] 				= CreateForward(ET_Ignore, Param_String);
-	hPrivFwds[OnLRPicked] 				= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_CellByRef);
+	hPrivFwds[OnLRPicked] 				= CreateForward(ET_Hook,   Param_Cell, Param_Cell, Param_Cell);
 	hPrivFwds[OnPlayerDied] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	hPrivFwds[OnBuildingDestroyed]		= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	hPrivFwds[OnObjectDeflected] 		= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
@@ -115,14 +115,15 @@ void Call_OnLRTextHud(char strHud[128])
 	Call_PushStringEx(strHud, 128, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_Finish();
 }
-void Call_OnLRPicked(const JailFighter player, const int request, const int value, ArrayList &array)
+Action Call_OnLRPicked(const JailFighter player, const int index, ArrayList array)
 {
+	Action result = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnLRPicked]);
 	Call_PushCell(player);
-	Call_PushCell(request);
-	Call_PushCell(value);
-	Call_PushCellRef(array);
-	Call_Finish();
+	Call_PushCell(index);
+	Call_PushCell(array);
+	Call_Finish(result);
+	return result;
 }
 void Call_OnPlayerDied(const JailFighter player, const JailFighter attacker, Event event)
 {
@@ -148,7 +149,7 @@ void Call_OnBuildingDestroyed(const JailFighter destroyer, const int building, E
 	Call_PushCell(event);
 	Call_Finish();
 }
-Action Call_OnPlayerJarated(const JailFighter jarateer, const JailFighter jarateed, Event event)
+void Call_OnPlayerJarated(const JailFighter jarateer, const JailFighter jarateed, Event event)
 {
 	Call_StartForward(hPrivFwds[OnPlayerJarated]);
 	Call_PushCell(jarateer);
@@ -156,7 +157,7 @@ Action Call_OnPlayerJarated(const JailFighter jarateer, const JailFighter jarate
 	Call_PushCell(event);
 	Call_Finish();
 }
-Action Call_OnUberDeployed(const JailFighter patient, const JailFighter medic, Event event)
+void Call_OnUberDeployed(const JailFighter patient, const JailFighter medic, Event event)
 {
 	Call_StartForward(hPrivFwds[OnUberDeployed]);
 	Call_PushCell(patient);

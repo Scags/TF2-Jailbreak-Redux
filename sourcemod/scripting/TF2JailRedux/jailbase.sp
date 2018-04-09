@@ -9,21 +9,20 @@ methodmap JailFighter
 {
 	public JailFighter( const int ind, bool uid = false )
 	{
-		int player;
-		if (uid && GetClientOfUserId(ind) > 0)
-			player = ind;
+		if (uid)
+			return view_as< JailFighter >(GetClientOfUserId(ind));
 		else if (IsClientValid(ind))
-			player = GetClientUserId(ind);
-		return view_as< JailFighter >(player);
+			return view_as< JailFighter >(ind);
+		return view_as< JailFighter >(0);
 	}
 
-	property int userid
+	property int index
 	{
 		public get()				{ return view_as< int >(this); }
 	}
-	property int index
+	property int userid
 	{
-		public get()				{ return GetClientOfUserId(view_as< int >(this)); }
+		public get()				{ return GetClientUserId(view_as< int >(this)); }
 	}
 
 	property int iCustom

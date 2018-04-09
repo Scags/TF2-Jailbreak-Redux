@@ -27,7 +27,7 @@ public int Panel_Help(Menu menu, MenuAction action, int client, int select)
 				case 0:
 				{
 					if (gamemode.bWardenExists)
-						CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.FindWarden().index);
+						CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.Warden.index);
 					else CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} There is no current warden.");
 				}
 				case 1:ListLastRequestPanel(client);
@@ -44,11 +44,6 @@ public Action Command_BecomeWarden(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	if (gamemode.bWardenExists)
-	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.FindWarden().index);
-		return Plugin_Handled;
-	}
 	if (!client)
 	{
 		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Command is in-game only.");
@@ -57,6 +52,18 @@ public Action Command_BecomeWarden(int client, int args)
 	if (gamemode.iRoundState != StateRunning)
 	{
 		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
+		return Plugin_Handled;
+	}
+	JailFighter player = JailFighter(client);
+	if (player.bIsWarden)
+	{
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are already warden.");
+		return Plugin_Handled;
+	}
+
+	if (gamemode.bWardenExists)
+	{
+		CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.Warden.index);
 		return Plugin_Handled;
 	}
 
@@ -84,15 +91,9 @@ public Action Command_BecomeWarden(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	JailFighter player = JailFighter(client);
 	if (player.bLockedFromWarden)
 	{
 		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You may not become warden until next round.");
-		return Plugin_Handled;
-	}
-	if (player.bIsWarden)
-	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are already warden.");
 		return Plugin_Handled;
 	}
 	
@@ -479,11 +480,50 @@ public Action Command_CurrentWarden(int client, int args)
 		return Plugin_Handled;
 	}
 	if (gamemode.bWardenExists)
-		CReplyToCommand(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.FindWarden().index);
+		CReplyToCommand(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.Warden.index);
 	else CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} There is no current warden.");
 
 	return Plugin_Handled;
 }
+
+#if defined _clientprefs_included
+public Action Command_MusicOff(int client, int args)
+{
+	if (!bEnabled.BoolValue || !client)
+		return Plugin_Handled;
+
+	MusicPanel(client);
+	return Plugin_Handled;
+}
+
+public void MusicPanel(const int client)
+{
+	Panel panel = new Panel();
+	panel.SetTitle("Turn the TF2Jail Music...");
+	panel.DrawItem("On?");
+	panel.DrawItem("Off?");
+	panel.Send(client, MusicTogglePanel, 9001);
+	delete (panel);
+}
+
+public int MusicTogglePanel(Menu menu, MenuAction action, int client, int select)
+{
+	if (action == MenuAction_Select) 
+	{
+		JailFighter player = JailFighter(client);
+		if (select == 1) 
+		{
+			player.bNoMusic = false;
+			CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You've turned {lightgreen}On{default} the TF2Jail Background Music.");
+		}
+		else
+		{
+			player.bNoMusic = true;
+			CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You've turned {lightgreen}Off{default} the TF2Jail Background Music.\nWhen the music stops, it won't play again.");
+		}
+	}
+}
+#endif
 
 public Action AdminRemoveWarden(int client, int args)
 {
@@ -626,7 +666,7 @@ public Action AdminForceWarden(int client, int args)
 	}
 	if (gamemode.bWardenExists)
 	{
-		CReplyToCommand(client, "{crimson}[TF2Jail]{fullred} %N{burlywood} is the current warden.", gamemode.FindWarden().index);
+		CReplyToCommand(client, "{crimson}[TF2Jail]{fullred} %N{burlywood} is the current warden.", gamemode.Warden.index);
 		return Plugin_Handled;
 	}
 
@@ -948,7 +988,7 @@ public Action AdminLockWarden(int client, int args)
 	}
 	if (gamemode.bWardenExists)
 	{
-		gamemode.FindWarden().WardenUnset();
+		gamemode.Warden.WardenUnset();
 		gamemode.bWardenExists = false;
 	}
 
@@ -1204,6 +1244,38 @@ public Action Command_WardenLaser(int client, int args)
 	return Plugin_Handled;
 }
 
+public Action Command_WardenToggleMedic(int client, int args)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Handled;
+
+	if (!client)
+	{
+		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Command is in-game only.");
+		return Plugin_Handled;
+	}
+
+	if (!cvarTF2Jail[WardenToggleMedic].BoolValue)
+	{
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} This is not enabled.");
+		return Plugin_Handled;
+	}
+
+	if (gamemode.iRoundState != StateRunning)
+	{
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
+		return Plugin_Handled;
+	}
+	if (!JailFighter(client).bIsWarden)
+	{
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are not warden.");
+		return Plugin_Handled;
+	}
+	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden {default}%N{burlywood} has toggled Medic {default}%s{burlywood}!", client, (gamemode.bMedicDisabled ? "On" : "Off"));
+	gamemode.ToggleMedic(gamemode.bMedicDisabled);
+	return Plugin_Handled;
+}
+
 public Action AdminWardayRed(int client, int args)
 {
 	if (!bEnabled.BoolValue)
@@ -1291,21 +1363,10 @@ public Action AdminFullWarday(int client, int args)
 	}
 
 	for (int i = MaxClients; i; --i)
-	{
-		if (!IsClientInGame(i) || !IsPlayerAlive(i))
-			continue;
-
-		if (GetClientTeam(i) == RED && !allowred)
-			continue;
-
-		if (GetClientTeam(i) == BLU && !allowblu)
-			continue;
-
-		JailFighter(i).TeleportToPosition(GetClientTeam(i));
-	}
+		if (IsClientInGame(i) || IsPlayerAlive(i))
+			JailFighter(i).TeleportToPosition(GetClientTeam(i));
 
 	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Warday has been activated!");
-
 	return Plugin_Handled;
 }
 
@@ -1315,44 +1376,21 @@ public Action AdminReloadCFG(int client, int args)
 	CReplyToCommand(client, "{orange}[TF2Jail]{fullred} Reloading plugin CFG.");
 	return Plugin_Handled;
 }
-#if defined _clientprefs_included
-public Action Command_MusicOff(int client, int args)
+
+public Action AdminToggleMedic(int client, int args)
 {
-	if (!bEnabled.BoolValue || !client)
+	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	MusicPanel(client);
+	if (gamemode.iRoundState != StateRunning)
+	{
+		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
+		return Plugin_Handled;
+	}
+	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has toggled Medic {default}%s{burlywood}!", gamemode.bMedicDisabled ? "On" : "Off");
+	gamemode.ToggleMedic(gamemode.bMedicDisabled);
 	return Plugin_Handled;
 }
-
-public void MusicPanel(const int client)
-{
-	Panel panel = new Panel();
-	panel.SetTitle("Turn the TF2Jail Music...");
-	panel.DrawItem("On?");
-	panel.DrawItem("Off?");
-	panel.Send(client, MusicTogglePanel, 9001);
-	delete (panel);
-}
-
-public int MusicTogglePanel(Menu menu, MenuAction action, int client, int select)
-{
-	if (action == MenuAction_Select) 
-	{
-		JailFighter player = JailFighter(client);
-		if (select == 1) 
-		{
-			player.bNoMusic = false;
-			CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You've turned {lightgreen}On{default} the TF2Jail Background Music.");
-		}
-		else
-		{
-			player.bNoMusic = true;
-			CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You've turned {lightgreen}Off{default} the TF2Jail Background Music.\nWhen the music stops, it won't play again.");
-		}
-	}
-}
-#endif
 
 public Action Preset(int client, int args)
 {
