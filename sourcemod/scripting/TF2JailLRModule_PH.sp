@@ -143,7 +143,6 @@ methodmap JailHunter < JBPlayer
 			g_PlayerModel[client] = model;
 		}
 
-		
 		// This wackiness with [0] is required when dealing with enums containing strings
 		char modelName[96];
 		if (g_PropData.GetArray(model, propData[0], sizeof(propData)))
@@ -370,7 +369,7 @@ public void ParsePropCFG()
 {
 	char Path[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, Path, sizeof(Path), "data/prophunt/prop_common.txt");
-	
+
 	KeyValues kv = CreateKeyValues("propcommon");
 	if (!kv.ImportFromFile(Path))
 	{
@@ -378,14 +377,14 @@ public void ParsePropCFG()
 		delete kv;
 		return;
 	}
-	
+
 	if (!kv.GotoFirstSubKey())
 	{
 		LogError("Prop Common file is empty!");
 		delete kv;
 		return;
 	}		
-	
+
 	g_PropData.Clear();
 	g_PropNamesIndex.Clear();
 	g_PropPath.Clear();
@@ -399,7 +398,9 @@ public void ParsePropCFG()
 		kv.GetString("name", propData[PropData_Name], sizeof(propData[PropData_Name]), "");
 
 		kv.GetString("offset", propData[PropData_Offset], sizeof(propData[PropData_Offset]), "0 0 0");
+		g_ModelOffset.PushString(propData[PropData_Offset]);
 		kv.GetString("rotation", propData[PropData_Rotation], sizeof(propData[PropData_Rotation]), "0 0 0");
+		g_ModelRotation.PushString(propData[PropData_Rotation]);
 
 		if (!strlen(propData[PropData_Name]))
 		{
@@ -418,7 +419,7 @@ public void ParsePropCFG()
 
 		counter++;
 	} while kv.GotoNextKey(false);
-		
+
 	delete kv;
 }
 
