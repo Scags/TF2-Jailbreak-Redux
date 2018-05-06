@@ -1,6 +1,13 @@
+#define Extinguish		"player/flame_out.wav"
+#define Engulf			"misc/flame_engulf.wav"
 
 methodmap CHotPrisoner < JailGameMode
 {
+	public static CHotPrisoner Manage()
+	{
+		return view_as< CHotPrisoner >(gamemode);
+	}
+
 	public void Initialize()
 	{
 		CPrintToChatAll("{burlywood}I'm too hot! Hot damn!");
@@ -33,11 +40,6 @@ methodmap CHotPrisoner < JailGameMode
 			SetEntityRenderColor(player.index, 255, 255, 255, 255);
 	}
 };
-
-public CHotPrisoner ToCHotPrisoner( JailGameMode handle )
-{
-	return view_as< CHotPrisoner >(handle);
-}
 
 public void HotPrisonerDownload()
 {

@@ -1,3 +1,5 @@
+#define HHH 			"models/bots/headless_hatman.mdl"	// Taken from flaminsarge's bethehorsemann don't crucify me
+#define AXE 			"models/weapons/c_models/c_bigaxe/c_bigaxe.mdl"
 #define SPAWN 			"ui/halloween_boss_summoned_fx.wav"
 #define SPAWNRUMBLE 	"ui/halloween_boss_summon_rumble.wav"
 #define SPAWNVO 		"vo/halloween_boss/knight_spawn.wav"
@@ -10,6 +12,11 @@
 
 methodmap CHHHDay < JailGameMode
 {
+	public static CHHHDay Manage()
+	{
+		return view_as< CHHHDay >(gamemode);
+	}
+
 	public void Initialize()
 	{
 		this.bIsWardenLocked = true;
@@ -68,11 +75,6 @@ methodmap CHHHDay < JailGameMode
 		}
 	}
 };
-
-public CHHHDay ToCHHHDay( JailGameMode handle )
-{
-	return view_as< CHHHDay >(handle);
-}
 
 public void HHHDayDownload()
 {

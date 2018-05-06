@@ -9,7 +9,7 @@
 #pragma newdecls required
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.0.3"
+#define PLUGIN_VERSION		"1.0.4"
 
 #define RED 				2
 #define BLU 				3
@@ -31,14 +31,22 @@ enum PropData
 {
 	String:PropData_Name[96],
 	String:PropData_Offset[32], // 3 digits, plus 2 spaces, plus a null terminator
-	String:PropData_Rotation[32], // 3 digits, plus 2 spaces, plus a null terminator
-}
+	String:PropData_Rotation[32] // 3 digits, plus 2 spaces, plus a null terminator
+};
 
 methodmap JailHunter < JBPlayer
 {
-	public JailHunter( const int w, bool userid = false )
+	public JailHunter( const int w )
 	{
-		return view_as< JailHunter >( JBPlayer(w, userid) );
+		return view_as< JailHunter >( JBPlayer(w) );
+	}
+	public static JailHunter OfUserId( const int id )
+	{
+		return view_as< JailHunter >( JBPlayer.OfUserId(id) );
+	}
+	public static JailHunter Of( const JBPlayer player )
+	{
+		return view_as< JailHunter >(player);
 	}
 
 	property int iRolls
@@ -62,16 +70,6 @@ methodmap JailHunter < JBPlayer
 		public get() 				{ return this.GetValue("bTouched"); }
 		public set( const bool i ) 	{ this.SetValue("bTouched", i); }
 	}
-	property bool bLast 
-	{
-		public get() 				{ return this.GetValue("bLast"); }
-		public set( const bool i ) 	{ this.SetValue("bLast", i); }
-	}
-	/*property bool bRerolled 
-	{
-		public get() 				{ return this.GetValue("bRerolled"); }
-		public set( const bool i ) 	{ this.SetValue("bRerolled", i); }
-	}*/
 	property bool bIsProp 
 	{
 		public get() 				{ return this.GetValue("bIsProp"); }
@@ -116,7 +114,7 @@ methodmap JailHunter < JBPlayer
 		if (override)
 			this.iLastProp = -1;
 
-		// fire in a nice random model
+		// Fire in a nice random model
 		char model[PLATFORM_MAX_PATH];
 		char offset[32] = "0 0 0";
 		char rotation[32] = "0 0 0";
@@ -184,7 +182,6 @@ methodmap JailHunter < JBPlayer
 		this.iLastProp = -1;
 		this.iFlameCount = 0;
 		this.bTouched = false;
-		this.bLast = false;
 		this.bIsProp = false;
 		this.bFlaming = false;
 		this.bLocked = false;
@@ -209,11 +206,6 @@ methodmap JailHunter < JBPlayer
 		}
 	}
 };
-
-public JailHunter ToJailHunter(const JBPlayer Player)
-{
-	return view_as< JailHunter >(Player);
-}
 
 public Plugin myinfo =
 {
@@ -276,7 +268,7 @@ public void OnPluginStart()
 	JBPH[FreezeTime] 			 = CreateConVar("sm_jbph_freeze_time", "30", "Freeze BLU team for 'x' seconds", FCVAR_NOTIFY, true, 0.0, true, 120.0);
 	JBPH[Teleportation] 		 = CreateConVar("sm_jbph_teleport", "1", "Teleport players to warday/freeday locations? (0: Disabed, 1: BLU to Warday, 2: BLU to Freeday, 3: RED to Warday, 4: RED to Freeday, 5: BOTH to Warday)", FCVAR_NOTIFY, true, 0.0, true, 5.0);	
 	JBPH[RoundTime] 			 = CreateConVar("sm_jbph_round_time", "300", "Round time in seconds. THIS ADDS TO YOUR \"sm_jbph_freeze_time\" CVAR.", FCVAR_NOTIFY, true, 0.0);
-	JBPH[PickCount] 			 = CreateConVar("sm_jbvsh_lr_max", "5", "How many times can Prophunt be picked in a single map? 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
+	JBPH[PickCount] 			 = CreateConVar("sm_jbph_lr_max", "5", "How many times can Prophunt be picked in a single map? 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
 	JBPH[ThisPlugin] 			 = CreateConVar("sm_jbph_ilrtype", "14", "This sub-plugin's last request index. DO NOT CHANGE THIS UNLESS YOU KNOW WHAT YOU'RE DOING", FCVAR_NOTIFY, true, 0.0);
 	JBPH[MedicToggling] 		 = CreateConVar("sm_jbph_medic_toggle", "1", "Disable the medic room?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
@@ -320,12 +312,11 @@ public void OnMapStart()
 
 public void fwdOnClientInduction(const JBPlayer Player)
 {
-	JailHunter base = ToJailHunter(Player);
+	JailHunter base = JailHunter.Of(Player);
 	base.iRolls = 0;
 	base.iLastProp = -1;
 	base.iFlameCount = 0;
 	base.bTouched = false;
-	base.bLast = false;
 	base.bIsProp = false;
 	base.bFlaming = false;
 	base.bLocked = false;
@@ -573,7 +564,7 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 			player.iFlameCount = 0;
 		}
 		else DoSelfDamage(client, weapon);
-		
+
 		result = false;
 		return Plugin_Handled;
 	}
@@ -586,7 +577,7 @@ public Action fwdOnHookDamage(const JBPlayer player, int &attacker, int& inflict
 		return Plugin_Continue;
 
 	//JailHunter player = JailHunter(attacker);
-	JailHunter victim = ToJailHunter(player);
+	JailHunter victim = JailHunter.Of(player);
 
 	if (!victim.bTouched && GetClientTeam(victim.index) == RED)
 	{
@@ -657,8 +648,8 @@ public Action Timer_Round(Handle timer)	// Same structure as the core plugin's t
 
 stock bool GetModelNameForClient(const int client, const char[] modelName, char[] name, int maxlen)
 {
-	int propData[PropData];
-		
+	PropData propData[PropData];
+
 	if (g_PropData.GetArray(modelName, propData[0], sizeof(propData)))
 	{
 		strcopy(name, maxlen, propData[PropData_Name]);
@@ -678,7 +669,7 @@ stock void SwitchView(const int client, bool observer, bool viewmodel)
 	SetEntProp(target, Prop_Send, "m_iObserverMode", observer ? 1:0);
 	SetEntData(target, g_oFOV, observer ? 100:GetEntData(target, g_oDefFOV, 4), 4, true);
 	SetEntProp(target, Prop_Send, "m_bDrawViewmodel", viewmodel ? 1:0);*/
-	
+
 	SetVariantInt(observer ? 1 : 0);
 	AcceptEntityInput(client, "SetForcedTauntCam");
 
@@ -705,7 +696,7 @@ public void OnGameFrame()
 			continue;
 
 		int weapon = GetEntPropEnt(i, Prop_Send, "m_hActiveWeapon");
-		
+
 		if (IsValidEntity(weapon))
 		{
 			DoSelfDamage(i, weapon);
@@ -783,7 +774,6 @@ stock void AddVelocity(const int client, const float speed)
 	TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 }
 
-
 public void fwdOnPreThink(const JBPlayer Player, int buttons)
 {
 	if (!JBPH[Enabled].BoolValue || NotPH)
@@ -794,7 +784,7 @@ public void fwdOnPreThink(const JBPlayer Player, int buttons)
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
 		return;
 
-	JailHunter player = ToJailHunter(Player);
+	JailHunter player = JailHunter.Of(Player);
 	if (GetClientTeam(client) == BLU)
 	{
 		if (!(buttons & IN_ATTACK))
@@ -861,7 +851,7 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 	if (!JBPH[Enabled].BoolValue || NotPH)
 		return;
 
-	JailHunter base = ToJailHunter(player);
+	JailHunter base = JailHunter.Of(player);
 	int client = base.index;
 
 	if (gamemode.GetProperty("bTF2Attribs"))
@@ -885,8 +875,8 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 
 			switch (JBPH[Teleportation].IntValue)
 			{
-				case 3, 5:if (gamemode.GetProperty("bWardayTeleportSetRed")) base.TeleportToPosition(WRED);
-				case 4:if (gamemode.GetProperty("bFreedayTeleportSet")) base.TeleportToPosition(FREEDAY);
+				case 3, 5:base.TeleportToPosition(WRED);
+				case 4:base.TeleportToPosition(FREEDAY);
 			}
 
 			base.bTouched = false;
@@ -939,7 +929,7 @@ public void fwdOnManageRoundStart()
 
 	if (JBPH[MedicToggling].BoolValue)
 		gamemode.ToggleMedic(false);
-		
+
 	float rerolltime = JBPH[RerollTime].FloatValue;
 	if (rerolltime != 0.0)
 		SetPawnTimer(DisallowRerolls, rerolltime, gamemode.GetProperty("iRoundCount"));
@@ -1003,7 +993,7 @@ public void fwdOnBlueTouchRed(const JBPlayer player, const JBPlayer victim)
 	if (!JBPH[Enabled].BoolValue || NotPH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return;
 
-	JailHunter base = ToJailHunter(victim);
+	JailHunter base = JailHunter.Of(victim);
 	if (!base.bTouched)
 	{
 		base.bTouched = true;
@@ -1047,7 +1037,7 @@ public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Even
 	if (!JBPH[Enabled].BoolValue || NotPH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return;
 
-	JailHunter player = ToJailHunter(victim);
+	JailHunter player = JailHunter.Of(victim);
 	player.Init_PH(true);
 
 	if (GetClientTeam(victim.index) == BLU)
@@ -1077,7 +1067,7 @@ public void fwdOnPlayerSpawned(const JBPlayer player)
 		return;
 
 	if (GetClientTeam(player.index) == RED)
-		ToJailHunter(player).MakeProp(JBPH[PropNameOnGive].BoolValue);
+		JailHunter.Of(player).MakeProp(JBPH[PropNameOnGive].BoolValue);
 }
 public void fwdOnManageTimeLeft()
 {
@@ -1120,12 +1110,11 @@ public void fwdOnResetVariables(const JBPlayer Player)
 		return;
 
 	int client = Player.index;
-	JailHunter player = ToJailHunter(Player);
+	JailHunter player = JailHunter.Of(Player);
 	player.iRolls = 0;
 	player.iLastProp = -1;
 	player.iFlameCount = 0;
 	player.bTouched = false;
-	player.bLast = false;
 	player.bIsProp = false;
 	player.bFlaming = false;
 	player.bLocked = false;
@@ -1133,7 +1122,7 @@ public void fwdOnResetVariables(const JBPlayer Player)
 	player.bHoldingRMB = false;
 	player.bFirstPerson = false;
 	player.iOldClass = TFClass_Unknown;
-	
+
 	if (GetClientTeam(client) == RED)
 	{
 		SetVariantString("ParticleEffectStop");
@@ -1152,6 +1141,7 @@ public Action fwdOnTimeEnd()
 {
 	if (!JBPH[Enabled].BoolValue || NotPH)
 		return Plugin_Continue;
+
 	ForceTeamWin(RED);
 	return Plugin_Handled;
 }
@@ -1163,15 +1153,15 @@ public void fwdOnPlayerPrepped(const JBPlayer Player, Event event)	// For safety
 	if (GetClientTeam(Player.index) != RED)
 		return;
 
-	JailHunter player = ToJailHunter(Player);
+	JailHunter player = JailHunter.Of(Player);
 	if (!player.bIsProp)
 		player.MakeProp(JBPH[PropNameOnGive].BoolValue);
 }
 
 public void CheckJBHooks()
 {
-	if (!JB_HookEx(OnLRRoundActivate, fwdOnLRRoundActivate))
-		LogError("Error Loading OnLRRoundActivate Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnManageRoundStartPlayer, fwdOnLRRoundActivate))
+		LogError("Error Loading OnManageRoundStartPlayer Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnManageRoundStart, fwdOnManageRoundStart))
 		LogError("Error Loading OnManageRoundStart, Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnManageRoundEnd, fwdOnManageRoundEnd))

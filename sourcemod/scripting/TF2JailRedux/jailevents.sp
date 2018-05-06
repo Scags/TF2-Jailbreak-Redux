@@ -56,7 +56,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter victim = JailFighter( event.GetInt("userid"), true );
+	JailFighter victim = JailFighter.OfUserId( event.GetInt("userid") );
 	int attacker = GetClientOfUserId( event.GetInt("attacker") );
 
 	if (victim.index == attacker || attacker <= 0)
@@ -73,17 +73,20 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue || gamemode.iRoundState == StateDisabled)
 		return Plugin_Continue;
 
-	JailFighter victim = JailFighter( event.GetInt("userid"), true );	
-	JailFighter attacker = JailFighter( event.GetInt("attacker"), true );
+	JailFighter victim = JailFighter.OfUserId( event.GetInt("userid") );	
+	JailFighter attacker = JailFighter.OfUserId( event.GetInt("attacker") );
 
 	if (gamemode.bTF2Attribs)
 		TF2Attrib_RemoveAll(victim.index);
 
 	if (IsClientValid(attacker.index))
 	{
-		int killcount = cvarTF2Jail[FreeKill].IntValue;
-		if (killcount)
-			FreeKillSystem(attacker, killcount);
+		if (!gamemode.bDisableKillSpree)
+		{
+			int killcount = cvarTF2Jail[FreeKill].IntValue;
+			if (killcount)
+				FreeKillSystem(attacker, killcount);
+		}
 	}
 
 	SetPawnTimer(CheckLivingPlayers, 0.2);
@@ -249,16 +252,16 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	bool warday;
 	float delay, dooropen;
-	int cloak;
+	int wep;
 
 	gamemode.iLRType = gamemode.iLRPresetType;
 	gamemode.iRoundState = StateRunning;
 
-	ManageRoundStart();		// THESE FIRE BEFORE INITIALIZATION FUNCTIONS IN THE PLAYER LOOP
-	ManageCells();			// This is the only (easy) way for the VSH sub-plugin to grab a random player
-	ManageFFTimer();		// And force them to be a boss, then OnLRActivate() we force non-bosses to red team
-	ManageHUDText();		// If you need to do something that goes against this functionality, you'll have to
-	ManageTimeLeft();		// Loop clients on ManageRoundStart() to set what you want, then ignore OnLRActivate()
+	ManageOnRoundStart(event);	// THESE FIRE BEFORE INITIALIZATION FUNCTIONS IN THE PLAYER LOOP
+	ManageCells();				// This is the only (easy) way for the VSH sub-plugin to grab a random player
+	ManageFFTimer();			// And force them to be a boss, then ManageRoundStart() we force non-bosses to red team
+	ManageHUDText();			// If you need to do something that goes against this functionality, you'll have to
+	ManageTimeLeft();			// Loop clients on ManageRoundStart() to set what you want, then ignore OnLRActivate()
 	// Or if you aren't using the VSH subplugin, ignore this
 
 	warday = gamemode.bIsWarday;
@@ -271,20 +274,21 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 			continue;
 
 		player = JailFighter(i);
-		OnLRActivate(player);
+		ManageRoundStart(player, event);
 
 		if (warday)
 		{
 			player.TeleportToPosition(GetClientTeam(i));
 
-			if (GetIndexOfWeaponSlot(i, TFWeaponSlot_Melee) == 589 && GetClientTeam(i) == BLU)
+			wep = GetPlayerWeaponSlot(i, 3);
+			if (wep > MaxClients && IsValidEdict(wep) && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 589 && GetClientTeam(i) == BLU)	// Eureka Effect
 			{
 				TF2_RemoveWeaponSlot(i, TFWeaponSlot_Melee);
 				player.SpawnWeapon("tf_weapon_wrench", 7, 1, 0, "");
 			}
 
-			cloak = GetPlayerWeaponSlot(i, 4);
-			if (cloak > MaxClients && IsValidEdict(cloak) && GetEntProp(cloak, Prop_Send, "m_iItemDefinitionIndex") == 60)
+			wep = GetPlayerWeaponSlot(i, 4);
+			if (wep > MaxClients && IsValidEdict(wep) && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 60)	// Cloak and Dagger
 			{
 				TF2_RemoveWeaponSlot(i, 4);
 				player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "");
@@ -321,7 +325,6 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	JailFighter player;
 	int i, x;
 	bool attrib = gamemode.bTF2Attribs;
-	gamemode.iRoundCount++;
 
 	for (i = MaxClients; i; --i)
 	{
@@ -340,10 +343,10 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 			if (hTextNodes[x] != null)
 				ClearSyncHud(i, hTextNodes[x]);
 
-		if (GetClientMenu(i) != MenuSource_None && !IsVoteInProgress())
+		if (GetClientMenu(i) != MenuSource_None)
 			CancelClientMenu(i, true);
 				
-		ManageRoundEnd(player);
+		ManageRoundEnd(player, event);
 	}
 	ManageOnRoundEnd(event); // Making 1 with and without clients so things dont fire once for every client in the loop
 	
@@ -359,9 +362,12 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	gamemode.bOnePrisonerLeft = false;
 	gamemode.bAllowBuilding = false;
 	gamemode.bSilentWardenKills = false;
+	gamemode.bDisableMuting = false;
+	gamemode.bDisableKillSpree = false;
 	gamemode.iLRType = -1;
 	gamemode.iTimeLeft = 0; // Had to set it to 0 here because it kept glitching out... odd
 	gamemode.iRoundState = StateEnding;
+	gamemode.iRoundCount++;
 
 	return Plugin_Continue;
 }
@@ -371,7 +377,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player = JailFighter( event.GetInt("userid"), true );
+	JailFighter player = JailFighter.OfUserId( event.GetInt("userid") );
 
 	if (IsClientValid(player.index))
 		SetPawnTimer(PrepPlayer, 0.2, player.userid);
@@ -384,7 +390,7 @@ public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player = JailFighter( (event.GetInt("userid")), true );
+	JailFighter player = JailFighter.OfUserId( (event.GetInt("userid")) );
 
 	if (IsClientValid(player.index))
 		SetPawnTimer(PrepPlayer, 0.2, player.userid);
@@ -397,7 +403,7 @@ public void OnHookedEvent(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return;
 
-	JailFighter( event.GetInt("userid"), true ).bInJump = StrEqual(name, "rocket_jump", false) || StrEqual(name, "sticky_jump", false);
+	JailFighter.OfUserId( event.GetInt("userid") ).bInJump = StrEqual(name, "rocket_jump", false) || StrEqual(name, "sticky_jump", false);
 }
 
 /** Events that aren't used in core (but are used in VSH plugin module) :^) **/
@@ -406,8 +412,8 @@ public Action ObjectDeflected(Event event, const char[] name, bool dontBroadcast
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter airblaster = JailFighter( event.GetInt("userid"), true );
-	JailFighter airblasted = JailFighter( event.GetInt("ownerid"), true );
+	JailFighter airblaster = JailFighter.OfUserId( event.GetInt("userid") );
+	JailFighter airblasted = JailFighter.OfUserId( event.GetInt("ownerid") );
 	int weaponid = GetEventInt(event, "weaponid");
 	if (weaponid)
 		return Plugin_Continue;
@@ -420,7 +426,7 @@ public Action ObjectDestroyed(Event event, const char[] name, bool dontBroadcast
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter destroyer = JailFighter( event.GetInt("attacker"), true );
+	JailFighter destroyer = JailFighter.OfUserId( event.GetInt("attacker") );
 	int building = event.GetInt("index");
 	int objecttype = event.GetInt("objecttype");
 	ManageBuildingDestroyed(destroyer, building, objecttype, event);
@@ -432,8 +438,8 @@ public Action PlayerJarated(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter jarateer = JailFighter( event.GetInt("thrower_entindex"), true );
-	JailFighter jarateed = JailFighter( event.GetInt("victim_entindex"), true );
+	JailFighter jarateer = JailFighter.OfUserId( event.GetInt("thrower_entindex") );
+	JailFighter jarateed = JailFighter.OfUserId( event.GetInt("victim_entindex") );
 	ManageOnPlayerJarated(jarateer, jarateed, event);
 	return Plugin_Continue;
 }
@@ -443,8 +449,8 @@ public Action UberDeployed(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 	
-	JailFighter medic = JailFighter( event.GetInt("userid"), true );
-	JailFighter patient = JailFighter( event.GetInt("targetid"), true );
+	JailFighter medic = JailFighter.OfUserId( event.GetInt("userid") );
+	JailFighter patient = JailFighter.OfUserId( event.GetInt("targetid") );
 	ManageUberDeployed(patient, medic, event);
 	return Plugin_Continue;
 }

@@ -1,8 +1,3 @@
-int	// Particles
-	iHalo,
-	iLaserBeam,
-	iHalo2
-;
 
 methodmap JailGameMode < StringMap
 {
@@ -10,6 +5,7 @@ methodmap JailGameMode < StringMap
 	{
 		return view_as< JailGameMode >(new StringMap());
 	}
+
 	property int iRoundState
 	{
 		public get()
@@ -405,6 +401,30 @@ methodmap JailGameMode < StringMap
 			this.SetValue("bMedicDisabled", i);
 		}
 	}
+	property bool bDisableMuting
+	{
+		public get()
+		{
+			bool i; this.GetValue("bDisableMuting", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bDisableMuting", i);
+		}
+	}
+	property bool bDisableKillSpree
+	{
+		public get()
+		{
+			bool i; this.GetValue("bDisableKillSpree", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bDisableKillSpree", i);
+		}
+	}
 
 	property float flMusicTime
 	{
@@ -419,30 +439,22 @@ methodmap JailGameMode < StringMap
 		}
 	}
 
-	property JailFighter Warden
+	property JailFighter iWarden
 	{
 		public get()
 		{
-			// JailFighter i; this.GetValue("Warden", i);
-			// return i;
-			JailFighter player;
-			for (int i = MaxClients; i; --i)
-			{
-				if (!IsClientInGame(i))
-					continue;
-				player = JailFighter(i);
-				if (!player.bIsWarden)
-					continue;
-				return player;
-			}
-			return view_as< JailFighter >(0);
+			int i; this.GetValue("iWarden", i);
+			JailFighter player = JailFighter.OfUserId(i);
+			if (!IsClientValid(player.index))
+				return view_as< JailFighter >(0);
+			if (!player.bIsWarden)
+				return view_as< JailFighter >(0);
+			return player;
 		}
-		/*public set( const JailFighter i )
+		public set( const JailFighter i )
 		{
-			this.SetValue("Warden", i);
-			this.bWardenExists = true;
-			i.WardenSet();
-		}*/
+			this.SetValue("iWarden", i.userid);
+		}
 	}
 	/**
 	 *	Initialize all JailGameMode Properties to a default.
@@ -462,6 +474,7 @@ methodmap JailGameMode < StringMap
 		this.bDisableCriticals = false;
 		this.bWardenExists = false;
 		this.bFirstDoorOpening = false;
+		this.bIsWardenLocked = false;
 		this.bAdminLockedLR = false;
 		this.bAdminLockWarden = false;
 		this.bIsWarday = false;
@@ -474,6 +487,8 @@ methodmap JailGameMode < StringMap
 		this.bAllowBuilding = false;
 		this.bSilentWardenKills = false;
 		this.bMedicDisabled = false;
+		this.bDisableMuting = false;
+		this.bDisableKillSpree = false;
 #if defined _steamtools_included
 		this.bSteam = false;
 #endif
@@ -486,6 +501,7 @@ methodmap JailGameMode < StringMap
 #endif
 		this.bMarkerExists = false;
 		this.flMusicTime = 0.0;
+		// this.iWarden = view_as< JailFighter >(0);
 	}
 	/**
 	 *	Find and Initialize a random player as the warden.
@@ -501,21 +517,61 @@ methodmap JailGameMode < StringMap
 	 *	Handle the cell doors.
 	 *
 	 *	@param status 			Type of cell door usage found in the eDoorsMode enum.
+	 *	@param announce 		Announce message to all clients.
+	 *	@param fromwarden 		If true, current warden will be the client announced who activated cells. 
+	 *							If false, undisclosed admin is the announced activator.
 	 *
 	 *	@noreturn
 	*/
-	public void DoorHandler( const eDoorsMode status )
+	public void DoorHandler( const eDoorsMode status, bool announce = false, bool fromwarden = true )
 	{
 		if (sCellNames[0] != '\0')
 		{
-			for (int i = 0; i < sizeof(sDoorsList); i++)
+			char name[32];
+			switch (status)
 			{
-				char sEntityName[32];
-				int ent = -1;
+				case OPEN:
+				{
+					if (Call_OnDoorsOpen() != Plugin_Continue) 
+						return;
+					name = "opened";
+					this.bCellsOpened = true;
+					if (!this.bFirstDoorOpening)
+						this.bFirstDoorOpening = true;
+				}
+				case CLOSE:
+				{
+					if (Call_OnDoorsClose() != Plugin_Continue) 
+						return;
+					name = "closed";
+					this.bCellsOpened = false;
+				}
+				case LOCK:
+				{
+					if (Call_OnDoorsLock() != Plugin_Continue) 
+						return;
+					name = "locked";
+				}
+				case UNLOCK:
+				{
+					if (Call_OnDoorsUnlock() != Plugin_Continue) 
+						return;
+					name = "unlocked";
+				}
+			}
+			int i, ent = -1;
+			if (announce)
+				if (fromwarden)
+					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden {default}%N{burlywood} has %s cells.", this.iWarden.index, name);
+				else CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has %s cells.", name);
+
+			for (i = 0; i < sizeof(sDoorsList); i++)
+			{
+				ent = -1;
 				while ((ent = FindEntityByClassnameSafe(ent, sDoorsList[i])) != -1)
 				{
-					GetEntPropString(ent, Prop_Data, "m_iName", sEntityName, sizeof(sEntityName));
-					if (StrEqual(sEntityName, sCellNames, false))
+					GetEntPropString(ent, Prop_Data, "m_iName", name, sizeof(name));
+					if (StrEqual(name, sCellNames, false))
 					{
 						switch (status)
 						{
@@ -526,18 +582,6 @@ methodmap JailGameMode < StringMap
 						}
 					}
 				}
-			}
-			switch (status)
-			{
-				case OPEN:
-				{
-					this.bCellsOpened = true;
-					if (!this.bFirstDoorOpening)
-						this.bFirstDoorOpening = true;
-				}
-				case CLOSE:this.bCellsOpened = false;
-				// case LOCK:CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Cell doors have been locked.");
-				// case UNLOCK:CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Cell doors have been unlocked.");
 			}
 		}
 	}
@@ -551,7 +595,10 @@ methodmap JailGameMode < StringMap
 	*/
 	public void FireWarden( bool prevent = true, bool announce = true )
 	{
-		JailFighter player = this.Warden;
+		JailFighter player = this.iWarden;
+		if (!player)
+			return;
+
 		player.WardenUnset();
 		this.bWardenExists = false;
 
@@ -562,7 +609,7 @@ methodmap JailGameMode < StringMap
 	}
 	/**
 	 *	Open all of the doors on a map
-	 *	@NOTE 					This ignores all name checks and opens every door possible.
+	 *	@note 					This ignores all name checks and opens every door possible.
 	 *
 	 *	@noreturn
 	*/

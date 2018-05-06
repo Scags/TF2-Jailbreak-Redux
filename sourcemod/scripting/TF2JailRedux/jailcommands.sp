@@ -27,7 +27,7 @@ public int Panel_Help(Menu menu, MenuAction action, int client, int select)
 				case 0:
 				{
 					if (gamemode.bWardenExists)
-						CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.Warden.index);
+						CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.iWarden.index);
 					else CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} There is no current warden.");
 				}
 				case 1:ListLastRequestPanel(client);
@@ -63,7 +63,7 @@ public Action Command_BecomeWarden(int client, int args)
 
 	if (gamemode.bWardenExists)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.Warden.index);
+		CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.iWarden.index);
 		return Plugin_Handled;
 	}
 
@@ -122,7 +122,7 @@ public Action Command_ExitWarden(int client, int args)
 	JailFighter player = JailFighter(client);
 	if (!player.bIsWarden)
 	{
-		CPrintToChat(player.index, "{crimson}[TF2Jail]{burlywood} You are not warden.");
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are not warden.");
 		return Plugin_Handled;
 	}
 
@@ -190,8 +190,7 @@ public Action Command_OpenCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(OPEN);
-	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden {default}%N{burlywood} has closed cells.", client);
+	gamemode.DoorHandler(OPEN, true);
 
 	return Plugin_Handled;
 }
@@ -224,8 +223,7 @@ public Action Command_CloseCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(CLOSE);
-	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden {default}%N{burlywood} has closed cells.", client);
+	gamemode.DoorHandler(CLOSE, true);
 
 	return Plugin_Handled;
 }
@@ -356,45 +354,26 @@ public Action Command_GiveLastRequest(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (args == 1)
+	char targetname[32]; GetCmdArgString(targetname, sizeof(targetname));
+	int target = FindTarget(client, targetname);
+	if (!IsClientValid(target))
 	{
-		char targetname[32]; GetCmdArg(1, targetname, sizeof(targetname));
-		int target = FindTarget(client, targetname);
-		if (!IsClientValid(target))
-			return Plugin_Handled;
-
-		if (!IsPlayerAlive(target))
-		{
-			CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Target is not alive.");
-			return Plugin_Handled;
-		}
-		if (GetClientTeam(target) != RED)
-		{
-			CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Target is not on Red Team.");
-			return Plugin_Handled;
-		}
-		JailFighter(target).ListLRS();
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Invalid target.");
+		return Plugin_Handled;
 	}
+	if (!IsPlayerAlive(target))
+	{
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Target is not alive.");
+		return Plugin_Handled;
+	}
+	if (GetClientTeam(target) != RED)
+	{
+		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Target is not on Red Team.");
+		return Plugin_Handled;
+	}
+	JailFighter(target).ListLRS();
 
 	return Plugin_Handled;
-}
-
-void AddClientsToMenu(Menu &menu, bool alive = false, int team = RED)
-{
-	char strName[32], strID[8];
-	for (int i = MaxClients; i; --i)
-	{
-		if (!IsClientInGame(i))
-			continue;
-		if (alive && !IsPlayerAlive(i))
-			continue;
-		if (GetClientTeam(i) != team)
-			continue;
-
-		IntToString(GetClientUserId(i), strID, sizeof(strID));
-		GetClientName(i, strName, sizeof(strName));
-		menu.AddItem(strID, strName);
-	}
 }
 
 public Action Command_RemoveLastRequest(int client, int args)
@@ -480,7 +459,7 @@ public Action Command_CurrentWarden(int client, int args)
 		return Plugin_Handled;
 	}
 	if (gamemode.bWardenExists)
-		CReplyToCommand(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.Warden.index);
+		CReplyToCommand(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.iWarden.index);
 	else CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} There is no current warden.");
 
 	return Plugin_Handled;
@@ -532,7 +511,7 @@ public Action AdminRemoveWarden(int client, int args)
 
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
+		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
 		return Plugin_Handled;
 	}
 	if (!gamemode.bWardenExists)
@@ -565,13 +544,13 @@ public Action AdminDenyLR(int client, int args)
 		player = JailFighter(i);
 		if (player.bIsQueuedFreeday)
 		{
-			CPrintToChat(i, "{orange}[TF2Jail]{burlywood} An Admin has removed your queued freeday!");
+			CPrintToChat(i, "{orange}[TF2Jail]{burlywood} Admin has removed your queued freeday!");
 			player.bIsQueuedFreeday = false;
 		}
 
 		if (player.bIsFreeday)
 		{
-			CPrintToChat(i, "{orange}[TF2Jail]{burlywood} An Admin has removed your freeday!");
+			CPrintToChat(i, "{orange}[TF2Jail]{burlywood} Admin has removed your freeday!");
 			player.RemoveFreeday();
 		}
 	}
@@ -597,8 +576,7 @@ public Action AdminOpenCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(OPEN);
-	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has opened cells.");
+	gamemode.DoorHandler(OPEN, true, false);
 
 	return Plugin_Handled;
 }
@@ -614,8 +592,7 @@ public Action AdminCloseCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(CLOSE);
-	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has closed cells.");
+	gamemode.DoorHandler(CLOSE, true, false);
 
 	return Plugin_Handled;
 }
@@ -631,8 +608,7 @@ public Action AdminLockCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(LOCK);
-	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has locked cells.");
+	gamemode.DoorHandler(LOCK, true, false);
 
 	return Plugin_Handled;
 }
@@ -648,8 +624,7 @@ public Action AdminUnlockCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(UNLOCK);
-	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has unlocked cells.");
+	gamemode.DoorHandler(UNLOCK, true, false);
 
 	return Plugin_Handled;
 }
@@ -661,12 +636,12 @@ public Action AdminForceWarden(int client, int args)
 
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
+		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
 		return Plugin_Handled;
 	}
 	if (gamemode.bWardenExists)
 	{
-		CReplyToCommand(client, "{crimson}[TF2Jail]{fullred} %N{burlywood} is the current warden.", gamemode.Warden.index);
+		CReplyToCommand(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.iWarden.index);
 		return Plugin_Handled;
 	}
 
@@ -731,9 +706,25 @@ public Action AdminForceLR(int client, int args)
 			CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Player is no longer available.");
 			return Plugin_Handled;
 		}
-		CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has forced {fullred}%N{burlywood} to receive a Last Request.", target);
+		if (!IsPlayerAlive(client))
+		{
+			CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Player is not alive.");
+			return Plugin_Handled;
+		}
+		CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has forced {default}%N{burlywood} to receive a Last Request.", target);
 		JailFighter(target).ListLRS();
 
+		return Plugin_Handled;
+	}
+
+	if (!client)
+	{
+		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Command is in-game only.");
+		return Plugin_Handled;
+	}
+	if (!IsPlayerAlive(client))
+	{
+		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} You must be alive.");
 		return Plugin_Handled;
 	}
 
@@ -833,7 +824,6 @@ public Action AdminGiveFreeday(int client, int args)
 
 		return Plugin_Handled;
 	}
-
 	Admin_GiveFreedaysMenu(client);
 	return Plugin_Handled;
 }
@@ -949,7 +939,7 @@ public int MenuHandle_RemoveFreedays(Menu menu, MenuAction action, int client, i
 		{
 			char player[32];
 			menu.GetItem(select, player, sizeof(player));
-			JailFighter targ = JailFighter(StringToInt(player), true);
+			JailFighter targ = JailFighter.OfUserId(StringToInt(player));
 			
 			if (!IsClientInGame(targ.index))
 			{
@@ -978,7 +968,7 @@ public Action AdminLockWarden(int client, int args)
 
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
+		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
 		return Plugin_Handled;
 	}
 	if (gamemode.bAdminLockWarden)
@@ -988,7 +978,7 @@ public Action AdminLockWarden(int client, int args)
 	}
 	if (gamemode.bWardenExists)
 	{
-		gamemode.Warden.WardenUnset();
+		gamemode.iWarden.WardenUnset();
 		gamemode.bWardenExists = false;
 	}
 
@@ -1115,6 +1105,11 @@ public Action Command_WardenFF(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
+	if (!client)
+	{
+		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Command is in-game only.");
+		return Plugin_Handled;
+	}
 	if (gamemode.iRoundState != StateRunning)
 	{
 		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
@@ -1144,6 +1139,11 @@ public Action Command_WardenCC(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
+	if (!client)
+	{
+		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Command is in-game only.");
+		return Plugin_Handled;
+	}
 	if (gamemode.iRoundState != StateRunning)
 	{
 		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
@@ -1300,7 +1300,7 @@ public Action AdminWardayRed(int client, int args)
 		if (!IsPlayerAlive(i) || GetClientTeam(i) != RED)
 			continue;
 
-		TeleportEntity(i, flWardayRed, NULL_VECTOR, NULL_VECTOR);
+		TeleportEntity(i, vecWardayRed, NULL_VECTOR, NULL_VECTOR);
 	}
 
 	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Warday for Red team has been activated!");
@@ -1331,7 +1331,7 @@ public Action AdminWardayBlue(int client, int args)
 		if (!IsPlayerAlive(i) || GetClientTeam(i) != BLU)
 			continue;
 
-		TeleportEntity(i, flWardayBlu, NULL_VECTOR, NULL_VECTOR);
+		TeleportEntity(i, vecWardayBlu, NULL_VECTOR, NULL_VECTOR);
 	}
 
 	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Warday for Blue team has been activated!");
@@ -1363,7 +1363,7 @@ public Action AdminFullWarday(int client, int args)
 	}
 
 	for (int i = MaxClients; i; --i)
-		if (IsClientInGame(i) || IsPlayerAlive(i))
+		if (IsClientInGame(i) && IsPlayerAlive(i))
 			JailFighter(i).TeleportToPosition(GetClientTeam(i));
 
 	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Warday has been activated!");

@@ -1,8 +1,4 @@
 #define GravSound 		"vo/scout_sf12_badmagic11.mp3"
-#define HHH 			"models/bots/headless_hatman.mdl"	// Taken from flaminsarge's bethehorsemann don't crucify me
-#define AXE 			"models/weapons/c_models/c_bigaxe/c_bigaxe.mdl"
-#define Extinguish		"player/flame_out.wav"
-#define Engulf			"misc/flame_engulf.wav"
 #define SuicideSound	"weapons/csgo_awp_shoot.wav"
 #define GunSound		"vo/heavy_meleedare02.mp3"
 #define TinySound		"vo/scout_sf12_badmagic28.mp3"
@@ -161,14 +157,15 @@ public void PrepPlayer(const int userid)
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Grenade);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item1);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item2);
-	base.EmptyWeaponSlots();
+	if (GetClientTeam(client) == RED)
+		base.EmptyWeaponSlots();
 
 	Call_OnPlayerPrepped(base);
 }
 /**
  *	Calls without including players, so we don't fire the same thing for every player
 */
-public void ManageRoundStart()
+public void ManageOnRoundStart(Event event)
 {
 	switch (gamemode.iLRType)
 	{
@@ -203,7 +200,6 @@ public void ManageRoundStart()
 			CPrintToChatAll("{burlywood} *War kazoo sounds*");
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
-			// EmitSoundToAll(WardaySound);
 		}
 		case ClassWars:
 		{
@@ -211,21 +207,22 @@ public void ManageRoundStart()
 			int iClassBLU = arrClass[GetRandomInt(0, 7)];
 			for (int i = MaxClients; i; --i)
 				if (IsClientInGame(i) && IsPlayerAlive(i))
-					TF2_SetPlayerClass(i, view_as< TFClassType >( (GetClientTeam(i) == RED ? iClassRED : iClassBLU)) );
+					if (GetClientTeam(i) == RED)
+						TF2_SetPlayerClass(i, view_as< TFClassType >(iClassRED));
+					else TF2_SetPlayerClass(i, view_as< TFClassType >(iClassBLU));	// Last else statement in one-liners reflects the last if statement. Learned that in C programming, heh
 
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
 		}
-		case HHHDay:ToCHHHDay(gamemode).Initialize();
-		case HotPrisoner:ToCHotPrisoner(gamemode).Initialize();
+		case HHHDay:CHHHDay.Manage().Initialize();
+		case HotPrisoner:CHotPrisoner.Manage().Initialize();
 	}
-
 	Call_OnManageRoundStart();
 }
 /**
- *	Calls on lr round start for each living player
+ *	Calls on round start for each living player
 */
-public void OnLRActivate(const JailFighter player)
+public void ManageRoundStart(const JailFighter player, Event event)
 {
 	int client = player.index;
 
@@ -234,35 +231,42 @@ public void OnLRActivate(const JailFighter player)
 		case FreedaySelf, FreedayOther:if (player.bIsFreeday) CPrintToChatAll("{burlywood}Freeday is now active for {default}%N{burlywood}.", client);
 		case GuardMelee:
 		{
-			if (TF2_GetClientTeam(client) == TFTeam_Blue)
+			if (GetClientTeam(client) == BLU)
 			{
 				player.StripToMelee();
-				if (GetIndexOfWeaponSlot(client, TFWeaponSlot_Melee) == 44 || GetIndexOfWeaponSlot(client, TFWeaponSlot_Melee) == 648)
+				int wep = GetPlayerWeaponSlot(client, 2);
+				if (wep > MaxClients && IsValidEdict(wep))
 				{
-					TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
-					player.SpawnWeapon("tf_weapon_bat", 0, 1, 0, "");
-					SetEntityHealth(client, 125);
+					int idx = GetItemIndex(wep);
+					if (idx == 44 || idx == 648)
+					{
+						TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+						player.SpawnWeapon("tf_weapon_bat", 0, 1, 0, "");
+						SetEntityHealth(client, 125);
+					}
 				}
 			}
 		}
 		case TinyRound:SetEntPropFloat(client, Prop_Send, "m_flModelScale", 0.3);
 		case Warday, ClassWars:ResetPlayer(client);
-		case HHHDay:ToCHHHDay(gamemode).Activate(player);
-		case HotPrisoner:ToCHotPrisoner(gamemode).Activate(player);
+		case HHHDay:CHHHDay.Manage().Activate(player);
+		case HotPrisoner:CHotPrisoner.Manage().Activate(player);
 	}
-
-	Call_OnLRRoundActivate(player);
+	Call_OnManageRoundStartPlayer(player, event);
 }
 /**
  *	Self explanatory, set the gamemode.iTimeLeft to whatever time (in seconds) you desire
 */
 public void ManageTimeLeft()
 {
+	int time = cvarTF2Jail[RoundTime].IntValue;
 	switch (gamemode.iLRType)
 	{
-		default:gamemode.iTimeLeft = cvarTF2Jail[RoundTime].IntValue;
+		default:{	}
 	}
-	Call_OnManageTimeLeft();
+	Call_OnManageTimeLeft(time);
+	
+	gamemode.iTimeLeft = time;
 }
 /**
  *	Calls on round end without players so we don't fire again for every player
@@ -273,23 +277,23 @@ public void ManageOnRoundEnd(Event event)
 	{
 		case Gravity:hEngineConVars[2].SetInt(800);
 		case RandomKill:SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), gamemode.iRoundCount);
-		case HHHDay:ToCHHHDay(gamemode).Terminate(event);
-		case HotPrisoner:ToCHotPrisoner(gamemode).Terminate(event);
+		case HHHDay:CHHHDay.Manage().Terminate(event);
+		case HotPrisoner:CHotPrisoner.Manage().Terminate(event);
 	}
 	Call_OnManageRoundEnd(event);
 }
 /** 
  *	Calls on round end obviously, resets should be put here as well 
 */
-public void ManageRoundEnd(const JailFighter base)
+public void ManageRoundEnd(const JailFighter base, Event event)
 {
 	switch(gamemode.iLRType)
 	{
 		case TinyRound:SetPawnTimer(ResetModelProps, 1.0, base.index);
-		case HHHDay:ToCHHHDay(gamemode).ManageEnd(base);
-		case HotPrisoner:ToCHotPrisoner(gamemode).ManageEnd(base);
+		case HHHDay:CHHHDay.Manage().ManageEnd(base);
+		case HotPrisoner:CHotPrisoner.Manage().ManageEnd(base);
 	}
-	Call_OnLRRoundEnd(base);
+	Call_OnManageRoundEndPlayer(base, event);
 }
 /**
  *	Manage jail cell behavior on round start; choose OPEN/CLOSE/LOCK/UNLOCK
@@ -311,6 +315,7 @@ public void ManageCells()
 */
 public void ManageWarden(const JailFighter base)
 {
+	gamemode.iWarden = base;
 	switch (gamemode.iLRType)
 	{
 		default: {	}
@@ -324,7 +329,7 @@ public void ManageRedTouchBlue(const JailFighter toucher, const JailFighter touc
 {
 	switch (gamemode.iLRType)
 	{
-		case HotPrisoner:ToCHotPrisoner(gamemode).ManageTouch(toucher, touchee);
+		case HotPrisoner:CHotPrisoner.Manage().ManageTouch(toucher, touchee);
 	}
 	Call_OnClientTouch(toucher, touchee);
 }
@@ -333,14 +338,13 @@ public void ManageRedTouchBlue(const JailFighter toucher, const JailFighter touc
 */
 public void ManageFFTimer()
 {
-	float time = 0.0;
+	float time;
 	switch (gamemode.iLRType)
 	{
 		case 
 			HHHDay, 
 			TinyRound
 		:time = 10.0;
-		default: {	}
 	}
 	Call_OnManageFFTimer(time);
 
@@ -438,15 +442,15 @@ public void ManageWardenThink(const JailFighter player)
 /**
  *	Sound hooking for certain scenarios
 */
-public Action SoundHook(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
+public Action SoundHook(clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
 {
 	if (!bEnabled.BoolValue || !IsClientValid(entity))
 		return Plugin_Continue;
-		
+
 	JailFighter base = JailFighter(entity);
 	switch (gamemode.iLRType)
 	{
-		case HHHDay:return ToCHHHDay(gamemode).HookSound(base, sample, entity);
+		case HHHDay:return CHHHDay.Manage().HookSound(base, sample, entity);
 	}
 
 	return Plugin_Continue;
@@ -467,15 +471,15 @@ public void ManageOnPreThink(const JailFighter base, int buttons)
 */
 public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victim, Event event)
 {
-	int damage = event.GetInt("damageamount");
-	int custom = event.GetInt("custom");
-	int weapon = event.GetInt("weaponid");
+	// int damage = event.GetInt("damageamount");
+	// int custom = event.GetInt("custom");
+	// int weapon = event.GetInt("weaponid");
 	
 	switch (gamemode.iLRType)
 	{
 		default: {	}
 	}
-	Call_OnHurtPlayer(victim, attacker, damage, custom, weapon, event);
+	Call_OnHurtPlayer(victim, attacker, /*damage, custom, weapon, */event);
 }
 /** 
  *	Calls when damage is taken/given during lr with SDKHooks
@@ -501,7 +505,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 					return Plugin_Changed;
 				}
 
-				if (GetClientTeam(attacker) == BLU && cvarTF2Jail[CritType].IntValue == 2 && !gamemode.bDisableCriticals && !TF2_IsPlayerCritBuffed(attacker))
+				if (GetClientTeam(attacker) == BLU && cvarTF2Jail[CritType].IntValue == 2 && !gamemode.bDisableCriticals)
 				{
 					damagetype |= DMG_CRIT;
 					return Plugin_Changed;
@@ -518,13 +522,13 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 {
 	switch (gamemode.iLRType)
 	{
-		case HHHDay:ToCHHHDay(gamemode).ManageDeath(attacker, victim, event);
+		case HHHDay:CHHHDay.Manage().ManageDeath(attacker, victim, event);
 		case RandomKill:
 		{
 			if ((attacker.index <= 0 && event.GetInt("damagebits") & DMG_BULLET) || attacker.index == victim.index)
 			{
 				event.SetString("weapon", "sniperrifle");
-				EmitSoundToAll(SuicideSound);
+				EmitSoundToAll(SuicideSound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_CONVO);
 			}
 		}
 	}
@@ -573,10 +577,7 @@ public void CheckLivingPlayers()
 		{
 			gamemode.bOnePrisonerLeft = true;
 
-			Action action = Plugin_Continue;
-			Call_OnLastPrisoner(action);
-
-			if (action == Plugin_Stop)
+			if (Call_OnLastPrisoner() != Plugin_Continue)
 				return;
 		}
 	}
@@ -647,7 +648,7 @@ public Action ManageMusic(char song[PLATFORM_MAX_PATH], float & time)
 	return Plugin_Handled;
 }
 /**
- *	Manage what happens when the round time hits 0
+ *	Manage what happens when the round timer hits 0
  *	You can override the basic round end function which forces Blue to win by returning anything but Plugin_Continue
 */
 public Action ManageTimeEnd()
@@ -680,12 +681,13 @@ public Action ManageTimeEnd()
 public void AddLRToMenu(Menu &menu)
 {
 	char strName[32], strID[4], strValue[16];
-	int i, max, value, def = cvarTF2Jail[LRDefault].IntValue;
+	int i, max, value, disabled, len = LRMAX, def = cvarTF2Jail[LRDefault].IntValue;
 
 	menu.AddItem("-1", "Random LR");
-	for (i = 0; i <= LRMAX; i++)
+	for (i = 0; i <= len; i++)
 	{
 		max = def;
+		disabled = ITEMDRAW_DEFAULT;
 		strValue[0] = '\0';
 		strName[0] = '\0';
 		// if (i == Warday)	// If you want a certain last request to have a different max, do something like this
@@ -696,6 +698,8 @@ public void AddLRToMenu(Menu &menu)
 		{
 			value = arrLRS.Get(i);
 			Format(strValue, sizeof(strValue), " (%i/%i)", value, max);
+			if (value >= max)
+				disabled = ITEMDRAW_DISABLED;
 		}
 
 		if (i < sizeof(strLRNames))	// If not a sub-plugin
@@ -703,7 +707,9 @@ public void AddLRToMenu(Menu &menu)
 		Format(strName, sizeof(strName), "%s%s", strName, strValue);	// Forward pre-formats strName
 
 		IntToString(i, strID, sizeof(strID));
-		menu.AddItem(strID, strName, (max && value >= max) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT); // Disables the LR selection if the max is too high
+		// menu.AddItem(strID, strName, (max && value >= max) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT)	// Ternary operators are just variable declarations at
+																										// compile time, so stack is wasted in for loops
+		menu.AddItem(strID, strName, disabled); // Disables the LR selection if the max is too high
 	}
 }
 /**
@@ -712,7 +718,8 @@ public void AddLRToMenu(Menu &menu)
 public void AddLRToPanel(Menu &panel)
 {
 	char id[4], name[64];
-	for (int i = 0; i <= LRMAX; i++)
+	int i, len = LRMAX;
+	for (i = 0; i <= len; i++)
 	{
 		name[0] = '\0';
 		switch (i)
@@ -740,7 +747,6 @@ public void AddLRToPanel(Menu &panel)
 /** 
  *	Called when player is given lr and is selecting. Place your lr under the MenuAction_Select case
  *	Use the already given lr's as a guide if you need help
- *	CheckSet() is purely used for safety
 */
 public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 {
@@ -769,7 +775,12 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			}
 			base = JailFighter(client);
 			gamemode.bIsLRInUse = true;
-			int request = StringToInt(strIndex), value;
+			int request = StringToInt(strIndex);
+
+			if (Call_OnLRPicked(base, request, arrLRS) != Plugin_Continue)
+				return;
+	
+			int value;
 			if (request != -1)	// If the selection isn't random
 				value = arrLRS.Get(request);
 
@@ -820,8 +831,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				case Warday:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to do a {default}Warday{burlywood}.", client);
 				case ClassWars:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Class Warfare{burlywood} as their last request.", client);
 			}
-			if (Call_OnLRPicked(base, request, arrLRS) != Plugin_Continue)
-				return;
 
 			gamemode.iLRPresetType = request;
 			arrLRS.Set( request, value+1 );
@@ -837,17 +846,6 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 public void ManageClientStartVariables(const JailFighter base)
 {
 	Call_OnClientInduction(base);
-}
-/** 
- *	Calls on map end, resets for lr variables
-*/
-public void ManageMapResetVariables(const JailFighter player)
-{
-	if (player.bIsHHH)
-		player.UnHorsemann();
-
-	ResetModelProps(player.index);
-	player.SetCustomModel("");
 }
 /**
  *	Another reset, but calls on disconnect for safety
@@ -884,7 +882,6 @@ public void ResetVariables(const JailFighter base, const bool compl)
 		base.bIsVIP = false;
 		base.bIsAdmin = false;
 	}
-
 	Call_OnVariableReset(base);
 }
 /**
@@ -896,9 +893,6 @@ public void ManageEntityCreated(int ent, const char[] classname)
 		SDKHook(ent, SDKHook_Spawn, OnEntSpawn);
 
 	if (cvarTF2Jail[KillPointServerCommand].BoolValue && StrContains(classname, "point_servercommand", false) != -1)
-		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
-
-	if (StrContains(classname, "rune") != - 1)	// oWo what's this?
 		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
 	
 	if (cvarTF2Jail[DroppedWeapons].BoolValue && StrEqual(classname, "tf_dropped_weapon"))
@@ -926,7 +920,7 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 /**
  *	Manage the warden menu applications
 */
-public void ManageWardenMenu(Menu & menu)
+public void ManageWardenMenu(Menu &menu)
 {
 	menu.AddItem("0", "Open Cells");
 	menu.AddItem("1", "Close Cells");
@@ -970,8 +964,7 @@ public void ManageWardenMenu(Menu & menu)
 				{
 					if (!gamemode.bCellsOpened)
 					{
-						gamemode.DoorHandler(OPEN);
-						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has opened cells.");
+						gamemode.DoorHandler(OPEN, true);
 						gamemode.bCellsOpened = true;
 					}
 					else CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Cells are already open.");
@@ -981,8 +974,7 @@ public void ManageWardenMenu(Menu & menu)
 				{
 					if (gamemode.bCellsOpened)
 					{
-						gamemode.DoorHandler(CLOSE);
-						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has closed cells.");
+						gamemode.DoorHandler(CLOSE, true);
 						gamemode.bCellsOpened = false;
 					}
 					else CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Cells are not open.");
@@ -992,6 +984,11 @@ public void ManageWardenMenu(Menu & menu)
 				{
 					if (hEngineConVars[0].BoolValue == false)
 					{
+						if (cvarTF2Jail[CVarWarn].BoolValue)
+						{
+							CVWarn(client, 0);
+							return;
+						}
 						hEngineConVars[0].SetBool(true);
 						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has enabled Friendly-Fire!");
 					}
@@ -1006,6 +1003,11 @@ public void ManageWardenMenu(Menu & menu)
 				{
 					if (hEngineConVars[1].BoolValue == false)
 					{
+						if (cvarTF2Jail[CVarWarn].BoolValue)
+						{
+							CVWarn(client, 1);
+							return;
+						}
 						hEngineConVars[1].SetBool(true);
 						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has enabled collisions!");
 					}

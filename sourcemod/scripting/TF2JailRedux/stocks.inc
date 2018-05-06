@@ -130,23 +130,6 @@ stock int GetItemQuality(const int item)
 		return GetEntProp(item, Prop_Send, "m_iEntityQuality");
 	return -1;
 }
-stock bool IsInRange(const int entity, const int target, const float dist, bool pTrace = false)
-{
-	float entitypos[3]; GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", entitypos);
-	float targetpos[3]; GetEntPropVector(target, Prop_Data, "m_vecAbsOrigin", targetpos);
-
-	if ( GetVectorDistance(entitypos, targetpos) <= dist )
-	{
-		if (!pTrace)
-			return true;
-		else {
-			TR_TraceRayFilter( entitypos, targetpos, MASK_SHOT, RayType_EndPoint, TraceRayDontHitSelf, entity );
-			if ( TR_GetFraction() > 0.98 )
-				return true;
-		}
-	}
-	return false;
-}
 stock int AttachParticle(const int ent, const char[] particleType, float offset = 0.0, bool battach = true)
 {
 	int particle = CreateEntityByName("info_particle_system");
@@ -458,12 +441,12 @@ stock void ResetPlayer(const int client)
 If you need to use this and your function uses 3 parameters, modify it if necessary.
 BUG/GLITCH: For some strange reason, SetPawnTimer doesn't work when u attempt to callback stock functions, interesting...
 */
-stock void SetPawnTimer(Function func, float thinktime = 0.1, any param1 = -999, any param2 = -999)
+stock void SetPawnTimer(Function func, float thinktime = 0.1, any param1 = -999/*, any param2 = -999*/)
 {
 	DataPack thinkpack = new DataPack();
 	thinkpack.WriteFunction(func);
 	thinkpack.WriteCell(param1);
-	thinkpack.WriteCell(param2);
+	// thinkpack.WriteCell(param2);
 
 	CreateTimer(thinktime, DoThink, thinkpack, TIMER_DATA_HNDL_CLOSE);
 }
@@ -479,9 +462,9 @@ public Action DoThink(Handle hTimer, DataPack hndl)
 	if ( param1 != -999 )
 		Call_PushCell(param1);
 
-	any param2 = hndl.ReadCell();
+	/*any param2 = hndl.ReadCell();
 	if ( param2 != -999 )
-		Call_PushCell(param2);
+		Call_PushCell(param2);*/
 
 	Call_Finish();
 	return Plugin_Continue;
@@ -742,36 +725,13 @@ stock int AttachProjectileModel(const int entity, const char[] strModel, char[] 
 	else LogError("(AttachProjectileModel): Could not create prop_dynamic");
 	return -1;
 }
-stock bool GetRandomBool()
-{
-	return ( !GetRandomInt(0, 1) ? false : true );
-}
-stock void _SetCapOwner(const int iCapTeam, float flEnableTime = 30.0)
-{
-	int i = -1;
-	int cap_master = FindEntityByClassname(-1, "team_control_point_master");
-	while ( (i = FindEntityByClassname(i, "team_control_point")) != -1 )
-	{
-		if (IsValidEntity(i)) {	// Adapted from Arena:Respawn
-			SetVariantInt(iCapTeam);
-			AcceptEntityInput(i, "SetOwner", -1, cap_master); // Must have team_control_point_master as the activator, less it will just ignore the Input
-			SetVariantInt(1);
-			AcceptEntityInput(i, "SetLocked");
-			SetPawnTimer(EnableCap, flEnableTime);
-		}
-	}
-}
-stock bool StrStarts(const char[] szStr, const char[] szSubStr, bool bCaseSensitive = true)
-{
-	return !StrContains(szStr, szSubStr, bCaseSensitive);
-}
 stock bool ValidateName(const char[] name)
 {
 	int length = strlen(name);
 	for (int i=0 ; i<length ; ++i) {
 		int holder = name[i];
-		// Invalid name, names may only contains numbers, underscores and normal letters
-		if (!(IsCharAlpha(holder) || IsCharNumeric(holder) || holder == '_'))
+		// Invalid name, names may only contains numbers, underscores, spaces, and normal letters
+		if (!(IsCharAlpha(holder) || IsCharNumeric(holder) || holder == '_' || IsCharSpace(holder)))
 			return false;
 	}
 	// A name is, of course, only valid if it's 1 or more chars long, though longer is recommended
@@ -1179,4 +1139,17 @@ stock bool GetClientAimPos(const int client, float vecPos[3], float vecOrigin[3]
 	TR_GetEndPosition(vecPos, trace);
 	delete trace;
 	return true;
+}
+stock bool IsInRange(const int client, const int target, const float dist)
+{
+	float vecMyPos[3]; GetClientAbsOrigin(client, vecMyPos);
+	float vecTheirPos[3]; GetClientAbsOrigin(target, vecTheirPos);
+
+	if (GetVectorDistance(vecMyPos, vecTheirPos) <= dist)
+	{
+		TR_TraceRayFilter(vecMyPos, vecTheirPos, MASK_SHOT, RayType_EndPoint, TraceRayDontHitSelf, client);
+		if (TR_GetFraction() > 0.98)
+			return true;
+	}
+	return false;
 }

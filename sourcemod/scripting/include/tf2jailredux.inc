@@ -44,9 +44,6 @@ enum
 	WBLU = 3
 };
 
-stock char snd[PLATFORM_MAX_PATH];
-stock char gameMessage[4096];	// For formatting chat/hint/center/etc messages
-stock char BackgroundSong[PLATFORM_MAX_PATH];	// If you want a sweet song with your lr, try this out
 stock char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear", "prop_door_rotating" };
 
 
@@ -63,7 +60,7 @@ native any JB_GetValue(const int client, const char key[64]);
 
 /**	base.GetValue
  *	Sets the property of the internal JB methodmap.
- *	@NOTE 				You can use this to create new properties which GetValue can access!
+ *	@note 				You can use this to create new properties which GetValue can access!
  *
  *	@param client 		Player index.
  *	@param key			Name of the property you want to override data from (works like StringMap).
@@ -287,7 +284,7 @@ stock void ForceClientTeamChange(const int client, const int iTeam, bool spawn =
 
 /**	base.TeleportToPosition
  *	Teleport a player either to a freeday or warday location.
- *	@NOTE 				If gamemode teleport properties are not true, teleportation will fail
+ *	@note 				If gamemode teleport properties are not true, teleportation will fail
  *
  *	@param client 		Player index.
  *	@param location 	Location to teleport the client.
@@ -428,7 +425,7 @@ stock void SpawnSmallHealthPackAt(const int client, int ownerteam = 0)
 }
 /**	base.MutePlayer
  *	Mute a client through the plugin.
- *	@NOTE 				Players that are deemed as admins will never be muted.
+ *	@note 				Players that are deemed as admins will never be muted.
  *
  *	@param client 		Player index.
  *
@@ -438,7 +435,7 @@ native void JB_MutePlayer(const int client);
 
 /**	base.GiveFreeday
  *	Initialize a player as a freeday.
- *	@NOTE 				Does not teleport them to the freeday location.
+ *	@note 				Does not teleport them to the freeday location.
  *
  *	@param client 		Player index.
  *
@@ -531,7 +528,7 @@ native void JB_UnmutePlayer(const int client);
 
 /**	base.WardenSet
  *	Initialize a player as the warden.
- *	@NOTE 				This automatically gives the player the warden menu
+ *	@note 				This automatically gives the player the warden menu
  *
  *	@param client 		Player index.
  *
@@ -588,7 +585,7 @@ native void JB_WardenMenu(const int client);
 */
 native void JB_ClimbWall(const int client, const int weapon, const float upwardvel, const float health, const bool attackdelay);
 
-/**
+/**	base.bNoMusic
  *	Get's player's Music Cookie.
  *
  *	@param client 		Player index.
@@ -597,21 +594,40 @@ native void JB_ClimbWall(const int client, const int weapon, const float upwardv
 */
 native bool JB_NoMusic(const int client);
 
+/**	base.hMap
+ *	Retrieve this player's StringMap address.
+ *	@note 				This can be used alongside StringMap methods to get/set to and create keys in the core StringMap!
+ *
+ *	@param client 		Player index.
+ *
+ *	@return 			Pointer to this players StringMap.
+*/
+native StringMap JB_Map(const int client);
+
 
 methodmap JBPlayer
 {
-	/** [ C O N S T R U C T O R ]
+	/** [ C O N S T R U C T O R S ]
 	 *	Constructs an instance of the JailFighter internal methodmap.
-	 *	 
-	 *	@param index			Index (or the userid) of a player.
-	 *	@param userid		If using userid instead of player index, set this param to true.
+	 *
+	 *	@param index		Index of a player.
 	 *
 	 *	@return				A player instance of the JBPlayer methodmap.
 	*/
-	public native JBPlayer(const int index, bool userid = false);
+	public native JBPlayer( const int index );
+
+	/**
+	 *	Constructs an instance of the JailFighter internal methodmap directly from a client's userid.
+	 *	@note 				Syntax is like so: JBPlayer.OfUserid(userid)
+	 *
+	 *	@param userid 		UserId of the client.
+	 *
+	 *	@return 			A player instance of the JBPlayer methodmap.
+	*/
+	public static native JBPlayer OfUserId( const int userid );
 
 	/* **** **** [ P R O P E R T I E S ] **** **** */
-	
+
 	/**
 	 *	Gets the userid of the JB player instance.
 	 *
@@ -621,7 +637,7 @@ methodmap JBPlayer
 	{
 		public native get();
 	}
-	
+
 	/**
 	 *	Gets the index of the JB player instance.
 	 *
@@ -632,19 +648,27 @@ methodmap JBPlayer
 		public native get();
 	}
 
+	property StringMap hMap
+	{
+		public get()
+		{
+			return JB_Map(this.index);
+		}
+	}
+
 	/**
 	 *	Get's player's Music Cookie.
 	 *
 	 *	@return 			True if music is toggled off. False otherwise.
 	*/
-	property int bNoMusic
+	property bool bNoMusic
 	{
 		public get()
 		{
 			return JB_NoMusic(this.index);
 		}
 	}
-	
+
 	/**
 	 *	Gets the property of the internal JailFighter methodmap.
 	 *
@@ -657,7 +681,7 @@ methodmap JBPlayer
 	{
 		return JB_GetValue(this.index, key);
 	}
-	
+
 	/**
 	 *	Sets the property of the internal JB methodmap.
 	 *	NOTE: You can use this to create new properties which GetValue can access!
@@ -689,110 +713,6 @@ methodmap JBPlayer
 	 *	float flSpeed 							// Client speed, isn't used
 	 *	float flKillSpree 						// Also for the ghetto rigged freekill system
 	*/
-
-	/**
-	 *	Set an array into this player's StringMap
-	 *
-	 *	@param key			Key string.
-	 *	@param array		Array to store.
-	 *	@param num_items	Number of items in the array.
-	 *	@param replace		If false, operation will fail if the key is already set.
-	 *
-	 *	@return				True on success, false on failure.
-	*/
-	public bool SetArray(const char[] key, const any[] array, int num_items, bool replace = true)
-	{
-		return JB_SetArray(this.index, key, array, num_items, replace);
-	}
-
-	/**
-	 *	Sets a string value in this player's StringMap, either inserting a new entry or replacing an old one.
-	 *
-	 *	@param key			Key string.
-	 *	@param string		String to store.
-	 *	@param replace		If false, operation will fail if the key is already set.
-	 *
-	 *	@return				True on success, false on failure.
-	*/
-	public bool SetString(const char[] key, const char[] string, bool replace = true)
-	{
-		return JB_SetString(this.index, key, string, replace);
-	}
-
-	/**
-	 *	Retrieves an array in this player's StringMap.
-	 *
-	 *	@param key			Key string.
-	 *	@param array		Buffer to store array.
-	 *	@param max_size		Maximum size of array buffer.
-	 *	@param size			Optional parameter to store the number of elements written to the buffer.
-	 *
-	 *	@return				True on success.  False if the key is not set, or the key is set 
-	 *						as a value or string (not an array).
-	*/
-	public bool GetArray(const char[] key, any[] array, int max_size, int &size = 0)
-	{
-		return JB_GetArray(this.index, key, array, max_size, size);
-	}
-
-	/**
-	 *	Retrieves a string in this player's StringMap.
-	 *
-	 *	@param key			Key string.
-	 *	@param string		Buffer to store value.
-	 *	@param max_size		Maximum size of string buffer.
-	 *	@param size			Optional parameter to store the number of bytes written to the buffer.
-	 *
-	 *	@return				True on success.  False if the key is not set, or the key is set 
-	 *						as a value or array (not a string).
-	*/
-	public bool GetString(const char[] key, char[] string, int max_size, int &size = 0)
-	{
-		return JB_GetString(this.index, key, string, max_size, size);
-	}
-
-	/**
-	 *	Removes a key entry from this player's StringMap.
-	 *
-	 *	@param key			Key string.
-	 *
-	 *	@return				True on success, false if the value was never set.
-	*/
-	public bool Remove(const char[] key)
-	{
-		return JB_Remove(this.index, key);
-	}
-
-	/**
-	 *	Clears all entries from this player's StringMap.
-	 *
-	 *	@noreturn
-	*/
-	public void Clear()
-	{
-		JB_Clear(this.index);
-	}
-
-	/**
-	 *	Create a snapshot of this player's StringMap's keys. See StringMapSnapshot.
-	 *
-	 *	@return 			Handle to key SnapShot.
-	*/
-	public StringMapSnapshot Snapshot()
-	{
-		return JB_Snapshot(this.index);
-	}
-
-	/**
-	 *	Retrieves the number of elements in this player's StringMap.
-	*/
-	property int Size
-	{
-		public get()
-		{
-			return JB_Size(this.index);
-		}
-	}
 
 	/**
 	 *	Creates and spawns a weapon to a player.
@@ -849,7 +769,7 @@ methodmap JBPlayer
 
 	/**
 	 *	Teleport a player either to a freeday or warday location.
-	 *	@NOTE 				If gamemode teleport properties are not true, teleportation will fail
+	 *	@note 				If gamemode teleport properties are not true, teleportation will fail
 	 *
 	 *	@param location 	Location to teleport the client.
 	 *
@@ -906,7 +826,7 @@ methodmap JBPlayer
 
 	/**
 	 *	Mute a client through the plugin.
-	 *	@NOTE 				Players that are deemed as admins will never be muted.
+	 *	@note 				Players that are deemed as admins will never be muted.
 	 *
 	 *	@noreturn
 	*/
@@ -917,7 +837,7 @@ methodmap JBPlayer
 
 	/**
 	 *	Initialize a player as a freeday.
-	 *	@NOTE 				Does not teleport them to the freeday location.
+	 *	@note 				Does not teleport them to the freeday location.
 	 *
 	 *	@noreturn
 	*/
@@ -968,7 +888,7 @@ methodmap JBPlayer
 
 	/**
 	 *	Initialize a player as the warden.
-	 *	@NOTE 				This automatically gives the player the warden menu
+	 *	@note 				This automatically gives the player the warden menu
 	 *
 	 *	@noreturn
 	*/
@@ -1076,7 +996,7 @@ native void JBGameMode_FireWarden(bool prevent = true, bool announce = true);
 
 /**
  *	Open all of the doors on a map
- *	@NOTE 					This ignores all name checks and opens every door possible.
+ *	@note 					This ignores all name checks and opens every door possible.
  *
  *	@noreturn
 */
@@ -1111,7 +1031,7 @@ native any JBGameMode_GetProperty(const char prop_name[64]);
 
 /**
  *	Set a property to the JailGameMode internal methodmap.
- *	@NOTE 					This can set properties that GetProperty can access!
+ *	@note 					This can set properties that GetProperty can access!
  *
  *	@param prop_name 		Property key to set into the StringMap.
  *	@param value 			Value to set to it.
@@ -1150,7 +1070,9 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	bool bFirstDoorOpening
  *	bool bSilentWardenKills
  *	bool bMedicDisabled
- *	float flMusicTime		// Optional, not used in core
+ *	bool bDisableMuting
+ *	bool bDisableKillSpree
+ *	float flMusicTime
 */
 
 
@@ -1236,7 +1158,6 @@ methodmap JBGameMode
 {
 	/**
 	 *	Initialize global methodmap with a handle to the core JailGameMode methodmap.
-	 *	@NOTE 				This must be done OnAllPluginsLoaded() to assure that TF2Jail Redux loads first.
 	 *
 	 *	@return 			Instance of the JailGameMode methodmap.
 	*/
@@ -1348,7 +1269,7 @@ methodmap JBGameMode
 
 	/**
 	 *	Set a property to the JailGameMode internal methodmap.
-	 *	@NOTE 					This can set properties that GetProperty can access!
+	 *	@note 					This can set properties that GetProperty can access!
 	 *
 	 *	@param prop_name 		Property key to set into the StringMap.
 	 *	@param value 			Value to set to it.
@@ -1390,7 +1311,9 @@ methodmap JBGameMode
 	 *	bool bFirstDoorOpening
 	 *	bool bSilentWardenKills
 	 *	bool bMedicDisabled
-	 *	float flMusicTime		// Optional, not used in core
+	 *	bool bDisableMuting
+	 *	bool bDisableKillSpree
+	 *	float flMusicTime
 	*/
 	/**
 	 *	Set an array into this the GameMode StringMap
@@ -1500,7 +1423,7 @@ methodmap JBGameMode
 
 /**
  *	Registers a plugin to be able to use TF2Jail's forwards
- *	@NOTE 					The purpose of this native is to register last-request subplugins, you don't need to register plugins to use forwards, 
+ *	@note 					The purpose of this native is to register last-request subplugins, you don't need to register plugins to use forwards, 
  *							simply hook what forward you need.
  *							If you add a last request and want to test it before you allow all players to use it, do NOT register the sub-plugin, 
  *							and use sm_setpreset to activate the lr type for next round.
@@ -1515,10 +1438,10 @@ native int TF2JailRedux_RegisterPlugin(const char plugin_name[64]);
 enum	// JB Hook Types
 {
 	OnDownloads = 0,
-	OnLRRoundActivate,
 	OnManageRoundStart,
+	OnManageRoundStartPlayer,
 	OnManageRoundEnd,
-	OnLRRoundEnd,
+	OnManageRoundEndPlayer,
 	OnWardenGet,
 	OnClientTouch,
 	OnRedThink,
@@ -1553,6 +1476,10 @@ enum	// JB Hook Types
 	OnPreThink,
 	OnManageFFTimer,
 	OnLRInitialized,
+	OnDoorsOpen,
+	OnDoorsClose,
+	OnDoorsLock,
+	OnDoorsUnlock,
 	OnPlayMusic
 };
 
@@ -1560,8 +1487,7 @@ enum	// JB Hook Types
 typeset JBHookCB
 {
 	/*
-		OnLRRoundActivate
-		OnLRRoundEnd
+		OnManageRoundStartPlayer
 		OnWardenGet
 		OnRedThink
 		OnBlueThink
@@ -1574,7 +1500,10 @@ typeset JBHookCB
 	*/
 	function void (const JBPlayer Player);
 	
-	//	OnPlayerSpawned
+	/*
+		OnPlayerSpawned
+		OnManageRoundEndPlayer
+	*/
 	function void (const JBPlayer Player, Event event);
 
 	/*
@@ -1606,7 +1535,7 @@ typeset JBHookCB
 	//	OnPanelAdd
 	function void (const int index, char name[64]);
 
-	// 	OnManageRoundEnd
+	//	OnManageRoundEnd
 	function void (Event event);
 
 	//	OnWMenuAdd
@@ -1615,11 +1544,11 @@ typeset JBHookCB
 	// 	OnLRTextHud
 	function void (char strHud[128]);
 
-	// 	OnLRPicked			Return anything but continue to prevent setting the next iLRPresetType to index
+	// 	OnLRPicked			Return anything but Continue to prevent setting the next iLRPresetType to index
 	function Action (const JBPlayer Player, const int index, ArrayList array);
 
 	// 	OnHurtPlayer
-	function void (const JBPlayer Victim, const JBPlayer Attacker, int damage, int custom, int weapon, Event event);
+	function void (const JBPlayer Victim, const JBPlayer Attacker, Event event);
 
 	// 	OnHookDamage
 	function Action (const JBPlayer Victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom);
@@ -1627,13 +1556,17 @@ typeset JBHookCB
 	//	OnWMenuSelect
 	function void (const JBPlayer Player, const char[] index);
 
-	// OnPlayMusic
+	//	OnPlayMusic
 	function Action (char song[PLATFORM_MAX_PATH], float &time);
 
 	/*
 		OnTimeEnd			Return anything but Continue to override forcing Blue team to win
 		OnLastGuard			Return Handled to stop "One Guard Left" message. Return Stop to not fire OnCheckLivingPlayers
 		OnLastPrisoner		Return Stop to not fire OnCheckLivingPlayers
+		OnDoorsOpen 		Return anything but Continue to not fire
+		OnDoorsClose 		Return anything but Continue to not fire
+		OnDoorsLock 		Return anything but Continue to not fire
+		OnDoorsUnlock 		Return anything but Continue to not fire
 	*/
 	function Action ();
 
@@ -1645,6 +1578,9 @@ typeset JBHookCB
 
 	//	OnManageFFTimer
 	function void (float &time);
+
+	//	OnManageTimeLeft
+	function void (int &time);
 };
 
 /**
@@ -1659,7 +1595,7 @@ native void JB_Hook(const int callbacktype, JBHookCB callback);
 
 /**
  *	Determine if this function is hooked into forward calls.
- *	@NOTE 					This automatically hooks functions into forwards if it wasn't already (if possible).
+ *	@note 					This automatically hooks functions into forwards if it wasn't already (if possible).
  *
  *	@param callbacktype 	Enum type to hook into.
  *	@param callback 		Function to call when the forward is called.
@@ -1680,7 +1616,7 @@ native void JB_Unhook(const int callbacktype, JBHookCB callback);
 
 /**
  *	Determine if a function is unhooked from forward calls.
- *	@NOTE 					This automatically unhooks functions from forwards if they weren't already (if possible).
+ *	@note 					This automatically unhooks functions from forwards if they weren't already (if possible).
  *	
  *	@param callbacktype 	Enum type to unhook from.
  *	@param callback 		Function to hunhook calls from.
@@ -1712,19 +1648,13 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JB_UnhookEx");
 
 	MarkNativeAsOptional("JBPlayer.JBPlayer");
+	MarkNativeAsOptional("JBPlayer.OfUserId");
 	MarkNativeAsOptional("JBPlayer.userid.get");
 	MarkNativeAsOptional("JBPlayer.index.get");
 
 	MarkNativeAsOptional("JB_GetValue");
 	MarkNativeAsOptional("JB_SetValue");
-	MarkNativeAsOptional("JB_SetArray");
-	MarkNativeAsOptional("JB_SetString");
-	MarkNativeAsOptional("JB_GetArray");
-	MarkNativeAsOptional("JB_GetString");
-	MarkNativeAsOptional("JB_Remove");
-	MarkNativeAsOptional("JB_Clear");
-	MarkNativeAsOptional("JB_Snapshot");
-	MarkNativeAsOptional("JB_Size");
+	MarkNativeAsOptional("JB_Map");
 
 	MarkNativeAsOptional("JB_TeleportToPosition");
 	MarkNativeAsOptional("JB_ListLRS");
