@@ -127,7 +127,7 @@ public void ManageHUDText()
 		case Warday:		strcopy(strHudName, sizeof(strHudName), "Warday");
 		case ClassWars:		strcopy(strHudName, sizeof(strHudName), "Class Warfare");
 	}
-	Call_OnLRTextHud(strHudName);
+	Call_OnHudShow(strHudName);
 
 	if (strHudName[0] != '\0')
 		SetTextNode(hTextNodes[1], strHudName, EnumTNPS[1][fCoord_X], EnumTNPS[1][fCoord_Y], EnumTNPS[1][fHoldTime], EnumTNPS[1][iRed], EnumTNPS[1][iGreen], EnumTNPS[1][iBlue], EnumTNPS[1][iAlpha], EnumTNPS[1][iEffect], EnumTNPS[1][fFXTime], EnumTNPS[1][fFadeIn], EnumTNPS[1][fFadeOut]);
@@ -151,6 +151,8 @@ public void PrepPlayer(const int userid)
 		return;
 
 	JailFighter base = JailFighter(client);
+
+	base.SetCustomModel("");
 
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_PDA);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
@@ -217,7 +219,7 @@ public void ManageOnRoundStart(Event event)
 		case HHHDay:CHHHDay.Manage().Initialize();
 		case HotPrisoner:CHotPrisoner.Manage().Initialize();
 	}
-	Call_OnManageRoundStart();
+	Call_OnRoundStart();
 }
 /**
  *	Calls on round start for each living player
@@ -252,7 +254,7 @@ public void ManageRoundStart(const JailFighter player, Event event)
 		case HHHDay:CHHHDay.Manage().Activate(player);
 		case HotPrisoner:CHotPrisoner.Manage().Activate(player);
 	}
-	Call_OnManageRoundStartPlayer(player, event);
+	Call_OnRoundStartPlayer(player, event);
 }
 /**
  *	Self explanatory, set the gamemode.iTimeLeft to whatever time (in seconds) you desire
@@ -264,7 +266,7 @@ public void ManageTimeLeft()
 	{
 		default:{	}
 	}
-	Call_OnManageTimeLeft(time);
+	Call_OnTimeLeft(time);
 	
 	gamemode.iTimeLeft = time;
 }
@@ -280,7 +282,7 @@ public void ManageOnRoundEnd(Event event)
 		case HHHDay:CHHHDay.Manage().Terminate(event);
 		case HotPrisoner:CHotPrisoner.Manage().Terminate(event);
 	}
-	Call_OnManageRoundEnd(event);
+	Call_OnRoundEnd(event);
 }
 /** 
  *	Calls on round end obviously, resets should be put here as well 
@@ -293,7 +295,7 @@ public void ManageRoundEnd(const JailFighter base, Event event)
 		case HHHDay:CHHHDay.Manage().ManageEnd(base);
 		case HotPrisoner:CHotPrisoner.Manage().ManageEnd(base);
 	}
-	Call_OnManageRoundEndPlayer(base, event);
+	Call_OnRoundEndPlayer(base, event);
 }
 /**
  *	Manage jail cell behavior on round start; choose OPEN/CLOSE/LOCK/UNLOCK
@@ -346,7 +348,7 @@ public void ManageFFTimer()
 			TinyRound
 		:time = 10.0;
 	}
-	Call_OnManageFFTimer(time);
+	Call_OnFFTimer(time);
 
 	if (time != 0.0)
 		SetPawnTimer(EnableFFTimer, time, gamemode.iRoundCount);
@@ -442,7 +444,7 @@ public void ManageWardenThink(const JailFighter player)
 /**
  *	Sound hooking for certain scenarios
 */
-public Action SoundHook(clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
+public Action SoundHook(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
 {
 	if (!bEnabled.BoolValue || !IsClientValid(entity))
 		return Plugin_Continue;
@@ -513,7 +515,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 			}
 		}
 	}
-	return Call_OnHookDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+	return Call_OnTakeDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 }
 /**
  *	Called when a player dies obviously
@@ -850,8 +852,9 @@ public void ManageClientStartVariables(const JailFighter base)
 /**
  *	Another reset, but calls on disconnect for safety
 */
-public void ManageClientDisconnect(const JailFighter player)
+public void ManageClientDisconnect(const int client)
 {
+	JailFighter player = JailFighter(client);
 	if (player.bIsWarden)
 	{
 		player.WardenUnset();

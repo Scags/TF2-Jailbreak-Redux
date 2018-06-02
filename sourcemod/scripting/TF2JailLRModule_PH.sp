@@ -550,7 +550,7 @@ public Action Cmd_Reroll(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool & result)
+public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool &result)
 {
 	if (!JBPH[Enabled].BoolValue || !IsClientValid(client) || gamemode.GetProperty("iRoundState") != StateRunning || NotPH)
 		return Plugin_Continue;
@@ -565,13 +565,16 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 		}
 		else DoSelfDamage(client, weapon);
 
-		result = false;
-		return Plugin_Handled;
+		if (!TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged))	// First blood crits
+		{
+			result = false;
+			return Plugin_Handled;
+		}
 	}
 	return Plugin_Continue;
 }
 
-public Action fwdOnHookDamage(const JBPlayer player, int &attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action fwdOnTakeDamage(const JBPlayer player, int &attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!JBPH[Enabled].BoolValue || NotPH || !IsClientValid(player.index))
 		return Plugin_Continue;
@@ -579,7 +582,7 @@ public Action fwdOnHookDamage(const JBPlayer player, int &attacker, int& inflict
 	//JailHunter player = JailHunter(attacker);
 	JailHunter victim = JailHunter.Of(player);
 
-	if (!victim.bTouched && GetClientTeam(victim.index) == RED)
+	if (!victim.bTouched && GetClientTeam(victim.index) == RED && IsClientValid(attacker))
 	{
 		EmitSoundToAll("prophunt/found.mp3", victim.index);
 		victim.bTouched = true;
@@ -665,10 +668,6 @@ stock bool GetModelNameForClient(const int client, const char[] modelName, char[
 stock void SwitchView(const int client, bool observer, bool viewmodel)
 {
 	JailHunter(client).bFirstPerson = !observer;
-	/*SetEntPropEnt(target, Prop_Send, "m_hObserverTarget", observer ? target:-1);
-	SetEntProp(target, Prop_Send, "m_iObserverMode", observer ? 1:0);
-	SetEntData(target, g_oFOV, observer ? 100:GetEntData(target, g_oDefFOV, 4), 4, true);
-	SetEntProp(target, Prop_Send, "m_bDrawViewmodel", viewmodel ? 1:0);*/
 
 	SetVariantInt(observer ? 1 : 0);
 	AcceptEntityInput(client, "SetForcedTauntCam");
@@ -725,10 +724,10 @@ stock void RemoveAnimeModel(const int client)
 		AcceptEntityInput(client, "SetCustomModelOffset");
 
 		AcceptEntityInput(client, "ClearCustomModelRotation");
-		
+
 		SetVariantString("");
 		AcceptEntityInput(client, "SetCustomModel");
-		
+
 		SetEntProp(client, Prop_Send, "m_bForcedSkin", false);
 		SetEntProp(client, Prop_Send, "m_nForcedSkin", 0);
 	}
@@ -737,7 +736,6 @@ stock void RemoveAnimeModel(const int client)
 stock void DoSelfDamage(const int client, const int weapon)
 {
 	float damage;
-
 	char classname[32]; GetEntityClassname(weapon, classname, sizeof(classname));
 
 	if (!strcmp(classname, "tf_weapon_flamethrower", false))
@@ -846,7 +844,7 @@ public void fwdOnPreThink(const JBPlayer Player, int buttons)
 int NoSS[6]  = { 3, 4, 5, 6, 7, 9 };
 int NoHvy[5] = { 3, 4, 5, 6, 9 };
 int iHeavy;
-public void fwdOnLRRoundActivate(const JBPlayer player)
+public void fwdOnRoundStartPlayer(const JBPlayer player)
 {
 	if (!JBPH[Enabled].BoolValue || NotPH)
 		return;
@@ -887,12 +885,14 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 			if (JBPH[ForceBluePyro].BoolValue)
 				TF2_SetPlayerClass(client, TFClass_Pyro);
 
-			if (TF2_GetPlayerClass(client) == TFClass_Scout || TF2_GetPlayerClass(client) == TFClass_Spy)
+			TFClassType class = TF2_GetPlayerClass(client);
+
+			if (class == TFClass_Scout || class == TFClass_Spy)
 			{
 				TF2_SetPlayerClass(client, view_as< TFClassType >(NoSS[GetRandomInt(0, 5)]));
 				CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Your illegal class has been changed.");
 			}
-			if (TF2_GetPlayerClass(client) == TFClass_Heavy)
+			else if (class == TFClass_Heavy)
 			{
 				if (iHeavy < 2)
 					iHeavy++;
@@ -902,7 +902,7 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 					CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} There are too many Heavies on Blue team.");
 				}
 			}
-			if (TF2_GetPlayerClass(client) == TFClass_Pyro && JBPH[Airblast].BoolValue && gamemode.GetProperty("bTF2Attribs"))
+			else if (class == TFClass_Pyro && JBPH[Airblast].BoolValue && gamemode.GetProperty("bTF2Attribs"))
 				TF2Attrib_SetByDefIndex(client, 823, 1.0);
 			TF2_RegeneratePlayer(client);
 
@@ -916,7 +916,7 @@ public void fwdOnLRRoundActivate(const JBPlayer player)
 	if (JBPH[StaticPropInfo].BoolValue)
 		QueryClientConVar(client, "r_staticpropinfo", KickCallBack);
 }
-public void fwdOnManageRoundStart()
+public void fwdOnRoundStart()
 {
 	if (!JBPH[Enabled].BoolValue || NotPH)
 		return;
@@ -979,7 +979,7 @@ public void fwdOnManageRoundStart()
 	CreateTimer(1.0, Timer_Round, _, TIMER_REPEAT);
 	CPrintToChatAll("{burlywood}Hunters will be released in %i seconds.", freeze);
 }
-public void fwdOnManageRoundEnd()
+public void fwdOnRoundEnd(Event event)
 {
 	if (!JBPH[Enabled].BoolValue || NotPH)
 		return;
@@ -1069,12 +1069,12 @@ public void fwdOnPlayerSpawned(const JBPlayer player)
 	if (GetClientTeam(player.index) == RED)
 		JailHunter.Of(player).MakeProp(JBPH[PropNameOnGive].BoolValue);
 }
-public void fwdOnManageTimeLeft()
+public void fwdOnTimeLeft(int &time)
 {
 	if (!JBPH[Enabled].BoolValue || NotPH)
 		return;
 
-	gamemode.SetProperty("iTimeLeft", JBPH[RoundTime].IntValue + JBPH[FreezeTime].IntValue);
+	time = JBPH[RoundTime].IntValue + JBPH[FreezeTime].IntValue;
 }
 public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
 {
@@ -1082,7 +1082,7 @@ public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayLis
 		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has decided to play a round of {default}Prophunt{burlywood}.", Player.index);
 	return Plugin_Continue;
 }
-public void fwdOnLRTextHud(char strHud[128])
+public void fwdOnHudShow(char strHud[128])
 {
 	if (!JBPH[Enabled].BoolValue || NotPH)
 		return;
@@ -1160,12 +1160,12 @@ public void fwdOnPlayerPrepped(const JBPlayer Player, Event event)	// For safety
 
 public void CheckJBHooks()
 {
-	if (!JB_HookEx(OnManageRoundStartPlayer, fwdOnLRRoundActivate))
-		LogError("Error Loading OnManageRoundStartPlayer Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnManageRoundStart, fwdOnManageRoundStart))
-		LogError("Error Loading OnManageRoundStart, Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnManageRoundEnd, fwdOnManageRoundEnd))
-		LogError("Error Loading OnManageRoundEnd Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnRoundStartPlayer, fwdOnRoundStartPlayer))
+		LogError("Error Loading OnRoundStartPlayer Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnRoundStart, fwdOnRoundStart))
+		LogError("Error Loading OnRoundStart, Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnRoundEnd, fwdOnRoundEnd))
+		LogError("Error Loading OnRoundEnd Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnRedThink, fwdOnRedThink))
 		LogError("Error Loading OnRedThink Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnBlueThink, fwdOnBlueThink))
@@ -1174,16 +1174,16 @@ public void CheckJBHooks()
 		LogError("Error loading OnPlayerDied Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnPlayerSpawned, fwdOnPlayerSpawned))
 		LogError("Error loading OnPlayerSpawned Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnHookDamage, fwdOnHookDamage))
-		LogError("Error loading OnHookDamage Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnTakeDamage, fwdOnTakeDamage))
+		LogError("Error loading OnTakeDamage Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnClientInduction, fwdOnClientInduction))
 		LogError("Error loading OnClientInduction Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnManageTimeLeft, fwdOnManageTimeLeft))
-		LogError("Error loading OnManageTimeLeft Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnTimeLeft, fwdOnTimeLeft))
+		LogError("Error loading OnTimeLeft Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnLRPicked, fwdOnLRPicked))
 		LogError("Error loading OnLRPicked Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnLRTextHud, fwdOnLRTextHud))
-		LogError("Error loading OnLRTextHud Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnHudShow, fwdOnHudShow))
+		LogError("Error loading OnHudShow Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnPanelAdd, fwdOnPanelAdd))
 		LogError("Error loading OnPanelAdd Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnMenuAdd, fwdOnMenuAdd))

@@ -1052,7 +1052,7 @@ public void FreedayforClientsMenu(const int client)
 	Menu menu = new Menu(MenuHandle_FreedayForClients);
 	menu.SetTitle("Choose a Player for Freeday");
 	
-	AddClientsToMenu(menu, false);
+	AddClientsToMenu(menu, false, 0);
 	menu.ExitButton = true;
 	menu.Display(client, -1);
 }

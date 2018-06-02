@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.14.0"
+#define PLUGIN_VERSION		"0.14.1"
 #define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -188,9 +188,9 @@ public void OnPluginStart()
 	HookEvent("player_spawn", OnPlayerSpawn);
 	HookEvent("player_death", OnPlayerDeath, EventHookMode_Pre);
 	HookEvent("player_hurt", OnPlayerHurt, EventHookMode_Pre);
-	HookEvent("teamplay_round_start", OnRoundStart);
+	HookEvent("teamplay_round_start", OnPreRoundStart);
 	HookEvent("arena_round_start", OnArenaRoundStart);
-	HookEvent("teamplay_round_win", OnRoundEnd);
+	HookEvent("teamplay_round_win", OnRoundEnded);
 	// HookEvent("post_inventory_application", OnRegeneration);
 	HookEvent("player_changeclass", OnChangeClass, EventHookMode_Pre);
 	//HookEvent("player_team", OnChangeTeam, EventHookMode_Post);
@@ -283,13 +283,13 @@ public void OnPluginStart()
 	RegAdminCmd("sm_tmedic", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
 	RegAdminCmd("sm_togglemedic", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
 
-	RegAdminCmd("sm_setpreset", SetPreset, ADMFLAG_ROOT, "Set gamemode.iLRPresetType. (DEBUGGING)");
-	RegAdminCmd("sm_itype", Type, ADMFLAG_ROOT, "gamemode.iLRType. (DEBUGGING)");
-	RegAdminCmd("sm_ipreset", Preset, ADMFLAG_ROOT, "gamemode.iLRPresetType. (DEBUGGING)");
-	RegAdminCmd("sm_getprop", GameModeProp, ADMFLAG_ROOT, "Retrieve a gamemode property value. (DEBUGGING)");
-	RegAdminCmd("sm_getpprop", BaseProp, ADMFLAG_ROOT, "Retrieve a base player property value. (DEBUGGING)");
-	RegAdminCmd("sm_len", PluginLength, ADMFLAG_ROOT, "hPlugins.Length. (DEBUGGING)");
-	RegAdminCmd("sm_lrlen", arrLRSLength, ADMFLAG_ROOT, "arrLRS.Length. (DEBUGGING)");
+	RegAdminCmd("sm_setpreset", SetPreset, ADMFLAG_GENERIC, "Set gamemode.iLRPresetType. (DEBUGGING)");
+	RegAdminCmd("sm_itype", Type, ADMFLAG_GENERIC, "gamemode.iLRType. (DEBUGGING)");
+	RegAdminCmd("sm_ipreset", Preset, ADMFLAG_GENERIC, "gamemode.iLRPresetType. (DEBUGGING)");
+	RegAdminCmd("sm_getprop", GameModeProp, ADMFLAG_GENERIC, "Retrieve a gamemode property value. (DEBUGGING)");
+	RegAdminCmd("sm_getpprop", BaseProp, ADMFLAG_GENERIC, "Retrieve a base player property value. (DEBUGGING)");
+	RegAdminCmd("sm_len", PluginLength, ADMFLAG_GENERIC, "hPlugins.Length. (DEBUGGING)");
+	RegAdminCmd("sm_lrlen", arrLRSLength, ADMFLAG_GENERIC, "arrLRS.Length. (DEBUGGING)");
 	RegAdminCmd("sm_jailreset", AdminResetPlugin, ADMFLAG_ROOT, "Reset all plug-in global variables. (DEBUGGING)");
 
 	hEngineConVars[0] = FindConVar("mp_friendlyfire");
@@ -311,8 +311,13 @@ public void OnPluginStart()
 	int i;
 
 	for (i = MaxClients; i; --i) 
+	{
 		if (IsClientInGame(i))
+		{
 			OnClientPutInServer(i);
+			OnClientPostAdminCheck(i);
+		}
+	}
 
 	for (i = 0; i < sizeof(hTextNodes); i++)
 		hTextNodes[i] = CreateHudSynchronizer();
@@ -441,6 +446,7 @@ public void OnMapStart()
 		CreateTimer(time, Timer_Announce, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 
 	gamemode.b1stRoundFreeday = true;
+	gamemode.iRoundCount = 0;
 
 	ManageDownloads();	// Handler
 
@@ -456,7 +462,7 @@ public void OnMapStart()
 
 public void OnMapEnd()
 {
-	gamemode.Init();
+	// gamemode.Init();		// Clears plugin/extension dependencies
 	StopBackGroundMusic();
 
 	hEngineConVars[2].SetInt(800);	// For admins like sans who force change the map during the low gravity LR
@@ -465,7 +471,7 @@ public void OnMapEnd()
 
 public void OnClientPutInServer(int client)
 {
-	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
+	SDKHook(client, SDKHook_OnTakeDamage, OnPlayerTakeDamage);
 	SDKHook(client, SDKHook_Touch, OnTouch);
 	SDKHook(client, SDKHook_PreThink, PreThink);
 
@@ -480,8 +486,8 @@ public void OnClientPutInServer(int client)
 	player.bIsQueuedFreeday = false;
 	player.bIsFreeday = false;
 	player.bLockedFromWarden = false;
-	player.bIsVIP = false;
-	player.bIsAdmin = false;
+	//player.bIsVIP = false;
+	//player.bIsAdmin = false;
 	player.bIsHHH = false;
 	player.bInJump = false;
 	player.bUnableToTeleport = false;
@@ -491,9 +497,15 @@ public void OnClientPutInServer(int client)
 	player.flKillSpree = 0.0;
 
 	SetPawnTimer(WelcomeMessage, 5.0, player.userid);
+	ManageClientStartVariables(player);
+}
 
+public void OnClientPostAdminCheck(int client)
+{
 	char strVIP[2]; cvarTF2Jail[VIPFlag].GetString(strVIP, sizeof(strVIP));
 	char strAdmin[2]; cvarTF2Jail[AdmFlag].GetString(strAdmin, sizeof(strAdmin));
+
+	JailFighter player = JailFighter(client);
 
 	if (strVIP[0] != '\0' && IsValidAdmin(client, strVIP)) // Very useful stock ^^
 		player.bIsVIP = true;
@@ -501,12 +513,18 @@ public void OnClientPutInServer(int client)
 
 	if (strAdmin[0] != '\0' && IsValidAdmin(client, strAdmin))
 		player.bIsAdmin = true;
-	else player.bIsVIP = false;
+	else player.bIsAdmin = false;
 
-	if (!AlreadyMuted(client))	// Brute force
+	if (!AlreadyMuted(client))
 		SetClientListeningFlags(client, VOICE_NORMAL);
-
-	ManageClientStartVariables(player);
+/*
+	As of now with the garbage muting system, some players will be muted before 
+	OnClientPostAdminCheck() fires. Therefore they can and will be stuck in a 
+	mute loop where the plugin says that they are a VIP or admin and need to 
+	be unmuted, but are not 'bIsMuted'. And if they are an admin or a VIP cvar
+	determinant, they will not be muted, and thus their 'bIsMuted' property
+	will never be set to true. This is why the above brute force method is required.
+*/
 }
 
 public Action OnTouch(int toucher, int touchee)
@@ -536,6 +554,7 @@ public Action Timer_PlayerThink(Handle timer)
 	int livingtype = cvarTF2Jail[LivingMuteType].IntValue;
 	int state = gamemode.iRoundState;
 	bool canmute = gamemode.bDisableMuting;
+
 	for (int i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
@@ -605,7 +624,7 @@ public Action Timer_Announce(Handle timer)
 
 public void OnClientDisconnect(int client)
 {
-	ManageClientDisconnect(JailFighter(client));	// Handler
+	ManageClientDisconnect(client);	// Handler
 }
 
 public void ConvarsSet(const bool Status)
@@ -638,7 +657,7 @@ public void HookVent(const int ref)
 		SDKHook(vent, SDKHook_OnTakeDamage, OnEntTakeDamage);
 }
 
-public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action OnPlayerTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!bEnabled.BoolValue || !IsClientValid(victim))
 		return Plugin_Continue;
@@ -905,7 +924,7 @@ public bool AlreadyMuted(const int client)
 	switch (gamemode.bSC)
 	{
 #if defined _sourcecomms_included
-		case true:return !!(SourceComms_GetClientMuteType(client) != bNot);
+		case true:return SourceComms_GetClientMuteType(client) != bNot;
 #endif
 #if defined _basecomm_included
 		case false:return BaseComm_IsClientMuted(client);
@@ -1172,7 +1191,7 @@ public void Open_Doors(const int roundcount)
 
 public void EnableFFTimer(const int roundcount)
 {
-	if (hEngineConVars[0].BoolValue == true || roundcount != gamemode.iRoundCount || gamemode.iRoundState != StateRunning)
+	if (hEngineConVars[0].BoolValue || roundcount != gamemode.iRoundCount || gamemode.iRoundState != StateRunning)
 		return;
 
 	hEngineConVars[0].SetBool(true);
@@ -1245,17 +1264,17 @@ public void MuteClient(const JailFighter player, const int type)
 	{
 		case 0:player.UnmutePlayer();
 		case 1:
-		{
-			if (GetClientTeam(player.index) == RED && !player.bIsVIP)
-				player.MutePlayer();
+			if (GetClientTeam(player.index) == RED)
+				if (!player.bIsVIP)
+					player.MutePlayer();
+				else player.UnmutePlayer();
 			else player.UnmutePlayer();
-		}
 		case 2:
-		{
-			if (GetClientTeam(player.index) == BLU && !player.bIsVIP)
-				player.MutePlayer();
+			if (GetClientTeam(player.index) == BLU)
+				if (!player.bIsVIP)
+					player.MutePlayer();
+				else player.UnmutePlayer();
 			else player.UnmutePlayer();
-		}
 		case 3:if (!player.bIsVIP) player.MutePlayer();
 		case 4:if (GetClientTeam(player.index) == RED) player.MutePlayer();
 		case 5:if (GetClientTeam(player.index) == BLU) player.MutePlayer();

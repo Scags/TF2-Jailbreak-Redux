@@ -88,96 +88,6 @@ native void JB_SetValue(const int client, const char key[64], any value);
  *	float flKillSpree 						// Also for the ghetto rigged freekill system
 */
 
-/**	base.SetArray
- *	Set an array into this player's StringMap
- *
- *	@param client 		Player index.
- *	@param key			Key string.
- *	@param array		Array to store.
- *	@param num_items	Number of items in the array.
- *	@param replace		If false, operation will fail if the key is already set.
- *
- *	@return				True on success, false on failure.
-*/
-native bool JB_SetArray(const int client, const char[] key, const any[] array, int num_items, bool replace = true);
-
-/**	base.SetString
- *	Sets a string value in this player's StringMap, either inserting a new entry or replacing an old one.
- *
- *	@param client 		Player index.
- *	@param key			Key string.
- *	@param string		String to store.
- *	@param replace		If false, operation will fail if the key is already set.
- *
- *	@return				True on success, false on failure.
-*/
-native bool JB_SetString(const int client, const char[] key, const char[] string, bool replace = true);
-
-/**	base.GetArray
- *	Retrieves an array in this player's StringMap.
- *
- *	@param client 		Player index.
- *	@param key			Key string.
- *	@param array		Buffer to store array.
- *	@param max_size		Maximum size of array buffer.
- *	@param size			Optional parameter to store the number of elements written to the buffer.
- *
- *	@return				True on success.  False if the key is not set, or the key is set 
- *						as a value or string (not an array).
-*/
-native bool JB_GetArray(const int client, const char[] key, any[] array, int max_size, int &size = 0);
-
-/**	base.GetString
- *	Retrieves a string in this player's StringMap.
- *
- *	@param client 		Player index.
- *	@param key			Key string.
- *	@param string		Buffer to store value.
- *	@param max_size		Maximum size of string buffer.
- *	@param size			Optional parameter to store the number of bytes written to the buffer.
- *
- *	@return				True on success.  False if the key is not set, or the key is set 
- *						as a value or array (not a string).
-*/
-native bool JB_GetString(const int client, const char[] key, char[] string, int max_size, int &size = 0);
-
-/**	base.Remove
- *	Removes a key entry from this player's StringMap.
- *
- *	@param client 		Player index.
- *	@param key			Key string.
- *
- *	@return				True on success, false if the value was never set.
-*/
-native bool JB_Remove(const int client, const char[] key);
-
-/**	base.Clear
- *	Clears all entries from this player's StringMap.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-native void JB_Clear(const int client);
-
-/**	base.Snapshot
- *	Create a snapshot of this player's StringMap's keys. See StringMapSnapshot.
- *
- *	@param client 		Player index.
- *
- *	@return 			Handle to key SnapShot.
-*/
-native StringMapSnapshot JB_Snapshot(const int client);
-
-/**	base.Size
- *	Retrieves the number of elements in this player's StringMap.
- *
- *	@param client 		Player index.
- *
- *	@return 			Player's StringMap size.
-*/
-native int JB_Size(const int client);
-
 /**	base.SpawnWeapon
  *	Creates and spawns a weapon to a player.
  *
@@ -1438,44 +1348,42 @@ native int TF2JailRedux_RegisterPlugin(const char plugin_name[64]);
 enum	// JB Hook Types
 {
 	OnDownloads = 0,
-	OnManageRoundStart,
-	OnManageRoundStartPlayer,
-	OnManageRoundEnd,
-	OnManageRoundEndPlayer,
-	OnWardenGet,
-	OnClientTouch,
+	OnRoundStart,
+	OnRoundStartPlayer,
+	OnRoundEnd,
+	OnRoundEndPlayer,
+	OnPreThink,
 	OnRedThink,
 	OnBlueThink,
-	// OnBlueNotWardenThink,
+	OnWardenGet,
+	OnClientTouch,
 	OnWardenThink,
-	OnLRTextHud,
-	OnLRPicked,
+	OnPlayerSpawned,
 	OnPlayerDied,
+	OnWardenKilled,
+	OnTimeLeft,
+	OnPlayerPrepped,
+	OnHurtPlayer,
+	OnTakeDamage,
+	OnLastGuard,
+	OnLastPrisoner,
+	OnCheckLivingPlayers,
 	OnBuildingDestroyed,
 	OnObjectDeflected,
 	OnPlayerJarated,
 	OnUberDeployed,
-	OnPlayerSpawned,
 	OnMenuAdd,
 	OnPanelAdd,
-	OnManageTimeLeft,
-	OnPlayerPrepped,
-	OnHurtPlayer,
-	OnHookDamage,
+	OnHudShow,
+	OnLRPicked,
 	OnWMenuAdd,
 	OnWMenuSelect,
 	OnClientInduction,
 	OnVariableReset,
 	OnTimeEnd,
-	OnLastGuard,
-	OnLastPrisoner,
-	OnCheckLivingPlayers,
-	OnWardenKilled,
 	OnFreedayGiven,
 	OnFreedayRemoved,
-	OnPreThink,
-	OnManageFFTimer,
-	OnLRInitialized,
+	OnFFTimer,
 	OnDoorsOpen,
 	OnDoorsClose,
 	OnDoorsLock,

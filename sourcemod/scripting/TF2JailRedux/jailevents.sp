@@ -116,10 +116,13 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	return Plugin_Continue;
 }
 
-public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
+public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!bEnabled.BoolValue)
+	{
+		Steam_SetGameDescription("Team Fortress");
 		return Plugin_Continue;
+	}
 
 	JailFighter player;
 	int i;
@@ -143,9 +146,9 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 
 		if (sCellNames[0] != '\0')
 		{
+			char sEntityName[32];
 			for (i = 0; i < sizeof(sDoorsList); i++)
 			{
-				char sEntityName[32];
 				ent = -1;
 				while ((ent = FindEntityByClassnameSafe(ent, sDoorsList[i])) != -1)
 				{
@@ -200,7 +203,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	if (cvarTF2Jail[Balance].BoolValue && gamemode.iPlaying > 2)
 	{
 		int flamemanager;
-		bool immunity = cvarTF2Jail[AutobalanceImmunity].BoolValue;
+		int immunity = cvarTF2Jail[AutobalanceImmunity].IntValue;
 		float ratio;
 		float balance = cvarTF2Jail[BalanceRatio].FloatValue;
 		float lBlue = float( GetLivingPlayers(BLU) );
@@ -218,7 +221,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 			if (ratio > balance)
 			{
 				player = JailFighter(GetRandomPlayer(BLU, true));
-				if ((immunity && !player.bIsVIP) || !immunity)
+				if ((immunity == 2 && !player.bIsAdmin) || (immunity == 1 && !player.bIsVIP) || !immunity)
 				{
 					if (HasEntProp(i, Prop_Send, "m_hFlameManager"))
 					{
@@ -235,7 +238,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 			}
 		}
 	}
-	
+
 	if (gamemode.b1stRoundFreeday)
 	{
 		gamemode.DoorHandler(OPEN);
@@ -251,7 +254,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	}
 
 	bool warday;
-	float delay, dooropen;
+	float delay;
 	int wep;
 
 	gamemode.iLRType = gamemode.iLRPresetType;
@@ -280,10 +283,10 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		{
 			player.TeleportToPosition(GetClientTeam(i));
 
-			wep = GetPlayerWeaponSlot(i, 3);
+			wep = GetPlayerWeaponSlot(i, 2);
 			if (wep > MaxClients && IsValidEdict(wep) && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 589 && GetClientTeam(i) == BLU)	// Eureka Effect
 			{
-				TF2_RemoveWeaponSlot(i, TFWeaponSlot_Melee);
+				TF2_RemoveWeaponSlot(i, 2);
 				player.SpawnWeapon("tf_weapon_wrench", 7, 1, 0, "");
 			}
 
@@ -300,7 +303,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	if (gamemode.bIsMapCompatible)
 	{
-		dooropen = cvarTF2Jail[DoorOpenTimer].FloatValue;
+		float dooropen = cvarTF2Jail[DoorOpenTimer].FloatValue;
 		if (dooropen != 0.0)
 			SetPawnTimer(Open_Doors, dooropen, gamemode.iRoundCount);
 	}
@@ -316,12 +319,11 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	return Plugin_Continue;
 }
 
-public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
+public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	StopBackGroundMusic();
 	JailFighter player;
 	int i, x;
 	bool attrib = gamemode.bTF2Attribs;
@@ -345,6 +347,8 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 
 		if (GetClientMenu(i) != MenuSource_None)
 			CancelClientMenu(i, true);
+
+		StopSound(i, SNDCHAN_AUTO, BackgroundSong);
 				
 		ManageRoundEnd(player, event);
 	}
@@ -390,7 +394,7 @@ public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player = JailFighter.OfUserId( (event.GetInt("userid")) );
+	JailFighter player = JailFighter.OfUserId( event.GetInt("userid") );
 
 	if (IsClientValid(player.index))
 		SetPawnTimer(PrepPlayer, 0.2, player.userid);

@@ -403,8 +403,7 @@ stock void IncrementHeadCount(const int client, bool addhealth = true, int addhe
 		//health += (decapitations >= 4 ? 10 : 15);
 		if ( health + (15 * addheads) <= 300 ) // TODO: Replace this with an overheal calculation (MaxHP * 1.5) OR add a maxhealth arg. 
 			health += 15 * addheads;
-		else
-			health = 300;
+		else health = 300;
 		SetEntProp(client, Prop_Data, "m_iHealth", health);
 		SetEntProp(client, Prop_Send, "m_iHealth", health);
 	}
@@ -441,12 +440,12 @@ stock void ResetPlayer(const int client)
 If you need to use this and your function uses 3 parameters, modify it if necessary.
 BUG/GLITCH: For some strange reason, SetPawnTimer doesn't work when u attempt to callback stock functions, interesting...
 */
-stock void SetPawnTimer(Function func, float thinktime = 0.1, any param1 = -999/*, any param2 = -999*/)
+stock void SetPawnTimer(Function func, float thinktime = 0.1, any param1 = -999, any param2 = -999)
 {
 	DataPack thinkpack = new DataPack();
 	thinkpack.WriteFunction(func);
 	thinkpack.WriteCell(param1);
-	// thinkpack.WriteCell(param2);
+	thinkpack.WriteCell(param2);
 
 	CreateTimer(thinktime, DoThink, thinkpack, TIMER_DATA_HNDL_CLOSE);
 }
@@ -462,9 +461,9 @@ public Action DoThink(Handle hTimer, DataPack hndl)
 	if ( param1 != -999 )
 		Call_PushCell(param1);
 
-	/*any param2 = hndl.ReadCell();
+	any param2 = hndl.ReadCell();
 	if ( param2 != -999 )
-		Call_PushCell(param2);*/
+		Call_PushCell(param2);
 
 	Call_Finish();
 	return Plugin_Continue;
@@ -984,33 +983,14 @@ stock void SetTextNode(Handle node, const char[] sText, float X = -1.0, float Y 
 			ShowSyncHudText(i, node, sText);
 	}
 }
-stock bool OnlyScoutsLeft(const int team)
-{
-	for (int i=MaxClients ; i ; --i) {
-		if ( !IsValidClient(i) || !IsPlayerAlive(i) )
-			continue;
-		if (GetClientTeam(i) == team && TF2_GetPlayerClass(i) != TFClass_Scout)
-			return false;
-	}
-	return true;
-}
 stock void RemoveParachute(const int client)
 {
 	if (TF2_IsPlayerInCondition(client, TFCond_Parachute))
 		TF2_RemoveCondition(client, TFCond_Parachute);
 }
-stock int CalcBossHealth(const float initial, const int playing, const float subtract, const float exponent, const float additional)
-{
-	return RoundFloat( Pow((((initial)+playing)*(playing-subtract)), exponent)+additional );
-}
 public bool TraceRayDontHitSelf(int entity, int mask, any data)
 {
 	return (entity != data);
-}
-stock void OverNineThousand()
-{
-	EmitSoundToAll("saxton_hale/9000.wav");
-	EmitSoundToAll("saxton_hale/9000.wav");
 }
 // From smlib
 stock int FindEntity(const char[] name, const char[] className = "")

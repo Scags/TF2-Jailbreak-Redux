@@ -48,7 +48,7 @@ methodmap JailFighter
 	{
 		public get()
 		{
-			return hJailFields[this.index];
+			return hJailFields[view_as< int >(this)];
 		}
 	}
 
@@ -293,7 +293,7 @@ methodmap JailFighter
 		else TF2Items_SetNumAttributes(hWeapon, 0);
 
 		int entity = TF2Items_GiveNamedItem(this.index, hWeapon);
-		delete (hWeapon);
+		delete hWeapon;
 		EquipPlayerWeapon(this.index, entity);
 		return entity;
 	}
@@ -523,11 +523,11 @@ methodmap JailFighter
 
 			int clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
 			if (clip != -1)
-				SetEntProp(weapon, Prop_Data, "m_iClip1", 0);
+				SetEntProp(weapon, Prop_Send, "m_iClip1", 0);
 
 			clip = GetEntProp(weapon, Prop_Data, "m_iClip2");
 			if (clip != -1)
-				SetEntProp(weapon, Prop_Data, "m_iClip2", 0);
+				SetEntProp(weapon, Prop_Send, "m_iClip2", 0);
 
 			SetWeaponAmmo(weapon, 0);
 		}
@@ -583,7 +583,7 @@ methodmap JailFighter
 		this.bIsWarden = false;
 		this.bLasering = false;
 		this.SetCustomModel("");
-		JBGameMode_SetProperty("iWarden", view_as< JailFighter >(0));
+		JBGameMode_SetProperty("iWarden", 0);
 
 		if (JBGameMode_GetProperty("iRoundState") == StateRunning)
 		{
@@ -814,7 +814,8 @@ methodmap JailFighter
 		fVelocity[2] = upwardvel;
 
 		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, fVelocity);
-		SDKHooks_TakeDamage(client, client, client, health, DMG_CLUB, GetPlayerWeaponSlot(client, TFWeaponSlot_Melee));
+		if (health != 0.0)
+			SDKHooks_TakeDamage(client, client, client, health, DMG_CLUB, 0);
 
 		if (attackdelay)
 			SetPawnTimer(NoAttacking, 0.1, EntIndexToEntRef(weapon));

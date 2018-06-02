@@ -443,12 +443,17 @@ methodmap JailGameMode < StringMap
 	{
 		public get()
 		{
+			if (!this.bWardenExists)
+				return view_as< JailFighter >(0);
+
 			int i; this.GetValue("iWarden", i);
 			JailFighter player = JailFighter.OfUserId(i);
+
 			if (!IsClientValid(player.index))
 				return view_as< JailFighter >(0);
 			if (!player.bIsWarden)
 				return view_as< JailFighter >(0);
+				
 			return player;
 		}
 		public set( const JailFighter i )

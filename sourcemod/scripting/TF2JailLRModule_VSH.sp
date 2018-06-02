@@ -2015,7 +2015,7 @@ public void fwdOnDownloads()
 	AddHHHToDownloads();
 	AddBunnyToDownloads();
 }
-public void fwdOnLRRoundActivate(const JBPlayer Player)
+public void fwdOnRoundStartPlayer(const JBPlayer Player)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
@@ -2034,7 +2034,7 @@ public void fwdOnLRRoundActivate(const JBPlayer Player)
 	base.iDamage = 0;
 	SetPawnTimer( PrepPlayers, 0.2, base.userid );
 }
-public void fwdOnManageRoundStart()
+public void fwdOnRoundStart()
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
@@ -2077,7 +2077,7 @@ public void fwdOnManageRoundStart()
 	SetPawnTimer(ManagePlayBossIntro, 0.2, rand);
 	ManageMessageIntro();
 }
-public void fwdOnManageRoundEnd(Event event)
+public void fwdOnRoundEnd(Event event)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
@@ -2226,8 +2226,8 @@ public void fwdOnRedThink(const JBPlayer Player)
 	}
 	if (validwep && weapon == GetPlayerWeaponSlot(i, TFWeaponSlot_Primary)) // Primary weapon crit list
 	{
-		if (StrStarts(wepclassname, "tf_weapon_compound_bow") ||  // Sniper bows
-			StrStarts(wepclassname, "tf_weapon_crossbow") ||  // Medic crossbows
+		if (!StrContains(wepclassname, "tf_weapon_compound_bow") ||  // Sniper bows
+			!StrContains(wepclassname, "tf_weapon_crossbow") ||  // Medic crossbows
 			StrEqual(wepclassname, "tf_weapon_shotgun_building_rescue") ||  // Engineer Rescue Ranger
 			StrEqual(wepclassname, "tf_weapon_drg_pomson")) // Engineer Pomson
 		{
@@ -2236,19 +2236,19 @@ public void fwdOnRedThink(const JBPlayer Player)
 	}
 	if (validwep && weapon == GetPlayerWeaponSlot(i, TFWeaponSlot_Secondary)) // Secondary weapon crit list
 	{
-		if (StrStarts(wepclassname, "tf_weapon_pistol") ||  // Engineer/Scout pistols
-			StrStarts(wepclassname, "tf_weapon_handgun_scout_secondary") ||  // Scout pistols
-			StrStarts(wepclassname, "tf_weapon_raygun") ||  //Bison
-			StrStarts(wepclassname, "tf_weapon_flaregun") ||  // Flare guns
+		if (!StrContains(wepclassname, "tf_weapon_pistol") ||  // Engineer/Scout pistols
+			!StrContains(wepclassname, "tf_weapon_handgun_scout_secondary") ||  // Scout pistols
+			!StrContains(wepclassname, "tf_weapon_raygun") ||  //Bison
+			!StrContains(wepclassname, "tf_weapon_flaregun") ||  // Flare guns
 			StrEqual(wepclassname, "tf_weapon_smg")) // Sniper SMGs minus Cleaner's Carbine
 		{
 			if (TFClass == TFClass_Scout && cond == TFCond_CritOnWin) cond = TFCond_Buffed;
 			int PrimaryIndex = GetIndexOfWeaponSlot(i, TFWeaponSlot_Primary);
-			if ((TFClass == TFClass_Pyro && PrimaryIndex == 594) || (IsValidEntity(FindPlayerBack(i, { 642 }, 1))) || (IsValidEntity(FindPlayerBack(i, { 231 }, 1)))) // No crits if using Phlogistinator or Cozy Camper or Darwin's Danger Shield
+			if ((TFClass == TFClass_Pyro && PrimaryIndex == 594) || (IsValidEntity(FindPlayerBack(i, { 642, 231 }, 2)))) // No crits if using Phlogistinator or Cozy Camper or Darwin's Danger Shield
 				addthecrit = false;
 			else addthecrit = true;
 		}
-		if (StrStarts(wepclassname, "tf_weapon_jar") ||  // Jarate/Milk
+		if (!StrContains(wepclassname, "tf_weapon_jar") ||  // Jarate/Milk
 			StrEqual(wepclassname, "tf_weapon_cleaver")) // Flying Guillotine
 		addthecrit = true;
 	}
@@ -2387,7 +2387,7 @@ public void fwdOnBlueThink(const JBPlayer Player)
 	/* Adding this so bosses can take minicrits if airborne */
 	TF2_AddCondition(base.index, TFCond_GrapplingHookSafeFall, 0.2);
 }
-public void fwdOnLRTextHud(char strHud[128])
+public void fwdOnHudShow(char strHud[128])
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
@@ -2558,7 +2558,7 @@ public void fwdOnPanelAdd(const int index, char name[64])
 
 	strcopy(name, sizeof(name), "Versus Saxton Hale- A nice round of VSH");
 }
-public void fwdOnManageTimeLeft()
+public void fwdOnTimeLeft()
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH)
 		return;
@@ -2578,7 +2578,7 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, Even
 	if (!victim.bIsBoss)
 		return;
 
-	int damage = event.GetInt("damagebits");
+	int damage = event.GetInt("damageamount");
 	int custom = event.GetInt("custom");
 	int weapon = event.GetInt("weaponid");
 	
@@ -2636,7 +2636,7 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, Even
 		else medic.iDamage += damage / (healercount + 1);
 	}
 }
-public Action fwdOnHookDamage(const JBPlayer Victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action fwdOnTakeDamage(const JBPlayer Victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!JBVSH[Enabled].BoolValue || NotVSH || gamemode.GetProperty("iRoundState") != StateRunning)
 		return Plugin_Continue;
@@ -2739,18 +2739,18 @@ public void CheckJBHooks()
 {
 	if (!JB_HookEx(OnDownloads, fwdOnDownloads))
 		LogError("Failed to load OnDownloads forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnManageRoundStartPlayer, fwdOnLRRoundActivate))
-		LogError("Failed to load OnManageRoundStartPlayer forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnManageRoundStart, fwdOnManageRoundStart))
-		LogError("Failed to load OnManageRoundStart forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnManageRoundEnd, fwdOnManageRoundEnd))
-		LogError("Failed to load OnManageRoundEnd forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnRoundStartPlayer, fwdOnRoundStartPlayer))
+		LogError("Failed to load OnRoundStartPlayer forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnRoundStart, fwdOnRoundStart))
+		LogError("Failed to load OnRoundStart forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnRoundEnd, fwdOnRoundEnd))
+		LogError("Failed to load OnRoundEnd forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnRedThink, fwdOnRedThink))
 		LogError("Failed to load OnRedThink forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnBlueThink, fwdOnBlueThink))
 		LogError("Failed to load OnBlueThink forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnLRTextHud, fwdOnLRTextHud))
-		LogError("Failed to load OnLRTextHud forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnHudShow, fwdOnHudShow))
+		LogError("Failed to load OnHudShow forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnLRPicked, fwdOnLRPicked))
 		LogError("Failed to load OnLRPicked forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnPlayerDied, fwdOnPlayerDied))
@@ -2769,12 +2769,12 @@ public void CheckJBHooks()
 		LogError("Failed to load OnMenuAdd forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnPanelAdd, fwdOnPanelAdd))
 		LogError("Failed to load OnPanelAdd forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnManageTimeLeft, fwdOnManageTimeLeft))
-		LogError("Failed to load OnManageTimeLeft forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnTimeLeft, fwdOnTimeLeft))
+		LogError("Failed to load OnTimeLeft forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnHurtPlayer, fwdOnHurtPlayer))
 		LogError("Failed to load OnHurtPlayer forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnHookDamage, fwdOnHookDamage))
-		LogError("Failed to load OnHookDamage forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnTakeDamage, fwdOnTakeDamage))
+		LogError("Failed to load OnTakeDamage forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnClientInduction, fwdOnClientInduction))
 		LogError("Failed to load OnClientInduction forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnPlayMusic, fwdOnMusicPlay))
@@ -2785,4 +2785,24 @@ public void CheckJBHooks()
 		LogError("Failed to load OnLastPrisoner forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
 		LogError("Failed to load OnCheckLivingPlayers forwards for JB VSH Sub-Plugin!");
+}
+
+stock bool OnlyScoutsLeft(const int team)
+{
+	for (int i=MaxClients ; i ; --i) {
+		if ( !IsValidClient(i) || !IsPlayerAlive(i) )
+			continue;
+		if (GetClientTeam(i) == team && TF2_GetPlayerClass(i) != TFClass_Scout)
+			return false;
+	}
+	return true;
+}
+stock int CalcBossHealth(const float initial, const int playing, const float subtract, const float exponent, const float additional)
+{
+	return RoundFloat( Pow((((initial)+playing)*(playing-subtract)), exponent)+additional );
+}
+stock void OverNineThousand()
+{
+	EmitSoundToAll("saxton_hale/9000.wav");
+	EmitSoundToAll("saxton_hale/9000.wav");
 }
