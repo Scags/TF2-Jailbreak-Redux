@@ -10,7 +10,7 @@
 #define RED 				2
 #define BLU 				3
 
-#define PLUGIN_VERSION 		"1.1.0"
+#define PLUGIN_VERSION 		"1.2.0"
 
 public Plugin myinfo =
 {
@@ -52,7 +52,7 @@ public void OnMapStart()
 
 public Action Cmd_RefreshList(int client, int args)
 {
-	CReplyToCommand(client, "{red}[TF2Jail]{tan} Running Weapon Blocker config.");
+	CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Running Weapon Blocker config.");
 	RunConfig();
 	return Plugin_Handled;
 }
@@ -110,15 +110,13 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 	if (!bEnabled.BoolValue)
 		return;
 
-	int team = GetClientTeam(Player.index) == RED ? 0 : 1;
+	int team = GetClientTeam(Player.index) - 2;
 	int len = hWeaponList[team].Length;
 
 	if (len)
 	{
-		int[] prepwep = new int[1];
-		int client = Player.index, i, index, u, wep;
+		int client = Player.index, i, index, u, wep, active, prepwep;
 		char classname[64];
-		int active;
 		for (i = 0; i < 3; i++)	// Prepare for wicked laziness and hacky coding
 		{
 			active = 0;
@@ -127,21 +125,21 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 
 			for (u = 0; u < len; u++)
 			{
-				prepwep[0] = hWeaponList[team].Get(u);
+				prepwep = hWeaponList[team].Get(u);
 
-				if (wep == prepwep[0])
+				if (wep == prepwep)
 				{ active = 1; break; }	// 1 is weapon
 
-				switch (prepwep[0])
+				switch (prepwep)
 				{
 					case 57, 131, 133, 230, 231, 406, 444, 642:	// Secondaries
 					{
-						if (IsValidEntity(FindPlayerBack(client, prepwep, 1)) && i)
+						if (IsValidEntity(FindPlayerBack(client, prepwep)) && i)
 						{ active = 2; break; }
 					}
 					case 405, 608:								// Primaries
 					{
-						if (IsValidEntity(FindPlayerBack(client, prepwep, 1)) && !i)
+						if (IsValidEntity(FindPlayerBack(client, prepwep)) && !i)
 						{ active = 2; break; }
 					}
 				}
@@ -202,7 +200,7 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 			if (active == 1)
 				TF2_RemoveWeaponSlot(client, i);
 			else if (active == 2)
-				RemovePlayerBack(client, prepwep[0], 1);
+				RemovePlayerBack(client, prepwep);
 
 /*	Flamethrower attributes are fucked up after Jungle Inferno, these static attribs are required whenever spawning them
 "flame_gravity"                         "0"
@@ -221,76 +219,26 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 	}
 }
 
-stock int FindPlayerBack(int client, int[] indices, int len)
+stock int FindPlayerBack(int client, int idx)
 {
-	if (len <= 0)
-		return -1;
 	int edict = MaxClients+1;
-	int i, idx;
 	char netclass[32];
-	while ((edict = FindEntityByClassname(edict, "tf_wearable")) != -1)
-	{
-		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearable"))
-		{
+	while ((edict = FindEntityByClassname(edict, "tf_wearabl*")) != -1)
+		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrContains(netclass, "CTFWearable") != -1)
 			if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			{
-				idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
-				for (i = 0; i < len; i++)
-					if (idx == indices[i])
-						return edict;
-			}
-		}
-	}
-	edict = MaxClients+1;
-	while ((edict = FindEntityByClassname(edict, "tf_wearable_razorback")) != -1)
-	{
-		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearableRazorback"))
-		{
-			if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			{
-				idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
-				for (i = 0; i < len; i++)
-					if (idx == indices[i])
-						return edict;
-			}
-		}
-	}
+				if (idx == GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex"))
+					return edict;	// One linerrrrrrrrrr
 	return -1;
 }
-stock void RemovePlayerBack(int client, int[] indices, int len)
+stock void RemovePlayerBack(int client, int idx)
 {
-	if (len <= 0)
-		return;
 	int edict = MaxClients+1;
-	int i, idx;
 	char netclass[32];
-	while ((edict = FindEntityByClassname(edict, "tf_wearable")) != -1)
-	{
-		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearable"))
-		{
+	while ((edict = FindEntityByClassname(edict, "tf_wearabl*")) != -1)
+		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrContains(netclass, "CTFWearable") != -1)
 			if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			{
-				idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
-				for (i = 0; i < len; i++)
-					if (idx == indices[i])
-						TF2_RemoveWearable(client, edict);
-			}
-		}
-	}
-	edict = MaxClients+1;
-	while ((edict = FindEntityByClassname(edict, "tf_wearable_razorback")) != -1)
-	{
-		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearableRazorback"))
-		{
-			if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			{
-				idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
-				for (i = 0; i < len; i++)
-					if (idx == indices[i])
-						TF2_RemoveWearable(client, edict);
-			}
-		}
-	}
+				if (idx == GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex"))
+					TF2_RemoveWearable(client, edict);	// One linerrrrrrrrrr
 }
 stock int SetWeaponAmmo(const int weapon, const int ammo)
 {
