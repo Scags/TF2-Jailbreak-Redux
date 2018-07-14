@@ -936,7 +936,7 @@ public bool AlreadyMuted(const int client)
 public void EnableEureka(const int userid)
 {
 	JailFighter player = JailFighter.OfUserId(userid);
-	if (IsClientInGame(player.index))
+	if (IsClientValid(player.index))
 		player.bUnableToTeleport = false;
 }
 
