@@ -1,8 +1,11 @@
 # TF2Jail-Redux #
 A current WIP
 
-Born out of my dislike with the unorganized and jumbled mess the original TF2Jail plugin was, I went out and did a partial rewrite of it, combining features of different plugins to create a more unique and pristine version that combatted the bugs and issues from the original.
-The entirety of the plugin is built with developers in mind, which is why much of it (especially Last Requests) are hard coded within it rather than having a config file with limited control over gameplay. Take a look at the [wiki](https://github.com/Scags/TF2-Jailbreak-Redux/wiki/Last-Requests) for a complete guide as to how to create and craft last requests.
+Born out of my dislike with the unorganized and jumbled mess the original TF2Jail plugin was, I went out and did a complete rewrite of it, combining features of different plugins to create a more unique and pristine version that is very developer-friendly.
+
+The entirety of the plugin is built with developers in mind, which is why much of it (especially Last Requests) are hard coded within it rather than having a config file with limited control over gameplay. The plugin is essentially developer framework with enough cvars to allow server owners to adjust the plugin to their liking without having to dabble in the source code.
+
+Take a look at the [wiki](https://github.com/Scags/TF2-Jailbreak-Redux/wiki) for a complete guide as to how to create and craft last requests. The plugin comes with it's own API found in the wiki as well.
 
 With the building from several other plugins, props to:
 
@@ -17,11 +20,11 @@ With the building from several other plugins, props to:
   And others that aren't mentioned.
 
 ## Features ##
-The entire plugin is organized into files associated with what part of the code they use:
+The entire plugin is organized into files associated with what functionality is found within them:
 
   **TF2Jail_Redux.sp**- Contains the core structure of the plugin, CVars, native engineering, and functions called to and from jailhandler.
   
-  **jailhandler.sp**- Gameplay structure. Just about everything gameplay oriented that happens within the plugin has some sort of function in here. Last requests are built and organized from here, being made almost as simple as possible.
+  **jailhandler.sp**- Gameplay and backend structure. Just about everything gameplay oriented that happens within the plugin has some sort of function in here. Last requests are built and organized from here, being made almost as simple as possible.
   
   **jailevents.sp**- Structure of events contained in the plugin, very little happens here other than calls to jailhandler.
   
@@ -33,13 +36,15 @@ The entire plugin is organized into files associated with what part of the code 
   
   **stocks.inc**- Several stock functions used and some that could be used in the plugin.
   
-  **jailforwards.sp**- Nergal saves the day! Forwards that allow events and functions to be used from third party plugins such as the VSH and PH module.
+  **jailforwards.sp**- Forwards that allow events and functions to be used from third party plugins such as the VSH and PH module. Note that these are all private forwards.
+  
+  **lastrequests,sp**- Organized file that includes last request .sp files. If you wish to take the methodmap road while crafting a last request, place the .sp file in the lastrequests/ folder and organize it by including it from here.
   
   **tf2jailredux.inc**- Complete native and forward-hooking structure that allows third party plugins to derive from the JBPlayer methodmap and be able get/set properties from the internal stringmap.
   
   
 ## Sub Plugins ##
-TF2JR uses an SDKHook-style format for its forwards. With sub-plugins such as Versus Saxton Hale and Prophunt, a developer is able to hook into the function calls that they need not only to create last requests, but to enhance regular gameplay. 
+TF2JR uses an SDKHook-style format for its forwards. With sub-plugins that can be made such as Versus Saxton Hale and Prophunt, a developer is able to hook into the function calls that they need not only to create last requests, but to enhance regular gameplay. 
 
 ## Requirements ##
 
