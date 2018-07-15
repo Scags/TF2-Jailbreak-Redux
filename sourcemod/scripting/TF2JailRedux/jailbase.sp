@@ -581,6 +581,7 @@ methodmap JailFighter
 						bits |= (1 << i);
 
 				event.SetInt("visibilityBitfield", bits);
+				event.Fire();
 			}
 		}
 
