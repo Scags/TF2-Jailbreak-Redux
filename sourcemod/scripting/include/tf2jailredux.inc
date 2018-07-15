@@ -82,7 +82,6 @@ native void JB_SetValue(const int client, const char key[64], any value);
  *	bool bIsAdmin							// Default Generic flag
  *	bool bIsHHH								// For the HHHDay LR
  *	bool bInJump							// Client is rocket/sticky jumping
- *	bool bNoMusic							// LR music option (cookie)
  *	bool bUnableToTeleport 					// Client can/can't teleport with Eureka Effect
  *	float flSpeed 							// Client speed, isn't used
  *	float flKillSpree 						// Also for the ghetto rigged freekill system
@@ -168,7 +167,6 @@ stock void SetWeaponInvis(const int client, const int alpha)
 			SetEntityRenderColor(entity, 150, 150, 150, transparent); 
 		}
 	}
-	return;
 }
 
 /**	base.ForceTeamChange
@@ -224,16 +222,7 @@ stock void RemoveAll(const int client, bool weps = true)
 {
 	TF2_RemovePlayerDisguise(client);
 	int ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1)
-	{
-		if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client) 
-		{
-			TF2_RemoveWearable(client, ent);
-			AcceptEntityInput(ent, "Kill");
-		}
-	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
+	while ((ent = FindEntityByClassname(ent, "tf_wearabl*")) != -1)
 	{
 		if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client) 
 		{
@@ -250,28 +239,9 @@ stock void RemoveAll(const int client, bool weps = true)
 			AcceptEntityInput(ent, "Kill");
 		}
 	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_wearable_razorback")) != -1)
-	{
-		if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client) 
-		{
-			TF2_RemoveWearable(client, ent);
-			AcceptEntityInput(ent, "Kill");
-		}
-	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_wearable_campaign_item")) != -1)
-	{
-		if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client) 
-		{
-			TF2_RemoveWearable(client, ent);
-			AcceptEntityInput(ent, "Kill");
-		}
-	}
 	if (weps)
 		TF2_RemoveAllWeapons(client);
 }
-
 
 /**	base.TeleToSpawn
  *	Teleport a player to the appropriate spawn location.
@@ -290,21 +260,18 @@ stock void TeleportToSpawn(const int client, int team = 0)	// Props to Chdata!
 	{
 		if (team <= 1)
 			hArray.Push(iEnt);
-		else
-		{
-			int iSpawnTeam = GetEntProp(iEnt, Prop_Send, "m_iTeamNum");
-			if (iSpawnTeam == team)
-				hArray.Push(iEnt);
-		}
+		else if (GetEntProp(iEnt, Prop_Send, "m_iTeamNum") == team)
+			hArray.Push(iEnt);
 	}
 	iEnt = hArray.Get(GetRandomInt(0, hArray.Length - 1));
-	hArray.Close();
-
+	delete hArray;
+	
 	// Technically you'll never find a map without a spawn point. not a good map at least.
 	GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", vPos);
 	GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
 	TeleportEntity(client, vPos, vAng, NULL_VECTOR);
 }
+
 /**	base.SpawnSmallHealthPack
  *	Spawn a small healthpack at the client's origin.
  *
@@ -331,8 +298,8 @@ stock void SpawnSmallHealthPackAt(const int client, int ownerteam = 0)
 		TeleportEntity(healthpack, pos, NULL_VECTOR, vel);
 		//CreateTimer(17.0, Timer_RemoveCandycaneHealthPack, EntIndexToEntRef(healthpack), TIMER_FLAG_NO_MAPCHANGE);
 	}
-	return;
 }
+
 /**	base.MutePlayer
  *	Mute a client through the plugin.
  *	@note 				Players that are deemed as admins will never be muted.
@@ -391,7 +358,7 @@ stock void StripPlayerToMelee(const int client)
 */
 stock void EmptyPlayerWeaponSlots(const int client)
 {
-	if (!IsPlayerAlive(client) || TF2_GetClientTeam(client) != TFTeam_Red)
+	if (!IsPlayerAlive(client))
 		return;
 
 	int offset = FindDataMapInfo(client, "m_hMyWeapons") - 4;
@@ -403,16 +370,16 @@ stock void EmptyPlayerWeaponSlots(const int client)
 
 		weapon = GetEntDataEnt2(client, offset);
 
-		if (!IsValidEntity(weapon) || i == TFWeaponSlot_Melee)
+		if (!IsValidEntity(weapon))
 			continue;
 
-		int clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
+		int clip = GetEntProp(weapon, Prop_Send, "m_iClip1");
 		if (clip != -1)
-			SetEntProp(weapon, Prop_Data, "m_iClip1", 0);
+			SetEntProp(weapon, Prop_Send, "m_iClip1", 0);
 
-		clip = GetEntProp(weapon, Prop_Data, "m_iClip2");
+		clip = GetEntProp(weapon, Prop_Send, "m_iClip2");
 		if (clip != -1)
-			SetEntProp(weapon, Prop_Data, "m_iClip2", 0);
+			SetEntProp(weapon, Prop_Send, "m_iClip2", 0);
 			
 		int iOffset = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;
 		int iAmmoTable = FindSendPropInfo("CTFPlayer", "m_iAmmo");
@@ -423,8 +390,6 @@ stock void EmptyPlayerWeaponSlots(const int client)
 	int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
 	if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
 		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
-	
-	//CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Your weapons and ammo have been stripped.");
 }
 
 /**	base.UnmutePlayer
@@ -618,7 +583,6 @@ methodmap JBPlayer
 	 *	bool bIsAdmin							// Default Generic flag
 	 *	bool bIsHHH								// For the HHHDay LR
 	 *	bool bInJump							// Client is rocket/sticky jumping
-	 *	bool bNoMusic							// LR music option (cookie)
 	 *	bool bUnableToTeleport 					// Client can/can't teleport with Eureka Effect
 	 *	float flSpeed 							// Client speed, isn't used
 	 *	float flKillSpree 						// Also for the ghetto rigged freekill system
@@ -892,7 +856,7 @@ native void JBGameMode_ManageCells(const eDoorsMode status);
  *
  *	@return 				The current warden.
 */
-native int JBGameMode_Warden();
+native JBPlayer JBGameMode_Warden();
 
 /** 
  *	Find and terminate the current warden.
@@ -1111,7 +1075,7 @@ methodmap JBGameMode
 	 *
 	 *	@return 				The current warden.
 	*/
-	property int Warden
+	property JBPlayer Warden
 	{
 		public get()
 		{
@@ -1395,7 +1359,7 @@ enum	// JB Hook Types
 typeset JBHookCB
 {
 	/*
-		OnManageRoundStartPlayer
+		OnRoundStartPlayer
 		OnWardenGet
 		OnRedThink
 		OnBlueThink
@@ -1410,7 +1374,7 @@ typeset JBHookCB
 	
 	/*
 		OnPlayerSpawned
-		OnManageRoundEndPlayer
+		OnRoundEndPlayer
 	*/
 	function void (const JBPlayer Player, Event event);
 
@@ -1432,7 +1396,7 @@ typeset JBHookCB
 
 	/*
 		OnDownloads
-		OnManageRoundStart
+		OnRoundStart
 		OnCheckLivingPlayers
 	*/
 	function void ();
@@ -1443,13 +1407,13 @@ typeset JBHookCB
 	//	OnPanelAdd
 	function void (const int index, char name[64]);
 
-	//	OnManageRoundEnd
+	//	OnRoundEnd
 	function void (Event event);
 
 	//	OnWMenuAdd
 	function void (Menu &menu);	
 
-	// 	OnLRTextHud
+	// 	OnHudShow
 	function void (char strHud[128]);
 
 	// 	OnLRPicked			Return anything but Continue to prevent setting the next iLRPresetType to index
@@ -1458,7 +1422,7 @@ typeset JBHookCB
 	// 	OnHurtPlayer
 	function void (const JBPlayer Victim, const JBPlayer Attacker, Event event);
 
-	// 	OnHookDamage
+	// 	OnTakeDamage
 	function Action (const JBPlayer Victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom);
 
 	//	OnWMenuSelect
@@ -1484,10 +1448,10 @@ typeset JBHookCB
 	//	OnPreThink
 	function void (const JBPlayer Player, int buttons);
 
-	//	OnManageFFTimer
+	//	OnFFTimer
 	function void (float &time);
 
-	//	OnManageTimeLeft
+	//	OnTimeLeft
 	function void (int &time);
 };
 

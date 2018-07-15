@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.14.1"
+#define PLUGIN_VERSION		"0.15.0"
 #define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -92,6 +92,8 @@ enum	// Cvar name
 	WardenToggleMedic,
 	Advert,
 	CVarWarn,
+	WardenAnnotation,
+	MarkerType,
 	Version
 };
 
@@ -175,12 +177,14 @@ public void OnPluginStart()
 	cvarTF2Jail[AutobalanceImmunity] 		= CreateConVar("sm_tf2jr_auto_balance_immunity", "1", "Allow VIP's/admins to have autobalance immunity? (If autobalancing is enabled). 0 = disabled; 1 = VIPs only; 2 = Admins only", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	cvarTF2Jail[NoCharge] 					= CreateConVar("sm_tf2jr_demo_charge", "3", "Disable DemoMan's charge ability? 0 = Allow; 1 = Disable for Blue team; 2 = Disable for Red team; 3 = Disable for all", FCVAR_NOTIFY, true, 0.0, true, 3.0);
 	cvarTF2Jail[NoAirblast] 				= CreateConVar("sm_tf2jr_airblast", "1", "Disable Pyro airblast? (Requires TF2Attributes)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[NoDoubleJump] 				= CreateConVar("sm_tf2jr_double_jump", "1", "Disable Scout doublejump? (Requires TF2Attributes)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[NoDoubleJump] 				= CreateConVar("sm_tf2jr_double_jump", "1", "Disable Scout double jump? (Requires TF2Attributes)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[DenyLR] 					= CreateConVar("sm_tf2jr_warden_deny_lr", "1", "Allow Wardens to deny the queued last request?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WardenLaser] 				= CreateConVar("sm_tf2jr_warden_laser", "1", "Allow Wardens to use laser pointers?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WardenToggleMedic] 			= CreateConVar("sm_tf2jr_warden_toggle_medic", "0", "Allow Wardens to toggle the medic room?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[Advert] 					= CreateConVar("sm_tf2jr_advertisement", "540", "Time in seconds to display the chat advertisement. 0 to disable.", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[CVarWarn] 					= CreateConVar("sm_tf2jr_warden_cvwarn", "1", "Warn the warden before they turn on Collisions/FF?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[WardenAnnotation] 			= CreateConVar("sm_tf2jr_warden_annotation", "5", "Display an annotation over the Warden's head on get? If so, how long in seconds?", FCVAR_NOTIFY, true, 0.0);
+	cvarTF2Jail[MarkerType] 				= CreateConVar("sm_tf2jr_warden_marker_type", "1", "If \"sm_tf2jr_warden_markers\" is enabled, what type of markers should there be? 0 = Circles' 1 = Annotations.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -278,10 +282,10 @@ public void OnPluginStart()
 	RegAdminCmd("sm_wblue", AdminWardayBlue, ADMFLAG_GENERIC, "Teleport all guards to their warday teleport location.");
 	RegAdminCmd("sm_startwarday", AdminFullWarday, ADMFLAG_GENERIC, "Teleport all players to their warday teleport location.");
 	RegAdminCmd("sm_sw", AdminFullWarday, ADMFLAG_GENERIC, "Teleport all players to their warday teleport location.");
-	RegAdminCmd("sm_reloadjailcfg", AdminReloadCFG, ADMFLAG_GENERIC, "Reload TF2Jail Redux's config file.");
 	RegAdminCmd("sm_tm", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
 	RegAdminCmd("sm_tmedic", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
 	RegAdminCmd("sm_togglemedic", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
+	RegAdminCmd("sm_reloadjailcfg", AdminReloadCFG, ADMFLAG_GENERIC, "Reload TF2Jail Redux's config file.");
 
 	RegAdminCmd("sm_setpreset", SetPreset, ADMFLAG_GENERIC, "Set gamemode.iLRPresetType. (DEBUGGING)");
 	RegAdminCmd("sm_itype", Type, ADMFLAG_GENERIC, "gamemode.iLRType. (DEBUGGING)");
@@ -475,7 +479,7 @@ public void OnClientPutInServer(int client)
 	SDKHook(client, SDKHook_Touch, OnTouch);
 	SDKHook(client, SDKHook_PreThink, PreThink);
 
-	if (hJailFields[client] != null)
+	if (hJailFields[client])
 		delete hJailFields[client];
 
 	hJailFields[client] = new StringMap();
@@ -1075,7 +1079,8 @@ public void StopBackGroundMusic()
 // Props to Dr.Doctor
 public void CreateMarker(const int client)
 {
-	if (!cvarTF2Jail[Markers].BoolValue)
+	float time = cvarTF2Jail[Markers].FloatValue;
+	if (time == 0.0)
 		return;
 
 	float vecAngles[3], vecOrigin[3], flPos[3];
@@ -1096,11 +1101,40 @@ public void CreateMarker(const int client)
 	flPos[2] += 5.0;
 	delete trace;
 
-	TE_SetupBeamRingPoint(flPos, 300.0, 300.1, iLaserBeam, iHalo, 0, 10, cvarTF2Jail[Markers].FloatValue, 2.0, 0.0, {255, 255, 255, 255}, 10, 0);
-	TE_SendToAll();
-	gamemode.bMarkerExists = true;
-	SetPawnTimer(ResetMarker, 1.0);
-	EmitAmbientSound("misc/rd_finale_beep01.wav", flPos); EmitAmbientSound("misc/rd_finale_beep01.wav", flPos);
+	if (cvarTF2Jail[MarkerType].BoolValue)
+	{
+		Event event = CreateEvent("show_annotation");
+		if (event)
+		{
+			flPos[2] += 20.0;	// Adjust
+
+			event.SetFloat("lifetime", time);
+			event.SetString("text", "Here");
+			event.SetString("play_sound", "misc/rd_finale_beep01.wav");
+			event.SetFloat("worldPosX", flPos[0]);
+			event.SetFloat("worldPosY", flPos[1]);
+			event.SetFloat("worldPosZ", flPos[2]);
+
+			int bits, i;
+			for (i = MaxClients; i; --i)
+				if (IsClientInGame(i))
+					bits |= (1 << i);
+
+			event.SetInt("visibilityBitfield", bits);
+			event.Fire();
+
+			gamemode.bMarkerExists = true;
+			SetPawnTimer(ResetMarker, 1.0);
+		}
+	}
+	else
+	{
+		TE_SetupBeamRingPoint(flPos, 300.0, 300.1, iLaserBeam, iHalo, 0, 10, time, 2.0, 0.0, {255, 255, 255, 255}, 10, 0);
+		TE_SendToAll();
+		gamemode.bMarkerExists = true;
+		SetPawnTimer(ResetMarker, 1.0);
+		EmitAmbientSound("misc/rd_finale_beep01.wav", flPos); EmitAmbientSound("misc/rd_finale_beep01.wav", flPos);
+	}
 }
 
 public void ResetMarker()

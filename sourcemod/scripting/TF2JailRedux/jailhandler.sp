@@ -318,6 +318,8 @@ public void ManageCells()
 public void ManageWarden(const JailFighter base)
 {
 	gamemode.iWarden = base;
+	gamemode.bWardenExists = true;
+
 	switch (gamemode.iLRType)
 	{
 		default: {	}
@@ -985,7 +987,7 @@ public void ManageWardenMenu(Menu &menu)
 				}
 				case 2:
 				{
-					if (hEngineConVars[0].BoolValue == false)
+					if (!hEngineConVars[0].BoolValue)
 					{
 						if (cvarTF2Jail[CVarWarn].BoolValue)
 						{
@@ -1004,7 +1006,7 @@ public void ManageWardenMenu(Menu &menu)
 				}
 				case 3:
 				{
-					if (hEngineConVars[1].BoolValue == false)
+					if (!hEngineConVars[1].BoolValue)
 					{
 						if (cvarTF2Jail[CVarWarn].BoolValue)
 						{

@@ -99,7 +99,6 @@ public Action Command_BecomeWarden(int client, int args)
 	
 	player.WardenSet();
 	player.WardenMenu();
-	gamemode.bWardenExists = true;
 	return Plugin_Handled;
 }
 
@@ -131,7 +130,6 @@ public Action Command_ExitWarden(int client, int args)
 
 	player.bLockedFromWarden = true;
 	player.WardenUnset();
-	gamemode.bWardenExists = false;
 	
 	return Plugin_Handled;
 }
@@ -639,11 +637,6 @@ public Action AdminForceWarden(int client, int args)
 		CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Round must be active.");
 		return Plugin_Handled;
 	}
-	if (gamemode.bWardenExists)
-	{
-		CReplyToCommand(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.iWarden.index);
-		return Plugin_Handled;
-	}
 
 	if (args)
 	{
@@ -669,14 +662,19 @@ public Action AdminForceWarden(int client, int args)
 			return Plugin_Handled;
 		}
 
+		if (gamemode.bWardenExists)
+			gamemode.iWarden.WardenUnset();
+
 		JailFighter targ = JailFighter(target);
 		targ.WardenSet();
 		targ.WardenMenu();
 		CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has forced {default}%N{burlywood} as warden.", target);
-		gamemode.bWardenExists = true;
 		
 		return Plugin_Handled;
 	}
+
+	if (gamemode.bWardenExists)
+		gamemode.iWarden.WardenUnset();
 
 	gamemode.FindRandomWarden();
 	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has forced a random player as warden.");
@@ -977,10 +975,7 @@ public Action AdminLockWarden(int client, int args)
 		return Plugin_Handled;
 	}
 	if (gamemode.bWardenExists)
-	{
 		gamemode.iWarden.WardenUnset();
-		gamemode.bWardenExists = false;
-	}
 
 	gamemode.bAdminLockWarden = true;
 	CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has locked warden!");

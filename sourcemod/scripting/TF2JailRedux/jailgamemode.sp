@@ -446,19 +446,15 @@ methodmap JailGameMode < StringMap
 			if (!this.bWardenExists)
 				return view_as< JailFighter >(0);
 
-			int i; this.GetValue("iWarden", i);
-			JailFighter player = JailFighter.OfUserId(i);
+			JailFighter i; this.GetValue("iWarden", i);
+			if (!i)
+				return view_as< JailFighter >(0);
 
-			if (!IsClientValid(player.index))
-				return view_as< JailFighter >(0);
-			if (!player.bIsWarden)
-				return view_as< JailFighter >(0);
-				
-			return player;
+			return i;
 		}
 		public set( const JailFighter i )
 		{
-			this.SetValue("iWarden", i.userid);
+			this.SetValue("iWarden", i);
 		}
 	}
 	/**
@@ -473,6 +469,7 @@ methodmap JailGameMode < StringMap
 		this.iRoundCount = 0;
 		this.iLRPresetType = -1;
 		this.iLRType = -1;
+		this.iWarden = view_as< JailFighter >(0);
 		this.bFreedayTeleportSet = false;
 		this.bTF2Attribs = false;
 		this.bIsFreedayRound = false;
@@ -506,7 +503,6 @@ methodmap JailGameMode < StringMap
 #endif
 		this.bMarkerExists = false;
 		this.flMusicTime = 0.0;
-		// this.iWarden = view_as< JailFighter >(0);
 	}
 	/**
 	 *	Find and Initialize a random player as the warden.
@@ -525,10 +521,12 @@ methodmap JailGameMode < StringMap
 	 *	@param announce 		Announce message to all clients.
 	 *	@param fromwarden 		If true, current warden will be the client announced who activated cells. 
 	 *							If false, undisclosed admin is the announced activator.
+	 *							Do NOT set this param to true if there is no current warden.
+	 *	@param overridefwds 	If true, forwards will not be called for the according action.
 	 *
 	 *	@noreturn
 	*/
-	public void DoorHandler( const eDoorsMode status, bool announce = false, bool fromwarden = true )
+	public void DoorHandler( const eDoorsMode status, bool announce = false, bool fromwarden = true, bool overridefwds = false )
 	{
 		if (sCellNames[0] != '\0')
 		{
@@ -537,8 +535,9 @@ methodmap JailGameMode < StringMap
 			{
 				case OPEN:
 				{
-					if (Call_OnDoorsOpen() != Plugin_Continue) 
-						return;
+					if (!overridefwds)
+						if (Call_OnDoorsOpen() != Plugin_Continue) 
+							return;
 					name = "opened";
 					this.bCellsOpened = true;
 					if (!this.bFirstDoorOpening)
@@ -546,21 +545,24 @@ methodmap JailGameMode < StringMap
 				}
 				case CLOSE:
 				{
-					if (Call_OnDoorsClose() != Plugin_Continue) 
-						return;
+					if (!overridefwds)
+						if (Call_OnDoorsClose() != Plugin_Continue) 
+							return;
 					name = "closed";
 					this.bCellsOpened = false;
 				}
 				case LOCK:
 				{
-					if (Call_OnDoorsLock() != Plugin_Continue) 
-						return;
+					if (!overridefwds)
+						if (Call_OnDoorsLock() != Plugin_Continue) 
+							return;
 					name = "locked";
 				}
 				case UNLOCK:
 				{
-					if (Call_OnDoorsUnlock() != Plugin_Continue) 
-						return;
+					if (!overridefwds)
+						if (Call_OnDoorsUnlock() != Plugin_Continue) 
+							return;
 					name = "unlocked";
 				}
 			}
@@ -605,7 +607,6 @@ methodmap JailGameMode < StringMap
 			return;
 
 		player.WardenUnset();
-		this.bWardenExists = false;
 
 		if (prevent)
 			player.bLockedFromWarden = true;
@@ -615,6 +616,7 @@ methodmap JailGameMode < StringMap
 	/**
 	 *	Open all of the doors on a map
 	 *	@note 					This ignores all name checks and opens every door possible.
+	 *							This also has the chance of opening doors that lead outside of the map, be wary of this.
 	 *
 	 *	@noreturn
 	*/

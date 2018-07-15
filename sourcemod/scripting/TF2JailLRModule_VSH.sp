@@ -29,7 +29,7 @@ JBGameMode gamemode;
 
 char
 	snd[PLATFORM_MAX_PATH],
-	gameMessage[4096]
+	gameMessage[256]
 ;
 
 methodmap JailBoss < JBPlayer

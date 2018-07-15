@@ -152,48 +152,192 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 			{
 				case TFClass_Scout:
 				{
-					classname = (!i ? "tf_weapon_scattergun" : (i == 1 ? "tf_weapon_pistol_scout" : "tf_weapon_bat"));
-					index = (!i ? 13 : (i == 1 ? 23 : 0));
+					switch (i)
+					{
+						case 0:
+						{
+							classname = "tf_weapon_scattergun";
+							index = 13;
+						}
+						case 1:
+						{
+							classname = "tf_weapon_pistol_scout";
+							index = 23;
+						}
+						case 2:
+						{
+							classname = "tf_weapon_bat";
+							index = 0;
+						}
+					}
 				}
 				case TFClass_Soldier:
 				{
-					classname = (!i ? "tf_weapon_rocketlauncher" : (i == 1 ? "tf_weapon_shotgun_soldier" : "tf_weapon_shovel"));
-					index = (!i ? 18 : (i == 1 ? 10 : 6));
+					switch (i)
+					{
+						case 0:
+						{
+							classname = "tf_weapon_rocketlauncher";
+							index = 18;
+						}
+						case 1:
+						{
+							classname = "tf_weapon_shotgun_soldier";
+							index = 10;
+						}
+						case 2:
+						{
+							classname = "tf_weapon_shovel";
+							index = 6;
+						}
+					}
 				}
 				case TFClass_Pyro:
 				{
-					classname = (!i ? "tf_weapon_flamethrower" : (i == 1 ? "tf_weapon_shotgun_pyro" : "tf_weapon_fireaxe"));
-					index = (!i ? 21 : (i == 1 ? 12 : 2));
+					switch (i)
+					{
+						case 0:
+						{
+							classname = "tf_weapon_flamethrower";
+							index = 21;
+						}
+						case 1:
+						{
+							classname = "tf_weapon_shotgun_pyro";
+							index = 12;
+						}
+						case 2:
+						{
+							classname = "tf_weapon_fireaxe";
+							index = 2;
+						}
+					}
 				}
 				case TFClass_DemoMan:
 				{
-					classname = (!i ? "tf_weapon_grenadelauncher" : (i == 1 ? "tf_weapon_pipebomblauncher" : "tf_weapon_bottle"));
-					index = (!i ? 19 : (i == 1 ? 20 : 1));
+					switch (i)
+					{
+						case 0:
+						{
+							classname = "tf_weapon_grenadelauncher";
+							index = 19;
+						}
+						case 1:
+						{
+							classname = "tf_weapon_pipebomblauncher";
+							index = 20;
+						}
+						case 2:
+						{
+							classname = "tf_weapon_bottle";
+							index = 1;
+						}
+					}
 				}
 				case TFClass_Heavy:
 				{
-					classname = (!i ? "tf_weapon_minigun" : (i == 1 ? "tf_weapon_shotgun_hwg" : "tf_weapon_fists"));
-					index = (!i ? 15 : (i == 1 ? 11 : 5));
+					switch (i)
+					{
+						case 0:
+						{
+							classname = "tf_weapon_minigun";
+							index = 15;
+						}
+						case 1:
+						{
+							classname = "tf_weapon_shotgun_hwg";
+							index = 11;
+						}
+						case 2:
+						{
+							classname = "tf_weapon_fists";
+							index = 5;
+						}
+					}
 				}
 				case TFClass_Engineer:
 				{
-					classname = (!i ? "tf_weapon_shotgun_primary" : (i == 1 ? "tf_weapon_pistol" : "tf_weapon_wrench"));
-					index = (!i ? 9 : (i == 1 ? 22 : 7));
+					switch (i)
+					{
+						case 0:
+						{
+							classname = "tf_weapon_shotgun_primary";
+							index = 9;
+						}
+						case 1:
+						{
+							classname = "tf_weapon_pistol";
+							index = 22;
+						}
+						case 2:
+						{
+							classname = "tf_weapon_wrench";
+							index = 7;
+						}
+					}
 				}
 				case TFClass_Medic:
 				{
-					classname = (!i ? "tf_weapon_syringegun_medic" : (i == 1 ? "tf_weapon_medigun" : "tf_weapon_bonesaw"));
-					index = (!i ? 17 : (i == 1 ? 29 : 8));
+					switch (i)
+					{
+						case 0:
+						{
+							classname = "tf_weapon_syringegun_medic";
+							index = 17;
+						}
+						case 1:
+						{
+							classname = "tf_weapon_medigun";
+							index = 29;
+						}
+						case 2:
+						{
+							classname = "tf_weapon_bonesaw";
+							index = 8;
+						}
+					}
 				}
 				case TFClass_Sniper:
 				{
-					classname = (!i ? "tf_weapon_sniperrifle" : (i == 1 ? "tf_weapon_smg" : "tf_weapon_club"));
-					index = (!i ? 14 : (i == 1 ? 16 : 3));
+					switch (i)
+					{
+						case 0:
+						{
+							classname = "tf_weapon_sniperrifle";
+							index = 14;
+						}
+						case 1:
+						{
+							classname = "tf_weapon_smg";
+							index = 16;
+						}
+						case 2:
+						{
+							classname = "tf_weapon_club";
+							index = 3;
+						}
+					}
 				}
 				case TFClass_Spy:
 				{
-					classname = (!i ? "tf_weapon_revolver" : (i == 1 ? "tf_weapon_pda_spy" : "tf_weapon_knife"));
-					index = (!i ? 24 : (i == 1 ? 735 : 4));
+					switch (i)
+					{
+						case 0:
+						{
+							classname = "tf_weapon_revolver";
+							index = 24;
+						}
+						case 1:
+						{
+							classname = "tf_weapon_pda_spy";
+							index = 735;
+						}
+						case 2:
+						{
+							classname = "tf_weapon_knife";
+							index = 4;
+						}
+					}
 				}
 			}
 
@@ -213,7 +357,7 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 */
 
 			wep = Player.SpawnWeapon(classname, index, 1, 0, (index == 21 ? "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1" : ""));
-			if (GetClientTeam(client) == RED)
+			if (team + 2 == RED)
 			{ SetWeaponAmmo(wep, 0); SetWeaponClip(wep, 0); }
 		}
 	}
@@ -222,23 +366,19 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 stock int FindPlayerBack(int client, int idx)
 {
 	int edict = MaxClients+1;
-	char netclass[32];
 	while ((edict = FindEntityByClassname(edict, "tf_wearabl*")) != -1)
-		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrContains(netclass, "CTFWearable") != -1)
-			if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-				if (idx == GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex"))
-					return edict;	// One linerrrrrrrrrr
+		if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
+			if (idx == GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex"))
+				return edict;	// One linerrrrrrrrrr
 	return -1;
 }
 stock void RemovePlayerBack(int client, int idx)
 {
 	int edict = MaxClients+1;
-	char netclass[32];
 	while ((edict = FindEntityByClassname(edict, "tf_wearabl*")) != -1)
-		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrContains(netclass, "CTFWearable") != -1)
-			if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-				if (idx == GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex"))
-					TF2_RemoveWearable(client, edict);	// One linerrrrrrrrrr
+		if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
+			if (idx == GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex"))
+				TF2_RemoveWearable(client, edict);	// One linerrrrrrrrrr
 }
 stock int SetWeaponAmmo(const int weapon, const int ammo)
 {

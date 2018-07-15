@@ -35,6 +35,11 @@ methodmap JailFighter
 		return view_as< JailFighter >(GetClientOfUserId(userid));
 	}
 
+	public static JailFighter Of( const any thing )
+	{
+		return view_as< JailFighter >(thing);
+	}
+
 	property int index
 	{
 		public get()				{ return view_as< int >(this); }
@@ -46,10 +51,7 @@ methodmap JailFighter
 
 	property StringMap hMap
 	{
-		public get()
-		{
-			return hJailFields[view_as< int >(this)];
-		}
+		public get()				{ return hJailFields[view_as< int >(this)]; }
 	}
 
 	property int iCustom
@@ -231,7 +233,7 @@ methodmap JailFighter
 		}
 	}
 #endif
-	
+
 	property float flSpeed
 	{
 		public get()
@@ -357,11 +359,8 @@ methodmap JailFighter
 		{
 			if (team <= 1)
 				hArray.Push(iEnt);
-			else 
-			{
-				if (GetEntProp(iEnt, Prop_Send, "m_iTeamNum") == team)
-					hArray.Push(iEnt);
-			}
+			else if (GetEntProp(iEnt, Prop_Send, "m_iTeamNum") == team)
+				hArray.Push(iEnt);
 		}
 		iEnt = hArray.Get(GetRandomInt(0, hArray.Length-1));
 		delete hArray;
@@ -392,7 +391,7 @@ methodmap JailFighter
 			SetEntProp(healthpack, Prop_Send, "m_iTeamNum", ownerteam, 4);
 			SetEntityMoveType(healthpack, MOVETYPE_VPHYSICS);
 			float vel[3];
-			vel[0] = float(GetRandomInt(-10, 10)), vel[1] = float(GetRandomInt(-10, 10)), vel[2] = 50.0;
+			vel[0] = GetRandomFloat(-10.0, 10.0), vel[1] = GetRandomFloat(-10.0, 10.0), vel[2] = 50.0;
 			TeleportEntity(healthpack, pos, NULL_VECTOR, vel);
 		}
 	}
@@ -518,7 +517,7 @@ methodmap JailFighter
 			offset += 4;
 			weapon = GetEntDataEnt2(client, offset);
 
-			if (!IsValidEntity(weapon) || i == TFWeaponSlot_Melee)
+			if (!IsValidEntity(weapon))
 				continue;
 
 			int clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
@@ -559,11 +558,32 @@ methodmap JailFighter
 	{
 		this.bIsWarden = true;	
 		this.UnmutePlayer();
+		
 		char strWarden[64];
 		int client = this.index;
 		Format(strWarden, sizeof(strWarden), "%N is the current Warden.", client);
 		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
 		CPrintToChatAll("{crimson}[TF2Jail]{default} %N{burlywood} is the new Warden", client);
+
+		float annot = cvarTF2Jail[WardenAnnotation].FloatValue;
+		if (annot != 0.0)
+		{
+			Event event = CreateEvent("show_annotation");
+			if (event)
+			{
+				event.SetInt("follow_entindex", client);
+				event.SetFloat("lifetime", annot);
+				event.SetString("text", "Warden");
+
+				int bits, i;
+				for (i = MaxClients; i; --i)
+					if (IsClientInGame(i) && i != client)
+						bits |= (1 << i);
+
+				event.SetInt("visibilityBitfield", bits);
+			}
+		}
+
 		ManageWarden(this);
 	}
 	/**
@@ -576,14 +596,16 @@ methodmap JailFighter
 		if (!this.bIsWarden)
 			return;
 
-		if (hTextNodes[2] != null)
+		if (hTextNodes[2])
 			for (int i = MaxClients; i; --i)
 				if (IsClientInGame(i))
 					ClearSyncHud(i, hTextNodes[2]);
+					
 		this.bIsWarden = false;
 		this.bLasering = false;
 		this.SetCustomModel("");
 		JBGameMode_SetProperty("iWarden", 0);
+		JBGameMode_SetProperty("bWardenExists", false);
 
 		if (JBGameMode_GetProperty("iRoundState") == StateRunning)
 		{
@@ -602,16 +624,7 @@ methodmap JailFighter
 		int client = this.index;
 		TF2_RemovePlayerDisguise(client);
 		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1)
-		{
-			if (GetOwner(ent) == client)
-			{
-				TF2_RemoveWearable(client, ent);
-				AcceptEntityInput(ent, "Kill");
-			}
-		}
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
+		while ((ent = FindEntityByClassname(ent, "tf_wearabl*")) != -1)
 		{
 			if (GetOwner(ent) == client)
 			{
@@ -621,24 +634,6 @@ methodmap JailFighter
 		}
 		ent = -1;
 		while ((ent = FindEntityByClassname(ent, "tf_powerup_bottle")) != -1)
-		{
-			if (GetOwner(ent) == client)
-			{
-				TF2_RemoveWearable(client, ent);
-				AcceptEntityInput(ent, "Kill");
-			}
-		}
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable_razorback")) != -1)
-		{
-			if (GetOwner(ent) == client)
-			{
-				TF2_RemoveWearable(client, ent);
-				AcceptEntityInput(ent, "Kill");
-			}
-		}
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable_campaign_item")) != -1)
 		{
 			if (GetOwner(ent) == client)
 			{
