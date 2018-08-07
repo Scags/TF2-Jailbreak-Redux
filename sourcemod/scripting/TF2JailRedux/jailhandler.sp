@@ -165,7 +165,7 @@ public void PrepPlayer(const int userid)
 	else
 	{
 		TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
-		TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
+		TF2_RemoveWeaponSlot(client, TFWeaponSlot_Grenade);
 	}
 
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_PDA);
