@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.15.0"
+#define PLUGIN_VERSION		"0.15.2"
 #define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -94,6 +94,7 @@ enum	// Cvar name
 	CVarWarn,
 	WardenAnnotation,
 	MarkerType,
+	EngieBuildings,
 	Version
 };
 
@@ -157,7 +158,7 @@ public void OnPluginStart()
 	cvarTF2Jail[DroppedWeapons] 			= CreateConVar("sm_tf2jr_dropped_weapons", "1", "Should dropped weapons be killed on spawn?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[VentHit] 					= CreateConVar("sm_tf2jr_vent_freeday", "1", "Should freeday players lose their freeday if they hit/break a vent?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[SeeNames] 					= CreateConVar("sm_tf2jr_wardensee", "1", "Allow the Warden to see prisoner names?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[NameDistance] 				= CreateConVar("sm_tf2jr_wardensee_distance", "200", "From how far can the Warden see prisoner names? (Hammer Units)", FCVAR_NOTIFY, true, 0.0, true, 1000.0);
+	cvarTF2Jail[NameDistance] 				= CreateConVar("sm_tf2jr_wardensee_distance", "800", "From how far can the Warden see prisoner names? (Hammer Units)", FCVAR_NOTIFY, true, 0.0, true, 1000.0);
 	cvarTF2Jail[SeeHealth] 					= CreateConVar("sm_tf2jr_wardensee_health", "1", "Can the Warden see prisoner health?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[EnableMusic] 				= CreateConVar("sm_tf2jr_music_on", "1", "Enable background music that could possibly play with last requests?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[MusicVolume] 				= CreateConVar("sm_tf2jr_music_volume", ".5", "Volume in which background music plays. (If enabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -185,6 +186,7 @@ public void OnPluginStart()
 	cvarTF2Jail[CVarWarn] 					= CreateConVar("sm_tf2jr_warden_cvwarn", "1", "Warn the warden before they turn on Collisions/FF?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WardenAnnotation] 			= CreateConVar("sm_tf2jr_warden_annotation", "5", "Display an annotation over the Warden's head on get? If so, how long in seconds?", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[MarkerType] 				= CreateConVar("sm_tf2jr_warden_marker_type", "1", "If \"sm_tf2jr_warden_markers\" is enabled, what type of markers should there be? 0 = Circles' 1 = Annotations.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[EngieBuildings] 			= CreateConVar("sm_tf2jr_engi_pda", "0", "Allow Engineers to keep their PDA's?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -195,7 +197,7 @@ public void OnPluginStart()
 	HookEvent("teamplay_round_start", OnPreRoundStart);
 	HookEvent("arena_round_start", OnArenaRoundStart);
 	HookEvent("teamplay_round_win", OnRoundEnded);
-	// HookEvent("post_inventory_application", OnRegeneration);
+	HookEvent("post_inventory_application", OnRegeneration);
 	HookEvent("player_changeclass", OnChangeClass, EventHookMode_Pre);
 	//HookEvent("player_team", OnChangeTeam, EventHookMode_Post);
 		/* Kinda used in core but not really */
@@ -586,6 +588,7 @@ public Action Timer_PlayerThink(Handle timer)
 			if (player.bIsWarden)
 			{
 				ManageWardenThink(player);
+				player.UnmutePlayer();
 
 				int target = GetClientAimTarget(i, true);
 				if (!IsClientValid(target))
@@ -756,7 +759,7 @@ public Action EurekaTele(int client, const char[] command, int args)
 
 	if (player.bUnableToTeleport)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You can't teleport yet!");
+		CPrintToChat(client, TAG ... "You can't teleport yet!");
 		return Plugin_Handled;
 	}
 
@@ -948,7 +951,7 @@ public void WelcomeMessage(const int userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (IsClientValid(client))
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Welcome to TF2 Jailbreak Redux. Type \"!jhelp\" for help.");
+		CPrintToChat(client, TAG ... "Welcome to TF2 Jailbreak Redux. Type \"!jhelp\" for help.");
 }
 
 public void KillThatBitch(const int client)
@@ -1013,7 +1016,7 @@ public void DisableWarden(const int roundcount)
 	 || gamemode.bIsWardenLocked)
 		return;
 
-	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has been locked due to lack of warden.");
+	CPrintToChatAll(TAG ... "Warden has been locked due to lack of warden.");
 	gamemode.DoorHandler(OPEN);
 	gamemode.bIsWardenLocked = true;
 }
@@ -1036,7 +1039,7 @@ public void RemoveEnt(any data)
 {
 	int ent = EntRefToEntIndex(data);
 	if (IsValidEntity(ent))
-		AcceptEntityInput(ent, "Kill");
+		RemoveEntity(ent);
 }
 
 public void MusicPlay()
@@ -1092,7 +1095,7 @@ public void CreateMarker(const int client)
 
 	if (!TR_DidHit(trace))
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Unable to create a marker.");
+		CPrintToChat(client, TAG ... "Unable to create a marker.");
 		delete trace;
 		return;
 	}
@@ -1168,7 +1171,7 @@ public void ClearHorsemannParticles(const int client)
 	{
 		ent = EntRefToEntIndex(iHHHParticle[client][i]);
 		if (ent > MaxClients && IsValidEntity(ent))
-			AcceptEntityInput(ent, "Kill");
+			RemoveEntity(ent);
 		iHHHParticle[client][i] = -1;
 	}
 }
@@ -1219,7 +1222,7 @@ public void Open_Doors(const int roundcount)
 		return;
 
 	gamemode.DoorHandler(OPEN);
-	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} The cell doors have opened after %i seconds of remaining closed.", cvarTF2Jail[DoorOpenTimer].IntValue);
+	CPrintToChatAll(TAG ... "The cell doors have opened after %i seconds of remaining closed.", cvarTF2Jail[DoorOpenTimer].IntValue);
 	gamemode.bCellsOpened = true;
 }
 
@@ -1229,7 +1232,7 @@ public void EnableFFTimer(const int roundcount)
 		return;
 
 	hEngineConVars[0].SetBool(true);
-	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Friendly-Fire has been enabled!");
+	CPrintToChatAll(TAG ... "Friendly-Fire has been enabled!");
 }
 
 public void FreeKillSystem(const JailFighter attacker, const int killcount)
@@ -1274,13 +1277,13 @@ public void EnableWarden(const int roundcount)
 		return;
 
 	gamemode.bIsWardenLocked = false;
-	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has been enabled.");
+	CPrintToChatAll(TAG ... "Warden has been enabled.");
 }
 
 public Action OnEntSpawn(int ent)
 {
 	if (IsValidEntity(ent))
-		AcceptEntityInput(ent, "Kill");
+		RemoveEntity(ent);
 	return Plugin_Handled;
 }
 
@@ -1288,7 +1291,7 @@ public Action OnBuildingSpawn(int ent)
 {
 	if (IsValidEntity(ent))
 		if (!gamemode.bAllowBuilding)
-			AcceptEntityInput(ent, "Kill");
+			RemoveEntity(ent);
 	return Plugin_Continue;
 }
 
@@ -1359,7 +1362,7 @@ public int CVWarnMenu(Menu menu, MenuAction action, int client, int select)
 		{
 			if (!player.bIsWarden)
 			{
-				CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are not warden.");
+				CPrintToChat(client, TAG ... "You are not warden.");
 				return;
 			}
 			char idx[2]; menu.GetItem(select, idx, 2);
@@ -1367,7 +1370,7 @@ public int CVWarnMenu(Menu menu, MenuAction action, int client, int select)
 			if (val <= 1)	// If not no
 			{
 				hEngineConVars[val].SetBool(true);
-				CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has enabled %s!", val ? "Collisions" : "Friendly-Fire");
+				CPrintToChatAll(TAG ... "Warden has enabled %s!", val ? "Collisions" : "Friendly-Fire");
 			}
 		}
 		case MenuAction_End:delete menu;
@@ -1486,6 +1489,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBGameMode.JBGameMode", Native_JBGameMode_Instance);
 
 	RegPluginLibrary("TF2Jail_Redux");
+
+	return APLRes_Success;
 }
 
 public int Native_RegisterPlugin(Handle plugin, int numParams)

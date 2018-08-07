@@ -151,7 +151,7 @@ methodmap JailHunter < JBPlayer
 		}
 		
 		if (announce)
-			CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are now disguised as {default}%s{burlywood}.", modelName);
+			CPrintToChat(client, TAG ... "You are now disguised as {default}%s{burlywood}.", modelName);
 		
 		// This is to kill the particle effects from the Harvest Ghost prop and the like
 		SetVariantString("ParticleEffectStop");
@@ -509,28 +509,28 @@ public Action Cmd_Reroll(int client, int args)
 
 	if (!JBPH[Reroll].BoolValue)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Rerolling has been disabled.");
+		CPrintToChat(client, TAG ... "Rerolling has been disabled.");
 		return Plugin_Handled;
 	}
 	JailHunter player = JailHunter(client);
 	if (!player.bIsProp)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are not a prop.");
+		CPrintToChat(client, TAG ... "You are not a prop.");
 		return Plugin_Handled;
 	}
 	if (GetClientTeam(client) != RED)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are not on Red team.");
+		CPrintToChat(client, TAG ... "You are not on Red team.");
 		return Plugin_Handled;
 	}
 	if (!bAbleToReroll)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are not allowed to reroll at this time.");
+		CPrintToChat(client, TAG ... "You are not allowed to reroll at this time.");
 		return Plugin_Handled;
 	}
 	if (player.iRolls >= JBPH[RerollCount].IntValue)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You have rerolled the maximum amount of times this round.");
+		CPrintToChat(client, TAG ... "You have rerolled the maximum amount of times this round.");
 		return Plugin_Handled;
 	}
 	if ( JBPH[DamageBlocksPropChange].BoolValue 
@@ -540,7 +540,7 @@ public Action Cmd_Reroll(int client, int args)
 	  || TF2_IsPlayerInCondition(client, TFCond_Jarated) 
 	  || TF2_IsPlayerInCondition(client, TFCond_Milked)) ) 
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are under effects and can't change!");
+		CPrintToChat(client, TAG ... "You are under effects and can't change!");
 		return Plugin_Handled;
 	}
 
@@ -890,7 +890,7 @@ public void fwdOnRoundStartPlayer(const JBPlayer player)
 			if (class == TFClass_Scout || class == TFClass_Spy)
 			{
 				TF2_SetPlayerClass(client, view_as< TFClassType >(NoSS[GetRandomInt(0, 5)]));
-				CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Your illegal class has been changed.");
+				CPrintToChat(client, TAG ... "Your illegal class has been changed.");
 			}
 			else if (class == TFClass_Heavy)
 			{
@@ -899,7 +899,7 @@ public void fwdOnRoundStartPlayer(const JBPlayer player)
 				else
 				{
 					TF2_SetPlayerClass(client, view_as< TFClassType >(NoHvy[GetRandomInt(0, 4)]));
-					CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} There are too many Heavies on Blue team.");
+					CPrintToChat(client, TAG ... "There are too many Heavies on Blue team.");
 				}
 			}
 			else if (class == TFClass_Pyro && JBPH[Airblast].BoolValue && gamemode.GetProperty("bTF2Attribs"))
@@ -1079,7 +1079,7 @@ public void fwdOnTimeLeft(int &time)
 public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
 {
 	if (JBPH[Enabled].BoolValue && selection == JBPHIndex)
-		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has decided to play a round of {default}Prophunt{burlywood}.", Player.index);
+		CPrintToChatAll(TAG ... "%N has decided to play a round of {default}Prophunt{burlywood}.", Player.index);
 	return Plugin_Continue;
 }
 public void fwdOnHudShow(char strHud[128])

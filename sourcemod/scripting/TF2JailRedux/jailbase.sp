@@ -58,24 +58,24 @@ methodmap JailFighter
 	{
 		public get()
 		{
-			int i; this.hMap.GetValue("iCustom", i);
+			int i; hJailFields[this.index].GetValue("iCustom", i);
 			return i;
 		}
 		public set( const int i )
 		{
-			this.hMap.SetValue("iCustom", i);
+			hJailFields[this.index].SetValue("iCustom", i);
 		}
 	}
 	property int iKillCount
 	{
 		public get()
 		{
-			int i; this.hMap.GetValue("iKillCount", i);
+			int i; hJailFields[this.index].GetValue("iKillCount", i);
 			return i;
 		}
 		public set( const int i )
 		{
-			this.hMap.SetValue("iKillCount", i);
+			hJailFields[this.index].SetValue("iKillCount", i);
 		}
 	}
 
@@ -83,132 +83,137 @@ methodmap JailFighter
 	{
 		public get()
 		{
-			bool i; this.hMap.GetValue("bIsWarden", i);
+//			Handle prof = CreateProfiler();
+//			StartProfiling(prof);
+			bool i; hJailFields[this.index].GetValue("bIsWarden", i);
+//			StopProfiling(prof);
+//			PrintToServer("%0.10f", GetProfilerTime(prof));
+//			delete prof;
 			return i;
 		}
 		public set( const bool i )
 		{
-			this.hMap.SetValue("bIsWarden", i);
+			hJailFields[this.index].SetValue("bIsWarden", i);
 		}
 	}
 	property bool bIsMuted
 	{
 		public get()
 		{
-			bool i; this.hMap.GetValue("bIsMuted", i);
+			bool i; hJailFields[this.index].GetValue("bIsMuted", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			this.hMap.SetValue("bIsMuted", i);
+			hJailFields[this.index].SetValue("bIsMuted", i);
 		}
 	}
 	property bool bIsQueuedFreeday
 	{
 		public get()
 		{
-			bool i; this.hMap.GetValue("bIsQueuedFreeday", i);
+			bool i; hJailFields[this.index].GetValue("bIsQueuedFreeday", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			this.hMap.SetValue("bIsQueuedFreeday", i);
+			hJailFields[this.index].SetValue("bIsQueuedFreeday", i);
 		}
 	}
 	property bool bIsFreeday
 	{
 		public get()
 		{
-			bool i; this.hMap.GetValue("bIsFreeday", i);
+			bool i; hJailFields[this.index].GetValue("bIsFreeday", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			this.hMap.SetValue("bIsFreeday", i);
+			hJailFields[this.index].SetValue("bIsFreeday", i);
 		}
 	}
 	property bool bLockedFromWarden
 	{
 		public get()
 		{
-			bool i; this.hMap.GetValue("bLockedFromWarden", i);
+			bool i; hJailFields[this.index].GetValue("bLockedFromWarden", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			this.hMap.SetValue("bLockedFromWarden", i);
+			hJailFields[this.index].SetValue("bLockedFromWarden", i);
 		}
 	}
 	property bool bIsVIP
 	{
 		public get()
 		{
-			bool i; this.hMap.GetValue("bIsVIP", i);
+			bool i; hJailFields[this.index].GetValue("bIsVIP", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			this.hMap.SetValue("bIsVIP", i);
+			hJailFields[this.index].SetValue("bIsVIP", i);
 		}
 	}
 	property bool bIsAdmin
 	{
 		public get()
 		{
-			bool i; this.hMap.GetValue("bIsAdmin", i);
+			bool i; hJailFields[this.index].GetValue("bIsAdmin", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			this.hMap.SetValue("bIsAdmin", i);
+			hJailFields[this.index].SetValue("bIsAdmin", i);
 		}
 	}
 	property bool bIsHHH
 	{
 		public get()
 		{
-			bool i; this.hMap.GetValue("bIsHHH", i);
+			bool i; hJailFields[this.index].GetValue("bIsHHH", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			this.hMap.SetValue("bIsHHH", i);
+			hJailFields[this.index].SetValue("bIsHHH", i);
 		}
 	}
 	property bool bInJump
 	{
 		public get()
 		{
-			bool i; this.hMap.GetValue("bInJump", i);
+			bool i; hJailFields[this.index].GetValue("bInJump", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			this.hMap.SetValue("bInJump", i);
+			hJailFields[this.index].SetValue("bInJump", i);
 		}
 	}
 	property bool bUnableToTeleport
 	{
 		public get()
 		{
-			bool i; this.hMap.GetValue("bUnableToTeleport", i);
+			bool i; hJailFields[this.index].GetValue("bUnableToTeleport", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			this.hMap.SetValue("bUnableToTeleport", i);
+			hJailFields[this.index].SetValue("bUnableToTeleport", i);
 		}
 	}
 	property bool bLasering
 	{
 		public get()
 		{
-			bool i; this.hMap.GetValue("bLasering", i);
+			bool i; hJailFields[this.index].GetValue("bLasering", i);
 			return i;
 		}
 		public set( const bool i )
 		{
-			this.hMap.SetValue("bLasering", i);
+			hJailFields[this.index].SetValue("bLasering", i);
 		}
 	}
 #if defined _clientprefs_included
@@ -238,24 +243,24 @@ methodmap JailFighter
 	{
 		public get()
 		{
-			float i; this.hMap.GetValue("flSpeed", i);
+			float i; hJailFields[this.index].GetValue("flSpeed", i);
 			return i;
 		}
 		public set( const float i )
 		{
-			this.hMap.SetValue("flSpeed", i);
+			hJailFields[this.index].SetValue("flSpeed", i);
 		}
 	}
 	property float flKillSpree
 	{
 		public get()
 		{
-			float i; this.hMap.GetValue("flKillSpree", i);
+			float i; hJailFields[this.index].GetValue("flKillSpree", i);
 			return i;
 		}
 		public set( const float i )
 		{
-			this.hMap.SetValue("flKillSpree", i);
+			hJailFields[this.index].SetValue("flKillSpree", i);
 		}
 	}
 
@@ -510,7 +515,7 @@ methodmap JailFighter
 			return;
 
 		int offset = FindDataMapInfo(client, "m_hMyWeapons") - 4;
-		int weapon;
+		int weapon, clip;
 
 		for (int i = 0; i < 2; i++)
 		{
@@ -520,7 +525,7 @@ methodmap JailFighter
 			if (!IsValidEntity(weapon))
 				continue;
 
-			int clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
+			clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
 			if (clip != -1)
 				SetEntProp(weapon, Prop_Send, "m_iClip1", 0);
 
@@ -530,6 +535,8 @@ methodmap JailFighter
 
 			SetWeaponAmmo(weapon, 0);
 		}
+
+		SetEntProp(client, Prop_Send, "m_iAmmo", 0, 4, 3);
 
 		char sClassName[64];
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
@@ -767,7 +774,7 @@ methodmap JailFighter
 	 *	@noreturn
 	*/
 	public void ClimbWall( const int weapon, const float upwardvel, const float health, const bool attackdelay )
-	//Credit to Mecha the Slag
+	// Credit to Mecha the Slag
 	{
 		if (GetClientHealth(this.index) <= health) 	// Have to baby players so they don't accidentally kill themselves trying to escape
 			return;

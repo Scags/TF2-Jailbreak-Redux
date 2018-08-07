@@ -75,8 +75,8 @@ methodmap CHHHJr < JailBoss
 						//hHHHTeleTimer = CreateTimer(bEnableSuperDuperJump ? 4.0 : 2.0, HHHTeleTimer, Hale, TIMER_FLAG_NO_MAPCHANGE);
 					}
 
-					float pos[3]; GetClientAbsOrigin(target, pos);
 					CreateTimer(3.0, EraseEntity, EntIndexToEntRef(AttachParticle(client, "ghost_appearation")));
+					float pos[3]; GetClientAbsOrigin(target, pos);
 					SetEntPropFloat(client, Prop_Send, "m_flNextAttack", currtime+2);
 					if (GetEntProp(target, Prop_Send, "m_bDucked"))
 					{

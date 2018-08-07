@@ -569,8 +569,8 @@ methodmap JailGameMode < StringMap
 			int i, ent = -1;
 			if (announce)
 				if (fromwarden)
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden {default}%N{burlywood} has %s cells.", this.iWarden.index, name);
-				else CPrintToChatAll("{orange}[TF2Jail]{burlywood} Admin has %s cells.", name);
+					CPrintToChatAll(TAG ... "Warden {default}%N{burlywood} has %s cells.", this.iWarden.index, name);
+				else CPrintToChatAll(ADMTAG ... "Admin has %s cells.", name);
 
 			for (i = 0; i < sizeof(sDoorsList); i++)
 			{

@@ -142,7 +142,7 @@ public void ManageSpawn(const JailFighter base, Event event)
 	Call_OnPlayerSpawned(base, event);
 }
 /**
- *	Manage each player just after spawn
+ *	Manage each player just after spawn or regeneration
 */
 public void PrepPlayer(const int userid)
 {
@@ -154,11 +154,24 @@ public void PrepPlayer(const int userid)
 
 	base.SetCustomModel("");
 
+	if (cvarTF2Jail[EngieBuildings].BoolValue)
+	{
+		if (TF2_GetPlayerClass(client) != TFClass_Engineer)
+		{
+			TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
+			TF2_RemoveWeaponSlot(client, TFWeaponSlot_Grenade);
+		}
+	}
+	else
+	{
+		TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
+		TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
+	}
+
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_PDA);
-	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
-	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Grenade);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item1);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item2);
+
 	if (GetClientTeam(client) == RED)
 		base.EmptyWeaponSlots();
 
@@ -775,7 +788,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 						
 					base.RemoveFreeday();
 				}
-				CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Last request has been chosen. Freedays have been stripped.");
+				CPrintToChatAll(TAG ... "Last request has been chosen. Freedays have been stripped.");
 			}
 			base = JailFighter(client);
 			gamemode.bIsLRInUse = true;
@@ -792,7 +805,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			{
 				case -1:	// Random
 				{
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen a {default}Random Last Request{burlywood} as their last request!", client);
+					CPrintToChatAll(TAG ... "%N has chosen a {default}Random Last Request{burlywood} as their last request!", client);
 					int randlr = GetRandomInt(2, LRMAX);
 					gamemode.iLRPresetType = randlr;
 					arrLRS.Set( randlr, arrLRS.Get(randlr)+1 );
@@ -805,35 +818,35 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case Suicide:
 				{
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to kill themselves. What a shame...", client);
+					CPrintToChatAll(TAG ... "%N has chosen to kill themselves. What a shame...", client);
 					SetPawnTimer(KillThatBitch, (GetRandomFloat(0.5, 7.0)), client);	// Meme lol
 					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case Custom:
 				{
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to type out their LR in chat.", client);
+					CPrintToChatAll(TAG ... "%N has chosen to type out their LR in chat.", client);
 					base.iCustom = base.userid;
 				}
 				case FreedaySelf:
 				{
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Freeday for Themselves{burlywood} next round.", client);
+					CPrintToChatAll(TAG ... "%N has chosen {default}Freeday for Themselves{burlywood} next round.", client);
 					base.bIsQueuedFreeday = true;
 				}
 				case FreedayOther:
 				{
-					CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N is picking Freedays for next round...", client);
+					CPrintToChatAll(TAG ... "%N is picking Freedays for next round...", client);
 					FreedayforClientsMenu(client);
 				}
-				case FreedayAll:	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to grant a {default}Freeday for All{burlywood} next round.", client);
-				case GuardMelee:	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to strip the guards of their weapons.", client);
-				case HHHDay:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Horseless Headless Horsemann Kill Round{burlywood} next round.", client);
-				case TinyRound:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Super Small{burlywood} for everyone.", client);
-				case HotPrisoner:	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to ignite all of the prisoners next round!", client);
-				case Gravity:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Low Gravity{burlywood} as their last request.", client);
-				case RandomKill:	CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to hire a Sniper for the next round!", client);
-				case Warday:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen to do a {default}Warday{burlywood}.", client);
-				case ClassWars:		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}Class Warfare{burlywood} as their last request.", client);
+				case FreedayAll:	CPrintToChatAll(TAG ... "%N has chosen to grant a {default}Freeday for All{burlywood} next round.", client);
+				case GuardMelee:	CPrintToChatAll(TAG ... "%N has chosen to strip the guards of their weapons.", client);
+				case HHHDay:		CPrintToChatAll(TAG ... "%N has chosen {default}Horseless Headless Horsemann Kill Round{burlywood} next round.", client);
+				case TinyRound:		CPrintToChatAll(TAG ... "%N has chosen {default}Super Small{burlywood} for everyone.", client);
+				case HotPrisoner:	CPrintToChatAll(TAG ... "%N has chosen to ignite all of the prisoners next round!", client);
+				case Gravity:		CPrintToChatAll(TAG ... "%N has chosen {default}Low Gravity{burlywood} as their last request.", client);
+				case RandomKill:	CPrintToChatAll(TAG ... "%N has chosen to hire a Sniper for the next round!", client);
+				case Warday:		CPrintToChatAll(TAG ... "%N has chosen to do a {default}Warday{burlywood}.", client);
+				case ClassWars:		CPrintToChatAll(TAG ... "%N has chosen {default}Class Warfare{burlywood} as their last request.", client);
 			}
 
 			gamemode.iLRPresetType = request;
@@ -918,7 +931,7 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 	if (base.iCustom > 0)
 	{
 		strcopy(strCustomLR, sizeof(strCustomLR), cArgs);
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Your custom last request is {default}%s", strCustomLR);
+		CPrintToChat(client, TAG ... "Your custom last request is {default}%s", strCustomLR);
 		base.iCustom = 0;
 	}
 }
@@ -958,7 +971,7 @@ public void ManageWardenMenu(Menu &menu)
 			JailFighter player = JailFighter(client);
 			if (!player.bIsWarden)
 			{
-				CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are not warden.");
+				CPrintToChat(client, TAG ... "You are not warden.");
 				return;
 			}
 			char index[32]; menu.GetItem(select, index, sizeof(index));
@@ -972,7 +985,7 @@ public void ManageWardenMenu(Menu &menu)
 						gamemode.DoorHandler(OPEN, true);
 						gamemode.bCellsOpened = true;
 					}
-					else CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Cells are already open.");
+					else CPrintToChat(client, TAG ... "Cells are already open.");
 					player.WardenMenu();
 				}
 				case 1:
@@ -982,7 +995,7 @@ public void ManageWardenMenu(Menu &menu)
 						gamemode.DoorHandler(CLOSE, true);
 						gamemode.bCellsOpened = false;
 					}
-					else CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Cells are not open.");
+					else CPrintToChat(client, TAG ... "Cells are not open.");
 					player.WardenMenu();
 				}
 				case 2:
@@ -995,12 +1008,12 @@ public void ManageWardenMenu(Menu &menu)
 							return;
 						}
 						hEngineConVars[0].SetBool(true);
-						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has enabled Friendly-Fire!");
+						CPrintToChatAll(TAG ... "Warden has enabled Friendly-Fire!");
 					}
 					else 
 					{
 						hEngineConVars[0].SetBool(false);
-						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has disabled Friendly-Fire.");
+						CPrintToChatAll(TAG ... "Warden has disabled Friendly-Fire.");
 					}
 					player.WardenMenu();
 				}
@@ -1014,12 +1027,12 @@ public void ManageWardenMenu(Menu &menu)
 							return;
 						}
 						hEngineConVars[1].SetBool(true);
-						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has enabled collisions!");
+						CPrintToChatAll(TAG ... "Warden has enabled collisions!");
 					}
 					else
 					{
 						hEngineConVars[1].SetBool(false);
-						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden has disabled collisions.");
+						CPrintToChatAll(TAG ... "Warden has disabled collisions.");
 					}
 					player.WardenMenu();
 				}
@@ -1029,7 +1042,7 @@ public void ManageWardenMenu(Menu &menu)
 					{
 						if (gamemode.bMarkerExists)
 						{
-							CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Slow down there cowboy.");
+							CPrintToChat(client, TAG ... "Slow down there cowboy.");
 							player.WardenMenu();
 							return;
 						}
@@ -1044,12 +1057,12 @@ public void ManageWardenMenu(Menu &menu)
 						if (player.bLasering)
 						{
 							player.bLasering = false;
-							CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You have turned Warden Lasers {default}off{burlywood}.");
+							CPrintToChat(client, TAG ... "You have turned Warden Lasers {default}off{burlywood}.");
 						}
 						else
 						{
 							player.bLasering = true;
-							CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You have turned Warden Lasers {default}on{burlywood}. Hold reload to activate.");
+							CPrintToChat(client, TAG ... "You have turned Warden Lasers {default}on{burlywood}. Hold reload to activate.");
 						}
 					}
 					player.WardenMenu();
@@ -1058,7 +1071,7 @@ public void ManageWardenMenu(Menu &menu)
 				{
 					if (cvarTF2Jail[WardenToggleMedic].BoolValue)
 					{
-						CPrintToChatAll("{crimson}[TF2Jail]{burlywood} Warden {default}%N{burlywood} has toggled Medic {default}%s{burlywood}!", client, gamemode.bMedicDisabled ? "On" : "Off");
+						CPrintToChatAll(TAG ... "Warden {default}%N{burlywood} has toggled Medic {default}%s{burlywood}!", client, gamemode.bMedicDisabled ? "On" : "Off");
 						gamemode.ToggleMedic(gamemode.bMedicDisabled);
 					}
 					player.WardenMenu();

@@ -6,6 +6,9 @@
 #include <tf2_stocks>
 #include <tf2items>
 
+#define TAG 				"{crimson}[TF2Jail]{burlywood} "
+#define ADMTAG 				"{orange}[TF2Jail]{burlywood} "
+
 enum eDoorsMode
 {	// Doors obviously
 	OPEN = 0,

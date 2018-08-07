@@ -6,44 +6,43 @@ stock int GetHealingTarget(const int client)
 	int medigun = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
 	if (!IsValidEdict(medigun) || !IsValidEntity(medigun))
 		return -1;
+
 	char s[32]; GetEdictClassname(medigun, s, sizeof(s));
-	if ( !strcmp(s, "tf_weapon_medigun", false) ) {
-		if ( GetEntProp(medigun, Prop_Send, "m_bHealing") )
-			return GetEntPropEnt( medigun, Prop_Send, "m_hHealingTarget" );
-	}
+	if (!strcmp(s, "tf_weapon_medigun", false))
+		if (GetEntProp(medigun, Prop_Send, "m_bHealing"))
+			return GetEntPropEnt(medigun, Prop_Send, "m_hHealingTarget");
 	return -1;
 }
 stock int GetActiveWep(const int client)
 {
 	int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-	if (IsValidEdict(weapon) && IsValidEntity(weapon))
+	if (IsValidEntity(weapon))
 		return weapon;
 	return -1;
 }
 stock float GetMediCharge(const int medigun)
 {
-	if (IsValidEdict(medigun) && IsValidEntity(medigun))
+	if (IsValidEntity(medigun))
 		return GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel");
 	return -1.0;
 }
 stock void SetMediCharge(const int medigun, const float val)
 {
-	if (IsValidEdict(medigun) && IsValidEntity(medigun))
+	if (IsValidEntity(medigun))
 		SetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel", val);
 }
 stock bool IsNearSpencer(const int client)
 {
-	int medics = 0;
-	for (int i=MaxClients ; i ; --i) {
-		if (IsValidClient(i) && GetHealingTarget(i) == client)
+	int medics;
+	for (int i = MaxClients ; i; --i)
+		if (IsClientInGame(i) && GetHealingTarget(i) == client)
 			medics++;
-	}
 	return (GetEntProp(client, Prop_Send, "m_nNumHealers") > medics);
 }
 // Prepare content stocks
 stock void CheckDownload(const char[] dlpath)
 {
-	if ( FileExists(dlpath) )
+	if (FileExists(dlpath))
 		AddFileToDownloadsTable(dlpath);
 }
 // Following 'Prepare' stocks taken from VSH1
@@ -58,16 +57,12 @@ stock void PrepareSound(const char[] szSoundPath) // For single custom sound fil
 stock void DownloadSoundList(const char[][] szFileList, int iSize) // For arrays of custom sounds
 {
 	for (int i = 0; i < iSize; i++)
-	{
 		PrepareSound(szFileList[i]);
-	}
 }
 stock void PrecacheSoundList(const char[][] szFileList, int iSize) // For arrays of stock TF2 sounds
 {
 	for (int i = 0; i < iSize; i++)
-	{
 		PrecacheSound(szFileList[i], true);
-	}
 }
 stock void PrepareMaterial(const char[] szMaterialPath) // For single custom materials, omit file extensions as it prepares VMT + VTF
 {
@@ -110,7 +105,8 @@ stock int PrepareModel(const char[] szModelPath, bool bMdlOnly = false) // For c
 stock void ForceTeamWin(const int team)
 {
 	int entity = FindEntityByClassname(-1, "team_control_point_master");
-	if (entity <= 0) {
+	if (entity <= 0)
+	{
 		entity = CreateEntityByName("team_control_point_master");
 		DispatchSpawn(entity);
 		AcceptEntityInput(entity, "Enable");
@@ -120,13 +116,13 @@ stock void ForceTeamWin(const int team)
 }
 stock int GetItemIndex(const int item)
 {
-	if (IsValidEdict(item) && IsValidEntity(item))
+	if (IsValidEntity(item))
 		return GetEntProp(item, Prop_Send, "m_iItemDefinitionIndex");
 	return -1;
 }
 stock int GetItemQuality(const int item)
 {
-	if (IsValidEdict(item) && IsValidEntity(item))
+	if (IsValidEntity(item))
 		return GetEntProp(item, Prop_Send, "m_iEntityQuality");
 	return -1;
 }
@@ -144,7 +140,8 @@ stock int AttachParticle(const int ent, const char[] particleType, float offset 
 	DispatchKeyValue(particle, "effect_name", particleType);
 	DispatchSpawn(particle);
 	SetVariantString(tName);
-	if (battach) {
+	if (battach)
+	{
 		AcceptEntityInput(particle, "SetParent", particle, particle, 0);
 		SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", ent);
 	}
@@ -156,7 +153,8 @@ stock int AttachParticle(const int ent, const char[] particleType, float offset 
 stock void CreateParticles(char[] particlename, float Pos[3] = NULL_VECTOR, float time)
 {
 	int particle = CreateEntityByName("info_particle_system");
-	if (IsValidEdict(particle)) {
+	if (IsValidEdict(particle))
+	{
 		DispatchKeyValue(particle, "effect_name", particlename);
 		ActivateEntity(particle);
 		AcceptEntityInput(particle, "start");
@@ -170,7 +168,8 @@ stock int SetWeaponAmmo(const int weapon, const int ammo)
 	int owner = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity");
 	if (owner <= 0)
 		return 0;
-	if (IsValidEntity(weapon)) {
+	if (IsValidEntity(weapon))
+	{
 		int iOffset = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;
 		int iAmmoTable = FindSendPropInfo("CTFPlayer", "m_iAmmo");
 		SetEntData(owner, iAmmoTable+iOffset, ammo, 4, true);
@@ -182,7 +181,8 @@ stock int GetWeaponAmmo(int weapon)
 	int owner = GetOwner(weapon);
 	if (owner <= 0)
 		return 0;
-	if (IsValidEntity(weapon)) {
+	if (IsValidEntity(weapon))
+	{
 		int iOffset = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;
 		int iAmmoTable = FindSendPropInfo("CTFPlayer", "m_iAmmo");
 		return GetEntData(owner, iAmmoTable+iOffset, 4);
@@ -191,7 +191,8 @@ stock int GetWeaponAmmo(int weapon)
 }
 stock int GetWeaponClip(const int weapon)
 {
-	if (IsValidEntity(weapon)) {
+	if (IsValidEntity(weapon))
+	{
 		int AmmoClipTable = FindSendPropInfo("CTFWeaponBase", "m_iClip1");
 		return GetEntData(weapon, AmmoClipTable);
 	}
@@ -199,7 +200,8 @@ stock int GetWeaponClip(const int weapon)
 }
 stock int SetWeaponClip(const int weapon, const int ammo)
 {
-	if (IsValidEntity(weapon)) {
+	if (IsValidEntity(weapon))
+	{
 		int iAmmoTable = FindSendPropInfo("CTFWeaponBase", "m_iClip1");
 		SetEntData(weapon, iAmmoTable, ammo, 4, true);
 	}
@@ -207,41 +209,6 @@ stock int SetWeaponClip(const int weapon, const int ammo)
 }
 stock int ShootRocket(const int client, bool bCrit = false, float vPosition[3], float vAngles[3], const float flSpeed, const float dmg, const char[] model, bool arc=false)
 {
-//new String:strEntname[45] = "tf_projectile_spellfireball";
-/*
-switch (spell)
-	{
-		case FIREBALL: 		strEntname = "tf_projectile_spellfireball";
-		case LIGHTNING: 	strEntname = "tf_projectile_lightningorb";
-		case PUMPKIN: 		strEntname = "tf_projectile_spellmirv";
-		case PUMPKIN2: 		strEntname = "tf_projectile_spellpumpkin";
-		case BATS: 			strEntname = "tf_projectile_spellbats";
-		case METEOR: 		strEntname = "tf_projectile_spellmeteorshower";
-		case TELE: 			strEntname = "tf_projectile_spelltransposeteleport";
-		case BOSS:			strEntname = "tf_projectile_spellspawnboss";
-		case ZOMBIEH:		strEntname = "tf_projectile_spellspawnhorde";
-		case ZOMBIE:		strEntname = "tf_projectile_spellspawnzombie";
-	}
-	switch(spell)
-	{
-		//These spells have arcs.
-		case BATS, METEOR, TELE:
-		{
-			vVelocity[2] += 32.0;
-		}
-	}
-
-CTFGrenadePipebombProjectile m_bCritical
-CTFProjectile_Rocket m_bCritical
-CTFProjectile_SentryRocket m_bCritical
-CTFWeaponBaseGrenadeProj m_bCritical
-CTFMinigun m_bCritShot
-CTFFlameThrower m_bCritFire
-CTFProjectile_Syringe
-CTFPlayer m_iCritMult
-SetEntPropFloat(iProjectile, Prop_Send, "m_flDamage", dmg);
-	}
-*/
 	int iTeam = GetClientTeam(client);
 	int iProjectile = CreateEntityByName("tf_projectile_rocket");
 	
@@ -253,8 +220,7 @@ SetEntPropFloat(iProjectile, Prop_Send, "m_flDamage", dmg);
 
 	if (!arc)
 		NormalizeVector(vVelocity, vVelocity);
-	else
-		vVelocity[2] -= 0.025;
+	else vVelocity[2] -= 0.025;
 
 	ScaleVector(vVelocity, flSpeed);
 	SetEntPropEnt(iProjectile,	Prop_Send, "m_hOwnerEntity", client);
@@ -272,7 +238,7 @@ SetEntPropFloat(iProjectile, Prop_Send, "m_flDamage", dmg);
 	DispatchSpawn(iProjectile);
 	if (arc)
 		SetEntityMoveType(iProjectile, MOVETYPE_FLYGRAVITY);
-	if ( model[0] != '\0' )
+	if (model[0] != '\0')
 		SetEntityModel(iProjectile, model);
 	return iProjectile;
 }
@@ -301,26 +267,26 @@ stock bool IsValidClient(const int client, bool replaycheck = true)
 }
 stock int GetOwner(const int ent)
 {
-	if ( IsValidEdict(ent) && IsValidEntity(ent) )
+	if (IsValidEntity(ent))
 		return GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity");
 	return -1;
 }
 stock int GetBuilder(const int ent)
 {
-	if ( IsValidEdict(ent) && IsValidEntity(ent) )
+	if (IsValidEdict(ent) && IsValidEntity(ent))
 		return GetEntPropEnt(ent, Prop_Send, "m_hBuilder");
 	return -1;
 }
 stock int GetGroundEntity(const int client)
 {
-	if ( IsValidClient(client, false)) )
+	if (IsValidClient(client, false)))
 		return GetEntPropEnt(client, Prop_Send, "m_hGroundEntity");
 	return -1;
 }
 stock void DoExplosion(const int owner, const int damage, const int radius, float pos[3])
 {
 	int explode = CreateEntityByName("env_explosion");
-	if ( !IsValidEntity(explode) )
+	if (!IsValidEntity(explode))
 		return;
 
 	DispatchKeyValue(explode, "targetname", "exploder");
@@ -342,7 +308,7 @@ stock void DoExplosion(const int owner, const int damage, const int radius, floa
 	AcceptEntityInput(explode, "Kill");
 }
 
-stock float[] nSubtractVectors(const float vec1[3], const float vec2[3])
+stock float[] vSubtractVectors(const float vec1[3], const float vec2[3])
 {
 	float result[3];
 	result[0] = vec1[0] - vec2[0];
@@ -350,7 +316,7 @@ stock float[] nSubtractVectors(const float vec1[3], const float vec2[3])
 	result[2] = vec1[2] - vec2[2];
 	return result;
 }
-stock float[] nAddVectors(const float vec1[3], const float vec2[3])
+stock float[] vAddVectors(const float vec1[3], const float vec2[3])
 {
 	float result[3];
 	result[0] = vec1[0] + vec2[0];
@@ -358,7 +324,7 @@ stock float[] nAddVectors(const float vec1[3], const float vec2[3])
 	result[2] = vec1[2] + vec2[2];
 	return result;
 }
-stock float[] nScaleVector(const float vec[3], const float scale)
+stock float[] vScaleVector(const float vec[3], const float scale)
 {
 	float result[3];
 	result[0] = vec[0] * scale;
@@ -366,7 +332,7 @@ stock float[] nScaleVector(const float vec[3], const float scale)
 	result[2] = vec[2] * scale;
 	return result;
 }
-stock float[] nNegateVector(const float vec[3])
+stock float[] vNegateVector(const float vec[3])
 {
 	float result[3];
 	result[0] = -vec[0];
@@ -376,7 +342,7 @@ stock float[] nNegateVector(const float vec[3])
 }
 stock bool VectorCompare (const float v1[3], const float v2[3])
 {
-	for (int i=0 ; i<3 ; i++)
+	for (int i = 0 ; i < 3 ; i++)
 		if (v1[i] != v2[i])
 			return false;
 			
@@ -385,23 +351,25 @@ stock bool VectorCompare (const float v1[3], const float v2[3])
 stock int GetLivingPlayers(const int team)
 {
 	int AlivePlayers = 0;
-	for (int i=MaxClients ; i ; --i) {
-		if ( IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == team )
+	for (int i = MaxClients ; i; --i)
+	{
+		if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == team)
 			++AlivePlayers;
 	}
 	return AlivePlayers;
 }
 stock void IncrementHeadCount(const int client, bool addhealth = true, int addheads = 1)
 {
-	if ( (TF2_GetPlayerClass(client) == TFClass_DemoMan) &&  !TF2_IsPlayerInCondition(client, TFCond_DemoBuff) )
+	if ((TF2_GetPlayerClass(client) == TFClass_DemoMan) && !TF2_IsPlayerInCondition(client, TFCond_DemoBuff))
 		TF2_AddCondition(client, TFCond_DemoBuff, TFCondDuration_Infinite); // Apply this condition to Demomen to give them their glowing eye effect.
+
 	int decapitations = GetEntProp(client, Prop_Send, "m_iDecapitations");
 	SetEntProp(client, Prop_Send, "m_iDecapitations", decapitations + addheads);
-	if ( addhealth )
+	if (addhealth)
 	{
 		int health = GetClientHealth(client);
 		//health += (decapitations >= 4 ? 10 : 15);
-		if ( health + (15 * addheads) <= 300 ) // TODO: Replace this with an overheal calculation (MaxHP * 1.5) OR add a maxhealth arg. 
+		if (health + (15 * addheads) <= 300) // TODO: Replace this with an overheal calculation (MaxHP * 1.5) OR add a maxhealth arg. 
 			health += 15 * addheads;
 		else health = 300;
 		SetEntProp(client, Prop_Data, "m_iHealth", health);
@@ -455,14 +423,14 @@ public Action DoThink(Handle hTimer, DataPack hndl)
 	hndl.Reset();
 
 	Function pFunc = hndl.ReadFunction();
-	Call_StartFunction( null, pFunc );
+	Call_StartFunction(null, pFunc);
 
 	any param1 = hndl.ReadCell();
-	if ( param1 != -999 )
+	if (param1 != -999)
 		Call_PushCell(param1);
 
 	any param2 = hndl.ReadCell();
-	if ( param2 != -999 )
+	if (param2 != -999)
 		Call_PushCell(param2);
 
 	Call_Finish();
@@ -472,16 +440,18 @@ stock void SetArenaCapEnableTime(const float time)
 {
 	int ent = -1;
 	char strTime[32]; FloatToString(time, strTime, sizeof(strTime));
-	if ( (ent = FindEntityByClassname(-1, "tf_logic_arena")) != -1 )
+	if ((ent = FindEntityByClassname(-1, "tf_logic_arena")) != -1)
 		DispatchKeyValue(ent, "CapEnableDelay", strTime);
 }
 stock void SetClientGlow(const int client, const float time1, float clampfl = 0.0, float &glowtimer)
 {
-	if (IsValidClient(client)) {
+	if (IsValidClient(client))
+	{
 		glowtimer += time1;
 		if (clampfl > 0.0)
 			glowtimer = clampfl;
-		if (glowtimer <= 0.0) {
+		if (glowtimer <= 0.0)
+		{
 			glowtimer = 0.0;
 			SetEntProp(client, Prop_Send, "m_bGlowEnabled", 0);
 		}
@@ -491,31 +461,29 @@ stock void SetClientGlow(const int client, const float time1, float clampfl = 0.
 stock int GetTeamPlayerCount(const int team)
 {
 	int count = 0;
-	for (int i=MaxClients ; i ; --i) {
-		if (IsValidClient(i) && GetClientTeam(i) == team)
-			{count++;}
-	}
+	for (int i = MaxClients ; i; --i)
+		if (IsClientInGame(i) && GetClientTeam(i) == team)
+			count++;
 	return count;
 }
 stock int GetClientCloakIndex(const int client)
 {
-	if (!IsValidClient(client))
+	if (!IsClientValid(client))
 		return -1;
 	int wep = GetPlayerWeaponSlot(client, 4);
 	if (!IsValidEntity(wep))
 		return -1;
 	char classname[32];
 	GetEntityClassname(wep, classname, sizeof(classname));
-	if ( !strncmp(classname, "tf_wea", 6, false) )
+	if (!strncmp(classname, "tf_wea", 6, false))
 		return GetItemIndex(wep);
 	return -1;
 }
 stock int GetSlotFromWeapon(const int iClient, const int iWeapon)
 {
-	for (int i=0; i<5; i++) {
-		if ( iWeapon == GetPlayerWeaponSlot(iClient, i) )
-			{return i;}
-	}
+	for (int i = 0; i < 5; i++)
+		if (iWeapon == GetPlayerWeaponSlot(iClient, i))
+			return i;
 	return -1;
 }
 stock bool RemoveDemoShield(int iClient)
@@ -535,58 +503,30 @@ stock void RemovePlayerBack(int client, int[] indices, int len)
 {
 	if (len <= 0)
 		return;
-	int edict = MaxClients+1;
-	while ((edict = FindEntityByClassname(edict, "tf_wearable")) != -1)
+	int edict = MaxClients+1, idx;
+	char netclass[32];
+	while ((edict = FindEntityByClassname(edict, "tf_wearabl*")) != -1)
 	{
-		char netclass[32];
-		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearable"))
+		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrContains(netclass, "CTFWearabl") != -1)
 		{
-			int idx = GetItemIndex(edict);
+			idx = GetItemIndex(edict);
 			if (GetOwner(edict) == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			{
-				for (int i = 0; i < len; i++) {
-					if (idx == indices[i]) {
+				for (int i = 0; i < len; i++)
+					if (idx == indices[i])
 						TF2_RemoveWearable(client, edict);
 						//AcceptEntityInput(edict, "Kill");
-					}
-				}
-			}
 		}
 	}
 	edict = MaxClients+1;
 	while ((edict = FindEntityByClassname(edict, "tf_powerup_bottle")) != -1)
 	{
-		char netclass[32];
 		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFPowerupBottle"))
 		{
-			int idx = GetItemIndex(edict);
+			idx = GetItemIndex(edict);
 			if (GetOwner(edict) == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			{
-				for (int i=0; i < len; i++) {
-					if (idx == indices[i]) {
+				for (int i = 0; i < len; i++)
+					if (idx == indices[i])
 						TF2_RemoveWearable(client, edict);
-						//AcceptEntityInput(edict, "Kill");
-					}
-				}
-			}
-		}
-	}
-	edict = MaxClients+1;
-	while ((edict = FindEntityByClassname(edict, "tf_wearable_razorback")) != -1)
-	{
-		char netclass[32];
-		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearableRazorback"))
-		{
-			int idx = GetItemIndex(edict);
-			if (GetOwner(edict) == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			{
-				for (int i = 0; i < len; i++) {
-					if (idx == indices[i]) {
-						TF2_RemoveWearable(client, edict);
-						//AcceptEntityInput(edict, "Kill");
-					}
-				}
-			}
 		}
 	}
 }
@@ -594,52 +534,29 @@ stock int FindPlayerBack(int client, int[] indices, int len)
 {
 	if (len <= 0)
 		return -1;
-	int edict = MaxClients+1;
-	while ((edict = FindEntityByClassname(edict, "tf_wearable")) != -1)
+	int edict = MaxClients+1, idx;
+	char netclass[32];
+	while ((edict = FindEntityByClassname(edict, "tf_wearabl*")) != -1)
 	{
-		char netclass[32];
-		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearable"))
+		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrContains(netclass, "CTFWearabl") != -1)
 		{
-			int idx = GetItemIndex(edict);
+			idx = GetItemIndex(edict);
 			if (GetOwner(edict) == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			{
-				for (int i = 0; i < len; i++) {
+				for (int i = 0; i < len; i++)
 					if (idx == indices[i])
 						return edict;
-				}
-			}
 		}
 	}
 	edict = MaxClients+1;
 	while ((edict = FindEntityByClassname(edict, "tf_powerup_bottle")) != -1)
 	{
-		char netclass[32];
 		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFPowerupBottle"))
 		{
-			int idx = GetItemIndex(edict);
+			idx = GetItemIndex(edict);
 			if (GetOwner(edict) == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			{
-				for (int i = 0; i < len; i++) {
+				for (int i = 0; i < len; i++)
 					if (idx == indices[i])
 						return edict;
-				}
-			}
-		}
-	}
-	edict = MaxClients+1;
-	while ((edict = FindEntityByClassname(edict, "tf_wearable_razorback")) != -1)
-	{
-		char netclass[32];
-		if (GetEntityNetClass(edict, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearableRazorback"))
-		{
-			int idx = GetItemIndex(edict);
-			if (GetOwner(edict) == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			{
-				for (int i = 0; i < len; i++) {
-					if (idx == indices[i])
-						return edict;
-				}
-			}
 		}
 	}
 	return -1;
@@ -647,7 +564,7 @@ stock int FindPlayerBack(int client, int[] indices, int len)
 stock int FindSentry(const int client)
 {
 	int i = -1;
-	while ( (i = FindEntityByClassname(i, "obj_sentrygun")) != -1 )
+	while ((i = FindEntityByClassname(i, "obj_sentrygun")) != -1)
 		if (GetEntPropEnt(i, Prop_Send, "m_hBuilder") == client)
 			return i;
 	return -1;
@@ -667,7 +584,7 @@ stock bool TF2_IsPlayerCritBuffed(const int client)
 }
 stock int GetMaxAmmo(const int client, const int slot)
 {
-	if (!IsValidClient(client))
+	if (!IsClientValid(client))
 		return 0;
 	int weapon = GetPlayerWeaponSlot(client, slot);
 	if (IsValidEntity(weapon))
@@ -690,11 +607,11 @@ stock bool IsValidAdmin(const int client, const char[] flags)
 	if (!IsClientInGame(client))
 		return false;
 	int ibFlags = ReadFlagString(flags);
-	if (!StrEqual(flags, "")) {
-		if ( (GetUserFlagBits(client) & ibFlags) == ibFlags )
+	if (!StrEqual(flags, ""))
+		if ((GetUserFlagBits(client) & ibFlags) == ibFlags)
 			return true;
-	}
-	if ( GetUserFlagBits(client) & ADMFLAG_ROOT )
+
+	if (GetUserFlagBits(client) & ADMFLAG_ROOT)
 		return true;
 	return false;
 }
@@ -703,7 +620,9 @@ stock int AttachProjectileModel(const int entity, const char[] strModel, char[] 
 	if (!IsValidEntity(entity))
 		return -1;
 	int model = CreateEntityByName("prop_dynamic");
-	if (IsValidEdict(model)) {
+
+	if (IsValidEdict(model))
+	{
 		float pos[3], ang[3];
 		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
 		GetEntPropVector(entity, Prop_Send, "m_angRotation", ang);
@@ -712,7 +631,8 @@ stock int AttachProjectileModel(const int entity, const char[] strModel, char[] 
 		DispatchSpawn(model);
 		SetVariantString("!activator");
 		AcceptEntityInput(model, "SetParent", entity, model, 0);
-		if (strAnim[0] != '\0') {
+		if (strAnim[0] != '\0')
+		{
 			SetVariantString(strAnim);
 			AcceptEntityInput(model, "SetDefaultAnimation");
 			SetVariantString(strAnim);
@@ -726,9 +646,10 @@ stock int AttachProjectileModel(const int entity, const char[] strModel, char[] 
 }
 stock bool ValidateName(const char[] name)
 {
-	int length = strlen(name);
-	for (int i=0 ; i<length ; ++i) {
-		int holder = name[i];
+	int length = strlen(name), holder;
+	for (int i = 0 ; i < length ; i++)
+	{
+		holder = name[i];
 		// Invalid name, names may only contains numbers, underscores, spaces, and normal letters
 		if (!(IsCharAlpha(holder) || IsCharNumeric(holder) || holder == '_' || IsCharSpace(holder)))
 			return false;
@@ -772,9 +693,9 @@ stock int GetRandomClient(bool alive = true, bool nobots = false)
 stock void SetControlPoint(const bool enable)
 {
 	int CPm = -1;
-	while ( (CPm = FindEntityByClassname(CPm, "team_control_point")) != -1 )
+	while ((CPm = FindEntityByClassname(CPm, "team_control_point")) != -1)
 	{
-		if ( CPm > MaxClients && IsValidEdict(CPm) ) 
+		if (CPm > MaxClients && IsValidEdict(CPm)) 
 		{
 			AcceptEntityInput(CPm, (enable ? "ShowModel" : "HideModel"));
 			SetVariantInt(enable ? 0 : 1);
@@ -789,89 +710,7 @@ stock int FindEntityByClassnameSafe(int iStart, char[] sClassName)
 
 	return FindEntityByClassname(iStart, sClassName);
 }
-stock void RemoveValveHat(int client, bool unhide = false)
-{
-	char sNetClass[32];
 
-	int edict = MaxClients + 1;
-	while ((edict = FindEntityByClassnameSafe(edict, "tf_wearable")) != -1)
-	{
-		if (GetEntityNetClass(edict, sNetClass, sizeof(sNetClass)) && strcmp(sNetClass, "CTFWearable") == 0)
-		{
-			int idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
-			if (idx != 57 && idx != 133 && idx != 231 && idx != 444 && idx != 405 && idx != 608 && idx != 642 && GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client)
-			{
-				SetEntityRenderMode(edict, (unhide ? RENDER_NORMAL : RENDER_TRANSCOLOR));
-				SetEntityRenderColor(edict, 255, 255, 255, (unhide ? 255 : 0));
-			}
-		}
-	}
-	edict = MaxClients + 1;
-	while ((edict = FindEntityByClassnameSafe(edict, "tf_powerup_bottle")) != -1)
-	{
-		if (GetEntityNetClass(edict, sNetClass, sizeof(sNetClass)) && strcmp(sNetClass, "CTFPowerupBottle") == 0)
-		{
-			int idx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
-			if (idx != 57 && idx != 133 && idx != 231 && idx != 444 && idx != 405 && idx != 608 && idx != 642 && GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client)
-			{
-				SetEntityRenderMode(edict, (unhide ? RENDER_NORMAL : RENDER_TRANSCOLOR));
-				SetEntityRenderColor(edict, 255, 255, 255, (unhide ? 255 : 0));
-			}
-		}
-	}
-}
-/*stock int CreateParticle2(const char[] sType, float refresh = 2.0, int client, int attach = NO_ATTACH, float xOffs = 0.0, float yOffs = 0.0, float zOffs = 0.0)
-{
-	int particle = CreateEntityByName("info_particle_system");
-
-	if (IsValidEntity(particle))
-	{
-		float pos[3];
-		GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
-
-		pos[0] += xOffs;
-		pos[1] += yOffs;
-		pos[2] += zOffs;
-
-		TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
-
-		DispatchKeyValue(particle, "effect_name", sType);
-
-		if (attach != NO_ATTACH)
-		{
-			SetVariantString("!activator");
-			AcceptEntityInput(particle, "SetParent", client, particle, 0);
-
-			if (attach == ATTACH_HEAD)
-			{
-				SetVariantString("head");
-				AcceptEntityInput(particle, "SetParentAttachmentMaintainOffset", particle, particle, 0);
-			}
-		}
-		DispatchKeyValue(particle, "targetname", "present");
-		DispatchSpawn(particle);
-
-		ActivateEntity(particle);
-		AcceptEntityInput(particle, "Start");
-
-		if (refresh > 0.0)
-		{
-			Handle hPack;
-			CreateDataTimer(1.0, CheckClient, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-			WritePackFloat(hPack, 0.0);
-			WritePackCell(hPack, GetClientUserId(client));
-			WritePackCell(hPack, EntIndexToEntRef(particle));
-			WritePackString(hPack, sType);
-			WritePackFloat(hPack, refresh);
-			WritePackCell(hPack, attach);
-			WritePackFloat(hPack, xOffs);
-			WritePackFloat(hPack, yOffs);
-			WritePackFloat(hPack, zOffs);
-		}
-	}
-
-	return EntIndexToEntRef(particle);
-}*/
 stock void TF2_SwitchToSlot(const int client, const int slot)
 {
 	if (slot >= 0 && slot <= 5 && IsClientValid(client) && IsPlayerAlive(client))
@@ -896,9 +735,12 @@ stock int MakeParticle(int client, char[] effect, char[] attachment)
 	ang[1] += 180.0;
 	if (ang[1] > 180.0) ang[1] -= 360.0;
 	ang[2] = 0.0;
+
 //	GetAngleVectors(ang, pos2, NULL_VECTOR, NULL_VECTOR);
 	int particle = CreateEntityByName("info_particle_system");
-	if (!IsValidEntity(particle)) return -1;
+	if (!IsValidEntity(particle))
+		return -1;
+
 	TeleportEntity(particle, pos, ang, NULL_VECTOR);
 	DispatchKeyValue(particle, "effect_name", effect);
 	SetVariantString("!activator");
@@ -908,6 +750,7 @@ stock int MakeParticle(int client, char[] effect, char[] attachment)
 		SetVariantString(attachment);
 		AcceptEntityInput(particle, "SetParentAttachmentMaintainOffset", particle, particle, 0);
 	}
+
 	Format(buffer, sizeof(buffer), "%s_%s%d", effect, attachment, particle);
 	DispatchKeyValue(particle, "targetname", buffer);
 	DispatchSpawn(particle);
@@ -918,7 +761,7 @@ stock int MakeParticle(int client, char[] effect, char[] attachment)
 }
 stock bool IsClientValid(int client)
 {
-	if (client > 0 && client <= MaxClients && IsClientInGame(client))
+	if (0 < client <= MaxClients && IsClientInGame(client))
 		return true;
 	return false;
 }
@@ -930,7 +773,8 @@ stock void PreModel(int client)
 	{
 		if (GetOwner(ent) == client) 
 		{
-			if (GetItemIndex(ent) != 405 && GetItemIndex(ent) != 608) 
+			int idx = GetItemIndex(ent)
+			if (idx != 405 && idx != 608) 
 			{
 				TF2_RemoveWearable(client, ent);
 				AcceptEntityInput(ent, "Kill");
@@ -978,10 +822,8 @@ stock void SetTextNode(Handle node, const char[] sText, float X = -1.0, float Y 
 	SetHudTextParams(X, Y, HoldTime, Red, Green, Blue, Alpha, Effect, fXTime, FadeIn, FadeOut);
 
 	for (int i = MaxClients; i; --i)
-	{
-		if (IsClientValid(i))
+		if (IsClientInGame(i))
 			ShowSyncHudText(i, node, sText);
-	}
 }
 stock void RemoveParachute(const int client)
 {

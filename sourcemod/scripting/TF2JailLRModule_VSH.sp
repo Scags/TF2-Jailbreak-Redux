@@ -744,7 +744,7 @@ public void CalcScores()
 		for (j = 0; damage - amount > 0; damage -= amount, j++) {  }
 		scoring.SetInt("points", j);
 		scoring.Fire();
-		CPrintToChat(i, "{crimson}[TF2Jail]{burlywood} You scored %i point%s.", j, j == 1 ? "" : "s");
+		CPrintToChat(i, TAG ... "You scored %i point%s.", j, j == 1 ? "" : "s");
 	}
 }
 
@@ -1778,11 +1778,15 @@ public void PrepPlayers(const int userid)	// OnPlayerPrepped doesn't fire after 
 		|| player.bIsBoss)
 	return;
 	
-	TF2Attrib_RemoveAll(client);
 	if (GetClientTeam(client) != RED && GetClientTeam(client) > view_as< int >(TFTeam_Spectator))
+	{
 		player.ForceTeamChange(RED);
+		TF2_RegeneratePlayer(client);
+		SetPawnTimer(PrepPlayers, 0.3, player.userid);	// After PrepPlayer fires in core. There's got to be an easier way to do this
+		return;
+	}
 
-	TF2_RegeneratePlayer(client);
+	TF2Attrib_RemoveAll(client);
 	SetEntityHealth(client, GetEntProp(client, Prop_Data, "m_iMaxHealth"));
 	
 	if (IsValidEntity(FindPlayerBack(client, { 444 }, 1))) //  Fixes mantreads to have jump height again
@@ -1967,7 +1971,7 @@ public void ManageBossCheckHealth(const JailBoss base)
 		LastBossTotalHealth = totalHealth;
 		flHealthTime = currtime + (iHealthChecks < 3 ? 10.0 : 60.0);
 	}
-	else CPrintToChat(base.index, "{crimson}[TF2Jail]{burlywood} You can see the Boss HP now (wait %i seconds). Last known total health was %i.", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
+	else CPrintToChat(base.index, TAG ... "You can see the Boss HP now (wait %i seconds). Last known total health was %i.", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
 }
 
 public void ManageMessageIntro()
@@ -2397,7 +2401,7 @@ public void fwdOnHudShow(char strHud[128])
 public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
 {
 	if (JBVSH[Enabled].BoolValue && selection == JBVSHIndex)
-		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has decided to play a round of {default}Versus Saxton Hale{burlywood}.", Player.index);
+		CPrintToChatAll(TAG ... "%N has decided to play a round of {default}Versus Saxton Hale{burlywood}.", Player.index);
 
 	return Plugin_Continue;
 }

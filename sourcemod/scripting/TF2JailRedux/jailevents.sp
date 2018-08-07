@@ -29,7 +29,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 			{
 				player.ForceTeamChange(RED);
 				EmitSoundToClient(client, NO);
-				CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You are muted, therefore you cannot join Blue Team.");
+				CPrintToChat(client, TAG ... "You are muted, therefore you cannot join Blue Team.");
 			}
 		}
 	}
@@ -230,7 +230,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 							AcceptEntityInput(flamemanager, "Kill");
 					}
 					player.ForceTeamChange(RED);
-					CPrintToChat(player.index, "{crimson}[TF2Jail]{burlywood} You have been autobalanced.");
+					CPrintToChat(player.index, TAG ... "You have been autobalanced.");
 
 					lBlue--;	// Avoid loopception
 					lRed++;
@@ -376,7 +376,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 	return Plugin_Continue;
 }
 
-/*public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
+public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
@@ -387,7 +387,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 		SetPawnTimer(PrepPlayer, 0.2, player.userid);
 
 	return Plugin_Continue;
-}*/
+}
 
 public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 {
