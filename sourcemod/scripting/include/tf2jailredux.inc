@@ -549,13 +549,14 @@ methodmap JBPlayer
 
 	/**
 	 *	Gets the property of the internal JailFighter methodmap.
+	 *	@note 				If you are getting a float value, you MUST view_as<float>
 	 *
-	 *	@param key		Name of property you want to access data from.
+	 *	@param key			Name of property you want to access data from.
 	 *	@param item			Reference to use of the variable to overwrite with data from the property.
 	 *
 	 *	@return				Property value called if it was valid
 	*/
-	public any GetValue(const char key[64])
+	public any GetValue( const char key[64] )
 	{
 		return JB_GetValue(this.index, key);
 	}
@@ -569,27 +570,78 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void SetValue(const char key[64], any value)
+	public void SetValue( const char key[64], any value )
 	{
 		JB_SetValue(this.index, key, value);
 	}
 
-	/**		AVAILABLE PROPERTIES
-	 *	int iLRCustom							// For the Custom LR
-	 *	int iKillCount							// For the ghetto rigged freekill system
-	 *	bool bIsWarden 							// Client is/isn't Warden
-	 *	bool bIsMuted							// Varies with CVars
-	 *	bool bIsQueuedFreeday					// Freeday for Self or Freeday for Others
-	 *	bool bIsFreeday 						// Client is/isn't a freeday
-	 *	bool bLockedFromWarden					// Upon being fired or retiring
-	 *	bool bIsVIP								// Default Reserve flag
-	 *	bool bIsAdmin							// Default Generic flag
-	 *	bool bIsHHH								// For the HHHDay LR
-	 *	bool bInJump							// Client is rocket/sticky jumping
-	 *	bool bUnableToTeleport 					// Client can/can't teleport with Eureka Effect
-	 *	float flSpeed 							// Client speed, isn't used
-	 *	float flKillSpree 						// Also for the ghetto rigged freekill system
-	*/
+	property int iCustom
+	{
+		public get() 				{ return this.GetValue("iCustom"); }
+		public set( const int i )	{ this.SetValue("iCustom", i); }
+	}
+	property int iKillCount
+	{
+		public get() 				{ return this.GetValue("iKillCount"); }
+		public set( const int i )	{ this.SetValue("iKillCount", i); }
+	}
+
+	property bool bIsWarden
+	{
+		public get() 				{ return this.GetValue("bIsWarden"); }
+		public set( const bool i )	{ this.SetValue("bIsWarden", i); }
+	}
+	property bool bIsQueuedFreeday
+	{
+		public get() 				{ return this.GetValue("bIsQueuedFreeday"); }
+		public set( const bool i )	{ this.SetValue("bIsQueuedFreeday", i); }
+	}
+	property bool bIsFreeday
+	{
+		public get() 				{ return this.GetValue("bIsFreeday"); }
+		public set( const bool i )	{ this.SetValue("bIsFreeday", i); }
+	}
+	property bool bLockedFromWarden
+	{
+		public get() 				{ return this.GetValue("bLockedFromWarden"); }
+		public set( const bool i )	{ this.SetValue("bLockedFromWarden", i); }
+	}
+	property bool bIsHHH
+	{
+		public get() 				{ return this.GetValue("bIsHHH"); }
+		public set( const bool i )	{ this.SetValue("bIsHHH", i); }
+	}
+	property bool bInJump
+	{
+		public get() 				{ return this.GetValue("bInJump"); }
+		public set( const bool i )	{ this.SetValue("bInJump", i); }
+	}
+	property bool bUnableToTeleport
+	{
+		public get() 				{ return this.GetValue("bUnableToTeleport"); }
+		public set( const bool i )	{ this.SetValue("bUnableToTeleport", i); }
+	}
+	property bool bLasering
+	{
+		public get() 				{ return this.GetValue("bLasering"); }
+		public set( const bool i )	{ this.SetValue("bLasering", i); }
+	}
+	property bool bIsMuted
+	{
+		public get() 				{ return this.GetValue("bIsMuted"); }
+		public set( const bool i )	{ this.SetValue("bIsMuted", i); }
+	}
+
+	property float flSpeed
+	{
+		public get() 				{ return this.GetValue("flSpeed"); }
+		public set( const float i )	{ this.SetValue("flSpeed", i); }
+	}
+	property float flKillSpree
+	{
+		public get() 				{ return this.GetValue("flKillSpree"); }
+		public set( const float i )	{ this.SetValue("flKillSpree", i); }
+	}
 
 	/**
 	 *	Creates and spawns a weapon to a player.
@@ -602,7 +654,7 @@ methodmap JBPlayer
 	 *
 	 *	@return				The weapon spawned to the client.
 	*/
-	public int SpawnWeapon(char[] name, const int index, const int level, const int qual, char[] att)
+	public int SpawnWeapon( char[] name, const int index, const int level, const int qual, char[] att )
 	{
 		return TF2_SpawnWeapon(this.index, name, index, level, qual, att);
 	}
@@ -614,7 +666,7 @@ methodmap JBPlayer
 	 *
 	 *	@return 			Index of the valid, equipped weapon.
 	*/
-	public int GetWeaponSlotIndex(const int slot)
+	public int GetWeaponSlotIndex( const int slot )
 	{
 		return GetIndexOfWeaponSlot(this.index, slot);
 	}
@@ -626,7 +678,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void SetWepInvis(const int alpha)
+	public void SetWepInvis( const int alpha )
 	{
 		SetWeaponInvis(this.index, alpha);
 	}
@@ -639,7 +691,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void ForceTeamChange(const int team, bool spawn = true)
+	public void ForceTeamChange( const int team, bool spawn = true )
 	{
 		ForceClientTeamChange(this.index, team, spawn);
 	}
@@ -652,7 +704,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void TeleportToPosition(const int location)
+	public void TeleportToPosition( const int location )
 	{
 		JB_TeleportToPosition(this.index, location);
 	}
@@ -672,7 +724,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void PreEquip(bool weps = true)
+	public void PreEquip( bool weps = true )
 	{
 		RemoveAll(this.index, weps);
 	}
@@ -684,7 +736,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void TeleToSpawn(int team = 0)
+	public void TeleToSpawn( int team = 0 )
 	{
 		TeleportToSpawn(this.index, team);
 	}
@@ -696,7 +748,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void SpawnSmallHealthPack(int ownerteam = 0)
+	public void SpawnSmallHealthPack( int ownerteam = 0 )
 	{
 		SpawnSmallHealthPackAt(this.index, ownerteam);
 	}
@@ -824,7 +876,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void ClimbWall(const int weapon, const float upwardvel, const float health, const bool attackdelay)
+	public void ClimbWall( const int weapon, const float upwardvel, const float health, const bool attackdelay )
 	{
 		JB_ClimbWall(this.index, weapon, upwardvel, health, attackdelay);
 	}
@@ -1031,10 +1083,10 @@ native StringMapSnapshot JBGameMode_Snapshot();
 native int JBGameMode_Size();
 
 
-methodmap JBGameMode
+methodmap JBGameMode < StringMap
 {
 	/**
-	 *	Initialize global methodmap with a handle to the core JailGameMode methodmap.
+	 *	Initialize global methodmap with a shared handle to the core JailGameMode methodmap.
 	 *
 	 *	@return 			Instance of the JailGameMode methodmap.
 	*/
@@ -1048,6 +1100,450 @@ methodmap JBGameMode
 		public get()
 		{
 			return JBGameMode_Playing();
+		}
+	}
+	/**
+	 *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
+	 *	@deprecated 			Use JBGameMode.SetValue instead, or use the preset properties below.
+	 *							You can also make a methodmap that inherites from JBGameMode, then
+	 *							create the properties that you need.
+	 *
+	 *	@param prop_name 		Property key to call from.
+	 *
+	 *	@return 				Value received from called key.
+	*/
+#pragma deprecated Use 'JBGameMode.SetValue' instead, or use the preset properties.
+	public bool SetProperty( const char prop_name[64], any i )
+	{
+		return this.SetValue(prop_name, i);
+	}
+
+	/**
+	 *	Get a property value from the JailGameMode StringMap.
+	 *	@deprecated 			UseJBGameMode.GetValue instead, or use the preset properties below.
+	 *							You can also make a methodmap that inherites from JBGameMode, then
+	 *							get the properties that you need.
+	 *
+	 *	@param prop_name 		Property key to call from.
+	 *
+	 *	@return 				Value received from called key.
+	*/
+#pragma deprecated Use 'JBGameMode.GetValue' instead, or use the preset properties.
+	public any GetProperty( const char prop_name[64] )
+	{
+		any i; this.GetValue(prop_name, i);
+		return i;
+	}
+
+	property int iRoundState
+	{
+		public get()
+		{
+			int i; this.GetValue("iRoundState", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			this.SetValue("iRoundState", i);
+		}
+	}
+	property int iTimeLeft
+	{
+		public get()
+		{
+			int i; this.GetValue("iTimeLeft", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			this.SetValue("iTimeLeft", i);
+		}
+	}
+	property int iLRPresetType
+	{
+		public get()
+		{
+			int i; this.GetValue("iLRPresetType", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			this.SetValue("iLRPresetType", i);
+		}
+	}
+	property int iLRType
+	{
+		public get()
+		{
+			int i; this.GetValue("iLRType", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			this.SetValue("iLRType", i);
+		}
+	}
+	property int iRoundCount
+	{
+		public get()
+		{
+			int i; this.GetValue("iRoundCount", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			this.SetValue("iRoundCount", i);
+		}
+	}
+
+	property bool bSteam
+	{
+		public get()
+		{
+			bool i; this.GetValue("bSteam", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bSteam", i);
+		}
+	}
+	property bool bSB
+	{
+		public get()
+		{
+			bool i; this.GetValue("bSB", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bSB", i);
+		}
+	}
+	property bool bSC
+	{
+		public get()
+		{
+			bool i; this.GetValue("bSC", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bSC", i);
+		}
+	}
+	property bool bVA
+	{
+		public get()
+		{
+			bool i; this.GetValue("bVA", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bVA", i);
+		}
+	}
+	property bool bTF2Attribs
+	{
+		public get()
+		{
+			bool i; this.GetValue("bTF2Attribs", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bTF2Attribs", i);
+		}
+	}
+	property bool bIsMapCompatible
+	{
+		public get()
+		{
+			bool i; this.GetValue("bIsMapCompatible", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bIsMapCompatible", i);
+		}
+	}
+	property bool bFreedayTeleportSet
+	{
+		public get()
+		{
+			bool i; this.GetValue("bFreedayTeleportSet", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bFreedayTeleportSet", i);
+		}
+	}
+	property bool bWardayTeleportSetBlue
+	{
+		public get()
+		{
+			bool i; this.GetValue("bWardayTeleportSetBlue", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bWardayTeleportSetBlue", i);
+		}
+	}
+	property bool bWardayTeleportSetRed
+	{
+		public get()
+		{
+			bool i; this.GetValue("bWardayTeleportSetRed", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bWardayTeleportSetRed", i);
+		}
+	}
+	property bool bCellsOpened
+	{
+		public get()
+		{
+			bool i; this.GetValue("bCellsOpened", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bCellsOpened", i);
+		}
+	}
+	property bool b1stRoundFreeday
+	{
+		public get()
+		{
+			bool i; this.GetValue("b1stRoundFreeday", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("b1stRoundFreeday", i);
+		}
+	}
+	property bool bIsLRInUse
+	{
+		public get()
+		{
+			bool i; this.GetValue("bIsLRInUse", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bIsLRInUse", i);
+		}
+	}
+	property bool bIsWardenLocked
+	{
+		public get()
+		{
+			bool i; this.GetValue("bIsWardenLocked", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bIsWardenLocked", i);
+		}
+	}
+	property bool bOneGuardLeft
+	{
+		public get()
+		{
+			bool i; this.GetValue("bOneGuardLeft", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bOneGuardLeft", i);
+		}
+	}
+	property bool bOnePrisonerLeft
+	{
+		public get()
+		{
+			bool i; this.GetValue("bOnePrisonerLeft", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bOnePrisonerLeft", i);
+		}
+	}
+	property bool bAdminLockWarden
+	{
+		public get()
+		{
+			bool i; this.GetValue("bAdminLockWarden", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bAdminLockWarden", i);
+		}
+	}
+	property bool bAdminLockedLR
+	{
+		public get()
+		{
+			bool i; this.GetValue("bAdminLockedLR", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bAdminLockedLR", i);
+		}
+	}
+	property bool bDisableCriticals
+	{
+		public get()
+		{
+			bool i; this.GetValue("bDisableCriticals", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bDisableCriticals", i);
+		}
+	}
+	property bool bIsFreedayRound
+	{
+		public get()
+		{
+			bool i; this.GetValue("bIsFreedayRound", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bIsFreedayRound", i);
+		}
+	}
+	property bool bWardenExists
+	{
+		public get()
+		{
+			bool i; this.GetValue("bWardenExists", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bWardenExists", i);
+		}
+	}
+	property bool bAvoidTeamKills
+	{
+		public get()
+		{
+			bool i; this.GetValue("bAvoidTeamKills", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bAvoidTeamKills", i);
+		}
+	}
+	property bool bIsWarday
+	{
+		public get()
+		{
+			bool i; this.GetValue("bIsWarday", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bIsWarday", i);
+		}
+	}
+	property bool bFirstDoorOpening
+	{
+		public get()
+		{
+			bool i; this.GetValue("bFirstDoorOpening", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bFirstDoorOpening", i);
+		}
+	}
+	property bool bSilentWardenKills
+	{
+		public get()
+		{
+			bool i; this.GetValue("bSilentWardenKills", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bSilentWardenKills", i);
+		}
+	}
+	property bool bMedicDisabled
+	{
+		public get()
+		{
+			bool i; this.GetValue("bMedicDisabled", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bMedicDisabled", i);
+		}
+	}
+	property bool bDisableMuting
+	{
+		public get()
+		{
+			bool i; this.GetValue("bDisableMuting", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bDisableMuting", i);
+		}
+	}
+	property bool bDisableKillSpree
+	{
+		public get()
+		{
+			bool i; this.GetValue("bDisableKillSpree", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bDisableKillSpree", i);
+		}
+	}
+
+	property bool bAllowBuilding
+	{
+		public get()
+		{
+			bool i; this.GetValue("bAllowBuilding", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bAllowBuilding", i);
+		}
+	}
+
+	property float flMusicTime
+	{
+		public get()
+		{
+			float i; this.GetValue("flMusicTime", i);
+			return i;
+		}
+		public set( const float i )
+		{
+			this.SetValue("flMusicTime", i); 
 		}
 	}
 
@@ -1068,7 +1564,7 @@ methodmap JBGameMode
 	 *
 	 *	@noreturn
 	*/
-	public void DoorHandler(const eDoorsMode status)
+	public void DoorHandler( const eDoorsMode status )
 	{
 		JBGameMode_ManageCells(status);
 	}
@@ -1094,7 +1590,7 @@ methodmap JBGameMode
 	 *
 	 *	@noreturn
 	*/
-	public void FireWarden(bool prevent = true, bool announce = true)
+	public void FireWarden( bool prevent = true, bool announce = true )
 	{
 		JBGameMode_FireWarden(prevent, announce);
 	}
@@ -1115,7 +1611,7 @@ methodmap JBGameMode
 	 *
 	 *	@noreturn
 	*/
-	public void ToggleMedic(const bool status)
+	public void ToggleMedic( const bool status )
 	{
 		JBGameMode_ToggleMedic(status);
 	}
@@ -1131,170 +1627,6 @@ methodmap JBGameMode
 	{
 		JBGameMode_ToggleMedicTeam(team);
 	}*/
-
-	/**
-	 *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
-	 *
-	 *	@param prop_name 		Property key to call from.
-	 *
-	 *	@return 				Value received from called key.
-	*/
-	public any GetProperty(const char prop_name[64])
-	{
-		return JBGameMode_GetProperty(prop_name);
-	}
-
-	/**
-	 *	Set a property to the JailGameMode internal methodmap.
-	 *	@note 					This can set properties that GetProperty can access!
-	 *
-	 *	@param prop_name 		Property key to set into the StringMap.
-	 *	@param value 			Value to set to it.
-	 *
-	 *	@noreturn
-	*/
-	public void SetProperty(const char prop_name[64], any value)
-	{
-		JBGameMode_SetProperty(prop_name, value);
-	}
-
-	/** Properties
-	 *	int iRoundState
-	 *	int iTimeLeft
-	 *	int iLRPresetType
-	 *	int iLRType
-	 *	bool bSteam				// If has SteamTools
-	 *	bool bSB 				// If has Sourcebans (Optional, not used in core)
-	 *	bool bSC				// If has SourceComms
-	 *	bool bVA 				// If has VoiceAnnounce_Ex (Optional, not used in core)
-	 *	bool bTF2Attribs
-	 *	bool bIsMapCompatible
-	 *	bool bFreedayTeleportSet
-	 *	bool bWardayTeleportSetBlue
-	 *	bool bWardayTeleportSetRed
-	 *	bool bCellsOpened
-	 *	bool b1stRoundFreeday
-	 *	bool bIsLRInUse
-	 *	bool bIsWardenLocked
-	 *	bool bOneGuardLeft
-	 *	bool bOnePrisonerLeft
-	 *	bool bAdminLockWarden
-	 *	bool bAdminLockedLR
-	 *	bool bDisableCriticals
-	 *	bool bIsFreedayRound
-	 *	bool bWardenExists
-	 *	bool bAvoidTeamKills
-	 *	bool bIsWarday
-	 *	bool bFirstDoorOpening
-	 *	bool bSilentWardenKills
-	 *	bool bMedicDisabled
-	 *	bool bDisableMuting
-	 *	bool bDisableKillSpree
-	 *	float flMusicTime
-	*/
-	/**
-	 *	Set an array into this the GameMode StringMap
-	 *
-	 *	@param key			Key string.
-	 *	@param array		Array to store.
-	 *	@param num_items	Number of items in the array.
-	 *	@param replace		If false, operation will fail if the key is already set.
-	 *
-	 *	@return				True on success, false on failure.
-	*/
-	public bool SetArray(const char[] key, const any[] array, int num_items, bool replace = true)
-	{
-		return JBGameMode_SetArray(key, array, num_items, replace);
-	}
-
-	/**
-	 *	Sets a string value in the GameMode StringMap, either inserting a new entry or replacing an old one.
-	 *
-	 *	@param key			Key string.
-	 *	@param string		String to store.
-	 *	@param replace		If false, operation will fail if the key is already set.
-	 *
-	 *	@return				True on success, false on failure.
-	*/
-	public bool SetString(const char[] key, const char[] string, bool replace = true)
-	{
-		return JBGameMode_SetString(key, string, replace);
-	}
-
-	/**
-	 *	Retrieves an array in the GameMode StringMap.
-	 *
-	 *	@param key			Key string.
-	 *	@param array		Buffer to store array.
-	 *	@param max_size		Maximum size of array buffer.
-	 *	@param size			Optional parameter to store the number of elements written to the buffer.
-	 *
-	 *	@return				True on success.  False if the key is not set, or the key is set 
-	 *						as a value or string (not an array).
-	*/
-	public bool GetArray(const char[] key, any[] array, int max_size, int &size = 0)
-	{
-		return JBGameMode_GetArray(key, array, max_size, size);
-	}
-
-	/**
-	 *	Retrieves a string in the GameMode StringMap.
-	 *
-	 *	@param key			Key string.
-	 *	@param string		Buffer to store value.
-	 *	@param max_size		Maximum size of string buffer.
-	 *	@param size			Optional parameter to store the number of bytes written to the buffer.
-	 *
-	 *	@return				True on success.  False if the key is not set, or the key is set 
-	 *						as a value or array (not a string).
-	*/
-	public bool GetString(const char[] key, char[] string, int max_size, int &size = 0)
-	{
-		return JBGameMode_GetString(key, string, max_size, size);
-	}
-
-	/**
-	 *	Removes a key entry from the GameMode StringMap.
-	 *
-	 *	@param key			Key string.
-	 *
-	 *	@return				True on success, false if the value was never set.
-	*/
-	public bool Remove(const char[] key)
-	{
-		return JBGameMode_Remove(key);
-	}
-
-	/**
-	 *	Clears all entries from the GameMode StringMap.
-	 *
-	 *	@noreturn
-	*/
-	public void Clear()
-	{
-		JBGameMode_Clear();
-	}
-
-	/**
-	 *	Create a snapshot of the GameMode StringMap's keys. See StringMapSnapshot.
-	 *
-	 *	@return 			Handle to key SnapShot.
-	*/
-	public StringMapSnapshot Snapshot()
-	{
-		return JBGameMode_Snapshot();
-	}
-
-	/**
-	 *	Retrieves the number of elements in the GameMode StringMap.
-	*/
-	property int Size
-	{
-		public get()
-		{
-			return JBGameMode_Size();
-		}
-	}
 };
 
 

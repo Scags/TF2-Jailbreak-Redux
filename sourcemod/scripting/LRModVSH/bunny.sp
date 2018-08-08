@@ -180,7 +180,7 @@ methodmap CBunny < JailBoss
 	{
 		strcopy(snd, PLATFORM_MAX_PATH, BunnyKill[GetRandomInt(0, sizeof(BunnyKill)-1)]);
 		EmitSoundToAll(snd, _, SNDCHAN_VOICE, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, this.index, NULL_VECTOR, NULL_VECTOR, false, 0.0);
-		SpawnManyAmmoPacks(victim.index, EggModel, 1);
+		SpawnManyAmmoPacks(victim.index, EggModel, 1);	// Ammo is killed on spawn, grrrrr
 		float curtime = GetGameTime();
 		if ( curtime <= this.flKillSpree )
 			this.iKills++;
