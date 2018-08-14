@@ -870,7 +870,7 @@ public void ManageClientStartVariables(const JailFighter base)
 public void ManageClientDisconnect(const int client)
 {
 	JailFighter player = JailFighter(client);
-	if (player.bIsWarden)
+	if (gamemode.iWarden == player)		// FIXME; why does the client StringMap error out here?
 	{
 		player.WardenUnset();
 		PrintCenterTextAll("Warden has disconnected!");
