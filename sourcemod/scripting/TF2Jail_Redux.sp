@@ -1452,7 +1452,7 @@ public int Native_LRIndex(Handle plugin, int numParams)
 	ArrayList holder = gamemode.hPlugins;
 	int idx = holder.FindValue(plugin);
 	if (idx != -1)
-		return idx - holder.Length + LRMAX;
+		return idx - holder.Length + LRMAX + 1;
 
 	// Returning -1 would be absolutely positively CATASTROPHIC!!!
 	return 0;
