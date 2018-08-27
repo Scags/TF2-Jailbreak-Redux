@@ -210,13 +210,13 @@ methodmap JailHunter < JBPlayer
 public Plugin myinfo =
 {
 	name = "TF2Jail PH LR Module",
-	author = "Ragenewb, just about all props to Darkimmortal, Geit, and Powerlord",
+	author = "Scag/Ragenewb, just about all props to Darkimmortal, Geit, and Powerlord",
 	description = "Prophunt embedded as an LR for TF2Jail Redux",
 	version = PLUGIN_VERSION,
 	url = ""
 };
 
-enum 
+enum
 {
 	FallDamage = 0,
 	Airblast,
@@ -232,7 +232,6 @@ enum
 	RoundTime,
 	Enabled,
 	PickCount,
-	ThisPlugin,
 	MedicToggling,
 	Version
 };
@@ -269,12 +268,11 @@ public void OnPluginStart()
 	JBPH[Teleportation] 		 = CreateConVar("sm_jbph_teleport", "1", "Teleport players to warday/freeday locations? (0: Disabed, 1: BLU to Warday, 2: BLU to Freeday, 3: RED to Warday, 4: RED to Freeday, 5: BOTH to Warday)", FCVAR_NOTIFY, true, 0.0, true, 5.0);	
 	JBPH[RoundTime] 			 = CreateConVar("sm_jbph_round_time", "300", "Round time in seconds. THIS ADDS TO YOUR \"sm_jbph_freeze_time\" CVAR.", FCVAR_NOTIFY, true, 0.0);
 	JBPH[PickCount] 			 = CreateConVar("sm_jbph_lr_max", "5", "How many times can Prophunt be picked in a single map? 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
-	JBPH[ThisPlugin] 			 = CreateConVar("sm_jbph_ilrtype", "14", "This sub-plugin's last request index. DO NOT CHANGE THIS UNLESS YOU KNOW WHAT YOU'RE DOING", FCVAR_NOTIFY, true, 0.0);
 	JBPH[MedicToggling] 		 = CreateConVar("sm_jbph_medic_toggle", "1", "Disable the medic room?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
-	JBPH[ThisPlugin].AddChangeHook(OnTypeChanged);
-
 	RegConsoleCmd("sm_propreroll", Cmd_Reroll);
+	RegAdminCmd("sm_unregisterph", Cmd_UnLoad, ADMFLAG_ROOT);
+	RegAdminCmd("sm_registerph", Cmd_ReLoad, ADMFLAG_ROOT);
 
 	AutoExecConfig(true, "LRModulePH");
 
@@ -285,24 +283,33 @@ public void OnPluginStart()
 	g_ModelRotation = new ArrayList(ByteCountToCells(11));
 }
 
+int JBPHIndex;
 public void OnAllPluginsLoaded()
 {
-	TF2JailRedux_RegisterPlugin("LRModule_PH");
+	JBPHIndex = TF2JailRedux_RegisterPlugin("LRModule_PH");
 	gamemode = new JBGameMode();
 	CheckJBHooks();
 }
 
-int JBPHIndex;
-public void OnConfigsExecuted()
+public void OnPluginEnd()
 {
-	JBPHIndex = JBPH[ThisPlugin].IntValue;
+	if (LibraryExists("TF2Jail_Redux"))
+		TF2JailRedux_UnRegisterPlugin("LRModule_PH");
 }
 
-public void OnTypeChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+public void OnLibraryRemoved(const char[] name)
 {
-	JBPHIndex = StringToInt(newValue);
+	if (!strcmp(name, "TF2Jail_Redux", false))
+		JBPHIndex = 0;
 }
-#define NotPH 				( gamemode.iLRType != (JBPHIndex) )
+
+public void OnLibraryAdded(const char[] name)
+{
+	if (!strcmp(name, "TF2Jail_Redux", false))
+		OnAllPluginsLoaded();
+}
+
+#define NOTPH 				( !JBPHIndex || gamemode.iLRType != (JBPHIndex) )
 
 public void OnMapStart()
 {
@@ -375,7 +382,7 @@ public void ParsePropCFG()
 		LogError("Prop Common file is empty!");
 		delete kv;
 		return;
-	}		
+	}
 
 	g_PropData.Clear();
 	g_PropNamesIndex.Clear();
@@ -417,7 +424,7 @@ public void ParsePropCFG()
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon, int &subtype, int &cmdnum, int &tickcount, int &seed, int mouse[2])
 {
-	if (!JBPH[Enabled].BoolValue || NotPH || gamemode.iRoundState != StateRunning)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return Plugin_Continue;
 
 	JailHunter player = JailHunter(client);
@@ -446,7 +453,7 @@ public void KickCallBack(const QueryCookie cookie, const int client, const ConVa
 
 public void fwdOnCheckLivingPlayers()
 {
-	if (gamemode.iRoundState != StateRunning || NotPH)
+	if (NOTPH)
 		return;
 
 	JailHunter base;
@@ -473,7 +480,7 @@ public void fwdOnCheckLivingPlayers()
 
 public Action fwdOnLastPrisoner()
 {
-	if (gamemode.iRoundState != StateRunning || NotPH)
+	if (NOTPH)
 		return Plugin_Continue;
 
 	for (int i = MaxClients; i; --i)
@@ -505,7 +512,7 @@ public void DisallowRerolls(const int roundcount)
 
 public Action Cmd_Reroll(int client, int args)
 {
-	if (!IsClientValid(client) || NotPH || !IsPlayerAlive(client) || gamemode.iRoundState != StateRunning)
+	if (!IsClientValid(client) || NOTPH || !IsPlayerAlive(client))
 		return Plugin_Handled;
 
 	if (!JBPH[Reroll].BoolValue)
@@ -551,9 +558,40 @@ public Action Cmd_Reroll(int client, int args)
 	return Plugin_Handled;
 }
 
+/**
+ *	Purpose: Disable the plugin without unloading it.
+ *	This is more for testing, but technical users can use this to their advantage.
+ *	Prophunt will not re-register unless you reload the plugin manually or sm_registerph.
+*/
+public Action Cmd_UnLoad(int client, int args)
+{
+	if (TF2JailRedux_UnRegisterPlugin("LRModule_PH"))
+	{
+		CReplyToCommand(client, ADMTAG ... "Prophunt has been successfully unregistered.");
+		// We don't have/need an index anymore, plus this is faster than TF2JailRedux_IsPluginRegistered
+		JBPHIndex = 0;
+	}
+	else CReplyToCommand(client, ADMTAG ... "Prophunt was not unregistered. Was it registered to begin with?");
+
+	return Plugin_Handled;
+}
+
+public Action Cmd_ReLoad(int client, int args)
+{
+	if (JBPHIndex || TF2JailRedux_IsPluginRegistered("LRModule_PH"))	// Redundant
+	{
+		CReplyToCommand(client, ADMTAG ... "Prophunt is already registered.");
+		return Plugin_Handled;
+	}
+
+	JBPHIndex = TF2JailRedux_RegisterPlugin("LRModule_PH");
+	CReplyToCommand(client, ADMTAG ... "Prophunt has been re-registered.");
+	return Plugin_Handled;
+}
+
 public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool &result)
 {
-	if (!JBPH[Enabled].BoolValue || !IsClientValid(client) || gamemode.iRoundState != StateRunning || NotPH)
+	if (!JBPH[Enabled].BoolValue || !IsClientValid(client) || NOTPH)
 		return Plugin_Continue;
 
 	if (IsPlayerAlive(client) && GetClientTeam(client) == BLU && IsValidEntity(weapon))
@@ -577,7 +615,7 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 
 public Action fwdOnTakeDamage(const JBPlayer player, int &attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (!JBPH[Enabled].BoolValue || NotPH || !IsClientValid(player.index))
+	if (!JBPH[Enabled].BoolValue || NOTPH || !IsClientValid(player.index))
 		return Plugin_Continue;
 
 	//JailHunter player = JailHunter(attacker);
@@ -605,7 +643,7 @@ public Action fwdOnTakeDamage(const JBPlayer player, int &attacker, int& inflict
 
 public Action Timer_Round(Handle timer)	// Same structure as the core plugin's timer system
 {
-	if (NotPH || gamemode.iRoundState != StateRunning)
+	if (NOTPH)
 		return Plugin_Stop;
 
 	int time = iGameTime;
@@ -679,7 +717,7 @@ stock void SwitchView(const int client, bool observer, bool viewmodel)
 
 public void OnGameFrame()
 {
-	if (!JBPH[Enabled].BoolValue || gamemode.iRoundState != StateRunning || NotPH)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	JailHunter player;
@@ -775,7 +813,7 @@ stock void AddVelocity(const int client, const float speed)
 
 public void fwdOnPreThink(const JBPlayer Player, int buttons)
 {
-	if (!JBPH[Enabled].BoolValue || NotPH)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	int client = Player.index;
@@ -847,7 +885,7 @@ int NoHvy[5] = { 3, 4, 5, 6, 9 };
 int iHeavy;
 public void fwdOnRoundStartPlayer(const JBPlayer player)
 {
-	if (!JBPH[Enabled].BoolValue || NotPH)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	JailHunter base = JailHunter.Of(player);
@@ -919,7 +957,7 @@ public void fwdOnRoundStartPlayer(const JBPlayer player)
 }
 public void fwdOnRoundStart()
 {
-	if (!JBPH[Enabled].BoolValue || NotPH)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	gamemode.bDisableCriticals = true;
@@ -982,7 +1020,7 @@ public void fwdOnRoundStart()
 }
 public void fwdOnRoundEnd(Event event)
 {
-	if (!JBPH[Enabled].BoolValue || NotPH)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	iHeavy = 0;
@@ -991,7 +1029,7 @@ public void fwdOnRoundEnd(Event event)
 }
 public void fwdOnBlueTouchRed(const JBPlayer player, const JBPlayer victim)
 {
-	if (!JBPH[Enabled].BoolValue || NotPH || gamemode.iRoundState != StateRunning)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	JailHunter base = JailHunter.Of(victim);
@@ -1003,14 +1041,14 @@ public void fwdOnBlueTouchRed(const JBPlayer player, const JBPlayer victim)
 }
 public void fwdOnRedThink(const JBPlayer player)
 {
-	if (!JBPH[Enabled].BoolValue || NotPH || gamemode.iRoundState != StateRunning)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	SetEntPropFloat(player.index, Prop_Send, "m_flMaxspeed", 400.0);
 }
 public void fwdOnBlueThink(const JBPlayer player)
 {
-	if (!JBPH[Enabled].BoolValue || NotPH || gamemode.iRoundState != StateRunning)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	int client = player.index;
@@ -1035,7 +1073,7 @@ public void fwdOnBlueThink(const JBPlayer player)
 }
 public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Event event)
 {
-	if (!JBPH[Enabled].BoolValue || NotPH || gamemode.iRoundState != StateRunning)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	JailHunter player = JailHunter.Of(victim);
@@ -1064,7 +1102,7 @@ public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Even
 }
 public void fwdOnPlayerSpawned(const JBPlayer player)
 {
-	if (!JBPH[Enabled].BoolValue || NotPH || gamemode.iRoundState != StateRunning)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	if (GetClientTeam(player.index) == RED)
@@ -1072,7 +1110,7 @@ public void fwdOnPlayerSpawned(const JBPlayer player)
 }
 public void fwdOnTimeLeft(int &time)
 {
-	if (!JBPH[Enabled].BoolValue || NotPH)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	time = JBPH[RoundTime].IntValue + JBPH[FreezeTime].IntValue;
@@ -1085,7 +1123,7 @@ public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayLis
 }
 public void fwdOnHudShow(char strHud[128])
 {
-	if (!JBPH[Enabled].BoolValue || NotPH)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	strcopy(strHud, 128, "Prophunt");
@@ -1107,7 +1145,7 @@ public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 }
 public void fwdOnResetVariables(const JBPlayer Player)
 {
-	if (!JBPH[Enabled].BoolValue || NotPH)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return;
 
 	int client = Player.index;
@@ -1140,7 +1178,7 @@ public void fwdOnResetVariables(const JBPlayer Player)
 
 public Action fwdOnTimeEnd()
 {
-	if (!JBPH[Enabled].BoolValue || NotPH)
+	if (!JBPH[Enabled].BoolValue || NOTPH)
 		return Plugin_Continue;
 
 	ForceTeamWin(RED);
@@ -1148,7 +1186,7 @@ public Action fwdOnTimeEnd()
 }
 public void fwdOnPlayerPrepped(const JBPlayer Player, Event event)	// For safety, although OnPlayerSpawned should take care of autobalanced players
 {
-	if (!JBPH[Enabled].BoolValue || NotPH || gamemode.iRoundState != StateRunning && GetLivingPlayers(RED) != 1)
+	if (!JBPH[Enabled].BoolValue || NOTPH && GetLivingPlayers(RED) != 1)
 		return;
 
 	if (GetClientTeam(Player.index) != RED)

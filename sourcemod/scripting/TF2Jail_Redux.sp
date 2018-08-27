@@ -20,8 +20,8 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"0.16.0"
-#define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Keith (Aerial Vanguard) and Nergal/Assyrian"
+#define PLUGIN_VERSION		"1.0.0"
+#define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
 #include <sourcemod>
@@ -122,10 +122,6 @@ public Plugin myinfo =
 	url = "https://github.com/Scags/TF2-Jailbreak-Redux"
 };
 
-ArrayList
-	hPlugins
-;
-
 #include "TF2JailRedux/stocks.inc"
 #include "TF2JailRedux/jailhandler.sp"
 #include "TF2JailRedux/jailforwards.sp"
@@ -137,9 +133,8 @@ public void OnPluginStart()
 	gamemode = new JailGameMode();
 	gamemode.Init();
 	
-	InitializeForwards();	// Forwards
-
 	LoadTranslations("common.phrases");
+	LoadTranslations("tf2jail_redux.phrases");
 
 	bEnabled 								= CreateConVar("sm_tf2jr_enable", "1", "Status of the plugin: (1 = on, 0 = off)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[Version] 					= CreateConVar("tf2jr_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_SPONLY | FCVAR_DONTRECORD);
@@ -199,7 +194,7 @@ public void OnPluginStart()
 	HookEvent("teamplay_round_win", OnRoundEnded);
 	HookEvent("post_inventory_application", OnRegeneration);
 	HookEvent("player_changeclass", OnChangeClass, EventHookMode_Pre);
-	//HookEvent("player_team", OnChangeTeam, EventHookMode_Post);
+	// HookEvent("player_disconnect", OnDisconnect, EventHookMode_Pre);
 		/* Kinda used in core but not really */
 	HookEvent("rocket_jump", OnHookedEvent);
 	HookEvent("rocket_jump_landed", OnHookedEvent);
@@ -329,7 +324,6 @@ public void OnPluginStart()
 		hTextNodes[i] = CreateHudSynchronizer();
 
 	hJailFields[0] = new StringMap();
-	hPlugins = new ArrayList();
 	arrLRS = new ArrayList(1, LRMAX+1);	// Registering plugins pushes indexes to arrLRS, we also start at 0 so +1
 }
 
@@ -629,11 +623,6 @@ public Action Timer_Announce(Handle timer)
 		CPrintToChatAll("{crimson}[TF2Jail Redux]{burlywood} V%s by {default}Scag/Ragenewb{burlywood}.", PLUGIN_VERSION);
 }
 
-public void OnClientDisconnect(int client)
-{
-	ManageClientDisconnect(client);	// Handler
-}
-
 public void ConvarsSet(const bool Status)
 {
 	if (Status)
@@ -684,7 +673,7 @@ public void OnEntTouch(const char[] output, int touchee, int toucher, float dela
 	if (player.bIsFreeday)
 	{
 		player.RemoveFreeday();
-		PrintCenterTextAll("%N has taken ammo and lost their freeday!", toucher);
+		PrintCenterTextAll("%t", "Taken Ammo", toucher);
 	}
 }
 
@@ -702,7 +691,7 @@ public Action OnEntTakeDamage(int victim, int &attacker, int &inflictor, float &
 	if (player.bIsFreeday)
 	{
 		player.RemoveFreeday();
-		PrintCenterTextAll("%N has hit a vent and lost their freeday!", attacker);
+		PrintCenterTextAll("%t", "Hit Vent", attacker);
 	}
 	return Plugin_Continue;
 }
@@ -759,7 +748,7 @@ public Action EurekaTele(int client, const char[] command, int args)
 
 	if (player.bUnableToTeleport)
 	{
-		CPrintToChat(client, TAG ... "You can't teleport yet!");
+		CPrintToChat(client, TAG ... "%t", "Can't Teleport");
 		return Plugin_Handled;
 	}
 
@@ -951,7 +940,7 @@ public void WelcomeMessage(const int userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (IsClientValid(client))
-		CPrintToChat(client, TAG ... "Welcome to TF2 Jailbreak Redux. Type \"!jhelp\" for help.");
+		CPrintToChat(client, TAG ... "%t", "Welcome Message");
 }
 
 public void KillThatBitch(const int client)
@@ -1016,7 +1005,7 @@ public void DisableWarden(const int roundcount)
 	 || gamemode.bIsWardenLocked)
 		return;
 
-	CPrintToChatAll(TAG ... "Warden has been locked due to lack of warden.");
+	CPrintToChatAll(TAG ... "%t", "Warden Locked");
 	gamemode.DoorHandler(OPEN);
 	gamemode.bIsWardenLocked = true;
 }
@@ -1095,7 +1084,7 @@ public void CreateMarker(const int client)
 
 	if (!TR_DidHit(trace))
 	{
-		CPrintToChat(client, TAG ... "Unable to create a marker.");
+		CPrintToChat(client, TAG ... "%t", "No Marker");
 		delete trace;
 		return;
 	}
@@ -1222,7 +1211,7 @@ public void Open_Doors(const int roundcount)
 		return;
 
 	gamemode.DoorHandler(OPEN);
-	CPrintToChatAll(TAG ... "The cell doors have opened after %i seconds of remaining closed.", cvarTF2Jail[DoorOpenTimer].IntValue);
+	CPrintToChatAll(TAG ... "%t", "Door Open Timer", cvarTF2Jail[DoorOpenTimer].IntValue);
 	gamemode.bCellsOpened = true;
 }
 
@@ -1232,7 +1221,7 @@ public void EnableFFTimer(const int roundcount)
 		return;
 
 	hEngineConVars[0].SetBool(true);
-	CPrintToChatAll(TAG ... "Friendly-Fire has been enabled!");
+	CPrintToChatAll(TAG ... "%t", "FF On");
 }
 
 public void FreeKillSystem(const JailFighter attacker, const int killcount)
@@ -1261,7 +1250,7 @@ public void FreeKillSystem(const JailFighter attacker, const int killcount)
 			if (IsClientInGame(i))
 				if (JailFighter(i).bIsAdmin)
 					if (messagetype)
-						CPrintToChat(i, "{crimson}**********\n%L\nIP:%s\n**********");
+						CPrintToChat(i, "{crimson}**********\n%L\nIP:%s\n**********", attacker.index, strIP);
 					else PrintToConsole(i, "**********\n%L\nIP:%s\n**********", attacker.index, strIP);
 		attacker.iKillCount = 0;
 	}
@@ -1277,7 +1266,7 @@ public void EnableWarden(const int roundcount)
 		return;
 
 	gamemode.bIsWardenLocked = false;
-	CPrintToChatAll(TAG ... "Warden has been enabled.");
+	CPrintToChatAll(TAG ... "%t", "Warden Enabled");
 }
 
 public Action OnEntSpawn(int ent)
@@ -1319,24 +1308,6 @@ public void MuteClient(const JailFighter player, const int type)
 	}
 }
 
-void AddClientsToMenu(Menu &menu, bool alive = false, int team = RED)
-{
-	char strName[32], strID[8];
-	for (int i = MaxClients; i; --i)
-	{
-		if (!IsClientInGame(i))
-			continue;
-		if (alive && !IsPlayerAlive(i))
-			continue;
-		if (team && GetClientTeam(i) != team)
-			continue;
-
-		IntToString(GetClientUserId(i), strID, sizeof(strID));
-		GetClientName(i, strName, sizeof(strName));
-		menu.AddItem(strID, strName);
-	}
-}
-
 public void CVWarn(const int client, const int val)
 {
 	Menu menu = new Menu(CVWarnMenu);
@@ -1370,7 +1341,9 @@ public int CVWarnMenu(Menu menu, MenuAction action, int client, int select)
 			if (val <= 1)	// If not no
 			{
 				hEngineConVars[val].SetBool(true);
-				CPrintToChatAll(TAG ... "Warden has enabled %s!", val ? "Collisions" : "Friendly-Fire");
+				if (val)
+					CPrintToChatAll(TAG ... "%t", "Collisions On Warden", client);
+				else CPrintToChatAll(TAG ... "%t", "FF On Warden", client);
 			}
 		}
 		case MenuAction_End:delete menu;
@@ -1378,72 +1351,18 @@ public int CVWarnMenu(Menu menu, MenuAction action, int client, int select)
 	player.WardenMenu();
 }
 
-// Props to Nergal!!!
-stock Handle FindPluginByName(const char name[64]) // Searches in linear time or O(n) but it only searches when TF2Jail's plugin's loaded
-{
-	char dictVal[64];
-	Handle thisPlugin;
-	StringMap pluginMap;
-	int arraylen = hPlugins.Length;
-	for (int i = 0; i < arraylen; ++i) 
-	{
-		pluginMap = hPlugins.Get(i);
-		if (pluginMap.GetString("PluginName", dictVal, 64))
-		{
-			if (!strcmp(name, dictVal, false)) 
-			{
-				pluginMap.GetValue("PluginHandle", thisPlugin);
-				return thisPlugin;
-			}
-		}
-	}
-	return null;
-}
-
-stock Handle GetPluginByIndex(const int index)
-{
-	Handle thisPlugin;
-	StringMap pluginMap = hPlugins.Get(index);
-	if (pluginMap.GetValue("PluginHandle", thisPlugin))
-		return thisPlugin;
-	return null;
-}
-
-public int RegisterPlugin(const Handle pluginhndl, const char modulename[64])
-{
-	if (!ValidateName(modulename)) 
-	{
-		LogError("TF2Jail :: Register Plugin  **** Invalid Name For Plugin Registration ****");
-		return -1;
-	}
-	else if (FindPluginByName(modulename) != null) 
-	{
-		LogError("TF2Jail :: Register Plugin  **** Plugin Already Registered ****");
-		return -1;
-	}
-
-	// Create dictionary to hold necessary data about plugin
-	StringMap PluginMap = new StringMap();
-	PluginMap.SetValue("PluginHandle", pluginhndl);
-	PluginMap.SetString("PluginName", modulename);
-
-	// Push to global vector
-	hPlugins.Push(PluginMap);
-	// Push to core last request handle
-	arrLRS.Push(0);
-
-	return hPlugins.Length - 1; // Return the index of registered plugin!
-}
-
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 		/* Functional */
 	CreateNative("TF2JailRedux_RegisterPlugin", Native_RegisterPlugin);
+	CreateNative("TF2JailRedux_UnRegisterPlugin", Native_UnRegisterPlugin);
+	CreateNative("TF2JailRedux_IsPluginRegistered", Native_IsPluginRegistered);
+		/* Forwards */
 	CreateNative("JB_Hook", Native_Hook);
 	CreateNative("JB_HookEx", Native_HookEx);
 	CreateNative("JB_Unhook", Native_Unhook);
 	CreateNative("JB_UnhookEx", Native_UnhookEx);
-		/* Player Methodmap*/
+		/* Player Methodmap */
 	CreateNative("JBPlayer.JBPlayer", Native_JBInstance);
 	CreateNative("JBPlayer.OfUserId", Native_JBInstance_Userid);
 	CreateNative("JBPlayer.userid.get", Native_JBPlayer_Userid);
@@ -1488,6 +1407,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 		/* Gamemode Methodmap */
 	CreateNative("JBGameMode.JBGameMode", Native_JBGameMode_Instance);
 
+	InitializeForwards();
+
 	RegPluginLibrary("TF2Jail_Redux");
 
 	return APLRes_Success;
@@ -1496,8 +1417,64 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public int Native_RegisterPlugin(Handle plugin, int numParams)
 {
 	char ModuleName[64]; GetNativeString(1, ModuleName, sizeof(ModuleName));
-	int plugin_index = RegisterPlugin(plugin, ModuleName); // ALL PROPS TO COOKIES.NET AKA COOKIES.IO
-	return plugin_index;
+	int idx;
+	StringMap holdermap = gamemode.hPlugins;
+	// Shouldn't ever happen if you're UnRegistering
+	if (holdermap.GetValue(ModuleName, idx)) 
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::RegisterPlugin  **** Plugin '%s' Already Registered ****", ModuleName);
+		return idx;
+	}
+
+	// Handle last request count
+	arrLRS.Push(0);
+
+	// Attach sub-plugin it's id
+	idx = LRMAX+1;
+	holdermap.SetValue(ModuleName, idx);
+
+	return idx; // Return the LR index of registered plugin!
+}
+public int Native_UnRegisterPlugin(Handle plugin, int numParams)
+{
+	char ModuleName[64]; GetNativeString(1, ModuleName, sizeof(ModuleName));
+	StringMap holdermap = gamemode.hPlugins;
+	int idx;
+	// Shouldn't ever happen unless you fat finger the name
+	if (!holdermap.GetValue(ModuleName, idx))
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::UnRegisterPlugin  **** Plugin '%s' Not Registered ****", ModuleName);
+		return false;
+	}
+	// Get rid of it
+	holdermap.Remove(ModuleName);
+	// This adjusts LRMAX, but indices may have skips in them
+	// Have to loop through all of the registered plugins, :c
+
+	// Capture keys
+	StringMapSnapshot snap = holdermap.Snapshot();
+	int len = snap.Length;
+	int idx2;
+
+	for (int i = 0; i < len; i++)
+	{
+		snap.GetKey(i, ModuleName, sizeof(ModuleName));
+		holdermap.GetValue(ModuleName, idx2);
+		// Should never be ==
+		if (idx < idx2)
+			holdermap.SetValue(ModuleName, idx2-1);
+	}
+
+	delete snap;
+	return true;
+}
+public int Native_IsPluginRegistered(Handle plugin, int numParams)
+{
+	char ModuleName[64]; GetNativeString(1, ModuleName, sizeof(ModuleName));
+	int idx;
+	if (gamemode.hPlugins.GetValue(ModuleName, idx))
+		return idx;
+	return 0;
 }
 public int Native_Hook(Handle plugin, int numParams)
 {

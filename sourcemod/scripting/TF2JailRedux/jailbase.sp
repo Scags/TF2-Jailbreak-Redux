@@ -83,12 +83,7 @@ methodmap JailFighter
 	{
 		public get()
 		{
-//			Handle prof = CreateProfiler();
-//			StartProfiling(prof);
 			bool i; hJailFields[this.index].GetValue("bIsWarden", i);
-//			StopProfiling(prof);
-//			PrintToServer("%0.10f", GetProfilerTime(prof));
-//			delete prof;
 			return i;
 		}
 		public set( const bool i )
@@ -568,9 +563,9 @@ methodmap JailFighter
 		
 		char strWarden[64];
 		int client = this.index;
-		Format(strWarden, sizeof(strWarden), "%N is the current Warden.", client);
+		Format(strWarden, sizeof(strWarden), "%t", "New Warden Center", client);
 		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
-		CPrintToChatAll("{crimson}[TF2Jail]{default} %N{burlywood} is the new Warden", client);
+		CPrintToChatAll("{crimson}[TF2Jail]{default} %t", "New Warden", client);
 
 		float annot = cvarTF2Jail[WardenAnnotation].FloatValue;
 		if (annot != 0.0)

@@ -1631,10 +1631,12 @@ methodmap JBGameMode < StringMap
 
 
 /**
- *	Registers a plugin to be able to use TF2Jail's forwards
- *	@note 					The purpose of this native is to register last-request subplugins, you don't need to register plugins to use forwards, 
+ *	Registers a sub-plugin to be added to the last request handle.
+ *	@note 					The purpose of this native is to register last-request subplugins, 
+ * 							you don't need to register plugins to use forwards, 
  *							simply hook what forward you need.
- *							If you add a last request and want to test it before you allow all players to use it, do NOT register the sub-plugin, 
+ *							If you add a last request and want to test it before you allow all 
+ *							players to use it, do NOT register the sub-plugin, 
  *							and use sm_setpreset to activate the lr type for next round.
  *	
  *	@param plugin_name		Module name you want your calling plugin to be identified under.
@@ -1642,6 +1644,36 @@ methodmap JBGameMode < StringMap
  *	@return					Integer of the plugin array index.
  */
 native int TF2JailRedux_RegisterPlugin(const char plugin_name[64]);
+
+/**
+ *	Un-registers a plugin from the last request handle.
+ *	@note 					This is optional, however doing this will prevent breakage when unloading
+ *							or reloading sub-plugins mid-game.
+ *							Obviously, you must use the name plugin_name as you did when you registered
+ *							the plugin originally.
+ *							This is best suited to be used OnPluginEnd() but it's return can be used to
+ *							your advantage (see @return).
+ *
+ *	@param plugin_name 		Module name you originally registered with.	You can also un-register 
+ * 							plugins	other than the calling one plugin, but this isn't advised unless 
+ * 							you	know what you're doing.
+ *
+ *	@return 				Returns true if the plugin is unregistered. Just because a plugin is unregistered
+ *							does not mean that it is unloaded. Therefore you can use a global bool (or native
+ *							TF2JailRedux_IsPluginRegistered) to determine if you should continue with your 
+ *							forward-hooked code. See the VSH or PH sub-plugin for usage.
+*/
+native bool TF2JailRedux_UnRegisterPlugin(const char plugin_name[64]);
+
+/**
+ *	Detects if this plugin is registered with the last request handle.
+ *
+ *	@param plugin_name 		Module name you originally registered with. If and when overloads become
+ *							a thing in SP, you would be able to pass the plugin index as well.
+ *
+ *	@return 				LR index of this plugin if it is registered. 0 otherwise.
+*/
+native int TF2JailRedux_IsPluginRegistered(const char plugin_name[64]);
 
 
 enum	// JB Hook Types

@@ -975,3 +975,21 @@ stock bool IsInRange(const int client, const int target, const float dist)
 	}
 	return false;
 }
+
+stock void AddClientsToMenu(Menu &menu, bool alive = false, int team = 2)
+{
+	char strName[32], strID[8];
+	for (int i = MaxClients; i; --i)
+	{
+		if (!IsClientInGame(i))
+			continue;
+		if (alive && !IsPlayerAlive(i))
+			continue;
+		if (team && GetClientTeam(i) != team)
+			continue;
+
+		IntToString(GetClientUserId(i), strID, sizeof(strID));
+		GetClientName(i, strName, sizeof(strName));
+		menu.AddItem(strID, strName);
+	}
+}

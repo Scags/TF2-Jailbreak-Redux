@@ -447,9 +447,6 @@ methodmap JailGameMode < StringMap
 				return view_as< JailFighter >(0);
 
 			JailFighter i; this.GetValue("iWarden", i);
-			if (!i)
-				return view_as< JailFighter >(0);
-
 			return i;
 		}
 		public set( const JailFighter i )
@@ -457,6 +454,20 @@ methodmap JailGameMode < StringMap
 			this.SetValue("iWarden", i);
 		}
 	}
+
+	/**
+	 *	Purpose: Store the plugin names from registered sub-plugins.
+	 *	Add a setter if you need.
+	*/
+	property StringMap hPlugins
+	{
+		public get()
+		{
+			StringMap i; this.GetValue("hPlugins", i);
+			return i;
+		}
+	}
+
 	/**
 	 *	Initialize all JailGameMode Properties to a default.
 	 *
@@ -503,6 +514,7 @@ methodmap JailGameMode < StringMap
 #endif
 		this.bMarkerExists = false;
 		this.flMusicTime = 0.0;
+		this.SetValue("hPlugins", new StringMap());
 	}
 	/**
 	 *	Find and Initialize a random player as the warden.
@@ -538,7 +550,7 @@ methodmap JailGameMode < StringMap
 					if (!overridefwds)
 						if (Call_OnDoorsOpen() != Plugin_Continue) 
 							return;
-					name = "opened";
+					FormatEx(name, sizeof(name), "%t", "Opened");
 					this.bCellsOpened = true;
 					if (!this.bFirstDoorOpening)
 						this.bFirstDoorOpening = true;
@@ -548,7 +560,7 @@ methodmap JailGameMode < StringMap
 					if (!overridefwds)
 						if (Call_OnDoorsClose() != Plugin_Continue) 
 							return;
-					name = "closed";
+					FormatEx(name, sizeof(name), "%t", "Closed");
 					this.bCellsOpened = false;
 				}
 				case LOCK:
@@ -556,21 +568,21 @@ methodmap JailGameMode < StringMap
 					if (!overridefwds)
 						if (Call_OnDoorsLock() != Plugin_Continue) 
 							return;
-					name = "locked";
+					FormatEx(name, sizeof(name), "%t", "Locked");
 				}
 				case UNLOCK:
 				{
 					if (!overridefwds)
 						if (Call_OnDoorsUnlock() != Plugin_Continue) 
 							return;
-					name = "unlocked";
+					FormatEx(name, sizeof(name), "%t", "Unlocked");
 				}
 			}
 			int i, ent = -1;
 			if (announce)
 				if (fromwarden)
-					CPrintToChatAll(TAG ... "Warden {default}%N{burlywood} has %s cells.", this.iWarden.index, name);
-				else CPrintToChatAll(ADMTAG ... "Admin has %s cells.", name);
+					CPrintToChatAll(TAG ... "%t", "Warden Work Cells", this.iWarden.index, name);
+				else CPrintToChatAll(ADMTAG ... "%t", "Admin Work Cells", name);
 
 			for (i = 0; i < sizeof(sDoorsList); i++)
 			{
@@ -611,7 +623,10 @@ methodmap JailGameMode < StringMap
 		if (prevent)
 			player.bLockedFromWarden = true;
 		if (announce)
-			CPrintToChatAll("{orange}[TF2Jail]{burlywood} Warden has been fired!");
+		{
+			CPrintToChatAll(TAG ... "%t", "Warden Fired");
+			PrintCenterTextAll("%t", "Warden Fired");
+		}
 	}
 	/**
 	 *	Open all of the doors on a map

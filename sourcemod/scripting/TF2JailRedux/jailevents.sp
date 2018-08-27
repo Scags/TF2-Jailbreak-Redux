@@ -29,7 +29,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 			{
 				player.ForceTeamChange(RED);
 				EmitSoundToClient(client, NO);
-				CPrintToChat(client, TAG ... "You are muted, therefore you cannot join Blue Team.");
+				CPrintToChat(client, TAG ... "%t", "Muted Can't Join");
 			}
 		}
 	}
@@ -101,7 +101,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 
 		if (gamemode.iRoundState == StateRunning)
 			if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue || !gamemode.bSilentWardenKills)
-				PrintCenterTextAll("Warden has been killed!");
+				PrintCenterTextAll("%t", "Warden Killed");
 	}
 
 	if (victim.iCustom)
@@ -230,7 +230,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 							AcceptEntityInput(flamemanager, "Kill");
 					}
 					player.ForceTeamChange(RED);
-					CPrintToChat(player.index, TAG ... "You have been autobalanced.");
+					CPrintToChat(player.index, TAG ... "%t", "Autobalanced");
 
 					lBlue--;	// Avoid loopception
 					lRed++;
@@ -242,11 +242,11 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	if (gamemode.b1stRoundFreeday)
 	{
 		gamemode.DoorHandler(OPEN);
-		PrintCenterTextAll("1st round freeday");
 
 		char s1stDay[32];
-		strcopy(s1stDay, sizeof(s1stDay), "First Day Freeday");
+		FormatEx(s1stDay, sizeof(s1stDay), "%t", "First Day Freeday");
 		SetTextNode(hTextNodes[0], s1stDay, EnumTNPS[0][fCoord_X], EnumTNPS[0][fCoord_Y], EnumTNPS[0][fHoldTime], EnumTNPS[0][iRed], EnumTNPS[0][iGreen], EnumTNPS[0][iBlue], EnumTNPS[0][iAlpha], EnumTNPS[0][iEffect], EnumTNPS[0][fFXTime], EnumTNPS[0][fFadeIn], EnumTNPS[0][fFadeOut]);
+		PrintCenterTextAll(s1stDay);
 		
 		gamemode.iTimeLeft = cvarTF2Jail[RoundTime_Freeday].IntValue;
 		gamemode.iLRType = -1;
@@ -388,6 +388,22 @@ public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 
 	return Plugin_Continue;
 }
+
+/*public Action OnDisconnect(Event event, const char[] name, bool dontBroadcast)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Continue;
+
+	JailFighter player = JailFighter.OfUserId( event.GetInt("userid") );
+	if (player.bIsWarden)
+	{
+		player.WardenUnset();
+		PrintCenterTextAll("Warden has disconnected!");
+		gamemode.bWardenExists = false;
+	}
+
+	return Plugin_Continue;
+}*/
 
 public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 {

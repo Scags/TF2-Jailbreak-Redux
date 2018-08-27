@@ -10,16 +10,23 @@
  *	@param client			Client being Guardbanned.
  *	@param admin			Admin doing the Guardban.
  *	@param time 			Time in minutes of the duration of the Guardban.
+ *	@param reason 			Reason to put into the log database.
+ *
+ *	@return 				Plugin_Handled or Plugin_Stop to stop the Guardban, 
+ *							anything else otherwise.
 */
-forward void JB_OnBan(int client, int admin, int time);
+forward Action JB_OnBan(int client, int admin, int &time, char reason[256]);
 
 /**
  *	Called upon an Unguardban occurrence.
  *
  *	@param client 			Client being Unguardbanned.
  *	@param admin 			Admin doing the Unguardban.
+ *
+ *	@return 				Anything but Plugin_Continue to stop the Unguardban,
+ *							anything else otherwise.
 */
-forward void JB_OnUnBan(int client, int admin);
+forward Action JB_OnUnBan(int client, int admin);
 
 /**
  *	Called upon an offline Guardban occurrence.
@@ -27,16 +34,23 @@ forward void JB_OnUnBan(int client, int admin);
  *	@param id 				Steam ID being Guardbanned.
  *	@param admin 			Admin doing the Guardban.
  *	@param time 			Time in minutes of the duration of the Guardban.
+ *	@param reason 			Reason to put into the log database.
+ *
+ *	@return 				Plugin_Handled or Plugin_Stop to stop the Guardban, 
+ *							anything else otherwise.
 */
-forward void JB_OnOfflineBan(const char[] id, int admin, int time);
+forward Action JB_OnOfflineBan(const char[] id, int admin, int &time, char reason[256]);
 
 /**
  *	Called upon an offline Unguardban occurrence.
  *
  *	@param id 				Steam ID being Unguardbanned.
  *	@param admin 			Admin doing the Unguardban.
+ *
+ *	@return 				Anything but Plugin_Continue to stop the Unguardban,
+ *							anything else otherwise.
 */
-forward void JB_OnOfflineUnBan(const char[] id, int admin);
+forward Action JB_OnOfflineUnBan(const char[] id, int admin);
 
 
 /**
@@ -45,10 +59,11 @@ forward void JB_OnOfflineUnBan(const char[] id, int admin);
  *	@param client 			Client to be Guardbanned.
  *	@param admin 			Admin doing the Guardban.
  *	@param time 			Time in minutes of the duration of the Guardban.
+ *	@param reason 			Reason to put into the log database.
  *
  *	@noreturn
 */
-native void JB_GuardBan(int client, int admin, int time);
+native void JB_GuardBan(int client, int admin, int time, char reason[256]);
 
 /**
  *	Unguardban a client.
@@ -66,10 +81,11 @@ native void JB_UnGuardBan(int client, int admin);
  *	@param id 				Steam ID2 to Guardban.
  *	@param admin 			Admin doing the Guardban.
  *	@param time 			Time in minutes of the duration of the Guardban.
+ *	@param reason 			Reason to put into the log database.
  *
  *	@noreturn
 */
-native void JB_OfflineGuardBan(const char[] id, int admin, int time);
+native void JB_OfflineGuardBan(const char[] id, int admin, int time, char reason[256]);
 
 /**
  *	Unguardban a Steam ID.
@@ -90,6 +106,37 @@ native void JB_OfflineGuardBan(const char[] id, int admin, int time);
 */
 native void JB_RageBanMenu(int client);
 
+/**
+ *	Give a player a menu of all guardbannable clients.
+ *	@note 					Operation will fail of there are no guardbannable clients.
+ *
+ *	@param client 			Client to give the menu to.
+ *							Client will not appear in menu.
+ *
+ *	@noreturn
+*/
+native void JB_DisplayBanMenu(int client);
+
+/**
+ *	Give a player a menu of all unguardbannable clients.
+ *	@note 					Operation will fail of there are no unguardbannable clients.
+ *
+ *	@param client 			Client to give the menu to.
+ *							Client will not appear in menu.
+ *
+ *	@noreturn
+*/
+native void JB_DisplayUnbanMenu(int client);
+
+/**
+ *	Detect if a player is guardbanned.
+ *
+ *	@param client 			Client index.
+ *
+ *	@return 				True if client is guardbanned, false otherwise.
+*/
+native bool JB_IsClientGuardbanned(int client);
+
 
 public SharedPlugin __pl_tf2jailredux_teambans = {
 	name = "TF2JailRedux_TeamBans",
@@ -102,7 +149,7 @@ public SharedPlugin __pl_tf2jailredux_teambans = {
 };
 
 #if !defined REQUIRE_PLUGIN
-public __pl_tf2jailredux_teambans_SetNTVOptional()
+public void __pl_tf2jailredux_teambans_SetNTVOptional()
 {
 	MarkNativeAsOptional("JB_GuardBan");
 	MarkNativeAsOptional("JB_UnGuardBan");
@@ -110,6 +157,8 @@ public __pl_tf2jailredux_teambans_SetNTVOptional()
 	MarkNativeAsOptional("JB_OfflineUnGuardBan");
 
 	MarkNativeAsOptional("JB_RageBanMenu");
+	MarkNativeAsOptional("JB_DisplayBanMenu");
+	MarkNativeAsOptional("JB_DisplayUnbanMenu");
 }
-
+#endif
 

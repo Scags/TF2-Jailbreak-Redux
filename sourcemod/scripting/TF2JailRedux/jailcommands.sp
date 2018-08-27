@@ -4,11 +4,16 @@ public Action Command_Help(int client, int args)
 		return Plugin_Handled;
 	
 	Panel panel = new Panel();
-	panel.SetTitle("Welcome to TF2Jail Redux!");
-	panel.DrawItem("Who's the current warden?");
-	panel.DrawItem("What are the last requests?");
+	char buffer[32];
+	FormatEx(buffer, sizeof(buffer), "%t", "Help Panel Welcome");
+	panel.SetTitle(buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "Help Panel Who's Warden");
+	panel.DrawItem(buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "Help Panel What are LR's");
+	panel.DrawItem(buffer);
 #if defined _clientprefs_included
-	panel.DrawItem("Turn off the background music?");
+	FormatEx(buffer, sizeof(buffer), "%t", "Help Panel Turn Off Music");
+	panel.DrawItem(buffer);
 #endif
 	panel.Send(client, Panel_Help, 9001);
 	delete panel;
@@ -27,8 +32,8 @@ public int Panel_Help(Menu menu, MenuAction action, int client, int select)
 				case 0:
 				{
 					if (gamemode.bWardenExists)
-						CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.iWarden.index);
-					else CPrintToChat(client, TAG ... "There is no current warden.");
+						CPrintToChat(client, "{crimson}[TF2Jail]{default} %t", "Current Warden", gamemode.iWarden.index);
+					else CPrintToChat(client, TAG ... "%t", "No Current Warden");
 				}
 				case 1:ListLastRequestPanel(client);
 #if defined _clientprefs_included
@@ -46,54 +51,54 @@ public Action Command_BecomeWarden(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	JailFighter player = JailFighter(client);
 	if (player.bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are already warden.");
+		CPrintToChat(client, TAG ... "%t", "Already Warden");
 		return Plugin_Handled;
 	}
 
 	if (gamemode.bWardenExists)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.iWarden.index);
+		CPrintToChat(client, "{crimson}[TF2Jail]{default} %t", "CurrentWarden", gamemode.iWarden.index);
 		return Plugin_Handled;
 	}
 
 	if (!IsPlayerAlive(client))
 	{
-		CPrintToChat(client, TAG ... "You must be alive.");
+		CPrintToChat(client, TAG ... "%t", "Need Alive");
 		return Plugin_Handled;
 	}
 
 	if (GetClientTeam(client) != BLU)
 	{
-		CPrintToChat(client, TAG ... "You are not on Blue Team.");
+		CPrintToChat(client, TAG ... "%t", "Need Blue Team");
 		return Plugin_Handled;
 	}
 
 	if (gamemode.bAdminLockWarden)
 	{
-		CPrintToChat(client, TAG ... "Admin has locked warden.");
+		CPrintToChat(client, TAG ... "%t", "Admin Lock Warden");
 		return Plugin_Handled;
 	}
 
 	if (gamemode.b1stRoundFreeday || gamemode.bIsWardenLocked)
 	{
-		CPrintToChat(client, TAG ... "Warden is locked.");
+		CPrintToChat(client, TAG ... "%t", "Warden Locked");
 		return Plugin_Handled;
 	}
 	
 	if (player.bLockedFromWarden)
 	{
-		CPrintToChat(client, TAG ... "You may not become warden until next round.");
+		CPrintToChat(client, TAG ... "%t", "Locked From Warden");
 		return Plugin_Handled;
 	}
 	
@@ -109,24 +114,24 @@ public Action Command_ExitWarden(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	
 	JailFighter player = JailFighter(client);
 	if (!player.bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 
-	CPrintToChatAll(TAG ... "Warden {default}%N{burlywood} has retired!", client);
-	PrintCenterTextAll("Warden has retired!");
+	CPrintToChatAll(TAG ... "%t", "Warden Retired Chat", client);
+	PrintCenterTextAll("%t", "Warden Retired Center");
 
 	player.bLockedFromWarden = true;
 	player.WardenUnset();
@@ -141,18 +146,18 @@ public Action Command_WardenMenu(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	JailFighter player = JailFighter(client);
 	if (!player.bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 
@@ -167,24 +172,24 @@ public Action Command_OpenCells(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 
 	if (!gamemode.bIsMapCompatible)
 	{
-		CPrintToChat(client, TAG ... "Map is incompatible.");
+		CPrintToChat(client, TAG ... "%t", "Map Incompatible");
 		return Plugin_Handled;
 	}
 
 	if (!JailFighter(client).bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 
@@ -200,24 +205,24 @@ public Action Command_CloseCells(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 
 	if (!gamemode.bIsMapCompatible)
 	{
-		CPrintToChat(client, TAG ... "Map is incompatible.");
+		CPrintToChat(client, TAG ... "%t", "Map Incompatible");
 		return Plugin_Handled;
 	}
 	
 	if (!JailFighter(client).bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 
@@ -233,18 +238,18 @@ public Action Command_EnableFriendlyFire(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 
 	if (!JailFighter(client).bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 
@@ -253,12 +258,12 @@ public Action Command_EnableFriendlyFire(int client, int args)
 		case true:
 		{
 			hEngineConVars[0].SetBool(false);
-			CPrintToChatAll(TAG ... "Warden {default}%N{burlywood} has disabled Friendly-Fire.", client);
+			CPrintToChatAll(TAG ... "%t", "FF Off Warden", client);
 		}
 		case false:
 		{
 			hEngineConVars[0].SetBool(true);
-			CPrintToChatAll(TAG ... "Warden {default}%N{burlywood} has enabled Friendly-Fire.", client);
+			CPrintToChatAll(TAG ... "%t", "FF On Warden", client);
 		}
 	}
 	return Plugin_Handled;
@@ -271,18 +276,18 @@ public Action Command_EnableCollisions(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 
 	if (!JailFighter(client).bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 
@@ -291,12 +296,12 @@ public Action Command_EnableCollisions(int client, int args)
 		case true:
 		{
 			hEngineConVars[1].SetBool(false);
-			CPrintToChatAll(TAG ... "Warden {default}%N{burlywood} has disabled collisions.", client);
+			CPrintToChatAll(TAG ... "%t", "Collisions Off Warden", client);
 		}
 		case false:
 		{
 			hEngineConVars[1].SetBool(true);
-			CPrintToChatAll(TAG ... "Warden {default}%N{burlywood} has enabled collisions.", client);
+			CPrintToChatAll(TAG ... "%t", "Collisions On Warden", client);
 		}
 	}
 	return Plugin_Handled;
@@ -309,32 +314,27 @@ public Action Command_GiveLastRequest(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
-		return Plugin_Handled;
-	}
-	if (args >= 2)
-	{
-		CReplyToCommand(client, TAG ... "Usage: sm_givelr or sm_givelr <playername>");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	if (gamemode.bAdminLockedLR)
 	{
-		CPrintToChat(client, TAG ... "Admin has locked LR.");
+		CPrintToChat(client, TAG ... "%t", "Admin Locked LR");
 		return Plugin_Handled;
 	}
 	if (!JailFighter(client).bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 	if (gamemode.bIsLRInUse)
 	{
-		CPrintToChat(client, TAG ... "Last Request has already been given.");
+		CPrintToChat(client, TAG ... "%t", "LR Given");
 		return Plugin_Handled;
 	}
 
@@ -344,7 +344,8 @@ public Action Command_GiveLastRequest(int client, int args)
 			return Plugin_Handled;
 
 		Menu menu = new Menu(MenuHandle_ForceLR);
-		menu.SetTitle("Choose a Player");
+		char buffer[16]; FormatEx(buffer, sizeof(buffer), "%t", "Choose Player");
+		menu.SetTitle(buffer);
 		AddClientsToMenu(menu, true);
 		menu.ExitButton = true;
 		menu.Display(client, -1);
@@ -356,17 +357,17 @@ public Action Command_GiveLastRequest(int client, int args)
 	int target = FindTarget(client, targetname);
 	if (!IsClientValid(target))
 	{
-		CPrintToChat(client, TAG ... "Invalid target.");
+		CPrintToChat(client, TAG ... "%t", "Player no longer available");
 		return Plugin_Handled;
 	}
 	if (!IsPlayerAlive(target))
 	{
-		CPrintToChat(client, TAG ... "Target is not alive.");
+		CPrintToChat(client, TAG ... "%", "Target must be alive");
 		return Plugin_Handled;
 	}
 	if (GetClientTeam(target) != RED)
 	{
-		CPrintToChat(client, TAG ... "Target is not on Red Team.");
+		CPrintToChat(client, TAG ... "%t", "Target Not On Red");
 		return Plugin_Handled;
 	}
 	JailFighter(target).ListLRS();
@@ -381,24 +382,24 @@ public Action Command_RemoveLastRequest(int client, int args)
 
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 
 	if (!JailFighter(client).bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 	if (!cvarTF2Jail[DenyLR].BoolValue)
 	{
-		CPrintToChat(client, TAG ... "Denying last requests has been disabled.");
+		CPrintToChat(client, TAG ... "%t", "Denying LR Disabled");
 		return Plugin_Handled;
 	}
 
 	if (gamemode.iLRPresetType < 0)
 	{
-		CPrintToChat(client, TAG ... "There is no last request set for next round.");
+		CPrintToChat(client, TAG ... "%t", "No LR Next Round");
 		return Plugin_Handled;
 	}
 
@@ -409,7 +410,7 @@ public Action Command_RemoveLastRequest(int client, int args)
 	arrLRS.Set( gamemode.iLRPresetType, arrLRS.Get(gamemode.iLRPresetType)-1 );
 	gamemode.bIsLRInUse = false;
 	gamemode.iLRPresetType = -1;
-	CPrintToChatAll(TAG ... "arden {default}%N{burlywood} has denied the Last Request!", client);
+	CPrintToChatAll(TAG ... "%t", "Warden Deny LR", client);
 
 	return Plugin_Handled;
 }
@@ -421,7 +422,7 @@ public Action Command_ListLastRequests(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 
@@ -435,7 +436,7 @@ public void ListLastRequestPanel(const int client)
 		return;
 
 	Menu panel = new Menu(ListLRsPanel);
-	panel.SetTitle("Last Request List");
+	panel.SetTitle("%t", "Last Request List");
 	AddLRToPanel(panel);
 	panel.ExitButton = true;
 	panel.Display(client, -1);
@@ -453,12 +454,12 @@ public Action Command_CurrentWarden(int client, int args)
 
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CReplyToCommand(client, TAG ... "Round must be active.");
+		CReplyToCommand(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	if (gamemode.bWardenExists)
-		CReplyToCommand(client, "{crimson}[TF2Jail]{default} %N{burlywood} is the current warden.", gamemode.iWarden.index);
-	else CReplyToCommand(client, TAG ... "There is no current warden.");
+		CReplyToCommand(client, "{crimson}[TF2Jail]{default} %t", "CurrentWarden", gamemode.iWarden.index);
+	else CReplyToCommand(client, TAG ... "%t", "No Current Warden");
 
 	return Plugin_Handled;
 }
@@ -491,12 +492,12 @@ public int MusicTogglePanel(Menu menu, MenuAction action, int client, int select
 		if (select == 1) 
 		{
 			player.bNoMusic = false;
-			CPrintToChat(client, TAG ... "You've turned {lightgreen}On{default} the TF2Jail Background Music.");
+			CPrintToChat(client, TAG ... "%t", "Music On");
 		}
 		else
 		{
 			player.bNoMusic = true;
-			CPrintToChat(client, TAG ... "You've turned {lightgreen}Off{default} the TF2Jail Background Music.\nWhen the music stops, it won't play again.");
+			CPrintToChat(client, TAG ... "%t", "Music Off");
 		}
 	}
 }
@@ -509,12 +510,12 @@ public Action AdminRemoveWarden(int client, int args)
 
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CReplyToCommand(client, TAG ... "Round must be active.");
+		CReplyToCommand(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	if (!gamemode.bWardenExists)
 	{
-		CReplyToCommand(client, TAG ... "There is no current warden.");
+		CReplyToCommand(client, TAG ... "%t", "No Current Warden");
 		return Plugin_Handled;
 	}
 	gamemode.FireWarden(false);
@@ -529,7 +530,7 @@ public Action AdminDenyLR(int client, int args)
 
 	if (gamemode.iLRPresetType == -1)
 	{
-		CReplyToCommand(client, TAG ... "There is no last request set for next round.");
+		CReplyToCommand(client, TAG ... "%t", "No LR Next Round");
 		return Plugin_Handled;
 	}
 
@@ -542,13 +543,13 @@ public Action AdminDenyLR(int client, int args)
 		player = JailFighter(i);
 		if (player.bIsQueuedFreeday)
 		{
-			CPrintToChat(i, ADMTAG ... "Admin has removed your queued freeday!");
+			CPrintToChat(i, ADMTAG ... "%t", "Admin Remove Queued Freeday");
 			player.bIsQueuedFreeday = false;
 		}
 
 		if (player.bIsFreeday)
 		{
-			CPrintToChat(i, ADMTAG ... "Admin has removed your freeday!");
+			CPrintToChat(i, ADMTAG ... "%t", "Admin Remove Freeday");
 			player.RemoveFreeday();
 		}
 	}
@@ -558,7 +559,7 @@ public Action AdminDenyLR(int client, int args)
 	gamemode.iLRPresetType = -1;
 	gamemode.bIsLRInUse = false;
 
-	CPrintToChatAll(ADMTAG ... "Admin has denied the current last request!");
+	CPrintToChatAll(ADMTAG ... "%t", "Admin Denied LR");
 
 	return Plugin_Handled;
 }
@@ -570,7 +571,7 @@ public Action AdminOpenCells(int client, int args)
 
 	if (!gamemode.bIsMapCompatible)
 	{
-		CReplyToCommand(client, TAG ... "Map is not compatible.");
+		CReplyToCommand(client, TAG ... "%t", "Map Incompatible");
 		return Plugin_Handled;
 	}
 
@@ -586,7 +587,7 @@ public Action AdminCloseCells(int client, int args)
 
 	if (!gamemode.bIsMapCompatible)
 	{
-		CReplyToCommand(client, TAG ... "Map is incompatible.");
+		CReplyToCommand(client, TAG ... "%t", "Map Incompatible");
 		return Plugin_Handled;
 	}
 
@@ -602,7 +603,7 @@ public Action AdminLockCells(int client, int args)
 
 	if (!gamemode.bIsMapCompatible)
 	{
-		CReplyToCommand(client, TAG ... "Map is incompatible.");
+		CReplyToCommand(client, TAG ... "%t", "Map Incompatible");
 		return Plugin_Handled;
 	}
 
@@ -618,7 +619,7 @@ public Action AdminUnlockCells(int client, int args)
 
 	if (!gamemode.bIsMapCompatible)
 	{
-		CReplyToCommand(client, TAG ... "Map is incompatible.");
+		CReplyToCommand(client, TAG ... "%t", "Map Incompatible");
 		return Plugin_Handled;
 	}
 
@@ -634,7 +635,7 @@ public Action AdminForceWarden(int client, int args)
 
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CReplyToCommand(client, TAG ... "Round must be active.");
+		CReplyToCommand(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 
@@ -646,19 +647,19 @@ public Action AdminForceWarden(int client, int args)
 		int target = FindTarget(client, arg, true);
 		if (!IsClientValid(target))
 		{
-			CReplyToCommand(client, TAG ... "Player is no longer available.");
+			CReplyToCommand(client, TAG ... "%t", "Player no longer available");
 			return Plugin_Handled;
 		}
 
 		if (!IsPlayerAlive(target))
 		{
-			CReplyToCommand(client, TAG ... "Target must be alive.");
+			CReplyToCommand(client, TAG ... "%", "Target must be alive");
 			return Plugin_Handled;
 		}
 
 		if (GetClientTeam(target) != BLU)
 		{
-			CReplyToCommand(client, TAG ... "Target is not on Blue Team.");
+			CReplyToCommand(client, TAG ... "%t", "Target Need Blue Team");
 			return Plugin_Handled;
 		}
 
@@ -668,7 +669,7 @@ public Action AdminForceWarden(int client, int args)
 		JailFighter targ = JailFighter(target);
 		targ.WardenSet();
 		targ.WardenMenu();
-		CPrintToChatAll(ADMTAG ... "Admin has forced {default}%N{burlywood} as warden.", target);
+		CPrintToChatAll(ADMTAG ... "%t", "Admin Force Warden", target);
 		
 		return Plugin_Handled;
 	}
@@ -677,7 +678,7 @@ public Action AdminForceWarden(int client, int args)
 		gamemode.iWarden.WardenUnset();
 
 	gamemode.FindRandomWarden();
-	CPrintToChatAll(ADMTAG ... "Admin has forced a random player as warden.");
+	CPrintToChatAll(ADMTAG ... "%t", "Admin Force Random Warden");
 	return Plugin_Handled;
 }
 
@@ -688,7 +689,7 @@ public Action AdminForceLR(int client, int args)
 
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CReplyToCommand(client, TAG ... "Round must be active.");
+		CReplyToCommand(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	
@@ -701,15 +702,15 @@ public Action AdminForceLR(int client, int args)
 
 		if (!IsClientValid(target))
 		{
-			CReplyToCommand(client, TAG ... "Player is no longer available.");
+			CReplyToCommand(client, TAG ... "%t", "Player no longer available");
 			return Plugin_Handled;
 		}
 		if (!IsPlayerAlive(client))
 		{
-			CReplyToCommand(client, TAG ... "Player is not alive.");
+			CReplyToCommand(client, TAG ... "%t", "Target must be alive");
 			return Plugin_Handled;
 		}
-		CPrintToChatAll(ADMTAG ... "Admin has forced {default}%N{burlywood} to receive a Last Request.", target);
+		CPrintToChatAll(ADMTAG ... "%t", "Admin Force LR", target);
 		JailFighter(target).ListLRS();
 
 		return Plugin_Handled;
@@ -717,16 +718,16 @@ public Action AdminForceLR(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (!IsPlayerAlive(client))
 	{
-		CReplyToCommand(client, TAG ... "You must be alive.");
+		CReplyToCommand(client, TAG ... "%t", "Need Alive");
 		return Plugin_Handled;
 	}
 
-	CPrintToChatAll(ADMTAG ... "Admin has forced a Last Request for themselves.");
+	CPrintToChatAll(ADMTAG ... "%t", "Admin Force LR Self");
 	JailFighter(client).ListLRS();
 
 	return Plugin_Handled;
@@ -765,7 +766,7 @@ public Action AdminResetPlugin(int client, int args)
 	gamemode.bIsMapCompatible = false;
 
 	ParseConfigs();
-	CPrintToChatAll("{orange}[TF2Jail]{fullred} Admin has reset plugin!");
+	CPrintToChatAll("{orange}[TF2Jail]{fullred} %t", "Admin Reset Plugin");
 
 	return Plugin_Handled;
 }
@@ -779,16 +780,16 @@ public Action AdminMapCompatibilityCheck(int client, int args)
 	{
 		int cell_door = FindEntity(sCellNames, "func_door");
 		if (IsValidEntity(cell_door))
-			CReplyToCommand(client, ADMTAG ... "Doors are functional.");
-		else CReplyToCommand(client, "{orange}[TF2Jail]{fullred} Doors are not functional.");
+			CReplyToCommand(client, ADMTAG ... "%t", "Doors Work");
+		else CReplyToCommand(client, "{orange}[TF2Jail]{fullred} %t", "Doors Don't Work");
 	}
 
 	if (sCellOpener[0] != '\0')
 	{
 		int open_cells = FindEntity(sCellOpener, "func_button");
 		if (IsValidEntity(open_cells))
-			CReplyToCommand(client, ADMTAG ... "Cell door functionality is active.");
-		else CReplyToCommand(client, "{orange}[TF2Jail]{fullred} Cell door functionality is inactive.");
+			CReplyToCommand(client, ADMTAG ... "%t", "Buttons Work");
+		else CReplyToCommand(client, "{orange}[TF2Jail]{fullred} %t", "Buttons Don't Work");
 	}
 	return Plugin_Handled;
 }
@@ -806,18 +807,18 @@ public Action AdminGiveFreeday(int client, int args)
 		int target = FindTarget(client, arg, true);
 		if (!IsClientValid(target))
 		{
-			CReplyToCommand(client, TAG ... "Player is no longer available.");
+			CReplyToCommand(client, TAG ... "%t", "Player no longer available");
 			return Plugin_Handled;
 		}
 		JailFighter targ = JailFighter(target);
 
 		if (targ.bIsFreeday)
 		{
-			CReplyToCommand(client, TAG ... "Target is currently a freeday.");
+			CReplyToCommand(client, TAG ... "%t", "Target Is Freeday");
 			return Plugin_Handled;
 		}
 		
-		CPrintToChatAll(ADMTAG ... "Admin has given {default}%N{burlywood} a freeday.", target);
+		CPrintToChatAll(ADMTAG ... "%t", "Admin Give Freeday", target);
 		targ.GiveFreeday();
 
 		return Plugin_Handled;
@@ -835,7 +836,7 @@ public void Admin_GiveFreedaysMenu(const int client)
 		return;
 
 	Menu menu = new Menu(ForceFreedayMenu);
-	menu.SetTitle("Select Player(s) for Freeday");
+	menu.SetTitle("%t", "Select For Freeday");
 
 	AddClientsToMenu(menu);
 	menu.ExitButton = true;
@@ -854,13 +855,13 @@ public int ForceFreedayMenu(Menu menu, MenuAction action, int client, int select
 
 			if (!IsClientValid(target))
 			{
-				CPrintToChat(client, TAG ... "Player is no longer available.");
+				CPrintToChat(client, TAG ... "%t", "Player no longer available");
 				Admin_GiveFreedaysMenu(client);
 				return;
 			}
 
 			JailFighter(target).GiveFreeday();
-			CPrintToChatAll(ADMTAG ... "Admin has forced {default}%N{burlywood} to receive a Freeday!", target);
+			CPrintToChatAll(ADMTAG ... "%t", "Admin Give Freeday", target);
 		}
 		case MenuAction_End:delete menu;
 	}
@@ -880,7 +881,7 @@ public Action AdminRemoveFreeday(int client, int args)
 		
 		if (!IsClientValid(target))
 		{
-			CReplyToCommand(client, TAG ... "Player is no longer available.");
+			CReplyToCommand(client, TAG ... "%t", "Player no longer available");
 			return Plugin_Handled;
 		}
 
@@ -891,7 +892,7 @@ public Action AdminRemoveFreeday(int client, int args)
 			return Plugin_Handled;
 		}
 
-		CPrintToChatAll(ADMTAG ... "Admin has removed freeday from {default}%N", target);
+		CPrintToChatAll(ADMTAG ... "%t", "Admin Remove Freeday", target);
 		targ.RemoveFreeday();
 
 		return Plugin_Handled;
@@ -910,7 +911,7 @@ public void RemoveFreedaysMenu(int client)
 		return;
 
 	Menu menu = new Menu(MenuHandle_RemoveFreedays);
-	menu.SetTitle("Choose a Player");
+	menu.SetTitle("%t", "Choose Player");
 
 	char strName[32], strID[8];
 	for (int i = MaxClients; i; --i)
@@ -941,13 +942,13 @@ public int MenuHandle_RemoveFreedays(Menu menu, MenuAction action, int client, i
 			
 			if (!IsClientInGame(targ.index))
 			{
-				CReplyToCommand(client, TAG ... "Client is no longer available.");
+				CReplyToCommand(client, TAG ... "%t", "Player no longer available");
 				return;
 			}
 
 			if (!targ.bIsFreeday)
 			{
-				CReplyToCommand(client, TAG ... "Client is not a freeday");
+				CReplyToCommand(client, TAG ... "%t", "Player Not Freeday");
 				RemoveFreedaysMenu(client);
 				return;
 			}
@@ -966,19 +967,19 @@ public Action AdminLockWarden(int client, int args)
 
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CReplyToCommand(client, TAG ... "Round must be active.");
+		CReplyToCommand(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	if (gamemode.bAdminLockWarden)
 	{
-		CReplyToCommand(client, TAG ... "Warden is already locked.");
+		CReplyToCommand(client, TAG ... "%t", "Warden Already Locked");
 		return Plugin_Handled;
 	}
 	if (gamemode.bWardenExists)
 		gamemode.iWarden.WardenUnset();
 
 	gamemode.bAdminLockWarden = true;
-	CPrintToChatAll(ADMTAG ... "Admin has locked warden!");
+	CPrintToChatAll(ADMTAG ... "%t", "Admin Lock Warden");
 
 	return Plugin_Handled;
 }
@@ -990,12 +991,12 @@ public Action AdminUnlockWarden(int client, int args)
 
 	if (!gamemode.bAdminLockWarden)
 	{
-		CReplyToCommand(client, TAG ... "Warden is not locked.");
+		CReplyToCommand(client, TAG ... "%t", "Warden Not Locked");
 		return Plugin_Handled;
 	}
 
 	gamemode.bAdminLockWarden = false;
-	CPrintToChatAll(ADMTAG ... "Admin has unlocked warden.");
+	CPrintToChatAll(ADMTAG ... "%t", "Admin Unlock Warden");
 
 	return Plugin_Handled;
 }
@@ -1008,7 +1009,7 @@ public int MenuHandle_ForceLR(Menu menu, MenuAction action, int client, int sele
 		{
 			if (!JailFighter(client).bIsWarden)
 			{
-				CPrintToChat(client, TAG ... "You are not warden.");
+				CPrintToChat(client, TAG ... "%t", "Not Warden");
 				return;
 			}
 
@@ -1018,22 +1019,22 @@ public int MenuHandle_ForceLR(Menu menu, MenuAction action, int client, int sele
 
 			if (!IsClientInGame(target))
 			{
-				CPrintToChat(client, TAG ... "Player is no longer available.");
+				CPrintToChat(client, TAG ... "%t", "Player no longer available");
 				return;
 			}
 			if (GetClientTeam(target) != RED)
 			{
-				CPrintToChat(client, TAG ... "Player is not on Red Team.");
+				CPrintToChat(client, TAG ... "%t,", "Target Not On Red");
 				return;
 			}
 			if (gamemode.bIsLRInUse)
 			{
-				CPrintToChat(client, TAG ... "Last Request has already been given.");
+				CPrintToChat(client, TAG ... "%t", "LR Given");
 				return;
 			}
 
 			JailFighter(target).ListLRS();
-			CPrintToChatAll(TAG ... "Warden {default}%N{burlywood} has given {default}%N{burlywood} a last request.", client, target);
+			CPrintToChatAll(TAG ... "%t", "Warden Give LR", client, target);
 		}
 		case MenuAction_End:delete menu;
 	}
@@ -1045,7 +1046,7 @@ public void FreedayforClientsMenu(const int client)
 		return;
 
 	Menu menu = new Menu(MenuHandle_FreedayForClients);
-	menu.SetTitle("Choose a Player for Freeday");
+	menu.SetTitle("%t", "Select For Freeday");
 	
 	AddClientsToMenu(menu, false, 0);
 	menu.ExitButton = true;
@@ -1065,14 +1066,14 @@ public int MenuHandle_FreedayForClients(Menu menu, MenuAction action, int client
 
 			if (!IsClientInGame(target))
 			{
-				CPrintToChat(client, TAG ... "Player is no longer available.");
+				CPrintToChat(client, TAG ... "%t", "Player no longer available");
 				FreedayforClientsMenu(client);
 				return;
 			}
 			JailFighter targ = JailFighter(target);
 			if (targ.bIsQueuedFreeday)
 			{
-				CPrintToChat(client, TAG ... "Freeday for {default}%N{burlywood} is currently queued.", target);
+				CPrintToChat(client, TAG ... "%t", "Freeday Already Queued", target);
 				FreedayforClientsMenu(client);
 				return;
 			}
@@ -1080,14 +1081,14 @@ public int MenuHandle_FreedayForClients(Menu menu, MenuAction action, int client
 			{
 				targ.bIsQueuedFreeday = true;
 				limit++;
-				CPrintToChatAll(TAG ... "{default}%N{burlywood} has chosen {default}%N{burlywood} for freeday.", client, target);
+				CPrintToChatAll(TAG ... "%t", "Chosen For Freeday", client, target);
 				if (limit < cvarTF2Jail[FreedayLimit].IntValue)
 					FreedayforClientsMenu(client);
 				else limit = 0;
 			}
 			else 
 			{	
-				CPrintToChat(client, TAG ... "You have picked the maximum amount of freedays.", client);
+				CPrintToChat(client, TAG ... "%t", "Freeday Max", client);
 				limit = 0;
 			}
 		}
@@ -1102,29 +1103,29 @@ public Action Command_WardenFF(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	if (!JailFighter(client).bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 
-	if (hEngineConVars[0].BoolValue == false)
+	if (!hEngineConVars[0].BoolValue)
 	{
 		hEngineConVars[0].SetBool(true);
-		CPrintToChatAll(TAG ... "Warden has enabled Friendly-Fire!");
+		CPrintToChatAll(TAG ... "%t", "FF On Warden", client);
 	}
 	else
 	{
 		hEngineConVars[0].SetBool(false);
-		CPrintToChatAll(TAG ... "Warden has disabled Friendly-Fire!");
+		CPrintToChatAll(TAG ... "%t", "FF Off Warden", client);
 	}
 	return Plugin_Handled;
 }
@@ -1136,29 +1137,29 @@ public Action Command_WardenCC(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	if (!JailFighter(client).bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 
-	if (hEngineConVars[1].BoolValue == false)
+	if (!hEngineConVars[1].BoolValue)
 	{
 		hEngineConVars[1].SetBool(true);
-		CPrintToChatAll(TAG ... "Warden has enabled Collisions!");
+		CPrintToChatAll(TAG ... "%t", "Collisions On Warden", client);
 	}
 	else
 	{
 		hEngineConVars[1].SetBool(false);
-		CPrintToChatAll(TAG ... "Warden has disabled Collisions!");
+		CPrintToChatAll(TAG ... "%t", "Collisions Off Warden");
 	}
 	return Plugin_Handled;
 }
@@ -1170,28 +1171,28 @@ public Action Command_WardenMarker(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (!cvarTF2Jail[Markers].BoolValue)
 	{
-		CPrintToChat(client, TAG ... "This is not enabled.");
+		CPrintToChat(client, TAG ... "%t", "Not Enabled");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 
 	if (!JailFighter(client).bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 	if (gamemode.bMarkerExists)
 	{
-		CPrintToChat(client, TAG ... "Slow down there cowboy.");
+		CPrintToChat(client, TAG ... "%t", "Slow Down");
 		return Plugin_Handled;
 	}
 
@@ -1206,34 +1207,34 @@ public Action Command_WardenLaser(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 	if (!cvarTF2Jail[WardenLaser].BoolValue)
 	{
-		CPrintToChat(client, TAG ... "This is not enabled.");
+		CPrintToChat(client, TAG ... "%t", "Not Enabled");
 		return Plugin_Handled;
 	}
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	JailFighter player = JailFighter(client);
 	if (!player.bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
 	if (player.bLasering)
 	{
 		player.bLasering = false;
-		CPrintToChat(client, TAG ... "You have turned Warden Lasers {default}off{burlywood}.");
+		CPrintToChat(client, TAG ... "%t", "Laser Off");
 	}
 	else
 	{
 		player.bLasering = true;
-		CPrintToChat(client, TAG ... "You have turned Warden Lasers {default}on{burlywood}. Hold reload to activate.");
+		CPrintToChat(client, TAG ... "%t", "Laser On");
 	}
 
 	return Plugin_Handled;
@@ -1246,27 +1247,30 @@ public Action Command_WardenToggleMedic(int client, int args)
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command is in-game only.");
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
 
 	if (!cvarTF2Jail[WardenToggleMedic].BoolValue)
 	{
-		CPrintToChat(client, TAG ... "This is not enabled.");
+		CPrintToChat(client, TAG ... "%t", "Not Enabled");
 		return Plugin_Handled;
 	}
 
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CPrintToChat(client, TAG ... "Round must be active.");
+		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
 	if (!JailFighter(client).bIsWarden)
 	{
-		CPrintToChat(client, TAG ... "You are not warden.");
+		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
-	CPrintToChatAll(TAG ... "Warden {default}%N{burlywood} has toggled Medic {default}%s{burlywood}!", client, (gamemode.bMedicDisabled ? "On" : "Off"));
+	if (gamemode.bMedicDisabled)
+		CPrintToChatAll(TAG ... "%t", "Medic Room Enabled", client);
+	else CPrintToChatAll(TAG ... "%t", "Medic Room Disabled", client);
+	
 	gamemode.ToggleMedic(gamemode.bMedicDisabled);
 	return Plugin_Handled;
 }
@@ -1278,13 +1282,13 @@ public Action AdminWardayRed(int client, int args)
 
 	if (gamemode.iRoundState > StateRunning)
 	{
-		CReplyToCommand(client, TAG ... "Must be done before or during active round.");
+		CReplyToCommand(client, TAG ... "%t", "Before Or During Round");
 		return Plugin_Handled;
 	}
 
 	if (!gamemode.bWardayTeleportSetRed)
 	{
-		CReplyToCommand(client, TAG ... "Warday configuration is not set for this location!");
+		CReplyToCommand(client, TAG ... "%t", "No Warday Config At Location");
 		return Plugin_Handled;
 	}
 
@@ -1298,7 +1302,7 @@ public Action AdminWardayRed(int client, int args)
 		TeleportEntity(i, vecWardayRed, NULL_VECTOR, NULL_VECTOR);
 	}
 
-	CPrintToChatAll(ADMTAG ... "Warday for Red team has been activated!");
+	CPrintToChatAll(ADMTAG ... "%t", "Warday Red Active");
 	return Plugin_Handled;
 }
 
@@ -1309,13 +1313,13 @@ public Action AdminWardayBlue(int client, int args)
 
 	if (gamemode.iRoundState > StateRunning)
 	{
-		CReplyToCommand(client, TAG ... "Must be done before or during active round.");
+		CReplyToCommand(client, TAG ... "%t", "Before Or During Round");
 		return Plugin_Handled;
 	}
 
 	if (!gamemode.bWardayTeleportSetBlue)
 	{
-		CReplyToCommand(client, TAG ... "Warday configuration is not set for this location!");
+		CReplyToCommand(client, TAG ... "%t", "No Warday Config At Location");
 		return Plugin_Handled;
 	}
 
@@ -1329,7 +1333,7 @@ public Action AdminWardayBlue(int client, int args)
 		TeleportEntity(i, vecWardayBlu, NULL_VECTOR, NULL_VECTOR);
 	}
 
-	CPrintToChatAll(ADMTAG ... "Warday for Blue team has been activated!");
+	CPrintToChatAll(ADMTAG ... "%t", "Warday Blue Active");
 	return Plugin_Handled;
 }
 
@@ -1340,7 +1344,7 @@ public Action AdminFullWarday(int client, int args)
 
 	if (gamemode.iRoundState > StateRunning)
 	{
-		CReplyToCommand(client, TAG ... "Must be done before or during active round.");
+		CReplyToCommand(client, TAG ... "%t", "Before Or During Round");
 		return Plugin_Handled;
 	}
 
@@ -1348,12 +1352,12 @@ public Action AdminFullWarday(int client, int args)
 		 allowblu = gamemode.bWardayTeleportSetBlue;
 
 	if (!allowred)
-		CReplyToCommand(client, TAG ... "Warday for Red Team is not configured, ignoring...");
+		CReplyToCommand(client, TAG ... "%t", "Ignore Red Team Warday");
 	else if (!allowblu)
-		CReplyToCommand(client, TAG ... "Warday for Blue Team is not configured, ignoring...");
+		CReplyToCommand(client, TAG ... "%t", "Ignore Blue Team Warday");
 	else if (!allowblu && !allowred)
 	{
-		CReplyToCommand(client, TAG ... "Warday configuration is not set.");
+		CReplyToCommand(client, TAG ... "%t", "No Warday Config");
 		return Plugin_Handled;
 	}
 
@@ -1361,14 +1365,14 @@ public Action AdminFullWarday(int client, int args)
 		if (IsClientInGame(i) && IsPlayerAlive(i))
 			JailFighter(i).TeleportToPosition(GetClientTeam(i));
 
-	CPrintToChatAll(ADMTAG ... "Warday has been activated!");
+	CPrintToChatAll(ADMTAG ... "%t", "Warday Activate");
 	return Plugin_Handled;
 }
 
 public Action AdminReloadCFG(int client, int args)
 {
 	ServerCommand("exec sourcemod/TF2JailRedux.cfg");
-	CReplyToCommand(client, "{orange}[TF2Jail]{fullred} Reloading plugin CFG.");
+	CReplyToCommand(client, "{orange}[TF2Jail]{fullred} %t", "Reload CFG");
 	return Plugin_Handled;
 }
 
@@ -1379,10 +1383,13 @@ public Action AdminToggleMedic(int client, int args)
 
 	if (gamemode.iRoundState != StateRunning)
 	{
-		CReplyToCommand(client, TAG ... "Round must be active.");
+		CReplyToCommand(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
-	CPrintToChatAll(ADMTAG ... "Admin has toggled Medic {default}%s{burlywood}!", gamemode.bMedicDisabled ? "On" : "Off");
+	if (gamemode.bMedicDisabled)
+		CPrintToChatAll(ADMTAG ... "%t", "Medic Room Enabled Admin");
+	else CPrintToChatAll(ADMTAG ... "%t", "Medic Room Disabled Admin");
+
 	gamemode.ToggleMedic(gamemode.bMedicDisabled);
 	return Plugin_Handled;
 }
@@ -1429,7 +1436,7 @@ public Action BaseProp(int client, int args)
 }
 public Action PluginLength(int client, int args)
 {
-	CReplyToCommand(client, "%d", hPlugins.Length);
+	CReplyToCommand(client, "%d", gamemode.hPlugins.Size);
 }
 public Action arrLRSLength(int client, int args)
 {

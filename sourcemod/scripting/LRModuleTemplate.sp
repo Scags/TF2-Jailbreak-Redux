@@ -4,6 +4,7 @@
 
 #pragma semicolon 1
 #pragma newdecls required
+// #include "TF2JailRedux/stocks.inc"
 
 #define PLUGIN_VERSION 		"1.0.0"
 
@@ -16,24 +17,25 @@ public Plugin myinfo =
 	url = ""
 };
 
-ConVar ThisPlugin, PickCount;
+ConVar PickCount;
 
 public void OnPluginStart()
 {
-	ThisPlugin = CreateConVar("sm_jb -- _ilrtype", "", "This sub-plugin's last request index. DO NOT CHANGE THIS UNLESS YOU KNOW WHAT YOU'RE DOING", FCVAR_NOTIFY, true, 0.0);
 	PickCount = CreateConVar("sm_jb -- _pickcount", "5", "Maximum number of times this LR can be picked in a single map. 0 for no limit", FCVAR_NOTIFY, true, 0.0);
-	ThisPlugin.AddChangeHook(OnTypeChanged);
 
 	AutoExecConfig(true, "LRModule --");
 }
 
+int ThisPluginIndex;
+#define CHECK() 				if ( !ThisPluginIndex || JBGameMode_GetProperty("iLRType") != ThisPluginIndex ) return
+
 public void OnAllPluginsLoaded()
 {
-	TF2JailRedux_RegisterPlugin("LRModule_AA");
-	JB_Hook(OnHudShow, fwdOnHudShow);
-	JB_Hook(OnLRPicked, fwdOnLRPicked);
-	JB_Hook(OnPanelAdd, fwdOnPanelAdd);
-	JB_Hook(OnMenuAdd, fwdOnMenuAdd);	// The necessities
+	ThisPluginIndex = TF2JailRedux_RegisterPlugin("LRModule_ --");
+	JB_Hook(OnHudShow, 					fwdOnHudShow);
+	JB_Hook(OnLRPicked, 				fwdOnLRPicked);
+	JB_Hook(OnPanelAdd,					fwdOnPanelAdd);
+	JB_Hook(OnMenuAdd, 					fwdOnMenuAdd);	// The necessities
 
 	//JB_Hook(OnDownloads, 				fwdOnDownloads);
 	//JB_Hook(OnRoundStart, 			fwdOnRoundStart);
@@ -75,34 +77,39 @@ public void OnAllPluginsLoaded()
 	//JB_Hook(OnPlayMusic, 				fwdOnPlayMusic);
 }
 
-int ThisPluginIndex;
-public void OnConfigsExecuted()
+public void OnPluginEnd()
 {
-	ThisPluginIndex = ThisPlugin.IntValue;
+	TF2JailRedux_UnRegisterPlugin("LRModule_ --");
 }
 
-public void OnTypeChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+public void OnLibraryRemoved(const char[] name)
 {
-	ThisPluginIndex = StringToInt(newValue);
+	if (!strcmp(name, "TF2Jail_Redux", false))
+		ThisPluginIndex = 0;
 }
-#define CHECK(%1) 				if ( JBGameMode_GetProperty("iLRType") != (%1) ) return
+
+public void OnLibraryAdded(const char[] name)
+{
+	if (!strcmp(name, "TF2Jail_Redux", false))
+		OnAllPluginsLoaded();
+}
 
 public void fwdOnHudShow(char strHud[128])
 {
-	CHECK(ThisPluginIndex);
+	CHECK();
 
 	strcopy(strHud, 128, "--");
 }
 public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
 {
-	if (selection == ThisPluginIndex)
+	if (ThisPluginIndex && selection == ThisPluginIndex)
 		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}--{burlywood} as their last request.", Player.index);
 	return Plugin_Continue;
 }
 
 public void fwdOnPanelAdd(const int index, char name[64])
 {
-	if (index != ThisPluginIndex)
+	if (ThisPluginIndex && index != ThisPluginIndex)
 		return;
 
 	strcopy(name, sizeof(name), "-- - ");
@@ -110,7 +117,7 @@ public void fwdOnPanelAdd(const int index, char name[64])
 
 public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 {
-	if (index != ThisPluginIndex)
+	if (ThisPluginIndex && index != ThisPluginIndex)
 		return;
 
 	max = PickCount.IntValue;

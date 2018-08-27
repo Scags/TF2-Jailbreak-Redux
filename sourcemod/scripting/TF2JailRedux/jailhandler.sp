@@ -31,19 +31,21 @@ enum /** LRs **/
  *	When adding a new lr, increase the LRMAX to the proper/latest enum value
  *	Reminder that random lr grabs a random int from 2 to LRMAX
  *	Having breaks or skips within the enum will result in nothing happening the following round if that number is selected
- *	hPlugins.Length increases by 1 every time you 'TF2JailRedux_RegisterPlugin()' with a sub-plugin
- *	Sub-Plugins *should* be completely manageable as their own plugin, with no need to touch this one
+ *	gamemode.hPlugins.Size increases by 1 every time you successfully 'TF2JailRedux_RegisterPlugin()' with a sub-plugin
+ *	and decreases by 1 everytime you successfully 'TF2JailRedux_UnRegisterPlugin()'
+ *	Sub-Plugins are completely manageable as their own plugin, with no need to touch this one
 */
-#define LRMAX		ClassWars + (hPlugins.Length)
+#define LRMAX		ClassWars + (gamemode.hPlugins.Size)
 
 #include "TF2JailRedux/lastrequests.sp"
 
 /** 
  *	SINCE THE PYRO UPDATE, FORCING PLAYERS AS THE SNIPER CLASS CAN AND WILL CAUSE SERVER CRASHES
 */
-int arrClass[8] = { 1, 3, 4, 5, 6, 7, 8, 9 };
+// Not anymore... https://forums.alliedmods.net/showthread.php?t=309821
+//int arrClass[8] = { 1, 3, 4, 5, 6, 7, 8, 9 };
 
-/** 
+/**
  *	ArrayList of LR usage
  *	You can determine the maximum picks per round under AddLRToMenu()
  *	Size is automatically managed
@@ -177,6 +179,16 @@ public void PrepPlayer(const int userid)
 
 	Call_OnPlayerPrepped(base);
 }
+public void OnClientDisconnect(int client)
+{
+	JailFighter player = JailFighter(client);
+	if (player.bIsWarden)
+	{
+		player.WardenUnset();
+		PrintCenterTextAll("Warden has disconnected!");
+		gamemode.bWardenExists = false;
+	}
+}
 /**
  *	Calls without including players, so we don't fire the same thing for every player
 */
@@ -194,7 +206,7 @@ public void ManageOnRoundStart(Event event)
 		case TinyRound:
 		{
 			EmitSoundToAll(TinySound);
-			CPrintToChatAll("{burlywood} SuperSmall for everyone activated.");
+			CPrintToChatAll("{burlywood}SuperSmall for everyone activated.");
 			gamemode.bIsWardenLocked = true;
 		}
 		case Gravity:
@@ -218,8 +230,8 @@ public void ManageOnRoundStart(Event event)
 		}
 		case ClassWars:
 		{
-			int iClassRED = arrClass[GetRandomInt(0, 7)];
-			int iClassBLU = arrClass[GetRandomInt(0, 7)];
+			int iClassRED = GetRandomInt(0, 8);
+			int iClassBLU = GetRandomInt(0, 8);
 			for (int i = MaxClients; i; --i)
 				if (IsClientInGame(i) && IsPlayerAlive(i))
 					if (GetClientTeam(i) == RED)
@@ -243,7 +255,7 @@ public void ManageRoundStart(const JailFighter player, Event event)
 
 	switch (gamemode.iLRType)
 	{
-		case FreedaySelf, FreedayOther:if (player.bIsFreeday) CPrintToChatAll("{burlywood}Freeday is now active for {default}%N{burlywood}.", client);
+		case FreedaySelf, FreedayOther:if (player.bIsFreeday) CPrintToChatAll("%t", "Freeday Active", client);
 		case GuardMelee:
 		{
 			if (GetClientTeam(client) == BLU)
@@ -513,7 +525,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 				if (base.bIsFreeday)
 				{	// Registers with Razorbacks ^^
 					base.RemoveFreeday();
-					PrintCenterTextAll("%N has attacked a guard and lost their freeday!", attacker);
+					PrintCenterTextAll("%t", "Attack Guard Lose Freeday", attacker);
 				}
 
 				if (victim.bIsFreeday && !base.bIsWarden)
@@ -582,7 +594,7 @@ public void CheckLivingPlayers()
 			Call_OnLastGuard(action);
 
 			if (action == Plugin_Continue)
-				PrintCenterTextAll("One guard left...");
+				PrintCenterTextAll("%t", "One Guard Left");
 
 			else if (action == Plugin_Stop)
 				return;	// Avoid multi-calls if necessary
@@ -788,7 +800,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 						
 					base.RemoveFreeday();
 				}
-				CPrintToChatAll(TAG ... "Last request has been chosen. Freedays have been stripped.");
+				CPrintToChatAll(TAG ... "%t", "LR Chosen");
 			}
 			base = JailFighter(client);
 			gamemode.bIsLRInUse = true;
@@ -865,19 +877,6 @@ public void ManageClientStartVariables(const JailFighter base)
 	Call_OnClientInduction(base);
 }
 /**
- *	Another reset, but calls on disconnect for safety
-*/
-public void ManageClientDisconnect(const int client)
-{
-	JailFighter player = JailFighter(client);
-	if (gamemode.iWarden == player)		// FIXME; why does the client StringMap error out here?
-	{
-		player.WardenUnset();
-		PrintCenterTextAll("Warden has disconnected!");
-		gamemode.bWardenExists = false;
-	}
-}
-/**
  *	Fires on both client disconnect and round start
  *	Yet again another way to make a new forward
 */
@@ -940,16 +939,35 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 */
 public void ManageWardenMenu(Menu &menu)
 {
-	menu.AddItem("0", "Open Cells");
-	menu.AddItem("1", "Close Cells");
-	menu.AddItem("2", "Enable/Disable FF");
-	menu.AddItem("3", "Enable/Disable Collisions");
+	char buffer[32];
+
+	FormatEx(buffer, sizeof(buffer), "%t", "Open Cells");
+	menu.AddItem("0", buffer);
+
+	FormatEx(buffer, sizeof(buffer), "%t", "Close Cells");
+	menu.AddItem("1", buffer);
+
+	FormatEx(buffer, sizeof(buffer), "%t", "Enable/Disable FF");
+	menu.AddItem("2", buffer);
+
+	FormatEx(buffer, sizeof(buffer), "%t", "Enable/Disable Collisions");
+	menu.AddItem("3", buffer);
+	
 	if (cvarTF2Jail[Markers].BoolValue)
-		menu.AddItem("4", "Marker");
+	{
+		FormatEx(buffer, sizeof(buffer), "%t", "Marker");
+		menu.AddItem("4", buffer);
+	}
 	if (cvarTF2Jail[WardenLaser].BoolValue)
-		menu.AddItem("5", "Laser");
+	{
+		FormatEx(buffer, sizeof(buffer), "%t", "Laser");
+		menu.AddItem("5", buffer);
+	}
 	if (cvarTF2Jail[WardenToggleMedic].BoolValue)
-		menu.AddItem("6", "Toggle Medic Room");
+	{
+		FormatEx(buffer, sizeof(buffer), "%t", "Toggle Medic Room");
+		menu.AddItem("6", buffer);
+	}
 
 	Call_OnWMenuAdd(menu);
 }
@@ -971,7 +989,7 @@ public void ManageWardenMenu(Menu &menu)
 			JailFighter player = JailFighter(client);
 			if (!player.bIsWarden)
 			{
-				CPrintToChat(client, TAG ... "You are not warden.");
+				CPrintToChat(client, TAG ... "%t", "Not Warden");
 				return;
 			}
 			char index[32]; menu.GetItem(select, index, sizeof(index));
@@ -985,7 +1003,7 @@ public void ManageWardenMenu(Menu &menu)
 						gamemode.DoorHandler(OPEN, true);
 						gamemode.bCellsOpened = true;
 					}
-					else CPrintToChat(client, TAG ... "Cells are already open.");
+					else CPrintToChat(client, TAG ... "%t", "Cells Already Open");
 					player.WardenMenu();
 				}
 				case 1:
@@ -995,7 +1013,7 @@ public void ManageWardenMenu(Menu &menu)
 						gamemode.DoorHandler(CLOSE, true);
 						gamemode.bCellsOpened = false;
 					}
-					else CPrintToChat(client, TAG ... "Cells are not open.");
+					else CPrintToChat(client, TAG ... "%t", "Cells Not Open");
 					player.WardenMenu();
 				}
 				case 2:
@@ -1008,12 +1026,12 @@ public void ManageWardenMenu(Menu &menu)
 							return;
 						}
 						hEngineConVars[0].SetBool(true);
-						CPrintToChatAll(TAG ... "Warden has enabled Friendly-Fire!");
+						CPrintToChatAll(TAG ... "%t", "FF On Warden", client);
 					}
 					else 
 					{
 						hEngineConVars[0].SetBool(false);
-						CPrintToChatAll(TAG ... "Warden has disabled Friendly-Fire.");
+						CPrintToChatAll(TAG ... "%t", "FF Off Warden", client);
 					}
 					player.WardenMenu();
 				}
@@ -1027,12 +1045,12 @@ public void ManageWardenMenu(Menu &menu)
 							return;
 						}
 						hEngineConVars[1].SetBool(true);
-						CPrintToChatAll(TAG ... "Warden has enabled collisions!");
+						CPrintToChatAll(TAG ... "%t", "Collisions On Warden");
 					}
 					else
 					{
 						hEngineConVars[1].SetBool(false);
-						CPrintToChatAll(TAG ... "Warden has disabled collisions.");
+						CPrintToChatAll(TAG ... "%t", "Collisions Off Warden");
 					}
 					player.WardenMenu();
 				}
@@ -1042,7 +1060,7 @@ public void ManageWardenMenu(Menu &menu)
 					{
 						if (gamemode.bMarkerExists)
 						{
-							CPrintToChat(client, TAG ... "Slow down there cowboy.");
+							CPrintToChat(client, TAG ... "%t", "Slow Down");
 							player.WardenMenu();
 							return;
 						}
@@ -1057,12 +1075,12 @@ public void ManageWardenMenu(Menu &menu)
 						if (player.bLasering)
 						{
 							player.bLasering = false;
-							CPrintToChat(client, TAG ... "You have turned Warden Lasers {default}off{burlywood}.");
+							CPrintToChat(client, TAG ... "%t", "Laser Off");
 						}
 						else
 						{
 							player.bLasering = true;
-							CPrintToChat(client, TAG ... "You have turned Warden Lasers {default}on{burlywood}. Hold reload to activate.");
+							CPrintToChat(client, TAG ... "%t", "Laser On");
 						}
 					}
 					player.WardenMenu();
@@ -1071,7 +1089,9 @@ public void ManageWardenMenu(Menu &menu)
 				{
 					if (cvarTF2Jail[WardenToggleMedic].BoolValue)
 					{
-						CPrintToChatAll(TAG ... "Warden {default}%N{burlywood} has toggled Medic {default}%s{burlywood}!", client, gamemode.bMedicDisabled ? "On" : "Off");
+						if (gamemode.bMedicDisabled)
+							CPrintToChatAll(TAG ... "%t", "Medic Room Enabled", client);
+						else CPrintToChatAll(TAG ... "%t", "Medic Room Disabled", client);
 						gamemode.ToggleMedic(gamemode.bMedicDisabled);
 					}
 					player.WardenMenu();
