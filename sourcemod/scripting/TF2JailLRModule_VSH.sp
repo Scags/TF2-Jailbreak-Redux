@@ -340,6 +340,10 @@ int
 	iTeamBansCVar		// Mid-round detection in case a player is guardbanned
 ;
 
+bool
+	bDisabled			// Handling core late-loading
+;
+
 float 
 	flHealthTime		// For !halehp
 ;
@@ -396,10 +400,9 @@ public void OnPluginStart()
 	AddMultiTargetFilter("@!hale", HaleTargetFilter, "All non-Boss players", false);
 }
 
-int JBVSHIndex;
 public void OnAllPluginsLoaded()
 {
-	JBVSHIndex = TF2JailRedux_RegisterPlugin("LRModule_VSH");
+	TF2JailRedux_RegisterPlugin();
 	gamemode = new JBGameMode();
 	LoadJBHooks();
 	hTeamBansCVar = FindConVar("sm_jbans_ignore_midround");
@@ -408,26 +411,33 @@ public void OnAllPluginsLoaded()
 public void OnPluginEnd()
 {
 	if (LibraryExists("TF2Jail_Redux"))
-		TF2JailRedux_UnRegisterPlugin("LRModule_VSH");
+		TF2JailRedux_UnRegisterPlugin();
 }
 
 public void OnLibraryRemoved(const char[] name)
 {
-	if (!strcmp(name, "TF2Jail_Redux", false))
-		JBVSHIndex = 0;
+	if (!strcmp(name, "TF2Jail_Redux", false) && JBVSH[Enabled].BoolValue)
+	{
+		JBVSH[Enabled].SetBool(false);
+		bDisabled = true;
+	}
 	else if (!strcmp(name, "TF2JailRedux_TeamBans", false))
 		hTeamBansCVar = null;
 }
 
 public void OnLibraryAdded(const char[] name)
 {
-	if (!strcmp(name, "TF2Jail_Redux", false))
+	if (!strcmp(name, "TF2Jail_Redux", false) && bDisabled)
+	{
 		OnAllPluginsLoaded();
+		JBVSH[Enabled].SetBool(true);
+		bDisabled = false;
+	}
 	else if (!strcmp(name, "TF2JailRedux_TeamBans", false))
 		hTeamBansCVar = FindConVar("sm_jbans_ignore_midround");
 }
 
-#define NOTVSH 				( !JBVSHIndex || gamemode.iLRType != (JBVSHIndex) )
+#define NOTVSH 				( gamemode.iLRType != TF2JailRedux_LRIndex() )
 
 public bool HaleTargetFilter(const char[] pattern, Handle clients)
 {
@@ -889,12 +899,8 @@ public Action Command_GetHPCmd(int client, int args)
 */
 public Action Cmd_UnLoad(int client, int args)
 {
-	if (TF2JailRedux_UnRegisterPlugin("LRModule_VSH"))
-	{
+	if (TF2JailRedux_UnRegisterPlugin())
 		CReplyToCommand(client, ADMTAG ... "Versus Saxton Hale has been successfully unregistered.");
-		// We don't have/need an index anymore, plus this is faster than TF2JailRedux_IsPluginRegistered
-		JBVSHIndex = 0;
-	}
 	else CReplyToCommand(client, ADMTAG ... "Versus Saxton Hale was not unregistered. Was it registered to begin with?");
 
 	return Plugin_Handled;
@@ -902,13 +908,13 @@ public Action Cmd_UnLoad(int client, int args)
 
 public Action Cmd_ReLoad(int client, int args)
 {
-	if (JBVSHIndex || TF2JailRedux_IsPluginRegistered("LRModule_VSH"))	// Redundant
+	if (TF2JailRedux_LRIndex())
 	{
 		CReplyToCommand(client, ADMTAG ... "Versus Saxton Hale is already registered.");
 		return Plugin_Handled;
 	}
 
-	JBVSHIndex = TF2JailRedux_RegisterPlugin("LRModule_PH");
+	TF2JailRedux_RegisterPlugin();
 	CReplyToCommand(client, ADMTAG ... "Versus Saxton Hale has been re-registered.");
 	return Plugin_Handled;
 }
@@ -2460,7 +2466,7 @@ public void fwdOnHudShow(char strHud[128])
 }
 public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
 {
-	if (JBVSH[Enabled].BoolValue && selection == JBVSHIndex)
+	if (JBVSH[Enabled].BoolValue && selection == TF2JailRedux_LRIndex())
 		CPrintToChatAll(TAG ... "%N has decided to play a round of {default}Versus Saxton Hale{burlywood}.", Player.index);
 
 	return Plugin_Continue;
@@ -2609,7 +2615,7 @@ public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 }
 public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 {
-	if (!JBVSH[Enabled].BoolValue || index != JBVSHIndex)
+	if (!JBVSH[Enabled].BoolValue || index != TF2JailRedux_LRIndex())
 		return;
 
 	max = JBVSH[PickCount].IntValue;	// Everything else is managed in core, even if max is 0
@@ -2617,7 +2623,7 @@ public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 }
 public void fwdOnPanelAdd(const int index, char name[64])
 {
-	if (!JBVSH[Enabled].BoolValue || index != JBVSHIndex)
+	if (!JBVSH[Enabled].BoolValue || index != TF2JailRedux_LRIndex())
 		return;
 
 	strcopy(name, sizeof(name), "Versus Saxton Hale- A nice round of VSH");

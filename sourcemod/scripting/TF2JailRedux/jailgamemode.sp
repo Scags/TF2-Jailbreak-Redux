@@ -459,11 +459,11 @@ methodmap JailGameMode < StringMap
 	 *	Purpose: Store the plugin names from registered sub-plugins.
 	 *	Add a setter if you need.
 	*/
-	property StringMap hPlugins
+	property ArrayList hPlugins
 	{
 		public get()
 		{
-			StringMap i; this.GetValue("hPlugins", i);
+			ArrayList i; this.GetValue("hPlugins", i);
 			return i;
 		}
 	}
@@ -514,7 +514,7 @@ methodmap JailGameMode < StringMap
 #endif
 		this.bMarkerExists = false;
 		this.flMusicTime = 0.0;
-		this.SetValue("hPlugins", new StringMap());
+		this.SetValue("hPlugins", new ArrayList());
 	}
 	/**
 	 *	Find and Initialize a random player as the warden.

@@ -1356,7 +1356,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 		/* Functional */
 	CreateNative("TF2JailRedux_RegisterPlugin", Native_RegisterPlugin);
 	CreateNative("TF2JailRedux_UnRegisterPlugin", Native_UnRegisterPlugin);
-	CreateNative("TF2JailRedux_IsPluginRegistered", Native_IsPluginRegistered);
+	CreateNative("TF2JailRedux_LRIndex", Native_LRIndex);
 		/* Forwards */
 	CreateNative("JB_Hook", Native_Hook);
 	CreateNative("JB_HookEx", Native_HookEx);
@@ -1416,66 +1416,48 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public int Native_RegisterPlugin(Handle plugin, int numParams)
 {
-	char ModuleName[64]; GetNativeString(1, ModuleName, sizeof(ModuleName));
-	int idx;
-	StringMap holdermap = gamemode.hPlugins;
+	ArrayList holder = gamemode.hPlugins;
 	// Shouldn't ever happen if you're UnRegistering
-	if (holdermap.GetValue(ModuleName, idx)) 
+	if (holder.FindValue(plugin) != -1) 
 	{
-		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::RegisterPlugin  **** Plugin '%s' Already Registered ****", ModuleName);
-		return idx;
+		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::RegisterPlugin  **** Plugin '0x%X' Already Registered ****", plugin);
+		return false;
 	}
 
 	// Handle last request count
 	arrLRS.Push(0);
 
-	// Attach sub-plugin it's id
-	idx = LRMAX+1;
-	holdermap.SetValue(ModuleName, idx);
+	// Handle the plugin itself
+	holder.Push(plugin);
 
-	return idx; // Return the LR index of registered plugin!
+	return true;
 }
 public int Native_UnRegisterPlugin(Handle plugin, int numParams)
 {
-	char ModuleName[64]; GetNativeString(1, ModuleName, sizeof(ModuleName));
-	StringMap holdermap = gamemode.hPlugins;
-	int idx;
-	// Shouldn't ever happen unless you fat finger the name
-	if (!holdermap.GetValue(ModuleName, idx))
+	ArrayList holder = gamemode.hPlugins;
+	int idx = holder.FindValue(plugin);
+	// Shouldn't ever happen
+	if (idx == -1)
 	{
-		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::UnRegisterPlugin  **** Plugin '%s' Not Registered ****", ModuleName);
+		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::UnRegisterPlugin  **** Plugin '0x%X' Not Registered ****", plugin);
 		return false;
 	}
 	// Get rid of it
-	holdermap.Remove(ModuleName);
-	// This adjusts LRMAX, but indices may have skips in them
-	// Have to loop through all of the registered plugins, :c
+	holder.Erase(idx);
 
-	// Capture keys
-	StringMapSnapshot snap = holdermap.Snapshot();
-	int len = snap.Length;
-	int idx2;
-
-	for (int i = 0; i < len; i++)
-	{
-		snap.GetKey(i, ModuleName, sizeof(ModuleName));
-		holdermap.GetValue(ModuleName, idx2);
-		// Should never be ==
-		if (idx < idx2)
-			holdermap.SetValue(ModuleName, idx2-1);
-	}
-
-	delete snap;
 	return true;
 }
-public int Native_IsPluginRegistered(Handle plugin, int numParams)
+public int Native_LRIndex(Handle plugin, int numParams)
 {
-	char ModuleName[64]; GetNativeString(1, ModuleName, sizeof(ModuleName));
-	int idx;
-	if (gamemode.hPlugins.GetValue(ModuleName, idx))
-		return idx;
+	ArrayList holder = gamemode.hPlugins;
+	int idx = holder.FindValue(plugin);
+	if (idx != -1)
+		return idx - holder.Length + LRMAX;
+
+	// Returning -1 would be absolutely positively CATASTROPHIC!!!
 	return 0;
 }
+
 public int Native_Hook(Handle plugin, int numParams)
 {
 	int JBHook = GetNativeCell(1);

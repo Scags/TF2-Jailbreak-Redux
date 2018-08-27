@@ -13,6 +13,7 @@
 
 #define RED 				2
 #define BLU 				3
+#define PROPHUNT_NAME 		"LRModule_PH"
 
 char g_PlayerModel[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 
@@ -238,7 +239,8 @@ enum
 
 bool 
 	bFirstBlood,
-	bAbleToReroll
+	bAbleToReroll,
+	bDisabled
 ;
 
 int 
@@ -283,10 +285,9 @@ public void OnPluginStart()
 	g_ModelRotation = new ArrayList(ByteCountToCells(11));
 }
 
-int JBPHIndex;
 public void OnAllPluginsLoaded()
 {
-	JBPHIndex = TF2JailRedux_RegisterPlugin("LRModule_PH");
+	TF2JailRedux_RegisterPlugin();
 	gamemode = new JBGameMode();
 	CheckJBHooks();
 }
@@ -294,22 +295,29 @@ public void OnAllPluginsLoaded()
 public void OnPluginEnd()
 {
 	if (LibraryExists("TF2Jail_Redux"))
-		TF2JailRedux_UnRegisterPlugin("LRModule_PH");
+		TF2JailRedux_UnRegisterPlugin();
 }
 
 public void OnLibraryRemoved(const char[] name)
 {
-	if (!strcmp(name, "TF2Jail_Redux", false))
-		JBPHIndex = 0;
+	if (!strcmp(name, "TF2Jail_Redux", false) && JBPH[Enabled].BoolValue)
+	{
+		JBPH[Enabled].SetBool(false);
+		bDisabled = true;
+	}
 }
 
 public void OnLibraryAdded(const char[] name)
 {
-	if (!strcmp(name, "TF2Jail_Redux", false))
+	if (!strcmp(name, "TF2Jail_Redux", false) && bDisabled)
+	{
 		OnAllPluginsLoaded();
+		JBPH[Enabled].SetBool(true);
+		bDisabled = false;
+	}
 }
 
-#define NOTPH 				( !JBPHIndex || gamemode.iLRType != (JBPHIndex) )
+#define NOTPH 				( gamemode.iLRType != TF2JailRedux_LRIndex() )
 
 public void OnMapStart()
 {
@@ -565,11 +573,9 @@ public Action Cmd_Reroll(int client, int args)
 */
 public Action Cmd_UnLoad(int client, int args)
 {
-	if (TF2JailRedux_UnRegisterPlugin("LRModule_PH"))
+	if (TF2JailRedux_UnRegisterPlugin())
 	{
 		CReplyToCommand(client, ADMTAG ... "Prophunt has been successfully unregistered.");
-		// We don't have/need an index anymore, plus this is faster than TF2JailRedux_IsPluginRegistered
-		JBPHIndex = 0;
 	}
 	else CReplyToCommand(client, ADMTAG ... "Prophunt was not unregistered. Was it registered to begin with?");
 
@@ -578,13 +584,13 @@ public Action Cmd_UnLoad(int client, int args)
 
 public Action Cmd_ReLoad(int client, int args)
 {
-	if (JBPHIndex || TF2JailRedux_IsPluginRegistered("LRModule_PH"))	// Redundant
+	if (TF2JailRedux_LRIndex())
 	{
 		CReplyToCommand(client, ADMTAG ... "Prophunt is already registered.");
 		return Plugin_Handled;
 	}
 
-	JBPHIndex = TF2JailRedux_RegisterPlugin("LRModule_PH");
+	TF2JailRedux_RegisterPlugin();
 	CReplyToCommand(client, ADMTAG ... "Prophunt has been re-registered.");
 	return Plugin_Handled;
 }
@@ -1117,7 +1123,7 @@ public void fwdOnTimeLeft(int &time)
 }
 public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
 {
-	if (JBPH[Enabled].BoolValue && selection == JBPHIndex)
+	if (JBPH[Enabled].BoolValue && selection == TF2JailRedux_LRIndex())
 		CPrintToChatAll(TAG ... "%N has decided to play a round of {default}Prophunt{burlywood}.", Player.index);
 	return Plugin_Continue;
 }
@@ -1130,14 +1136,14 @@ public void fwdOnHudShow(char strHud[128])
 }
 public void fwdOnPanelAdd(const int index, char name[64])
 {
-	if (!JBPH[Enabled].BoolValue || index != JBPHIndex)
+	if (!JBPH[Enabled].BoolValue || index != TF2JailRedux_LRIndex())
 		return;
 
 	strcopy(name, sizeof(name), "Prophunt- Find and kill all the cowardly props!");
 }
 public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 {
-	if (!JBPH[Enabled].BoolValue || index != JBPHIndex)
+	if (!JBPH[Enabled].BoolValue || index != TF2JailRedux_LRIndex())
 		return;
 
 	max = JBPH[PickCount].IntValue;

@@ -1436,7 +1436,7 @@ public Action BaseProp(int client, int args)
 }
 public Action PluginLength(int client, int args)
 {
-	CReplyToCommand(client, "%d", gamemode.hPlugins.Size);
+	CReplyToCommand(client, "%d", gamemode.hPlugins.Length);
 }
 public Action arrLRSLength(int client, int args)
 {

@@ -63,6 +63,7 @@
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has disabled Collisions."
+	}
 
 	// 1: Client name/index
 	"FF On Warden"
@@ -76,6 +77,7 @@
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has disabled Friendly-Fire!"
+	}
 	
 	"Help Panel Welcome"
 	{
@@ -294,7 +296,7 @@
 	// 1: Client name/index
 	"Admin Give Freeday"
 	{
-		"#format" 		"{1:N"}
+		"#format" 		"{1:N}"
 		"en" 			"Admin has given {default}{1}{burlywood} a Freeday."
 	}
 
@@ -338,7 +340,7 @@
 	// 2: Receiver name/index
 	"Warden Give LR"
 	{
-		"#format" 		"{1:N}, {2:N}"
+		"#format" 		"{1:N},{2:N}"
 		"en" 			"Warden {default}{1}{burlywood} has given {default}{1}{burlywood} a Last Request."
 	}
 
@@ -353,7 +355,7 @@
 	// 2: Receiver name/index
 	"Chosen For Freeday"
 	{
-		"#format" 		"{1:N}, {2:N}"
+		"#format" 		"{1:N},{2:N}"
 		"en" 			"{default}{1}{burlywood} has chosen {default}{2}{burlywood} for Freeday."
 	}
 
@@ -489,7 +491,7 @@
 	// 2: Door format, see Opened, Closed, Locked, Unlocked
 	"Warden Work Cells"
 	{
-		"#format" 		"{1:N}, {2:s}"
+		"#format" 		"{1:N},{2:s}"
 		"en" 			"Warden {default}{1}{burlywood} has {2} cells."
 	}
 

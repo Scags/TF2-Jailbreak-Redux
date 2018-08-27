@@ -1638,12 +1638,10 @@ methodmap JBGameMode < StringMap
  *							If you add a last request and want to test it before you allow all 
  *							players to use it, do NOT register the sub-plugin, 
  *							and use sm_setpreset to activate the lr type for next round.
- *	
- *	@param plugin_name		Module name you want your calling plugin to be identified under.
  *
- *	@return					Integer of the plugin array index.
+ *	@return					True on success, false if plugin was already registered.
  */
-native int TF2JailRedux_RegisterPlugin(const char plugin_name[64]);
+native bool TF2JailRedux_RegisterPlugin();
 
 /**
  *	Un-registers a plugin from the last request handle.
@@ -1654,26 +1652,20 @@ native int TF2JailRedux_RegisterPlugin(const char plugin_name[64]);
  *							This is best suited to be used OnPluginEnd() but it's return can be used to
  *							your advantage (see @return).
  *
- *	@param plugin_name 		Module name you originally registered with.	You can also un-register 
- * 							plugins	other than the calling one plugin, but this isn't advised unless 
- * 							you	know what you're doing.
  *
  *	@return 				Returns true if the plugin is unregistered. Just because a plugin is unregistered
  *							does not mean that it is unloaded. Therefore you can use a global bool (or native
- *							TF2JailRedux_IsPluginRegistered) to determine if you should continue with your 
+ *							TF2JailRedux_LRIndex) to determine if you should continue with your 
  *							forward-hooked code. See the VSH or PH sub-plugin for usage.
 */
-native bool TF2JailRedux_UnRegisterPlugin(const char plugin_name[64]);
+native bool TF2JailRedux_UnRegisterPlugin();
 
 /**
- *	Detects if this plugin is registered with the last request handle.
- *
- *	@param plugin_name 		Module name you originally registered with. If and when overloads become
- *							a thing in SP, you would be able to pass the plugin index as well.
+ *	Retrieve the calling plugin's LR index
  *
  *	@return 				LR index of this plugin if it is registered. 0 otherwise.
 */
-native int TF2JailRedux_IsPluginRegistered(const char plugin_name[64]);
+native int TF2JailRedux_LRIndex();
 
 
 enum	// JB Hook Types
@@ -1880,6 +1872,9 @@ public SharedPlugin __pl_tf2jailredux = {
 public void __pl_tf2jailredux_SetNTVOptional()
 {
 	MarkNativeAsOptional("TF2JailRedux_RegisterPlugin");
+	MarkNativeAsOptional("TF2JailRedux_UnRegisterPlugin");
+	MarkNativeAsOptional("TF2JailRedux_IsPluginRegistered");
+	MarkNativeAsOptional("TF2JailRedux_LRIndex");
 
 	MarkNativeAsOptional("JB_Hook");
 	MarkNativeAsOptional("JB_HookEx");

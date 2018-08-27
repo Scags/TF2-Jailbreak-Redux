@@ -26,12 +26,11 @@ public void OnPluginStart()
 	AutoExecConfig(true, "LRModule --");
 }
 
-int ThisPluginIndex;
-#define CHECK() 				if ( !ThisPluginIndex || JBGameMode_GetProperty("iLRType") != ThisPluginIndex ) return
+#define CHECK() 				if ( JBGameMode_GetProperty("iLRType") != TF2JailRedux_LRIndex() ) return
 
 public void OnAllPluginsLoaded()
 {
-	ThisPluginIndex = TF2JailRedux_RegisterPlugin("LRModule_ --");
+	TF2JailRedux_RegisterPlugin();
 	JB_Hook(OnHudShow, 					fwdOnHudShow);
 	JB_Hook(OnLRPicked, 				fwdOnLRPicked);
 	JB_Hook(OnPanelAdd,					fwdOnPanelAdd);
@@ -79,13 +78,13 @@ public void OnAllPluginsLoaded()
 
 public void OnPluginEnd()
 {
-	TF2JailRedux_UnRegisterPlugin("LRModule_ --");
+	TF2JailRedux_UnRegisterPlugin();
 }
 
 public void OnLibraryRemoved(const char[] name)
 {
 	if (!strcmp(name, "TF2Jail_Redux", false))
-		ThisPluginIndex = 0;
+	{}
 }
 
 public void OnLibraryAdded(const char[] name)
@@ -102,14 +101,14 @@ public void fwdOnHudShow(char strHud[128])
 }
 public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
 {
-	if (ThisPluginIndex && selection == ThisPluginIndex)
+	if (selection == TF2JailRedux_LRIndex())
 		CPrintToChatAll("{crimson}[TF2Jail]{burlywood} %N has chosen {default}--{burlywood} as their last request.", Player.index);
 	return Plugin_Continue;
 }
 
 public void fwdOnPanelAdd(const int index, char name[64])
 {
-	if (ThisPluginIndex && index != ThisPluginIndex)
+	if (index != TF2JailRedux_LRIndex())
 		return;
 
 	strcopy(name, sizeof(name), "-- - ");
@@ -117,7 +116,7 @@ public void fwdOnPanelAdd(const int index, char name[64])
 
 public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 {
-	if (ThisPluginIndex && index != ThisPluginIndex)
+	if (index != TF2JailRedux_LRIndex())
 		return;
 
 	max = PickCount.IntValue;

@@ -31,11 +31,11 @@ enum /** LRs **/
  *	When adding a new lr, increase the LRMAX to the proper/latest enum value
  *	Reminder that random lr grabs a random int from 2 to LRMAX
  *	Having breaks or skips within the enum will result in nothing happening the following round if that number is selected
- *	gamemode.hPlugins.Size increases by 1 every time you successfully 'TF2JailRedux_RegisterPlugin()' with a sub-plugin
+ *	gamemode.hPlugins.Length increases by 1 every time you successfully 'TF2JailRedux_RegisterPlugin()' with a sub-plugin
  *	and decreases by 1 everytime you successfully 'TF2JailRedux_UnRegisterPlugin()'
  *	Sub-Plugins are completely manageable as their own plugin, with no need to touch this one
 */
-#define LRMAX		ClassWars + (gamemode.hPlugins.Size)
+#define LRMAX		ClassWars + (gamemode.hPlugins.Length)
 
 #include "TF2JailRedux/lastrequests.sp"
 
