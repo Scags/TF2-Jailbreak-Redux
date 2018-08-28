@@ -172,15 +172,6 @@ native void JB_DisplayBanMenu(int client);
 native void JB_DisplayUnbanMenu(int client);
 
 /**
- *	Detect if a player is WardenBanned.
- *
- *	@param client 			Client index.
- *
- *	@return 				True if client is WardenBanned, false otherwise.
-*/
-native bool JB_IsClientWardenBanned(int client);
-
-/**
  *	WardenBan a client.
  *
  *	@param client 			Client to be WardenBanned.

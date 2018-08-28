@@ -1482,8 +1482,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JB_DisplayBanMenu", Native_DisplayBanMenu);
 	CreateNative("JB_DisplayUnbanMenu", Native_DisplayUnbanMenu);
 
-	CreateNative("JB_IsClientGuardbanned", Native_IsClientGuardbanned);
-
 	CreateNative("JB_WardenBan", Native_WardenBan);
 	CreateNative("JB_UnWardenBan", Native_UnWardenBan);
 	CreateNative("JB_OfflineWardenBan", Native_OfflineWardenBan);
@@ -1526,10 +1524,6 @@ public int Native_DisplayBanMenu(Handle plugin, int numParams)
 public int Native_DisplayUnbanMenu(Handle plugin, int numParams)
 {
 	DisplayUnbannableMenu(GetNativeCell(1));
-}
-public int Native_IsClientGuardbanned(Handle plugin, int numParams)
-{
-	return JailPlayer(GetNativeCell(1)).bIsGuardbanned;
 }
 
 public int Native_WardenBan(Handle plugin, int numParams)
