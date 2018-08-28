@@ -24,7 +24,7 @@
 		"en" 			"Welcome to TF2 Jailbreak Redux. Type \"!jhelp\" for help."
 	}
 	
-	"Warden Locked"
+	"Warden Locked Lack"
 	{
 		"en" 			"Warden has been locked due to lack of a Warden."
 	}

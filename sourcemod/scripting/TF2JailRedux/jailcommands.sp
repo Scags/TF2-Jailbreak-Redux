@@ -84,7 +84,7 @@ public Action Command_BecomeWarden(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (gamemode.bAdminLockWarden)
+	if (gamemode.bIsWardenLocked)
 	{
 		CPrintToChat(client, TAG ... "%t", "Admin Lock Warden");
 		return Plugin_Handled;
@@ -103,7 +103,6 @@ public Action Command_BecomeWarden(int client, int args)
 	}
 	
 	player.WardenSet();
-	player.WardenMenu();
 	return Plugin_Handled;
 }
 
@@ -668,7 +667,6 @@ public Action AdminForceWarden(int client, int args)
 
 		JailFighter targ = JailFighter(target);
 		targ.WardenSet();
-		targ.WardenMenu();
 		CPrintToChatAll(ADMTAG ... "%t", "Admin Force Warden", target);
 		
 		return Plugin_Handled;
@@ -692,7 +690,7 @@ public Action AdminForceLR(int client, int args)
 		CReplyToCommand(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
-	
+
 	if (args)
 	{
 		char arg[64];
@@ -756,7 +754,7 @@ public Action AdminResetPlugin(int client, int args)
 	gamemode.bWardenExists = false;
 	gamemode.bFirstDoorOpening = false;
 	gamemode.bAdminLockedLR = false;
-	gamemode.bAdminLockWarden = false;
+	gamemode.bIsWardenLocked = false;
 	gamemode.bIsWarday = false;
 	gamemode.bOneGuardLeft = false;
 	gamemode.bOnePrisonerLeft = false;
@@ -970,7 +968,7 @@ public Action AdminLockWarden(int client, int args)
 		CReplyToCommand(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
-	if (gamemode.bAdminLockWarden)
+	if (gamemode.bIsWardenLocked)
 	{
 		CReplyToCommand(client, TAG ... "%t", "Warden Already Locked");
 		return Plugin_Handled;
@@ -978,7 +976,7 @@ public Action AdminLockWarden(int client, int args)
 	if (gamemode.bWardenExists)
 		gamemode.iWarden.WardenUnset();
 
-	gamemode.bAdminLockWarden = true;
+	gamemode.bIsWardenLocked = true;
 	CPrintToChatAll(ADMTAG ... "%t", "Admin Lock Warden");
 
 	return Plugin_Handled;
@@ -989,13 +987,18 @@ public Action AdminUnlockWarden(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	if (!gamemode.bAdminLockWarden)
+	if (gamemode.iRoundState != StateRunning)
+	{
+		CReplyToCommand(client, TAG ... "%t", "Needs Active Round");
+		return Plugin_Handled;
+	}
+	if (!gamemode.bIsWardenLocked)
 	{
 		CReplyToCommand(client, TAG ... "%t", "Warden Not Locked");
 		return Plugin_Handled;
 	}
 
-	gamemode.bAdminLockWarden = false;
+	gamemode.bIsWardenLocked = false;
 	CPrintToChatAll(ADMTAG ... "%t", "Admin Unlock Warden");
 
 	return Plugin_Handled;

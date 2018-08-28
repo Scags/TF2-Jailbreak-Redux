@@ -9,7 +9,7 @@ void InitializeForwards()
 	hPrivFwds[OnRoundStartPlayer]		= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
 	hPrivFwds[OnRoundEnd] 				= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnRoundEndPlayer] 		= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
-	hPrivFwds[OnWardenGet] 				= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnWardenGet] 				= CreateForward(ET_Hook, Param_Cell);
 	hPrivFwds[OnClientTouch]			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
 	hPrivFwds[OnRedThink] 				= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnBlueThink] 				= CreateForward(ET_Ignore, Param_Cell);
@@ -78,11 +78,13 @@ void Call_OnRoundEndPlayer(const JailFighter player, Event event)
 	Call_PushCell(event);
 	Call_Finish();
 }
-void Call_OnWardenGet(const JailFighter player)
+Action Call_OnWardenGet(const JailFighter player)
 {
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnWardenGet]);
 	Call_PushCell(player);
-	Call_Finish();
+	Call_Finish(action);
+	return action;
 }
 void Call_OnClientTouch(const JailFighter toucher, const JailFighter touchee)
 {

@@ -5,18 +5,18 @@
 	   |_|   |_|     |_____|  \___/   \__,_| |_| |_|   |_| \_\  \___|  \__,_|  \__,_| /_/\_\ */
 
 /**
- **	TF2Jail_Redux.sp: Contains the core functions of the plugin, along with natives 			   **
- **	jailbase.sp: Player methodmap properties plus a few handy variables 						   **
- **	jailgamemode.sp: Gamemode methodmap properties that control gameplay functionality			   **
+ **	TF2Jail_Redux.sp: Contains the core functions of the plugin, along with natives. 			   **
+ **	jailbase.sp: Player methodmap properties plus a few handy variables. 						   **
+ **	jailgamemode.sp: Gamemode methodmap properties that control gameplay functionality.			   **
  **	jailevents.sp: Events of the plugin that are organized and managed by...					   **
- **	jailhandler.sp: Logic of gamemode behavior under any circumstance, functions called from core  **
- **	jailcommands.sp: Commands and some of the menus corresponding to commands 					   **
- **	stocks.inc: Stock functions used or could possibly be used within plugin 					   **
- **	jailforwards.sp: Contains external gamemode third-party functionality, leave it alone 		   **
- **	tf2jailredux.inc: External gamemode third-party functionality, leave it alone 				   **
- **	If you're here to give some more uniqueness to the plugin, check jailhandler 	 			   **
+ **	jailhandler.sp: Logic of gamemode behavior under any circumstance, functions called from core. **
+ **	jailcommands.sp: Commands and some of the menus corresponding to commands. 					   **
+ **	stocks.inc: Stock functions used or could possibly be used within plugin. 					   **
+ **	jailforwards.sp: Contains external gamemode third-party functionality, leave it alone. 		   **
+ **	tf2jailredux.inc: External gamemode third-party functionality, leave it alone. 				   **
+ **	If you're here to give some more uniqueness to the plugin, check jailhandler. 	 			   **
  **	It's fixed with a variety of not only last request examples, but gameplay event management.	   **
- **	VSH and PH are standalone subplugins, if there is an issue with them, simply delete them	   **
+ **	VSH and PH are standalone subplugins, if there is an issue with them, simply delete them.	   **
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
@@ -1005,7 +1005,7 @@ public void DisableWarden(const int roundcount)
 	 || gamemode.bIsWardenLocked)
 		return;
 
-	CPrintToChatAll(TAG ... "%t", "Warden Locked");
+	CPrintToChatAll(TAG ... "%t", "Warden Locked Lack");
 	gamemode.DoorHandler(OPEN);
 	gamemode.bIsWardenLocked = true;
 }
@@ -1444,6 +1444,8 @@ public int Native_UnRegisterPlugin(Handle plugin, int numParams)
 	}
 	// Get rid of it
 	holder.Erase(idx);
+
+	arrLRS.Erase(idx - holder.Length + LRMAX + 1);
 
 	return true;
 }

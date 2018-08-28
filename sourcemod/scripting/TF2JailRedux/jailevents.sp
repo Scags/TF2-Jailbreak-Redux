@@ -357,7 +357,6 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 	hEngineConVars[0].SetBool(false);
 	hEngineConVars[1].SetBool(false);
 
-	gamemode.bAdminLockWarden = false;
 	gamemode.b1stRoundFreeday = false;
 	gamemode.bIsLRInUse = false;
 	gamemode.bDisableCriticals = false;

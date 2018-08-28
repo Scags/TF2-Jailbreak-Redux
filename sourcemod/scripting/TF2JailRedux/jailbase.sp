@@ -558,6 +558,9 @@ methodmap JailFighter
 	*/
 	public void WardenSet()
 	{
+		if (Call_OnWardenGet(this) != Plugin_Continue)
+			return;
+
 		this.bIsWarden = true;	
 		this.UnmutePlayer();
 		
@@ -565,7 +568,7 @@ methodmap JailFighter
 		int client = this.index;
 		Format(strWarden, sizeof(strWarden), "%t", "New Warden Center", client);
 		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
-		CPrintToChatAll("{crimson}[TF2Jail]{default} %t", "New Warden", client);
+		CPrintToChatAll("{crimson}[TF2Jail]{default} %t.", "New Warden", client);
 
 		float annot = cvarTF2Jail[WardenAnnotation].FloatValue;
 		if (annot != 0.0)

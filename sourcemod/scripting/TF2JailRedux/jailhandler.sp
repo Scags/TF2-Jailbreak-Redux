@@ -344,12 +344,12 @@ public void ManageWarden(const JailFighter base)
 {
 	gamemode.iWarden = base;
 	gamemode.bWardenExists = true;
+	base.WardenMenu();
 
 	switch (gamemode.iLRType)
 	{
 		default: {	}
 	}
-	Call_OnWardenGet(base);
 }
 /**
  *	Called on model collision between players, Red player in this case is the 'toucher'

@@ -1635,9 +1635,7 @@ methodmap JBGameMode < StringMap
  *	@note 					The purpose of this native is to register last-request subplugins, 
  * 							you don't need to register plugins to use forwards, 
  *							simply hook what forward you need.
- *							If you add a last request and want to test it before you allow all 
- *							players to use it, do NOT register the sub-plugin, 
- *							and use sm_setpreset to activate the lr type for next round.
+ *							You MUST register a Last Request sub-plugin in order for it to work.
  *
  *	@return					True on success, false if plugin was already registered.
  */
@@ -1651,7 +1649,6 @@ native bool TF2JailRedux_RegisterPlugin();
  *							the plugin originally.
  *							This is best suited to be used OnPluginEnd() but it's return can be used to
  *							your advantage (see @return).
- *
  *
  *	@return 				Returns true if the plugin is unregistered. Just because a plugin is unregistered
  *							does not mean that it is unloaded. Therefore you can use a global bool (or native
@@ -1719,7 +1716,6 @@ typeset JBHookCB
 {
 	/*
 		OnRoundStartPlayer
-		OnWardenGet
 		OnRedThink
 		OnBlueThink
 		OnWardenThink
@@ -1812,6 +1808,9 @@ typeset JBHookCB
 
 	//	OnTimeLeft
 	function void (int &time);
+
+	//	OnWardenGet
+	function Action (const JBPlayer Player);
 };
 
 /**
@@ -1873,7 +1872,6 @@ public void __pl_tf2jailredux_SetNTVOptional()
 {
 	MarkNativeAsOptional("TF2JailRedux_RegisterPlugin");
 	MarkNativeAsOptional("TF2JailRedux_UnRegisterPlugin");
-	MarkNativeAsOptional("TF2JailRedux_IsPluginRegistered");
 	MarkNativeAsOptional("TF2JailRedux_LRIndex");
 
 	MarkNativeAsOptional("JB_Hook");

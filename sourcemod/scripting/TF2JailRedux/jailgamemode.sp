@@ -269,18 +269,6 @@ methodmap JailGameMode < StringMap
 			this.SetValue("bOnePrisonerLeft", i);
 		}
 	}
-	property bool bAdminLockWarden
-	{
-		public get()
-		{
-			bool i; this.GetValue("bAdminLockWarden", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			this.SetValue("bAdminLockWarden", i);
-		}
-	}
 	property bool bAdminLockedLR
 	{
 		public get()
@@ -489,7 +477,6 @@ methodmap JailGameMode < StringMap
 		this.bFirstDoorOpening = false;
 		this.bIsWardenLocked = false;
 		this.bAdminLockedLR = false;
-		this.bAdminLockWarden = false;
 		this.bIsWarday = false;
 		this.bOneGuardLeft = false;
 		this.bOnePrisonerLeft = false;
