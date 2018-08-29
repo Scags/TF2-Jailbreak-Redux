@@ -42,6 +42,9 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		}
 	}
 
+	if (gamemode.iRoundState == StateRunning)
+		gamemode.ToggleMuting(player);
+
 	if (gamemode.bIsWarday)
 		player.TeleportToPosition(GetClientTeam(client));	// Enum value is the same as team value, so we can cheat it
 
@@ -112,6 +115,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	ManagePlayerDeath(attacker, victim, event);
+	gamemode.ToggleMuting(victim, true);	// IsPlayerAlive more like returns true on player_death >:c
 
 	return Plugin_Continue;
 }
@@ -193,6 +197,9 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	gamemode.bWardenExists = false;
 	gamemode.bIsWardenLocked = false;
 	gamemode.bFirstDoorOpening = false;
+	gamemode.iLivingMuteType = cvarTF2Jail[LivingMuteType].IntValue;
+	gamemode.iMuteType = cvarTF2Jail[MuteType].IntValue;
+
 	int i;
 	JailFighter player;
 
@@ -297,6 +304,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 				player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "");
 			}
 		}
+		gamemode.ToggleMuting(player);
 	}
 
 	gamemode.iLRPresetType = -1;
@@ -330,7 +338,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 
 	for (i = MaxClients; i; --i)
 	{
-		if (!IsClientValid(i))
+		if (!IsClientInGame(i))
 			continue;
 		
 		if (attrib)
@@ -349,8 +357,9 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 			CancelClientMenu(i, true);
 
 		StopSound(i, SNDCHAN_AUTO, BackgroundSong);
-				
+
 		ManageRoundEnd(player, event);
+		player.UnmutePlayer();
 	}
 	ManageOnRoundEnd(event); // Making 1 with and without clients so things dont fire once for every client in the loop
 	
@@ -388,22 +397,6 @@ public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 	return Plugin_Continue;
 }
 
-/*public Action OnDisconnect(Event event, const char[] name, bool dontBroadcast)
-{
-	if (!bEnabled.BoolValue)
-		return Plugin_Continue;
-
-	JailFighter player = JailFighter.OfUserId( event.GetInt("userid") );
-	if (player.bIsWarden)
-	{
-		player.WardenUnset();
-		PrintCenterTextAll("Warden has disconnected!");
-		gamemode.bWardenExists = false;
-	}
-
-	return Plugin_Continue;
-}*/
-
 public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!bEnabled.BoolValue)
@@ -415,6 +408,17 @@ public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 		SetPawnTimer(PrepPlayer, 0.2, player.userid);
 
 	return Plugin_Continue;
+}
+
+public void OnChangeTeam(Event event, const char[] name, bool dontBroadcast)
+{
+	if (!bEnabled.BoolValue)
+		return;
+
+	if (event.GetBool("disconnect"))
+		return;
+
+	gamemode.ToggleMuting(JailFighter.OfUserId( event.GetInt("userid") ), _, event.GetInt("team"));
 }
 
 public void OnHookedEvent(Event event, const char[] name, bool dontBroadcast)

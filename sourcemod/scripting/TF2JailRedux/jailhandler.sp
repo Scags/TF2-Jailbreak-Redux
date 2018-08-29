@@ -939,36 +939,6 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 */
 public void ManageWardenMenu(Menu &menu)
 {
-	char buffer[32];
-
-	FormatEx(buffer, sizeof(buffer), "%t", "Open Cells");
-	menu.AddItem("0", buffer);
-
-	FormatEx(buffer, sizeof(buffer), "%t", "Close Cells");
-	menu.AddItem("1", buffer);
-
-	FormatEx(buffer, sizeof(buffer), "%t", "Enable/Disable FF");
-	menu.AddItem("2", buffer);
-
-	FormatEx(buffer, sizeof(buffer), "%t", "Enable/Disable Collisions");
-	menu.AddItem("3", buffer);
-	
-	if (cvarTF2Jail[Markers].BoolValue)
-	{
-		FormatEx(buffer, sizeof(buffer), "%t", "Marker");
-		menu.AddItem("4", buffer);
-	}
-	if (cvarTF2Jail[WardenLaser].BoolValue)
-	{
-		FormatEx(buffer, sizeof(buffer), "%t", "Laser");
-		menu.AddItem("5", buffer);
-	}
-	if (cvarTF2Jail[WardenToggleMedic].BoolValue)
-	{
-		FormatEx(buffer, sizeof(buffer), "%t", "Toggle Medic Room");
-		menu.AddItem("6", buffer);
-	}
-
 	Call_OnWMenuAdd(menu);
 }
 /**
@@ -976,12 +946,6 @@ public void ManageWardenMenu(Menu &menu)
 */
  public int WardenMenuHandler(Menu menu, MenuAction action, int client, int select)
  {
- 	if (!IsClientValid(client))
- 		return;
-
- 	if (!IsPlayerAlive(client))
- 		return;
-
  	switch (action)
 	{
 		case MenuAction_Select:
@@ -992,113 +956,14 @@ public void ManageWardenMenu(Menu &menu)
 				CPrintToChat(client, TAG ... "%t", "Not Warden");
 				return;
 			}
-			char index[32]; menu.GetItem(select, index, sizeof(index));
-			int val = StringToInt(index);
-			switch (val)
-			{
-				case 0:
-				{
-					if (!gamemode.bCellsOpened)
-					{
-						gamemode.DoorHandler(OPEN, true);
-						gamemode.bCellsOpened = true;
-					}
-					else CPrintToChat(client, TAG ... "%t", "Cells Already Open");
-					player.WardenMenu();
-				}
-				case 1:
-				{
-					if (gamemode.bCellsOpened)
-					{
-						gamemode.DoorHandler(CLOSE, true);
-						gamemode.bCellsOpened = false;
-					}
-					else CPrintToChat(client, TAG ... "%t", "Cells Not Open");
-					player.WardenMenu();
-				}
-				case 2:
-				{
-					if (!hEngineConVars[0].BoolValue)
-					{
-						if (cvarTF2Jail[CVarWarn].BoolValue)
-						{
-							CVWarn(client, 0);
-							return;
-						}
-						hEngineConVars[0].SetBool(true);
-						CPrintToChatAll(TAG ... "%t", "FF On Warden", client);
-					}
-					else 
-					{
-						hEngineConVars[0].SetBool(false);
-						CPrintToChatAll(TAG ... "%t", "FF Off Warden", client);
-					}
-					player.WardenMenu();
-				}
-				case 3:
-				{
-					if (!hEngineConVars[1].BoolValue)
-					{
-						if (cvarTF2Jail[CVarWarn].BoolValue)
-						{
-							CVWarn(client, 1);
-							return;
-						}
-						hEngineConVars[1].SetBool(true);
-						CPrintToChatAll(TAG ... "%t", "Collisions On Warden");
-					}
-					else
-					{
-						hEngineConVars[1].SetBool(false);
-						CPrintToChatAll(TAG ... "%t", "Collisions Off Warden");
-					}
-					player.WardenMenu();
-				}
-				case 4:
-				{
-					if (cvarTF2Jail[Markers].BoolValue) 
-					{
-						if (gamemode.bMarkerExists)
-						{
-							CPrintToChat(client, TAG ... "%t", "Slow Down");
-							player.WardenMenu();
-							return;
-						}
-						CreateMarker(client);
-					}
-					player.WardenMenu();
-				}
-				case 5:
-				{
-					if (cvarTF2Jail[WardenLaser].BoolValue)
-					{
-						if (player.bLasering)
-						{
-							player.bLasering = false;
-							CPrintToChat(client, TAG ... "%t", "Laser Off");
-						}
-						else
-						{
-							player.bLasering = true;
-							CPrintToChat(client, TAG ... "%t", "Laser On");
-						}
-					}
-					player.WardenMenu();
-				}
-				case 6:
-				{
-					if (cvarTF2Jail[WardenToggleMedic].BoolValue)
-					{
-						if (gamemode.bMedicDisabled)
-							CPrintToChatAll(TAG ... "%t", "Medic Room Enabled", client);
-						else CPrintToChatAll(TAG ... "%t", "Medic Room Disabled", client);
-						gamemode.ToggleMedic(gamemode.bMedicDisabled);
-					}
-					player.WardenMenu();
-				}
-				default:Call_OnWMenuSelect(player, index);	// Passing string in case you set something wacky in the first AddItem() parameter
-			}
+
+			char info[32]; menu.GetItem(select, info, sizeof(info));
+			if (Call_OnWMenuSelect(player, info) != Plugin_Continue)
+				return;
+
+			FakeClientCommandEx(client, info);
+			player.WardenMenu();
 		}
-		case MenuAction_End:delete menu;
+		// case MenuAction_End:delete menu;	// It's technically global so :/
 	}
 }

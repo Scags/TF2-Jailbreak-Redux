@@ -445,7 +445,7 @@ public Action Cmd_GuardBan(int client, int args)
 	if (!IsFakeClient(target_list[0]))
 	{
 		if (JailPlayer(target_list[0]).bIsGuardbanned)
-			CReplyToCommand(client, TAG ... "%s %N is already guardbanned.", target_list[0]);
+			CReplyToCommand(client, TAG ... "%N is already guardbanned.", target_list[0]);
 		else
 		{
 			char reason[256];
@@ -818,6 +818,9 @@ void GuardBan(int victim, int admin, int time, char reason[256] = "")
 
 	CShowActivityEx(admin, TAG, "Guardbanned %N %s", victim, BanMsg);
 
+	player.bIsGuardbanned = true;
+	player.iTimeLeft = time;
+
 	char query[512];
 	hTheDB.Format(query, sizeof(query), 
 			"INSERT INTO %s "
@@ -829,8 +832,6 @@ void GuardBan(int victim, int admin, int time, char reason[256] = "")
 
 	hTheDB.Query(CCB_GuardBan, query);
 
-	player.bIsGuardbanned = true;
-	player.iTimeLeft = time;
 	if (GetClientTeam(victim) == BLU)
 	{
 		if (JBGameMode_GetProperty("iRoundState") >= StateRunning)
@@ -921,6 +922,12 @@ public void WardenBan(int victim, int admin, int time)
 
 	CShowActivityEx(admin, TAG, "Wardenbanned %N %s", victim, BanMsg);
 
+	if (player.bIsWarden)
+		JBGameMode_FireWarden(false);	// Curse you gamemode properties!
+
+	player.bIsWardenBanned = true;
+	player.iWardenTimeLeft = time;
+
 	char query[512];
 	hTheDB.Format(query, sizeof(query), 
 			"INSERT INTO %s "
@@ -931,12 +938,6 @@ public void WardenBan(int victim, int admin, int time)
 			strWardenTable, ID, time, time);
 
 	hTheDB.Query(CCB_WardenBan, query);
-
-	if (player.bIsWarden)
-		JBGameMode_FireWarden(false);	// Curse you gamemode properties!
-
-	player.bIsWardenBanned = true;
-	player.iWardenTimeLeft = time;
 }
 
 public void OfflineUnWardenBan(const char[] ID, int admin)
@@ -1241,9 +1242,9 @@ public int DBCB_Connect(Database db, const char[] error, any data)
 	ReplaceString(query, sizeof(query), strCoreTable, strWardenTable);
 
 	txn.AddQuery(query);
-	// db.Query(DBCB_Initialization, query);	// I use 'initialize' too much
 
 	// Let's keep webpanel compatibility shall we?
+	// Because I know one exists... somewhere...
 	Format(strLogTable, sizeof(strLogTable), "%stf2jr_guardbans_logs", prefix);
 
 	Format(query, sizeof(query), 
@@ -1260,7 +1261,6 @@ public int DBCB_Connect(Database db, const char[] error, any data)
 			strLogTable);
 
 	txn.AddQuery(query);
-	// db.Query(DBCB_Initialization, query);
 
 	hTheDB.Execute(txn, TXN_OnSuccess, TXN_OnFailure);
 }
@@ -1360,12 +1360,12 @@ public int CCB_Induction(Database db, DBResultSet results, const char[] error, a
 		int rows = results.RowCount;
 		if (cvarJBANS[Debug].BoolValue)
 			LogMessage("[JBANS] Found client (%N) induction rowcount %d.", client, rows);
-		
+
 		JailPlayer player = JailPlayer(client);
 		if (rows)
 		{
 			results.FetchRow();
-			
+
 			int time = results.FetchInt(0);
 			if (cvarJBANS[Debug].BoolValue)
 				LogMessage("[JBANS]: %N joined with %i time remaining on ban.", client, time);
@@ -1389,12 +1389,12 @@ public int CCB_Induction_Warden(Database db, DBResultSet results, const char[] e
 		int rows = results.RowCount;
 		if (cvarJBANS[Debug].BoolValue)
 			LogMessage("[JBANS] Found client (%N) warden induction rowcount %d.", client, rows);
-		
+
 		JailPlayer player = JailPlayer(client);
 		if (rows)
 		{
 			results.FetchRow();
-			
+
 			int time = results.FetchInt(0);
 			if (cvarJBANS[Debug].BoolValue)
 				LogMessage("[JBANS]: %N joined with %i time remaining on wardenban.", client, time);

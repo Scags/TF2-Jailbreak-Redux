@@ -11,17 +11,18 @@ int
 	EnumTNPS[4][eTextNodeParams],		// Hud params
 	iHalo,								// Particle
 	iLaserBeam,							// Particle
-	iHalo2								// Particle
+	iHalo2,								// Particle
+	iHHHParticle[MAX_TF_PLAYERS][3]		// HHH particles
 ;
 
 float
-	vecOld[MAXPLAYERS+1][3],			// Freeday particle vector
+	vecOld[MAX_TF_PLAYERS][3],			// Freeday particle vector
 	vecFreedayPosition[3], 				// Freeday map position
 	vecWardayBlu[3], 					// Blue warday map position
 	vecWardayRed[3]						// Red warday map position
 ;
 
-StringMap hJailFields[MAXPLAYERS+1];
+StringMap hJailFields[MAX_TF_PLAYERS];
 
 methodmap JailFighter
 {
@@ -267,6 +268,7 @@ methodmap JailFighter
 	 *	@param level		The level of the weapon.
 	 *	@param qual			The weapon quality of the item.
 	 *	@param att			The nested attribute string, example: "2 ; 2.0" - increases weapon damage by 100% aka 2x..
+	 *
 	 *	@return				Entity index of the newly created weapon.
 	*/
 	public int SpawnWeapon( char[] name, int index, int level, int qual, char[] att )
@@ -285,8 +287,8 @@ methodmap JailFighter
 		if (count > 0) 
 		{
 			TF2Items_SetNumAttributes(hWeapon, count/2);
-			int i2=0;
-			for (int i=0 ; i<count ; i += 2) 
+			int i2 = 0;
+			for (int i = 0 ; i < count ; i += 2) 
 			{
 				TF2Items_SetAttribute(hWeapon, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
 				i2++;
@@ -337,12 +339,19 @@ methodmap JailFighter
 			}
 		}
 	}
-	/*public void SetOverlay(const char[] strOverlay)
+	/**
+	 *	Create an overlay on a client.
+	 *
+	 *	@param strOverlay 	Overlay to use.
+	 *
+	 *	@noreturn
+	*/
+	public void SetOverlay( const char[] strOverlay )
 	{
 		int iFlags = GetCommandFlags("r_screenoverlay") & (~FCVAR_CHEAT);
 		SetCommandFlags("r_screenoverlay", iFlags);
 		ClientCommand(this.index, "r_screenoverlay \"%s\"", strOverlay);
-	}*/
+	}
 	/**
 	 *	Teleport a player to the appropriate spawn location.
 	 *
@@ -425,7 +434,11 @@ methodmap JailFighter
 	{
 		if (this.bIsMuted)
 			return;
+
 		if (this.bIsAdmin)
+			return;
+
+		if (this.bIsWarden)
 			return;
 
 		int client = this.index;
@@ -755,11 +768,7 @@ methodmap JailFighter
 		if (IsVoteInProgress())
 			return;
 
-		Menu wmenu = new Menu(WardenMenuHandler);
-		wmenu.SetTitle("Warden Commands");
-		ManageWardenMenu(wmenu);
-		wmenu.ExitButton = true;
-		wmenu.Display(this.index, MENU_TIME_FOREVER);
+		view_as< Menu >(JBGameMode_GetProperty("hWardenMenu")).Display(this.index, -1);		// Absolutely disgusting
 	}
 	/**
 	 *	Allow a player to climb walls upon hitting them.

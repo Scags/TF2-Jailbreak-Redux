@@ -218,7 +218,7 @@ public Action Command_CloseCells(int client, int args)
 		CPrintToChat(client, TAG ... "%t", "Map Incompatible");
 		return Plugin_Handled;
 	}
-	
+
 	if (!JailFighter(client).bIsWarden)
 	{
 		CPrintToChat(client, TAG ... "%t", "Not Warden");
@@ -252,19 +252,17 @@ public Action Command_EnableFriendlyFire(int client, int args)
 		return Plugin_Handled;
 	}
 
-	switch (hEngineConVars[0].BoolValue)
+	if (!hEngineConVars[0].BoolValue)
 	{
-		case true:
-		{
-			hEngineConVars[0].SetBool(false);
-			CPrintToChatAll(TAG ... "%t", "FF Off Warden", client);
-		}
-		case false:
-		{
-			hEngineConVars[0].SetBool(true);
-			CPrintToChatAll(TAG ... "%t", "FF On Warden", client);
-		}
+		hEngineConVars[0].SetBool(true);
+		CPrintToChatAll(TAG ... "%t", "FF On Warden", client);
 	}
+	else 
+	{
+		hEngineConVars[0].SetBool(false);
+		CPrintToChatAll(TAG ... "%t", "FF Off Warden", client);
+	}
+
 	return Plugin_Handled;
 }
 
@@ -278,6 +276,7 @@ public Action Command_EnableCollisions(int client, int args)
 		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
 		return Plugin_Handled;
 	}
+
 	if (gamemode.iRoundState != StateRunning)
 	{
 		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
@@ -290,19 +289,17 @@ public Action Command_EnableCollisions(int client, int args)
 		return Plugin_Handled;
 	}
 
-	switch (hEngineConVars[1].BoolValue)
+	if (!hEngineConVars[1].BoolValue)
 	{
-		case true:
-		{
-			hEngineConVars[1].SetBool(false);
-			CPrintToChatAll(TAG ... "%t", "Collisions Off Warden", client);
-		}
-		case false:
-		{
-			hEngineConVars[1].SetBool(true);
-			CPrintToChatAll(TAG ... "%t", "Collisions On Warden", client);
-		}
+		hEngineConVars[1].SetBool(true);
+		CPrintToChatAll(TAG ... "%t", "Collisions On Warden");
 	}
+	else
+	{
+		hEngineConVars[1].SetBool(false);
+		CPrintToChatAll(TAG ... "%t", "Collisions Off Warden");
+	}
+
 	return Plugin_Handled;
 }
 
@@ -764,6 +761,7 @@ public Action AdminResetPlugin(int client, int args)
 	gamemode.bIsMapCompatible = false;
 
 	ParseConfigs();
+	BuildMenu();
 	CPrintToChatAll("{orange}[TF2Jail]{fullred} %t", "Admin Reset Plugin");
 
 	return Plugin_Handled;
@@ -1162,7 +1160,7 @@ public Action Command_WardenCC(int client, int args)
 	else
 	{
 		hEngineConVars[1].SetBool(false);
-		CPrintToChatAll(TAG ... "%t", "Collisions Off Warden");
+		CPrintToChatAll(TAG ... "%t", "Collisions Off Warden", client);
 	}
 	return Plugin_Handled;
 }
@@ -1265,6 +1263,7 @@ public Action Command_WardenToggleMedic(int client, int args)
 		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
 		return Plugin_Handled;
 	}
+
 	if (!JailFighter(client).bIsWarden)
 	{
 		CPrintToChat(client, TAG ... "%t", "Not Warden");

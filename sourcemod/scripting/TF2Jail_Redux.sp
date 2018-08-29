@@ -48,6 +48,7 @@
 
 #define RED 				2
 #define BLU 				3
+#define MAX_TF_PLAYERS 		34	// 32 + replay + console
 
 enum	// Cvar name
 {
@@ -91,7 +92,6 @@ enum	// Cvar name
 	WardenLaser,
 	WardenToggleMedic,
 	Advert,
-	CVarWarn,
 	WardenAnnotation,
 	MarkerType,
 	EngieBuildings,
@@ -132,7 +132,7 @@ public void OnPluginStart()
 {
 	gamemode = new JailGameMode();
 	gamemode.Init();
-	
+
 	LoadTranslations("common.phrases");
 	LoadTranslations("tf2jail_redux.phrases");
 
@@ -163,8 +163,8 @@ public void OnPluginStart()
 	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[Markers] 					= CreateConVar("sm_tf2jr_warden_markers", "3", "Warden markers lifetime in seconds? (0 to disable them entirely)", FCVAR_NOTIFY, true, 0.0, true, 30.0);
 	cvarTF2Jail[CritType] 					= CreateConVar("sm_tf2jr_criticals", "2", "What type of criticals should guards get? 0 = none; 1 = mini-crits; 2 = full crits", FCVAR_NOTIFY, true, 0.0, true, 2.0);
-	cvarTF2Jail[MuteType] 					= CreateConVar("sm_tf2jr_muting", "6", "What type of dead player muting should occur? 0 = no muting; 1 = red players only are muted(except VIPs); 2 = blue players only are muted(except VIPs); 3 = all players are muted(except VIPs); 4 = all red players are muted; 5 = all blue players are muted; 6 = everybody is muted. ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
-	cvarTF2Jail[LivingMuteType] 			= CreateConVar("sm_tf2jr_live_muting", "1", "What type of living player muting should occur? 0 = no muting; 1 = red players only are muted(except VIPs); 2 = blue players only are muted(except VIPs and warden); 3 = all players are muted(except VIPs and warden); 4 = all red players are muted; 5 = all blue players are muted(except warden); 6 = everybody is muted(except warden). ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
+	cvarTF2Jail[MuteType] 					= CreateConVar("sm_tf2jr_muting", "6", "What type of dead player muting should occur? 0 = none; 1 = red players(except VIPs); 2 = blue players(except VIPs); 3 = all players(except VIPs); 4 = all red players; 5 = all blue players; 6 = everybody. ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
+	cvarTF2Jail[LivingMuteType] 			= CreateConVar("sm_tf2jr_live_muting", "1", "What type of living player muting should occur? 0 = none; 1 = red players(except VIPs); 2 = blue players(except VIPs and warden); 3 = all players(except VIPs and warden); 4 = all red players; 5 = all blue players(except warden); 6 = everybody(except warden). ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
 	cvarTF2Jail[Disguising] 				= CreateConVar("sm_tf2jr_disguising", "0", "What teams can disguise, if any? (Your Eternal Reward only) 0 = no disguising; 1 = only Red can disguise; 2 = Only blue can disguise; 3 = all players can disguise", FCVAR_NOTIFY, true, 0.0, true, 3.0);
 	cvarTF2Jail[WardenDelay] 				= CreateConVar("sm_tf2jr_warden_delay", "0", "Delay in seconds after round start until players can toggle becoming the warden. 0 to disable delay.", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[LRDefault] 					= CreateConVar("sm_tf2jr_lr_default", "5", "Default number of times the basic last requests can be picked in a single map. 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
@@ -178,9 +178,8 @@ public void OnPluginStart()
 	cvarTF2Jail[WardenLaser] 				= CreateConVar("sm_tf2jr_warden_laser", "1", "Allow Wardens to use laser pointers?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WardenToggleMedic] 			= CreateConVar("sm_tf2jr_warden_toggle_medic", "0", "Allow Wardens to toggle the medic room?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[Advert] 					= CreateConVar("sm_tf2jr_advertisement", "540", "Time in seconds to display the chat advertisement. 0 to disable.", FCVAR_NOTIFY, true, 0.0);
-	cvarTF2Jail[CVarWarn] 					= CreateConVar("sm_tf2jr_warden_cvwarn", "1", "Warn the warden before they turn on Collisions/FF?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WardenAnnotation] 			= CreateConVar("sm_tf2jr_warden_annotation", "5", "Display an annotation over the Warden's head on get? If so, how long in seconds?", FCVAR_NOTIFY, true, 0.0);
-	cvarTF2Jail[MarkerType] 				= CreateConVar("sm_tf2jr_warden_marker_type", "1", "If \"sm_tf2jr_warden_markers\" is enabled, what type of markers should there be? 0 = Circles' 1 = Annotations.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[MarkerType] 				= CreateConVar("sm_tf2jr_warden_marker_type", "1", "If \"sm_tf2jr_warden_markers\" is enabled, what type of markers should there be? 0 = Circles; 1 = Annotations.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[EngieBuildings] 			= CreateConVar("sm_tf2jr_engi_pda", "0", "Allow Engineers to keep their PDA's?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
@@ -194,6 +193,7 @@ public void OnPluginStart()
 	HookEvent("teamplay_round_win", OnRoundEnded);
 	HookEvent("post_inventory_application", OnRegeneration);
 	HookEvent("player_changeclass", OnChangeClass, EventHookMode_Pre);
+	HookEvent("player_team", OnChangeTeam);
 	// HookEvent("player_disconnect", OnDisconnect, EventHookMode_Pre);
 		/* Kinda used in core but not really */
 	HookEvent("rocket_jump", OnHookedEvent);
@@ -265,8 +265,8 @@ public void OnPluginStart()
 	RegAdminCmd("sm_forcelr", AdminForceLR, ADMFLAG_GENERIC, "Force a last request to either administrator or another, living client.");
 	RegAdminCmd("sm_compatible", AdminMapCompatibilityCheck, ADMFLAG_GENERIC, "Check if the current map is compatible with the plug-in.");
 	RegAdminCmd("sm_compat", AdminMapCompatibilityCheck, ADMFLAG_GENERIC, "Check if the current map is compatible with the plug-in.");
-	RegAdminCmd("sm_gf", AdminGiveFreeday, ADMFLAG_GENERIC, "Give a client on the server a Free day.");
-	RegAdminCmd("sm_givefreeday", AdminGiveFreeday, ADMFLAG_GENERIC, "Give a client on the server a Free day.");
+	RegAdminCmd("sm_gf", AdminGiveFreeday, ADMFLAG_GENERIC, "Give a client on the server a Freeday.");
+	RegAdminCmd("sm_givefreeday", AdminGiveFreeday, ADMFLAG_GENERIC, "Give a client on the server a Freeday.");
 	RegAdminCmd("sm_rf", AdminRemoveFreeday, ADMFLAG_GENERIC, "Remove a client's Free day status if they have one.");
 	RegAdminCmd("sm_removefreeday", AdminRemoveFreeday, ADMFLAG_GENERIC, "Remove a client's Free day status if they have one.");
 	RegAdminCmd("sm_lw", AdminLockWarden, ADMFLAG_GENERIC, "Lock Warden from being taken by clients publicly.");
@@ -334,15 +334,15 @@ public bool WardenGroup(const char[] pattern, Handle clients)
 		bool non = StrContains(pattern, "!", false) != -1;
 		for (int i = MaxClients; i; --i) 
 		{
-			if (IsClientInGame(i) && FindValueInArray(clients, i) == -1)
+			if (IsClientInGame(i) && view_as< ArrayList >(clients).FindValue(i) == -1)
 			{
 				if (JailFighter(i).bIsWarden) 
 				{
 					if (!non)
-						PushArrayCell(clients, i);
+						view_as< ArrayList >(clients).Push(i);
 				}
 				else if (non)
-					PushArrayCell(clients, i);
+					view_as< ArrayList >(clients).Push(i);
 			}
 		}
 	}
@@ -427,6 +427,7 @@ public void OnConfigsExecuted()
 
 	ConvarsSet(true);
 	ParseConfigs(); // Parse all configuration files under 'addons/sourcemod/configs/tf2jail/...'.
+	BuildMenu();
 
 #if defined _steamtools_included
 	if (gamemode.bSteam)
@@ -517,14 +518,9 @@ public void OnClientPostAdminCheck(int client)
 
 	if (!AlreadyMuted(client))
 		SetClientListeningFlags(client, VOICE_NORMAL);
-/*
-	As of now with the garbage muting system, some players will be muted before 
-	OnClientPostAdminCheck() fires. Therefore they can and will be stuck in a 
-	mute loop where the plugin says that they are a VIP or admin and need to 
-	be unmuted, but are not 'bIsMuted'. And if they are an admin or a VIP cvar
-	determinant, they will not be muted, and thus their 'bIsMuted' property
-	will never be set to true. This is why the above brute force method is required.
-*/
+	// Brute force them to be unmuted, then let properties take over
+
+	gamemode.ToggleMuting(player);
 }
 
 public Action OnTouch(int toucher, int touchee)
@@ -550,32 +546,17 @@ public Action Timer_PlayerThink(Handle timer)
 		MusicPlay();
 
 	JailFighter player;
-	int type = cvarTF2Jail[MuteType].IntValue;
-	int livingtype = cvarTF2Jail[LivingMuteType].IntValue;
 	int state = gamemode.iRoundState;
-	bool canmute = gamemode.bDisableMuting;
 
 	for (int i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
 			continue;
 
-		player = JailFighter(i);
-		if (!IsPlayerAlive(i))
-		{
-			if (state == StateRunning && !canmute)
-				MuteClient(player, type);
-			else player.UnmutePlayer();
-			continue;
-		}
-
-		if (state == StateRunning && !canmute)
-			MuteClient(player, livingtype);
-		else player.UnmutePlayer();
-
 		if (state != StateRunning)
 			continue;
 
+		player = JailFighter(i);
 		if (GetClientTeam(i) == BLU)
 		{
 			ManageBlueThink(player);
@@ -915,6 +896,38 @@ public void ParseNodeConfig()
 	delete key;
 }
 
+public void BuildMenu()
+{
+	if (gamemode.hWardenMenu)
+	{
+		delete gamemode.hWardenMenu;
+		gamemode.SetValue("hWardenMenu", 0);	// Son of a-
+	}
+
+	Menu menu = new Menu(WardenMenuHandler);
+	menu.SetTitle("%t", "Warden Commands");
+
+	KeyValues kv = new KeyValues("WardenMenu");
+
+	char sConfig[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, sConfig, sizeof(sConfig), "configs/tf2jail/wardenmenu.cfg");
+
+	kv.ImportFromFile(sConfig);
+	kv.GotoFirstSubKey(false);
+
+	char sLRID[64]; char sLRName[256];
+	do
+	{		
+		kv.GetSectionName(sLRID, sizeof(sLRID));
+		kv.GetString(NULL_STRING, sLRName, sizeof(sLRName));
+		menu.AddItem(sLRID, sLRName);
+	} while kv.GotoNextKey(false);
+
+	delete kv;
+	ManageWardenMenu(menu);		// Handler/Forwards
+	gamemode.SetValue("hWardenMenu", menu);
+}
+
 public bool AlreadyMuted(const int client)
 {
 	switch (gamemode.bSC)
@@ -1139,9 +1152,6 @@ public bool TraceRayFilterPlayers(int ent, int mask)
 	return (ent > MaxClients || !ent);
 }
 
-int iHHHParticle[MAXPLAYERS + 1][3];
-/** ctrl+c
-	ctrl+v **/
 public void DoHorsemannParticles(const int client)
 {
 	int lefteye = MakeParticle(client, "halloween_boss_eye_glow", "lefteye");
@@ -1284,73 +1294,6 @@ public Action OnBuildingSpawn(int ent)
 	return Plugin_Continue;
 }
 
-public void MuteClient(const JailFighter player, const int type)
-{
-	switch (type)
-	{
-		case 0:player.UnmutePlayer();
-		case 1:
-			if (GetClientTeam(player.index) == RED)
-				if (!player.bIsVIP)
-					player.MutePlayer();
-				else player.UnmutePlayer();
-			else player.UnmutePlayer();
-		case 2:
-			if (GetClientTeam(player.index) == BLU)
-				if (!player.bIsVIP)
-					player.MutePlayer();
-				else player.UnmutePlayer();
-			else player.UnmutePlayer();
-		case 3:if (!player.bIsVIP) player.MutePlayer();
-		case 4:if (GetClientTeam(player.index) == RED) player.MutePlayer();
-		case 5:if (GetClientTeam(player.index) == BLU) player.MutePlayer();
-		default:player.MutePlayer();
-	}
-}
-
-public void CVWarn(const int client, const int val)
-{
-	Menu menu = new Menu(CVWarnMenu);
-	char cv[2]; IntToString(val, cv, 2);
-	menu.SetTitle(val ? "Enable Collisions?" : "Enable Friendly-Fire?");
-	menu.AddItem(cv, "Yes");
-	menu.AddItem("2", "No");
-	menu.ExitButton = true;
-	menu.Display(client, -1);
-}
-
-public int CVWarnMenu(Menu menu, MenuAction action, int client, int select)
-{
-	if (!IsClientValid(client))
-		return;
-	if (!IsPlayerAlive(client))
-		return;
-
-	JailFighter player = JailFighter(client);
-	switch (action)
-	{
-		case MenuAction_Select:
-		{
-			if (!player.bIsWarden)
-			{
-				CPrintToChat(client, TAG ... "You are not warden.");
-				return;
-			}
-			char idx[2]; menu.GetItem(select, idx, 2);
-			int val = StringToInt(idx);
-			if (val <= 1)	// If not no
-			{
-				hEngineConVars[val].SetBool(true);
-				if (val)
-					CPrintToChatAll(TAG ... "%t", "Collisions On Warden", client);
-				else CPrintToChatAll(TAG ... "%t", "FF On Warden", client);
-			}
-		}
-		case MenuAction_End:delete menu;
-	}
-	player.WardenMenu();
-}
-
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 		/* Functional */
@@ -1404,6 +1347,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBGameMode_Clear", Native_JBGameMode_Clear);
 	CreateNative("JBGameMode_Snapshot", Native_JBGameMode_Snapshot);
 	CreateNative("JBGameMode_Size", Native_JBGameMode_Size);
+	CreateNative("JBGameMode_ToggleMuting", Native_JBGameMode_ToggleMuting);
 		/* Gamemode Methodmap */
 	CreateNative("JBGameMode.JBGameMode", Native_JBGameMode_Instance);
 
@@ -1677,6 +1621,10 @@ public int Native_JBGameMode_Snapshot(Handle plugin, int numParams)
 public int Native_JBGameMode_Size(Handle plugin, int numParams)
 {
 	return gamemode.Size;
+}
+public int Native_JBGameMode_ToggleMuting(Handle plugin, int numParams)
+{
+	gamemode.ToggleMuting(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
 }
 
 public int Native_JBGameMode_Instance(Handle plugin, int numParams)

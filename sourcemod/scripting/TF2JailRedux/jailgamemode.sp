@@ -82,7 +82,31 @@ methodmap JailGameMode < StringMap
 			this.SetValue("iLRType", i);
 		}
 	}
-	
+	property int iMuteType
+	{
+		public get()
+		{
+			int i; this.GetValue("iMuteType", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			this.SetValue("iMuteType", i);
+		}
+	}
+	property int iLivingMuteType
+	{
+		public get()
+		{
+			int i; this.GetValue("iLivingMuteType", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			this.SetValue("iLivingMuteType", i);
+		}
+	}
+
 #if defined _steamtools_included
 	property bool bSteam
 	{
@@ -445,13 +469,26 @@ methodmap JailGameMode < StringMap
 
 	/**
 	 *	Purpose: Store the plugin names from registered sub-plugins.
-	 *	Add a setter if you need.
+	 *	Add a setter if you need. Don't see why you'd need one though.
 	*/
 	property ArrayList hPlugins
 	{
 		public get()
 		{
 			ArrayList i; this.GetValue("hPlugins", i);
+			return i;
+		}
+	}
+
+	/**
+	 *	Purpose: Store the Warden Menu, but keep it exposed to sub-plugins.
+	 *	Add a setter if you need. Don't see why you'd need one though.
+	*/
+	property Menu hWardenMenu
+	{
+		public get()
+		{
+			Menu i; this.GetValue("hWardenMenu", i);
 			return i;
 		}
 	}
@@ -468,6 +505,8 @@ methodmap JailGameMode < StringMap
 		this.iRoundCount = 0;
 		this.iLRPresetType = -1;
 		this.iLRType = -1;
+		this.iMuteType = 0;
+		this.iLivingMuteType = 0;
 		this.iWarden = view_as< JailFighter >(0);
 		this.bFreedayTeleportSet = false;
 		this.bTF2Attribs = false;
@@ -502,6 +541,7 @@ methodmap JailGameMode < StringMap
 		this.bMarkerExists = false;
 		this.flMusicTime = 0.0;
 		this.SetValue("hPlugins", new ArrayList());
+		// this.SetValue("hWardenMenu", new Menu(WardenMenu));
 	}
 	/**
 	 *	Find and Initialize a random player as the warden.
@@ -510,7 +550,11 @@ methodmap JailGameMode < StringMap
 	*/
 	public void FindRandomWarden()
 	{
-		JailFighter(GetRandomPlayer(BLU, true)).WardenSet();
+		int client = GetRandomPlayer(BLU, true);
+		if (client == -1)
+			return;
+
+		JailFighter(client).WardenSet();
 		this.bWardenExists = true;
 	}
 	/**
@@ -616,7 +660,7 @@ methodmap JailGameMode < StringMap
 		}
 	}
 	/**
-	 *	Open all of the doors on a map
+	 *	Open all of the doors on a map.
 	 *	@note 					This ignores all name checks and opens every door possible.
 	 *							This also has the chance of opening doors that lead outside of the map, be wary of this.
 	 *
@@ -639,9 +683,9 @@ methodmap JailGameMode < StringMap
 		}
 	}
 	/**
-	 *	Enable/Disable the medic room in a map
+	 *	Enable/Disable the medic room in a map.
 	 *
-	 *	@param status 			True to enable it, False otherwise
+	 *	@param status 			True to enable it, False otherwise.
 	 *
 	 *	@noreturn
 	*/
@@ -665,9 +709,9 @@ methodmap JailGameMode < StringMap
 		}
 	}
 	/**
-	 *	Toggle team filtering on the medic room
+	 *	Toggle team filtering on the medic room.
 	 *
-	 *	@param team 			Team to toggle
+	 *	@param team 			Team to toggle.
 	 *
 	 *	@noreturn
 	*/
@@ -679,4 +723,50 @@ methodmap JailGameMode < StringMap
 				if (GetEntPropFloat(ent, Prop_Data, "m_flDamage") < 0)
 					SetEntProp(ent, Prop_Data, "m_iTeamNum", team);
 	}*/
+
+	/**
+	 *	Trigger muting on clients.
+	 *
+	 *	@param player 			JailFighter instance of player to toggle muting for.
+	 *	@param forcedead 		Force the client to be treated as dead, even if they aren't.
+	 *	@param teamchange 		Force team-based muting onto the client, even if they aren't
+	 *							on that team.
+	 *
+	 *	@noreturn
+	*/
+	public void ToggleMuting(const JailFighter player, bool forcedead = false, int teamchange = 0)
+	{
+		if (this.iRoundState != StateRunning || this.bDisableMuting)
+		{
+			player.UnmutePlayer();
+			return;
+		}
+
+		int type = (!forcedead && IsPlayerAlive(player.index)) ? this.iLivingMuteType : this.iMuteType;
+		int team = teamchange ? teamchange : GetClientTeam(player.index);
+
+		if (!team)	// If player is in spec, assume red team rules of muting
+			team = RED;
+
+		switch (type)
+		{
+			case 0:player.UnmutePlayer();
+			case 1:
+				if (team == RED)
+					if (!player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				else player.UnmutePlayer();
+			case 2:
+				if (team == BLU)
+					if (!player.bIsVIP)
+						player.MutePlayer();
+					else player.UnmutePlayer();
+				else player.UnmutePlayer();
+			case 3:if (!player.bIsVIP) player.MutePlayer();
+			case 4:if (team == RED) player.MutePlayer();
+			case 5:if (team == BLU) player.MutePlayer();
+			default:player.MutePlayer();
+		}
+	}
 };

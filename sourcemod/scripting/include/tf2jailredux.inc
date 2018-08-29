@@ -1073,15 +1073,28 @@ native void JBGameMode_Clear();
 /**
  *	Create a snapshot of the GameMode StringMap's keys. See StringMapSnapshot.
  *
- *	@return 			Handle to key SnapShot.
+ *	@return 			Handle to key Snapshot.
 */
 native StringMapSnapshot JBGameMode_Snapshot();
 
 /**
  *	Retrieves the number of elements in the GameMode StringMap.
+ *
+ *	@return 			Element count.
 */
 native int JBGameMode_Size();
 
+/**
+ *	Trigger muting on clients.
+ *
+ *	@param player 			JBPlayer instance of player to toggle muting for.
+ *	@param forcedead 		Force the client to be treated as dead, even if they aren't.
+ *	@param teamchange 		Force team-based muting onto the client, even if they aren't
+ *							on that team.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_ToggleMuting(const JBPlayer player, bool forcedead = false, int teamchange = 0);
 
 methodmap JBGameMode < StringMap
 {
@@ -1604,6 +1617,7 @@ methodmap JBGameMode < StringMap
 	{
 		JBGameMode_OpenAllDoors();
 	}
+
 	/**
 	 *	Enable/Disable the medic room in a map
 	 *
@@ -1627,6 +1641,21 @@ methodmap JBGameMode < StringMap
 	{
 		JBGameMode_ToggleMedicTeam(team);
 	}*/
+
+	/**
+	 *	Trigger muting on clients.
+	 *
+	 *	@param player 			JBPlayer instance of player to toggle muting for.
+	 *	@param forcedead 		Force the client to be treated as dead, even if they aren't.
+	 *	@param teamchange 		Force team-based muting onto the client, even if they aren't
+	 *							on that team.
+	 *
+	 *	@noreturn
+	*/
+	public void ToggleMuting(const JBPlayer player, bool forcedead = false, int teamchange = 0)
+	{
+		JBGameMode_ToggleMuting(player, forcedead, teamchange);
+	}
 };
 
 
@@ -1651,9 +1680,9 @@ native bool TF2JailRedux_RegisterPlugin();
  *							your advantage (see @return).
  *
  *	@return 				Returns true if the plugin is unregistered. Just because a plugin is unregistered
- *							does not mean that it is unloaded. Therefore you can use a global bool (or native
- *							TF2JailRedux_LRIndex) to determine if you should continue with your 
- *							forward-hooked code. See the VSH or PH sub-plugin for usage.
+ *							does not mean that it is unloaded. Therefore you can use a global bool to 
+ * 							determine if you should continue with your 	forward-hooked code. See the VSH 
+ * 							or PH sub-plugin for usage.
 */
 native bool TF2JailRedux_UnRegisterPlugin();
 
@@ -1781,7 +1810,7 @@ typeset JBHookCB
 	function Action (const JBPlayer Victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom);
 
 	//	OnWMenuSelect
-	function void (const JBPlayer Player, const char[] index);
+	function Action (const JBPlayer Player, const char[] index);
 
 	//	OnPlayMusic
 	function Action (char song[PLATFORM_MAX_PATH], float &time);

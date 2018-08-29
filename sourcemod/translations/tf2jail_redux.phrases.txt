@@ -550,41 +550,6 @@
 		"en" 			"Last request has been chosen. Freedays have been stripped."
 	}
 
-	"Open Cells"
-	{
-		"en" 			"Open Cells"
-	}
-
-	"Close Cells"
-	{
-		"en" 			"Close Cells"
-	}
-
-	"Enable/Disable FF"
-	{
-		"en" 			"Enable/Disable FF"
-	}
-
-	"Enable/Disable Collisions"
-	{
-		"en" 			"Enable/Disable Collisions"
-	}
-
-	"Marker"
-	{
-		"en" 			"Marker"
-	}
-
-	"Laser"
-	{
-		"en" 			"Laser"
-	}
-
-	"Toggle Medic Room"
-	{
-		"en" 			"Toggle Medic Room"
-	}
-
 	"Cells Already Open"
 	{
 		"en" 			"Cells are already open."

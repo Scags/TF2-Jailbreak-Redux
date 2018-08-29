@@ -30,7 +30,7 @@ void InitializeForwards()
 	hPrivFwds[OnHurtPlayer] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, /*Param_Cell, Param_Cell, Param_Cell, */Param_Cell);
 	hPrivFwds[OnTakeDamage] 			= CreateForward(ET_Hook,   Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
 	hPrivFwds[OnWMenuAdd] 				= CreateForward(ET_Ignore, Param_CellByRef);
-	hPrivFwds[OnWMenuSelect] 			= CreateForward(ET_Ignore, Param_Cell, Param_String);
+	hPrivFwds[OnWMenuSelect] 			= CreateForward(ET_Hook, Param_Cell, Param_String);
 	hPrivFwds[OnClientInduction] 		= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnVariableReset] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnTimeEnd] 				= CreateForward(ET_Hook);
@@ -240,12 +240,14 @@ void Call_OnWMenuAdd(Menu & menu)
 	Call_PushCellRef(menu);
 	Call_Finish();
 }
-void Call_OnWMenuSelect(const JailFighter player, const char[] index)
+Action Call_OnWMenuSelect(const JailFighter player, const char[] index)
 {
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnWMenuSelect]);
 	Call_PushCell(player);
 	Call_PushString(index);
-	Call_Finish();
+	Call_Finish(action);
+	return action;
 }
 Action Call_OnPlayMusic(char song[PLATFORM_MAX_PATH], float &time)
 {
