@@ -26,7 +26,7 @@ void InitializeForwards()
 	hPrivFwds[OnMenuAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_CellByRef, Param_String);
 	hPrivFwds[OnPanelAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_String);
 	hPrivFwds[OnTimeLeft] 				= CreateForward(ET_Ignore, Param_CellByRef);
-	hPrivFwds[OnPlayerPrepped] 			= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnPlayerPrepped] 			= CreateForward(ET_Hook, Param_Cell);
 	hPrivFwds[OnHurtPlayer] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, /*Param_Cell, Param_Cell, Param_Cell, */Param_Cell);
 	hPrivFwds[OnTakeDamage] 			= CreateForward(ET_Hook,   Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
 	hPrivFwds[OnWMenuAdd] 				= CreateForward(ET_Ignore, Param_CellByRef);
@@ -46,6 +46,7 @@ void InitializeForwards()
 	hPrivFwds[OnDoorsClose] 			= CreateForward(ET_Hook);
 	hPrivFwds[OnDoorsLock] 				= CreateForward(ET_Hook);
 	hPrivFwds[OnDoorsUnlock] 			= CreateForward(ET_Hook);
+	hPrivFwds[OnPlayerPreppedPost] 		= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
 }
 void Call_OnDownloads()
@@ -201,11 +202,13 @@ void Call_OnTimeLeft(int &time)
 	Call_PushCellRef(time);
 	Call_Finish();
 }
-void Call_OnPlayerPrepped(const JailFighter player)
+Action Call_OnPlayerPrepped(const JailFighter player)
 {
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnPlayerPrepped]);
 	Call_PushCell(player);
-	Call_Finish();
+	Call_Finish(action);
+	return action;
 }
 void Call_OnHurtPlayer(const JailFighter victim, const JailFighter attacker, /*int damage, int custom, int weapon, */Event event)
 {
@@ -356,4 +359,10 @@ Action Call_OnDoorsUnlock()
 	Call_StartForward(hPrivFwds[OnDoorsUnlock]);
 	Call_Finish(result);
 	return result;
+}
+void Call_OnPlayerPreppedPost(const JailFighter player)
+{
+	Call_StartForward(hPrivFwds[OnPlayerPreppedPost]);
+	Call_PushCell(player);
+	Call_Finish();
 }

@@ -403,7 +403,7 @@ public Action Command_RemoveLastRequest(int client, int args)
 		if (IsClientInGame(i))
 			JailFighter(i).bIsQueuedFreeday = false;
 
-	arrLRS.Set( gamemode.iLRPresetType, arrLRS.Get(gamemode.iLRPresetType)-1 );
+	hLRS.Set( gamemode.iLRPresetType, hLRS.Get(gamemode.iLRPresetType)-1 );
 	gamemode.bIsLRInUse = false;
 	gamemode.iLRPresetType = -1;
 	CPrintToChatAll(TAG ... "%t", "Warden Deny LR", client);
@@ -551,7 +551,7 @@ public Action AdminDenyLR(int client, int args)
 	}
 
 	int type = gamemode.iLRPresetType;
-	arrLRS.Set( type, arrLRS.Get(type)-1 );
+	hLRS.Set( type, hLRS.Get(type)-1 );
 	gamemode.iLRPresetType = -1;
 	gamemode.bIsLRInUse = false;
 
@@ -1440,7 +1440,7 @@ public Action PluginLength(int client, int args)
 {
 	CReplyToCommand(client, "%d", gamemode.hPlugins.Length);
 }
-public Action arrLRSLength(int client, int args)
+public Action hLRSLength(int client, int args)
 {
-	CReplyToCommand(client, "%d", arrLRS.Length);
+	CReplyToCommand(client, "%d", hLRS.Length);
 }

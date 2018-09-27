@@ -25,7 +25,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		}
 		case BLU:
 		{
-			if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue && gamemode.iRoundState != StateRunning)
+			if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue && gamemode.iRoundState == StateStarting)
 			{
 				player.ForceTeamChange(RED);
 				EmitSoundToClient(client, NO);
@@ -260,9 +260,8 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		return Plugin_Continue;
 	}
 
-	bool warday;
+	bool warday, strip;
 	float delay;
-	int wep;
 
 	gamemode.iLRType = gamemode.iLRPresetType;
 	gamemode.iRoundState = StateRunning;
@@ -275,6 +274,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	// Or if you aren't using the VSH subplugin, ignore this
 
 	warday = gamemode.bIsWarday;
+	strip = cvarTF2Jail[StripForSure].BoolValue;
 
 	for (i = MaxClients; i; --i)
 	{
@@ -287,23 +287,10 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 		ManageRoundStart(player, event);
 
 		if (warday)
-		{
 			player.TeleportToPosition(GetClientTeam(i));
 
-			wep = GetPlayerWeaponSlot(i, 2);
-			if (wep > MaxClients && IsValidEdict(wep) && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 589 && GetClientTeam(i) == BLU)	// Eureka Effect
-			{
-				TF2_RemoveWeaponSlot(i, 2);
-				player.SpawnWeapon("tf_weapon_wrench", 7, 1, 0, "");
-			}
-
-			wep = GetPlayerWeaponSlot(i, 4);
-			if (wep > MaxClients && IsValidEdict(wep) && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 60)	// Cloak and Dagger
-			{
-				TF2_RemoveWeaponSlot(i, 4);
-				player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "");
-			}
-		}
+		if (strip)
+			SetPawnTimer(PrepPlayer, 0.2, player.userid);
 		gamemode.ToggleMuting(player);
 	}
 
@@ -340,7 +327,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 	{
 		if (!IsClientInGame(i))
 			continue;
-		
+
 		if (attrib)
 			TF2Attrib_RemoveAll(i);
 
@@ -362,7 +349,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 		player.UnmutePlayer();
 	}
 	ManageOnRoundEnd(event); // Making 1 with and without clients so things dont fire once for every client in the loop
-	
+
 	hEngineConVars[0].SetBool(false);
 	hEngineConVars[1].SetBool(false);
 

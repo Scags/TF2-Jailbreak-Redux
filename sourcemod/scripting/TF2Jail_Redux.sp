@@ -95,6 +95,7 @@ enum	// Cvar name
 	WardenAnnotation,
 	MarkerType,
 	EngieBuildings,
+	StripForSure,
 	Version
 };
 
@@ -105,7 +106,7 @@ ConVar
 	hEngineConVars[3]
 ;
 
-Handle 
+Handle
 	hTextNodes[4],
 #if defined _clientprefs_included
 	MusicCookie,
@@ -160,7 +161,7 @@ public void OnPluginStart()
 	cvarTF2Jail[EurekaTimer] 				= CreateConVar("sm_tf2jr_eureka_teleport", "20", "How long must players wait until they are able to Eureka Effect Teleport again? (0 to disable cooldown)", FCVAR_NOTIFY, true, 0.0, true, 60.0);
 	cvarTF2Jail[VIPFlag] 					= CreateConVar("sm_tf2jr_vip_flag", "a", "What admin flag do VIP players fall under? Leave blank to disable VIP perks.", FCVAR_NOTIFY);
 	cvarTF2Jail[AdmFlag] 					= CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under? Leave blank to disable Admin perks.", FCVAR_NOTIFY);
-	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players? Pre-round only.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[Markers] 					= CreateConVar("sm_tf2jr_warden_markers", "3", "Warden markers lifetime in seconds? (0 to disable them entirely)", FCVAR_NOTIFY, true, 0.0, true, 30.0);
 	cvarTF2Jail[CritType] 					= CreateConVar("sm_tf2jr_criticals", "2", "What type of criticals should guards get? 0 = none; 1 = mini-crits; 2 = full crits", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	cvarTF2Jail[MuteType] 					= CreateConVar("sm_tf2jr_muting", "6", "What type of dead player muting should occur? 0 = none; 1 = red players(except VIPs); 2 = blue players(except VIPs); 3 = all players(except VIPs); 4 = all red players; 5 = all blue players; 6 = everybody. ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
@@ -181,6 +182,7 @@ public void OnPluginStart()
 	cvarTF2Jail[WardenAnnotation] 			= CreateConVar("sm_tf2jr_warden_annotation", "5", "Display an annotation over the Warden's head on get? If so, how long in seconds?", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[MarkerType] 				= CreateConVar("sm_tf2jr_warden_marker_type", "1", "If \"sm_tf2jr_warden_markers\" is enabled, what type of markers should there be? 0 = Circles; 1 = Annotations.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[EngieBuildings] 			= CreateConVar("sm_tf2jr_engi_pda", "0", "Allow Engineers to keep their PDA's?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[StripForSure] 				= CreateConVar("sm_tf2jr_strip4sure", "0", "Make doubly sure that prisoners don't have ammo?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -290,7 +292,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_getprop", GameModeProp, ADMFLAG_GENERIC, "Retrieve a gamemode property value. (DEBUGGING)");
 	RegAdminCmd("sm_getpprop", BaseProp, ADMFLAG_GENERIC, "Retrieve a base player property value. (DEBUGGING)");
 	RegAdminCmd("sm_len", PluginLength, ADMFLAG_GENERIC, "hPlugins.Length. (DEBUGGING)");
-	RegAdminCmd("sm_lrlen", arrLRSLength, ADMFLAG_GENERIC, "arrLRS.Length. (DEBUGGING)");
+	RegAdminCmd("sm_lrlen", hLRSLength, ADMFLAG_GENERIC, "hLRS.Length. (DEBUGGING)");
 	RegAdminCmd("sm_jailreset", AdminResetPlugin, ADMFLAG_ROOT, "Reset all plug-in global variables. (DEBUGGING)");
 
 	hEngineConVars[0] = FindConVar("mp_friendlyfire");
@@ -324,7 +326,11 @@ public void OnPluginStart()
 		hTextNodes[i] = CreateHudSynchronizer();
 
 	hJailFields[0] = new StringMap();
-	arrLRS = new ArrayList(1, LRMAX+1);	// Registering plugins pushes indexes to arrLRS, we also start at 0 so +1
+	hLRS = new ArrayList(1, LRMAX+1);	// Registering plugins pushes indexes to hLRS, we also start at 0 so +1
+
+#if defined _steamtools_included
+	MarkNativeAsOptional("Steam_SetGameDescription");
+#endif
 }
 
 public bool WardenGroup(const char[] pattern, Handle clients)
@@ -353,9 +359,9 @@ public bool FreedaysGroup(const char[] pattern, Handle clients)
 {
 	if (bEnabled.BoolValue)
 		for (int i = MaxClients; i; --i)
-			if (IsClientInGame(i) && FindValueInArray(clients, i) == -1)
+			if (IsClientInGame(i) && view_as< ArrayList >(clients).FindValue(i) == -1)
 				if (JailFighter(i).bIsFreeday)
-					PushArrayCell(clients, i);
+					view_as< ArrayList >(clients).Push(i);
 	return true;
 }
 
@@ -456,14 +462,13 @@ public void OnMapStart()
 	HookEntityOutput("item_ammopack_small", "OnPlayerTouch", OnEntTouch);
 	HookEntityOutput("tf_ammo_pack", "OnPlayerTouch", OnEntTouch);
 
-	int len = arrLRS.Length;
+	int len = hLRS.Length;
 	for (int i = 0; i < len; i++)
-		arrLRS.Set( i, 0 );
+		hLRS.Set( i, 0 );
 }
 
 public void OnMapEnd()
 {
-	// gamemode.Init();		// Clears plugin/extension dependencies
 	StopBackGroundMusic();
 
 	hEngineConVars[2].SetInt(800);	// For admins like sans who force change the map during the low gravity LR
@@ -563,7 +568,6 @@ public Action Timer_PlayerThink(Handle timer)
 			if (player.bIsWarden)
 			{
 				ManageWardenThink(player);
-				player.UnmutePlayer();
 
 				int target = GetClientAimTarget(i, true);
 				if (!IsClientValid(target))
@@ -977,7 +981,7 @@ public void RandSniper(const int roundcount)
 
 	int rand = GetRandomClient();
 
-	if (!IsClientValid(rand))
+	if (rand == -1)
 		return;
 
 	EmitSoundToAll(SuicideSound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_CONVO);
@@ -993,7 +997,7 @@ public void EndRandSniper(const int roundcount)
 
 	int rand = GetRandomClient();
 
-	if (!IsClientValid(rand))
+	if (rand == -1)
 		return;
 
 	EmitSoundToAll(SuicideSound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_CONVO);
@@ -1305,11 +1309,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JB_HookEx", Native_HookEx);
 	CreateNative("JB_Unhook", Native_Unhook);
 	CreateNative("JB_UnhookEx", Native_UnhookEx);
-		/* Player Methodmap */
-	CreateNative("JBPlayer.JBPlayer", Native_JBInstance);
-	CreateNative("JBPlayer.OfUserId", Native_JBInstance_Userid);
-	CreateNative("JBPlayer.userid.get", Native_JBPlayer_Userid);
-	CreateNative("JBPlayer.index.get", Native_JBPlayer_Index);
 		/* Player */
 	CreateNative("JB_TeleportToPosition", Native_JB_TeleportToPosition);
 	CreateNative("JB_ListLRS", Native_JB_ListLRS);
@@ -1364,12 +1363,13 @@ public int Native_RegisterPlugin(Handle plugin, int numParams)
 	// Shouldn't ever happen if you're UnRegistering
 	if (holder.FindValue(plugin) != -1) 
 	{
-		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::RegisterPlugin  **** Plugin '0x%X' Already Registered ****", plugin);
+		char pluginname[32]; GetPluginFilename(plugin, pluginname, sizeof(pluginname));
+		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::RegisterPlugin  **** Plugin '%s' Already Registered ****", pluginname);
 		return false;
 	}
 
 	// Handle last request count
-	arrLRS.Push(0);
+	hLRS.Push(0);
 
 	// Handle the plugin itself
 	holder.Push(plugin);
@@ -1383,13 +1383,15 @@ public int Native_UnRegisterPlugin(Handle plugin, int numParams)
 	// Shouldn't ever happen
 	if (idx == -1)
 	{
-		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::UnRegisterPlugin  **** Plugin '0x%X' Not Registered ****", plugin);
+		char pluginname[32]; GetPluginFilename(plugin, pluginname, sizeof(pluginname));
+		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::UnRegisterPlugin  **** Plugin '%s' Not Registered ****", pluginname);
 		return false;
 	}
 	// Get rid of it
 	holder.Erase(idx);
 
-	arrLRS.Erase(idx - holder.Length + LRMAX + 1);
+	// Erase it's index from hLRS
+	hLRS.Erase(idx - holder.Length + LRMAX + 1);
 
 	return true;
 }
@@ -1407,16 +1409,14 @@ public int Native_LRIndex(Handle plugin, int numParams)
 public int Native_Hook(Handle plugin, int numParams)
 {
 	int JBHook = GetNativeCell(1);
-	Function Func = GetNativeFunction(2);
 	if (hPrivFwds[JBHook] != null)
-		AddToForward(hPrivFwds[JBHook], plugin, Func);
+		AddToForward(hPrivFwds[JBHook], plugin, GetNativeFunction(2));
 }
 public int Native_HookEx(Handle plugin, int numParams)
 {
 	int JBHook = GetNativeCell(1);
-	Function Func = GetNativeFunction(2);
 	if (hPrivFwds[JBHook] != null)
-		return AddToForward(hPrivFwds[JBHook], plugin, Func);
+		return AddToForward(hPrivFwds[JBHook], plugin, GetNativeFunction(2));
 	return 0;
 }
 public int Native_Unhook(Handle plugin, int numParams)
@@ -1433,24 +1433,6 @@ public int Native_UnhookEx(Handle plugin, int numParams)
 	return 0;
 }
 
-public int Native_JBInstance(Handle plugin, int numParams)
-{
-	return view_as< int >(JailFighter(GetNativeCell(1)));
-}
-public int Native_JBInstance_Userid(Handle plugin, int numParams)
-{
-	return view_as< int >(JailFighter.OfUserId(GetNativeCell(1)));
-}
-public int Native_JBPlayer_Userid(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	return player.userid;
-}
-public int Native_JBPlayer_Index(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	return player.index;
-}
 public int Native_JB_StringMap(Handle plugin, int numParams)
 {
 	return view_as< int >(hJailFields[GetNativeCell(1)]);

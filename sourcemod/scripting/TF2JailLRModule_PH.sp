@@ -13,7 +13,6 @@
 
 #define RED 				2
 #define BLU 				3
-#define PROPHUNT_NAME 		"LRModule_PH"
 
 char g_PlayerModel[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 
@@ -150,14 +149,14 @@ methodmap JailHunter < JBPlayer
 			strcopy(offset, sizeof(offset), propData[PropData_Offset]);
 			strcopy(rotation, sizeof(rotation), propData[PropData_Rotation]);
 		}
-		
+
 		if (announce)
 			CPrintToChat(client, TAG ... "You are now disguised as {default}%s{burlywood}.", modelName);
-		
+
 		// This is to kill the particle effects from the Harvest Ghost prop and the like
 		SetVariantString("ParticleEffectStop");
 		AcceptEntityInput(client, "DispatchEffect");
-		
+
 		g_PlayerModel[client] = model;
 		SetVariantString(model);
 		AcceptEntityInput(client, "SetCustomModel");
@@ -214,7 +213,7 @@ public Plugin myinfo =
 	author = "Scag/Ragenewb, just about all props to Darkimmortal, Geit, and Powerlord",
 	description = "Prophunt embedded as an LR for TF2Jail Redux",
 	version = PLUGIN_VERSION,
-	url = ""
+	url = "https://github.com/Scags/TF2-Jailbreak-Redux"
 };
 
 enum
@@ -237,13 +236,13 @@ enum
 	Version
 };
 
-bool 
+bool
 	bFirstBlood,
 	bAbleToReroll,
 	bDisabled
 ;
 
-int 
+int
 	iGameTime	// Pre-round-start global time
 ;
 
@@ -304,6 +303,7 @@ public void OnLibraryRemoved(const char[] name)
 	{
 		JBPH[Enabled].SetBool(false);
 		bDisabled = true;
+		gamemode = null;
 	}
 }
 
@@ -471,6 +471,7 @@ public void fwdOnCheckLivingPlayers()
 	{
 		if (!IsClientInGame(i))
 			continue;
+
 		if (!IsPlayerAlive(i))
 		{
 			base = JailHunter(i);
@@ -574,9 +575,7 @@ public Action Cmd_Reroll(int client, int args)
 public Action Cmd_UnLoad(int client, int args)
 {
 	if (TF2JailRedux_UnRegisterPlugin())
-	{
 		CReplyToCommand(client, ADMTAG ... "Prophunt has been successfully unregistered.");
-	}
 	else CReplyToCommand(client, ADMTAG ... "Prophunt was not unregistered. Was it registered to begin with?");
 
 	return Plugin_Handled;
@@ -1190,7 +1189,7 @@ public Action fwdOnTimeEnd()
 	ForceTeamWin(RED);
 	return Plugin_Handled;
 }
-public void fwdOnPlayerPrepped(const JBPlayer Player, Event event)	// For safety, although OnPlayerSpawned should take care of autobalanced players
+public void fwdOnPlayerPreppedPost(const JBPlayer Player)
 {
 	if (!JBPH[Enabled].BoolValue || NOTPH && GetLivingPlayers(RED) != 1)
 		return;
@@ -1243,8 +1242,8 @@ public void CheckJBHooks()
 		LogError("Error loading OnLastPrisoner Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
 		LogError("Error loading OnCheckLivingPlayers Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayerPrepped, fwdOnPlayerPrepped))
-		LogError("Error loading OnPlayerPrepped Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnPlayerPreppedPost, fwdOnPlayerPreppedPost))
+		LogError("Error loading OnPlayerPreppedPost Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnPreThink, fwdOnPreThink))
 		LogError("Error Loading OnPreThink Forwards for JB PH Sub-Plugin!");
 }
