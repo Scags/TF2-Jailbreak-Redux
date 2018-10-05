@@ -41,8 +41,8 @@ public void OnPluginStart()
 }
 
 public void OnAllPluginsLoaded()
-{	// Has to happen after the weapon handling obv
-	JB_Hook(OnPlayerPreppedPost, fwdOnPlayerPreppedPost);
+{	// Hook into our forward
+	JB_Hook(OnPlayerPrepped, fwdOnPlayerPrepped);
 }
 
 public void OnMapStart()
@@ -52,7 +52,7 @@ public void OnMapStart()
 
 public Action Cmd_RefreshList(int client, int args)
 {
-	CReplyToCommand(client, TAG ... "Running Weapon Blocker config.");
+	CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Running Weapon Blocker config.");
 	RunConfig();
 	return Plugin_Handled;
 }
@@ -105,7 +105,7 @@ public void RunConfig()
 			hWeaponList[count].Clear();
 }
 
-public void fwdOnPlayerPreppedPost(const JBPlayer Player)
+public void fwdOnPlayerPrepped(const JBPlayer Player)
 {
 	if (!bEnabled.BoolValue)
 		return;
@@ -116,16 +116,12 @@ public void fwdOnPlayerPreppedPost(const JBPlayer Player)
 	if (len)
 	{
 		int client = Player.index, i, index, u, wep, active, prepwep;
-		TFClassType class = TF2_GetPlayerClass(client);
 		char classname[64];
 		for (i = 0; i < 3; i++)	// Prepare for wicked laziness and hacky coding
 		{
 			active = 0;
 			wep = GetPlayerWeaponSlot(client, i);
-			if (wep == -1)
-				continue;
-
-			wep = GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex");
+			wep = (wep > MaxClients && IsValidEntity(wep)) ? GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") : -1;
 
 			for (u = 0; u < len; u++)
 			{
@@ -152,7 +148,7 @@ public void fwdOnPlayerPreppedPost(const JBPlayer Player)
 			if (!active)	// If no valid weapon to be spawned, try again
 				continue;
 
-			switch (class)
+			switch (TF2_GetPlayerClass(client))
 			{
 				case TFClass_Scout:
 				{
@@ -362,7 +358,7 @@ public void fwdOnPlayerPreppedPost(const JBPlayer Player)
 
 			wep = Player.SpawnWeapon(classname, index, 1, 0, (index == 21 ? "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1" : ""));
 			if (team + 2 == RED)
-			{ SetWeaponAmmo(client, wep, 0); SetWeaponClip(wep, 0); }
+			{ SetWeaponAmmo(wep, 0); SetWeaponClip(wep, 0); }
 		}
 	}
 }
@@ -384,12 +380,25 @@ stock void RemovePlayerBack(int client, int idx)
 			if (idx == GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex"))
 				TF2_RemoveWearable(client, edict);	// One linerrrrrrrrrr
 }
-stock void SetWeaponAmmo(const int client, const int weapon, const int ammo)
+stock int SetWeaponAmmo(const int weapon, const int ammo)
 {
-	int iOffset = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;
-	SetEntData(client, FindSendPropInfo("CTFPlayer", "m_iAmmo")+iOffset, ammo, 4, true);
+	int owner = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity");
+	if (owner <= 0)
+		return 0;
+	if (IsValidEntity(weapon))
+	{
+		int iOffset = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;
+		int iAmmoTable = FindSendPropInfo("CTFPlayer", "m_iAmmo");
+		SetEntData(owner, iAmmoTable+iOffset, ammo, 4, true);
+	}
+	return 0;
 }
-stock void SetWeaponClip(const int weapon, const int ammo)
+stock int SetWeaponClip(const int weapon, const int ammo)
 {
-	SetEntData(weapon, FindSendPropInfo("CTFWeaponBase", "m_iClip1"), ammo, 4, true);
+	if (IsValidEntity(weapon))
+	{
+		int iAmmoTable = FindSendPropInfo("CTFWeaponBase", "m_iClip1");
+		SetEntData(weapon, iAmmoTable, ammo, 4, true);
+	}
+	return 0;
 }

@@ -330,12 +330,12 @@ enum/*CvarName*/
 	Version
 };
 
-ConVar
+ConVar 
 	JBVSH[Version + 1],
 	hTeamBansCVar
 ;
 
-int
+int 
 	iHealthChecks,		// For !halehp
 	iTeamBansCVar		// Mid-round detection in case a player is guardbanned
 ;
@@ -344,7 +344,7 @@ bool
 	bDisabled			// Handling core late-loading
 ;
 
-float
+float 
 	flHealthTime		// For !halehp
 ;
 
@@ -420,7 +420,6 @@ public void OnLibraryRemoved(const char[] name)
 	{
 		JBVSH[Enabled].SetBool(false);
 		bDisabled = true;
-		gamemode = null;
 	}
 	else if (!strcmp(name, "TF2JailRedux_TeamBans", false))
 		hTeamBansCVar = null;
@@ -556,7 +555,7 @@ public void _MakePlayerBoss(const int userid)
 }
 
 public void OnPreThinkPost(int client)
-{
+{	// We don't want cheaters to camp near dispensers now do we?
 	if (!JBVSH[Enabled].BoolValue || NOTVSH)
 		return;
 
@@ -573,6 +572,7 @@ public void OnPreThinkPost(int client)
 			SetEntPropFloat(client, Prop_Send, "m_flCloakMeter", cloak);
 		}
 	}
+	return;
 }
 
 public Action EraseEntity(Handle timer, any entid)
@@ -1813,33 +1813,32 @@ public void ManageUberDeploy(const JailBoss medic, const JailBoss patient)
 	}
 }
 
-public Action fwdOnPlayerPrepped(const JBPlayer Player)
+public void PrepPlayers(const int userid)	// OnPlayerPrepped doesn't fire after round start, and I don't want it to be that way in the core plugin
 {
 	if (!JBVSH[Enabled].BoolValue || NOTVSH)
-		return Plugin_Continue;
-	return Plugin_Handled;	// Prevent weapons and ammo from being stripped, and do our own thang
-}
+		return;
 
-public void PrepPlayer(const int userid)
-{
 	JailBoss player = JailBoss.OfUserId(userid);
 	int client = player.index;
 
-	if (!IsPlayerAlive(client) || player.bIsBoss)
+	if (!IsValidClient(client))
 		return;
-
+	if (!IsPlayerAlive(client)
+		|| gamemode.iRoundState == StateEnding
+		|| player.bIsBoss)
+	return;
+	
 	if (GetClientTeam(client) != RED && GetClientTeam(client) > view_as< int >(TFTeam_Spectator))
 	{
 		player.ForceTeamChange(RED);
 		TF2_RegeneratePlayer(client);
-		SetPawnTimer(PrepPlayer, 0.2, userid);
+		SetPawnTimer(PrepPlayers, 0.3, player.userid);	// After PrepPlayer fires in core. There's got to be an easier way to do this
 		return;
 	}
 
-	SetVariantString(""); AcceptEntityInput(client, "SetCustomModel");
 	TF2Attrib_RemoveAll(client);
 	SetEntityHealth(client, GetEntProp(client, Prop_Data, "m_iMaxHealth"));
-
+	
 	if (IsValidEntity(FindPlayerBack(client, { 444 }, 1))) //  Fixes mantreads to have jump height again
 	{
 		TF2Attrib_SetByDefIndex(client, 58, 1.3); //  "Self dmg push force increased"
@@ -2087,7 +2086,7 @@ public void fwdOnRoundStartPlayer(const JBPlayer Player)
 	}
 
 	base.iDamage = 0;
-	SetPawnTimer(PrepPlayer, 0.2, base.userid);
+	SetPawnTimer( PrepPlayers, 0.2, base.userid );
 }
 public void fwdOnRoundStart()
 {
@@ -2609,10 +2608,10 @@ public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 		return;
 	}
 
+	SetVariantString(""); AcceptEntityInput(spawn.index, "SetCustomModel");
 	if (GetClientTeam(spawn.index) != RED)
 		spawn.ForceTeamChange(RED);
-
-	SetPawnTimer(PrepPlayer, 0.2, spawn.userid);
+	SetPawnTimer( PrepPlayers, 0.2, spawn.userid );
 }
 public void fwdOnMenuAdd(const int index, int &max, char strName[32])
 {
@@ -2797,11 +2796,8 @@ public void fwdOnCheckLivingPlayers()
 		if (!IsClientInGame(i))
 			continue;
 
-		if (!IsPlayerAlive(i))
-			continue;
-
 		base = JailBoss(i);
-		if (base.bNeedsToGoBackToBlue && GetClientTeam(i) != BLU)
+		if (base.bNeedsToGoBackToBlue && GetClientTeam(i) != BLU && !IsPlayerAlive(i))
 		{
 			ChangeClientTeam(i, BLU);
 			base.bNeedsToGoBackToBlue = false;
@@ -2816,7 +2812,7 @@ public Action OnPlayerRunCmd(int client, int & buttons, int & impulse, float vel
 
 	if (!IsPlayerAlive(client))
 		return Plugin_Continue;
-
+	
 	JailBoss base = JailBoss(client);
 	switch (base.iType) {
 		case  - 1: {  }
@@ -2889,10 +2885,6 @@ public void LoadJBHooks()
 		LogError("Failed to load OnLastPrisoner forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
 		LogError("Failed to load OnCheckLivingPlayers forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayerPrepped, fwdOnPlayerPrepped))
-		LogError("Failed to load OnPlayerPrepped forwards for JB VSH Sub-Plugin!");
-//	if (!JB_HookEx(OnPlayerPreppedPost, fwdOnPlayerPreppedPost))
-//		LogError("Failed to load OnPlayerPreppedPost forwards for JB VSH Sub-Plugin!");
 }
 
 stock bool OnlyScoutsLeft(const int team)
