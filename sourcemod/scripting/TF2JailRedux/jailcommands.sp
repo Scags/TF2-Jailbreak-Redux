@@ -29,15 +29,15 @@ public int Panel_Help(Menu menu, MenuAction action, int client, int select)
 		{
 			switch (select)
 			{
-				case 0:
+				case 1:
 				{
 					if (gamemode.bWardenExists)
 						CPrintToChat(client, "{crimson}[TF2Jail]{default} %t", "Current Warden", gamemode.iWarden.index);
 					else CPrintToChat(client, TAG ... "%t", "No Current Warden");
 				}
-				case 1:ListLastRequestPanel(client);
+				case 2:ListLastRequestPanel(client);
 #if defined _clientprefs_included
-				case 2:MusicPanel(client);
+				case 3:MusicPanel(client);
 #endif
 			}
 		}

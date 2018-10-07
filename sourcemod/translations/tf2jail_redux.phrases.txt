@@ -433,6 +433,11 @@
 		"en" 			"Warday configuration is not set."
 	}
 
+	"Warden Commands"
+	{
+		"en"			"Warden Commands"
+	}
+
 	"Warday Activate"
 	{
 		"en" 			"Warday has been activated!"
