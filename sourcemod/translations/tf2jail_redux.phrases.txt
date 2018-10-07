@@ -341,7 +341,7 @@
 	"Warden Give LR"
 	{
 		"#format" 		"{1:N},{2:N}"
-		"en" 			"Warden {default}{1}{burlywood} has given {default}{1}{burlywood} a Last Request."
+		"en" 			"Warden {default}{1}{burlywood} has given {default}{2}{burlywood} a Last Request."
 	}
 
 	// 1: Client name/index
