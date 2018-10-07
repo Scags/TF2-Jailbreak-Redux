@@ -101,7 +101,7 @@ public Action Command_BecomeWarden(int client, int args)
 		CPrintToChat(client, TAG ... "%t", "Locked From Warden");
 		return Plugin_Handled;
 	}
-	
+
 	player.WardenSet();
 	return Plugin_Handled;
 }
@@ -476,6 +476,7 @@ public void MusicPanel(const int client)
 	panel.SetTitle("Turn the TF2Jail Music...");
 	panel.DrawItem("On?");
 	panel.DrawItem("Off?");
+	panel.DrawItem("Exit");
 	panel.Send(client, MusicTogglePanel, 9001);
 	delete (panel);
 }
@@ -488,13 +489,14 @@ public int MusicTogglePanel(Menu menu, MenuAction action, int client, int select
 		if (select == 1) 
 		{
 			player.bNoMusic = false;
-			CPrintToChat(client, TAG ... "%t", "Music On");
+			CPrintToChat(client, TAG ... "{burlywood}%t", "Music On");
 		}
-		else
+		else if (select == 2)
 		{
 			player.bNoMusic = true;
-			CPrintToChat(client, TAG ... "%t", "Music Off");
+			CPrintToChat(client, TAG ... "{burlywood}%t", "Music Off");
 		}
+		else return;
 	}
 }
 #endif

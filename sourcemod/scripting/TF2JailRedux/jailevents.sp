@@ -389,6 +389,9 @@ public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
+	if (gamemode.iRoundState == StateRunning)
+		return Plugin_Continue;
+
 	JailFighter player = JailFighter.OfUserId( event.GetInt("userid") );
 
 	if (IsClientValid(player.index))

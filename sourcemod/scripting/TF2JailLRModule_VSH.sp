@@ -1827,7 +1827,7 @@ public void PrepPlayers(const int userid)	// OnPlayerPrepped doesn't fire after 
 		|| gamemode.iRoundState == StateEnding
 		|| player.bIsBoss)
 	return;
-	
+
 	if (GetClientTeam(client) != RED && GetClientTeam(client) > view_as< int >(TFTeam_Spectator))
 	{
 		player.ForceTeamChange(RED);
@@ -2130,7 +2130,7 @@ public void fwdOnRoundStart()
 	int maxhp = GetEntProp(client, Prop_Data, "m_iMaxHealth");
 	TF2Attrib_RemoveAll(client);
 	TF2Attrib_SetByDefIndex( client, 26, float(rand.iMaxHealth)-maxhp );
-	
+
 	rand.iHealth = rand.iMaxHealth;
 	SetEntityHealth(client, rand.iHealth);
 
@@ -2835,6 +2835,15 @@ public Action OnPlayerRunCmd(int client, int & buttons, int & impulse, float vel
 	return Plugin_Continue;
 }
 
+public Action fwdOnPlayerPreppedPre(const JBPlayer player)
+{
+	if (!JBVSH[Enabled].BoolValue || NOTVSH)
+		return Plugin_Continue;
+
+	PrepPlayers(player.userid);
+	return Plugin_Handled;
+}
+
 public void LoadJBHooks()
 {
 	if (!JB_HookEx(OnDownloads, fwdOnDownloads))
@@ -2885,6 +2894,8 @@ public void LoadJBHooks()
 		LogError("Failed to load OnLastPrisoner forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
 		LogError("Failed to load OnCheckLivingPlayers forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnPlayerPreppedPre, fwdOnPlayerPreppedPre))
+		LogError("Failed to load OnPlayerPreppedPre forwards for JB VSH Sub-Plugin!");
 }
 
 stock bool OnlyScoutsLeft(const int team)

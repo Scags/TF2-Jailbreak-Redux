@@ -153,6 +153,8 @@ public void PrepPlayer(const int userid)
 		return;
 
 	JailFighter base = JailFighter(client);
+	if (Call_OnPlayerPreppedPre(base) != Plugin_Continue)
+		return;
 
 	base.SetCustomModel("");
 
@@ -275,7 +277,7 @@ public void ManageRoundStart(const JailFighter player, Event event)
 			}
 		}
 		case TinyRound:SetEntPropFloat(client, Prop_Send, "m_flModelScale", 0.3);
-		case Warday, ClassWars:ResetPlayer(client);
+		case Warday, ClassWars:SetPawnTimer(ResetPlayer, 0.1, client);
 		case HHHDay:CHHHDay.Manage().Activate(player);
 		case HotPrisoner:CHotPrisoner.Manage().Activate(player);
 	}

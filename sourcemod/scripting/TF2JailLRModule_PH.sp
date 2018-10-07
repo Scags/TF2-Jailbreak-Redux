@@ -885,9 +885,8 @@ public void fwdOnPreThink(const JBPlayer Player, int buttons)
 	}
 }
 
-// Same as in jailhandler.sp, forcing people as the sniper class crashes servers
-int NoSS[6]  = { 3, 4, 5, 6, 7, 9 };
-int NoHvy[5] = { 3, 4, 5, 6, 9 };
+int NoSS[7]  = { 2, 3, 4, 5, 6, 7, 9 };
+int NoHvy[6] = { 2, 3, 4, 5, 6, 9 };
 int iHeavy;
 public void fwdOnRoundStartPlayer(const JBPlayer player)
 {
