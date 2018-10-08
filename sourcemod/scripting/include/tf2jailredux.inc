@@ -1738,6 +1738,7 @@ enum	// JB Hook Types
 	OnDoorsLock,
 	OnDoorsUnlock,
 	OnPlayerPreppedPre,
+	OnLRGiven,
 	OnPlayMusic
 };
 
@@ -1754,6 +1755,7 @@ typeset JBHookCB
 		OnVariableReset
 		OnFreedayGiven
 		OnFreedayRemoved
+		OnLRGiven
 	*/
 	function void (const JBPlayer Player);
 	

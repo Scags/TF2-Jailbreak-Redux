@@ -757,6 +757,11 @@ methodmap JailFighter
 		AddLRToMenu(menu);
 		menu.ExitButton = true;
 		menu.Display(this.index, -1);
+
+		Call_OnLRGiven(this);
+		float time = cvarTF2Jail[LRTimer].FloatValue;
+		if (time != 0.0/* && JBGameMode_GetProperty("iTimeLeft") > time*/)
+			JBGameMode_SetProperty("iTimeLeft", time);
 	}
 	/**
 	 *	Give a player the warden menu.

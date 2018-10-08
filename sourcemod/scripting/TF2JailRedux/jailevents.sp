@@ -319,8 +319,13 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	delay = cvarTF2Jail[WardenDelay].FloatValue;
 	if (delay != 0.0)
 	{
-		gamemode.bIsWardenLocked = true;
-		SetPawnTimer(EnableWarden, delay, gamemode.iRoundCount);
+		if (delay == -1.0)
+			gamemode.FindRandomWarden();
+		else
+		{
+			gamemode.bIsWardenLocked = true;
+			SetPawnTimer(EnableWarden, delay, gamemode.iRoundCount);
+		}
 	}
 
 	gamemode.flMusicTime = GetGameTime() + 1.4;
@@ -387,9 +392,6 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!bEnabled.BoolValue)
-		return Plugin_Continue;
-
-	if (gamemode.iRoundState == StateRunning)
 		return Plugin_Continue;
 
 	JailFighter player = JailFighter.OfUserId( event.GetInt("userid") );

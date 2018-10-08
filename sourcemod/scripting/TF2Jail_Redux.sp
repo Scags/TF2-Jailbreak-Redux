@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"1.0.0"
+#define PLUGIN_VERSION		"1.0.1"
 #define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -95,6 +95,7 @@ enum	// Cvar name
 	WardenAnnotation,
 	MarkerType,
 	EngieBuildings,
+	LRTimer,
 	Version
 };
 
@@ -166,7 +167,7 @@ public void OnPluginStart()
 	cvarTF2Jail[MuteType] 					= CreateConVar("sm_tf2jr_muting", "6", "What type of dead player muting should occur? 0 = none; 1 = red players(except VIPs); 2 = blue players(except VIPs); 3 = all players(except VIPs); 4 = all red players; 5 = all blue players; 6 = everybody. ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
 	cvarTF2Jail[LivingMuteType] 			= CreateConVar("sm_tf2jr_live_muting", "1", "What type of living player muting should occur? 0 = none; 1 = red players(except VIPs); 2 = blue players(except VIPs and warden); 3 = all players(except VIPs and warden); 4 = all red players; 5 = all blue players(except warden); 6 = everybody(except warden). ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
 	cvarTF2Jail[Disguising] 				= CreateConVar("sm_tf2jr_disguising", "0", "What teams can disguise, if any? (Your Eternal Reward only) 0 = no disguising; 1 = only Red can disguise; 2 = Only blue can disguise; 3 = all players can disguise", FCVAR_NOTIFY, true, 0.0, true, 3.0);
-	cvarTF2Jail[WardenDelay] 				= CreateConVar("sm_tf2jr_warden_delay", "0", "Delay in seconds after round start until players can toggle becoming the warden. 0 to disable delay.", FCVAR_NOTIFY, true, 0.0);
+	cvarTF2Jail[WardenDelay] 				= CreateConVar("sm_tf2jr_warden_delay", "0", "Delay in seconds after round start until players can toggle becoming the warden. 0 to disable delay. -1 to automatically pick a warden on round start.", FCVAR_NOTIFY, true, -1.0);
 	cvarTF2Jail[LRDefault] 					= CreateConVar("sm_tf2jr_lr_default", "5", "Default number of times the basic last requests can be picked in a single map. 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[FreeKill] 					= CreateConVar("sm_tf2jr_freekill", "3", "How many kills in a row must a player get before the freekiller system activates? 0 to disable. (This does not affect gameplay, prints SourceBans information to admin consoles determined by \"sm_tf2jr_admin_flag\").", FCVAR_NOTIFY, true, 0.0, true, 33.0);
 	cvarTF2Jail[FreeKillMessage] 			= CreateConVar("sm_tf2jr_freekill_message", "0", "If \"sm_tf2jr_freekill\" is enabled, how are admins to be notified of a freekiller? 0 = Console message; 1 = Chat message.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -181,6 +182,7 @@ public void OnPluginStart()
 	cvarTF2Jail[WardenAnnotation] 			= CreateConVar("sm_tf2jr_warden_annotation", "5", "Display an annotation over the Warden's head on get? If so, how long in seconds?", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[MarkerType] 				= CreateConVar("sm_tf2jr_warden_marker_type", "1", "If \"sm_tf2jr_warden_markers\" is enabled, what type of markers should there be? 0 = Circles; 1 = Annotations.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[EngieBuildings] 			= CreateConVar("sm_tf2jr_engi_pda", "0", "Allow Engineers to keep their PDA's?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[LRTimer] 					= CreateConVar("sm_tf2jr_lr_timer", "0", "When an LR is given, should the round timer be set to a certain time? 0 to disable.", FCVAR_NOTIFY, true, 0.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -353,9 +355,9 @@ public bool FreedaysGroup(const char[] pattern, Handle clients)
 {
 	if (bEnabled.BoolValue)
 		for (int i = MaxClients; i; --i)
-			if (IsClientInGame(i) && FindValueInArray(clients, i) == -1)
+			if (IsClientInGame(i) && view_as< ArrayList >(clients).FindValue(i) == -1)
 				if (JailFighter(i).bIsFreeday)
-					PushArrayCell(clients, i);
+					view_as< ArrayList >(clients).Push(i);
 	return true;
 }
 
@@ -924,7 +926,7 @@ public void BuildMenu()
 	} while kv.GotoNextKey(false);
 
 	delete kv;
-	ManageWardenMenu(menu);		// Handler/Forwards
+	ManageWardenMenu(menu);		// Handler
 	gamemode.SetValue("hWardenMenu", menu);
 }
 
@@ -960,7 +962,7 @@ public void KillThatBitch(const int client)
 {
 	EmitSoundToAll(SuicideSound);
 	ForcePlayerSuicide(client);
-	if (IsPlayerAlive(client))	// In case their kartified or something idk
+	if (IsPlayerAlive(client))	// In case they're kartified or something idk
 		SDKHooks_TakeDamage(client, 0, 0, 9001.0, DMG_DIRECT, _, _, _);
 }
 
@@ -1207,7 +1209,7 @@ public Action Timer_Round(Handle timer)
 		}
 		case 0:
 		{
-			if (ManageTimeEnd() == Plugin_Continue)
+			if (ManageTimeEnd() == Plugin_Continue)	// Handler
 				ForceTeamWin(BLU);
 			return Plugin_Stop;
 		}
@@ -1364,8 +1366,8 @@ public int Native_RegisterPlugin(Handle plugin, int numParams)
 	// Shouldn't ever happen if you're UnRegistering
 	if (holder.FindValue(plugin) != -1) 
 	{
-		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::RegisterPlugin  **** Plugin '0x%X' Already Registered ****", plugin);
-		return false;
+		char name[64]; GetPluginFilename(plugin, name, sizeof(name));
+		return ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::RegisterPlugin  **** Plugin '%s' Already Registered ****", name);
 	}
 
 	// Handle last request count
@@ -1383,8 +1385,8 @@ public int Native_UnRegisterPlugin(Handle plugin, int numParams)
 	// Shouldn't ever happen
 	if (idx == -1)
 	{
-		ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::UnRegisterPlugin  **** Plugin '0x%X' Not Registered ****", plugin);
-		return false;
+		char name[64]; GetPluginFilename(plugin, name, sizeof(name));
+		return ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::UnRegisterPlugin  **** Plugin '%s' Not Registered ****", name);
 	}
 	// Get rid of it
 	holder.Erase(idx);

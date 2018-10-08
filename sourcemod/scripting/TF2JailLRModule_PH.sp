@@ -9,7 +9,7 @@
 #pragma newdecls required
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.0.4"
+#define PLUGIN_VERSION		"1.0.5"
 
 #define RED 				2
 #define BLU 				3
@@ -251,7 +251,9 @@ ConVar
 	JBPH[Version + 1]
 ;
 
-JBGameMode gamemode;
+JBGameMode
+	gamemode
+;
 
 public void OnPluginStart()
 {
@@ -554,7 +556,8 @@ public Action Cmd_Reroll(int client, int args)
 	  || TF2_IsPlayerInCondition(client, TFCond_OnFire)
 	  || TF2_IsPlayerInCondition(client, TFCond_LostFooting)
 	  || TF2_IsPlayerInCondition(client, TFCond_Jarated) 
-	  || TF2_IsPlayerInCondition(client, TFCond_Milked)) ) 
+	  || TF2_IsPlayerInCondition(client, TFCond_Milked)
+	  || TF2_IsPlayerInCondition(client, TFCond_Gas)) ) 
 	{
 		CPrintToChat(client, TAG ... "You are under effects and can't change!");
 		return Plugin_Handled;
@@ -574,9 +577,7 @@ public Action Cmd_Reroll(int client, int args)
 public Action Cmd_UnLoad(int client, int args)
 {
 	if (TF2JailRedux_UnRegisterPlugin())
-	{
 		CReplyToCommand(client, ADMTAG ... "Prophunt has been successfully unregistered.");
-	}
 	else CReplyToCommand(client, ADMTAG ... "Prophunt was not unregistered. Was it registered to begin with?");
 
 	return Plugin_Handled;
@@ -912,8 +913,8 @@ public void fwdOnRoundStartPlayer(const JBPlayer player)
 		{
 			base.iOldClass = TF2_GetPlayerClass(client);
 			TF2_SetPlayerClass(client, TFClass_Scout);
+			TF2_RegeneratePlayer(client);	// Fixes first-person viewmodels
 			base.MakeProp(JBPH[PropNameOnGive].BoolValue);
-			SetEntityHealth(client, 125);
 
 			switch (JBPH[Teleportation].IntValue)
 			{
@@ -1189,17 +1190,22 @@ public Action fwdOnTimeEnd()
 	ForceTeamWin(RED);
 	return Plugin_Handled;
 }
-public void fwdOnPlayerPrepped(const JBPlayer Player, Event event)	// For safety, although OnPlayerSpawned should take care of autobalanced players
+public Action fwdOnPlayerPreppedPre(const JBPlayer Player)	// For safety, although OnPlayerSpawned should take care of autobalanced players
 {
-	if (!JBPH[Enabled].BoolValue || NOTPH && GetLivingPlayers(RED) != 1)
-		return;
+	if (!JBPH[Enabled].BoolValue || NOTPH)
+		return Plugin_Continue;
 
 	if (GetClientTeam(Player.index) != RED)
-		return;
+		return Plugin_Continue;
+
+	if (GetLivingPlayers(RED) == 1)	// If the last prop
+		return Plugin_Handled;
 
 	JailHunter player = JailHunter.Of(Player);
 	if (!player.bIsProp)
 		player.MakeProp(JBPH[PropNameOnGive].BoolValue);
+
+	return Plugin_Handled;
 }
 
 public void CheckJBHooks()
@@ -1242,8 +1248,8 @@ public void CheckJBHooks()
 		LogError("Error loading OnLastPrisoner Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
 		LogError("Error loading OnCheckLivingPlayers Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayerPrepped, fwdOnPlayerPrepped))
-		LogError("Error loading OnPlayerPrepped Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnPlayerPreppedPre, fwdOnPlayerPreppedPre))
+		LogError("Error loading OnPlayerPreppedPre Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnPreThink, fwdOnPreThink))
 		LogError("Error Loading OnPreThink Forwards for JB PH Sub-Plugin!");
 }

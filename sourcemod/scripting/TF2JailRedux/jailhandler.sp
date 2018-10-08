@@ -156,6 +156,12 @@ public void PrepPlayer(const int userid)
 	if (Call_OnPlayerPreppedPre(base) != Plugin_Continue)
 		return;
 
+	switch (gamemode.iLRType)
+	{
+		case ClassWars, Warday:return;	// Prevent ammo removal
+		default:{	}
+	}
+
 	base.SetCustomModel("");
 
 	if (cvarTF2Jail[EngieBuildings].BoolValue)
@@ -226,19 +232,20 @@ public void ManageOnRoundStart(Event event)
 		}
 		case Warday:
 		{
-			CPrintToChatAll("{burlywood} *War kazoo sounds*");
+			CPrintToChatAll("{burlywood}*War kazoo sounds*");
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
 		}
 		case ClassWars:
 		{
-			int iClassRED = GetRandomInt(0, 8);
-			int iClassBLU = GetRandomInt(0, 8);
+			int iClassRED = GetRandomInt(1, 9);
+			int iClassBLU = GetRandomInt(1, 9);
 			for (int i = MaxClients; i; --i)
 				if (IsClientInGame(i) && IsPlayerAlive(i))
 					if (GetClientTeam(i) == RED)
-						TF2_SetPlayerClass(i, view_as< TFClassType >(iClassRED));
-					else TF2_SetPlayerClass(i, view_as< TFClassType >(iClassBLU));	// Last else statement in one-liners reflects the last if statement. Learned that in C programming, heh
+						{ TF2_SetPlayerClass(i, view_as< TFClassType >(iClassRED));}
+					else { TF2_SetPlayerClass(i, view_as< TFClassType >(iClassBLU));}
+						// Last else statement in one-liners reflects the last if statement. Learned that in C programming, heh
 
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
@@ -277,7 +284,7 @@ public void ManageRoundStart(const JailFighter player, Event event)
 			}
 		}
 		case TinyRound:SetEntPropFloat(client, Prop_Send, "m_flModelScale", 0.3);
-		case Warday, ClassWars:SetPawnTimer(ResetPlayer, 0.1, client);
+		case Warday, ClassWars:SetPawnTimer(ResetPlayer, 0.2, client);
 		case HHHDay:CHHHDay.Manage().Activate(player);
 		case HotPrisoner:CHotPrisoner.Manage().Activate(player);
 	}

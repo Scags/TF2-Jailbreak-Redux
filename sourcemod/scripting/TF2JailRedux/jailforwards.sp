@@ -47,6 +47,7 @@ void InitializeForwards()
 	hPrivFwds[OnDoorsLock] 				= CreateForward(ET_Hook);
 	hPrivFwds[OnDoorsUnlock] 			= CreateForward(ET_Hook);
 	hPrivFwds[OnPlayerPreppedPre] 		= CreateForward(ET_Hook, Param_Cell);
+	hPrivFwds[OnLRGiven] 				= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
 }
 void Call_OnDownloads()
@@ -365,4 +366,10 @@ Action Call_OnPlayerPreppedPre(const JailFighter player)
 	Call_PushCell(player);
 	Call_Finish(result);
 	return result;
+}
+void Call_OnLRGiven(const JailFighter player)
+{
+	Call_StartForward(hPrivFwds[OnLRGiven]);
+	Call_PushCell(player);
+	Call_Finish();
 }

@@ -16,7 +16,7 @@
 
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.1.5"
+#define PLUGIN_VERSION		"1.1.6"
 
 Handle
 	hHudText, 
@@ -25,7 +25,9 @@ Handle
 	jumpHUD
 ;
 
-JBGameMode gamemode;
+JBGameMode
+	gamemode
+;
 
 char
 	snd[PLATFORM_MAX_PATH],
