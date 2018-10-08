@@ -159,6 +159,7 @@ public void PrepPlayer(const int userid)
 	switch (gamemode.iLRType)
 	{
 		case ClassWars, Warday:return;	// Prevent ammo removal
+		case HHHDay:return;				// Prevent clearing everything
 		default:{	}
 	}
 
