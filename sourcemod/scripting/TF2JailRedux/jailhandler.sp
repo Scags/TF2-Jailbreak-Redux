@@ -27,7 +27,7 @@ enum /** LRs **/
 	// VSH = 13			// DO NOT SET ANY NEW LRS UNDER THESE NUMBERS UNLESS YOU DISABLE OR ADJUST THE SUB PLUGIN CONVARS!
 	// PH = 14,			// THEY WILL OVERLAP!
 };
-/** 
+/**
  *	When adding a new lr, increase the LRMAX to the proper/latest enum value
  *	Reminder that random lr grabs a random int from 2 to LRMAX
  *	Having breaks or skips within the enum will result in nothing happening the following round if that number is selected
@@ -103,8 +103,8 @@ public void ManageDownloads()
 	iHalo = PrecacheModel("materials/sprites/glow01.vmt", true);
 	iHalo2 = PrecacheModel("materials/sprites/halo01.vmt", true);
 
-	HHHDayDownload();
-	HotPrisonerDownload();
+	CHHHDay.SetDownloads();
+	CHotPrisoner.SetDownloads();
 
 	Call_OnDownloads();
 }
@@ -153,17 +153,17 @@ public void PrepPlayer(const int userid)
 		return;
 
 	JailFighter base = JailFighter(client);
-	if (Call_OnPlayerPreppedPre(base) != Plugin_Continue)
-		return;
 
 	switch (gamemode.iLRType)
 	{
 		case ClassWars, Warday:return;	// Prevent ammo removal
 		case HHHDay:return;				// Prevent clearing everything
-		default:{	}
+		case -1:{	}
 	}
+	if (Call_OnPlayerPreppedPre(base) != Plugin_Continue)
+		return;
 
-	base.SetCustomModel("");
+	SetEntityModel(client, "");
 
 	if (cvarTF2Jail[EngieBuildings].BoolValue)
 	{
@@ -187,16 +187,6 @@ public void PrepPlayer(const int userid)
 		base.EmptyWeaponSlots();
 
 	Call_OnPlayerPrepped(base);
-}
-public void OnClientDisconnect(int client)
-{
-	JailFighter player = JailFighter(client);
-	if (player.bIsWarden)
-	{
-		player.WardenUnset();
-		PrintCenterTextAll("Warden has disconnected!");
-		gamemode.bWardenExists = false;
-	}
 }
 /**
  *	Calls without including players, so we don't fire the same thing for every player
@@ -244,17 +234,18 @@ public void ManageOnRoundStart(Event event)
 			for (int i = MaxClients; i; --i)
 				if (IsClientInGame(i) && IsPlayerAlive(i))
 					if (GetClientTeam(i) == RED)
-						{ TF2_SetPlayerClass(i, view_as< TFClassType >(iClassRED));}
-					else { TF2_SetPlayerClass(i, view_as< TFClassType >(iClassBLU));}
+						TF2_SetPlayerClass(i, view_as< TFClassType >(iClassRED));
+					else TF2_SetPlayerClass(i, view_as< TFClassType >(iClassBLU));
 						// Last else statement in one-liners reflects the last if statement. Learned that in C programming, heh
 
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
+			gamemode.bAllowBuilding = true;
 		}
-		case HHHDay:CHHHDay.Manage().Initialize();
-		case HotPrisoner:CHotPrisoner.Manage().Initialize();
+		case HHHDay:CHHHDay.Initialize();
+		case HotPrisoner:CHotPrisoner.Initialize();
 	}
-	Call_OnRoundStart();
+	Call_OnRoundStart(event);
 }
 /**
  *	Calls on round start for each living player
@@ -286,8 +277,8 @@ public void ManageRoundStart(const JailFighter player, Event event)
 		}
 		case TinyRound:SetEntPropFloat(client, Prop_Send, "m_flModelScale", 0.3);
 		case Warday, ClassWars:SetPawnTimer(ResetPlayer, 0.2, client);
-		case HHHDay:CHHHDay.Manage().Activate(player);
-		case HotPrisoner:CHotPrisoner.Manage().Activate(player);
+		case HHHDay:CHHHDay.Activate(player);
+		case HotPrisoner:CHotPrisoner.Activate(player);
 	}
 	Call_OnRoundStartPlayer(player, event);
 }
@@ -299,7 +290,7 @@ public void ManageTimeLeft()
 	int time = cvarTF2Jail[RoundTime].IntValue;
 	switch (gamemode.iLRType)
 	{
-		default:{	}
+		case -1:{	}
 	}
 	Call_OnTimeLeft(time);
 	
@@ -314,8 +305,8 @@ public void ManageOnRoundEnd(Event event)
 	{
 		case Gravity:hEngineConVars[2].SetInt(800);
 		case RandomKill:SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), gamemode.iRoundCount);
-		case HHHDay:CHHHDay.Manage().Terminate(event);
-		case HotPrisoner:CHotPrisoner.Manage().Terminate(event);
+		case HHHDay:CHHHDay.Terminate(event);
+		case HotPrisoner:CHotPrisoner.Terminate(event);
 	}
 	Call_OnRoundEnd(event);
 }
@@ -327,8 +318,8 @@ public void ManageRoundEnd(const JailFighter base, Event event)
 	switch(gamemode.iLRType)
 	{
 		case TinyRound:SetPawnTimer(ResetModelProps, 1.0, base.index);
-		case HHHDay:CHHHDay.Manage().ManageEnd(base);
-		case HotPrisoner:CHotPrisoner.Manage().ManageEnd(base);
+		case HHHDay:CHHHDay.ManageEnd(base);
+		case HotPrisoner:CHotPrisoner.ManageEnd(base);
 	}
 	Call_OnRoundEndPlayer(base, event);
 }
@@ -354,11 +345,12 @@ public void ManageWarden(const JailFighter base)
 {
 	gamemode.iWarden = base;
 	gamemode.bWardenExists = true;
+	gamemode.ResetVotes();
 	base.WardenMenu();
 
 	switch (gamemode.iLRType)
 	{
-		default: {	}
+		case -1: {	}
 	}
 }
 /**
@@ -368,7 +360,7 @@ public void ManageRedTouchBlue(const JailFighter toucher, const JailFighter touc
 {
 	switch (gamemode.iLRType)
 	{
-		case HotPrisoner:CHotPrisoner.Manage().ManageTouch(toucher, touchee);
+		case HotPrisoner:CHotPrisoner.ManageTouch(toucher, touchee);
 	}
 	Call_OnClientTouch(toucher, touchee);
 }
@@ -424,7 +416,7 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 {
 	switch (cond)
 	{
-		default: {	}
+		case -1: {	}
 	}
 }*/
 
@@ -440,7 +432,7 @@ public void ManageRedThink(const JailFighter player)
 {
 	switch (gamemode.iLRType)
 	{
-		default: {	}
+		case -1: {	}
 	}
 	Call_OnRedThink(player);
 }
@@ -463,7 +455,7 @@ public void ManageBlueThink(const JailFighter player)
 {
 	switch (gamemode.iLRType)
 	{
-		default: {	}
+		case -1: {	}
 	}
 	Call_OnBlueNotWardenThink(player);
 }*/
@@ -474,7 +466,7 @@ public void ManageWardenThink(const JailFighter player)
 {
 	switch (gamemode.iLRType)
 	{
-		default: {	}
+		case -1: {	}
 	}
 	Call_OnWardenThink(player);
 }
@@ -489,7 +481,7 @@ public Action SoundHook(int clients[64], int &numClients, char sample[PLATFORM_M
 	JailFighter base = JailFighter(entity);
 	switch (gamemode.iLRType)
 	{
-		case HHHDay:return CHHHDay.Manage().HookSound(base, sample, entity);
+		case HHHDay:return CHHHDay.HookSound(base, sample, entity);
 	}
 
 	return Plugin_Continue;
@@ -501,7 +493,7 @@ public void ManageOnPreThink(const JailFighter base, int buttons)
 {
 	switch (gamemode.iLRType)
 	{
-		default: {	}
+		case -1: {	}
 	}
 	Call_OnPreThink(base, buttons);
 }
@@ -516,7 +508,7 @@ public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victi
 	
 	switch (gamemode.iLRType)
 	{
-		default: {	}
+		case -1: {	}
 	}
 	Call_OnHurtPlayer(victim, attacker, /*damage, custom, weapon, */event);
 }
@@ -561,7 +553,7 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 {
 	switch (gamemode.iLRType)
 	{
-		case HHHDay:CHHHDay.Manage().ManageDeath(attacker, victim, event);
+		case HHHDay:CHHHDay.ManageDeath(attacker, victim, event);
 		case RandomKill:
 		{
 			if ((attacker.index <= 0 && event.GetInt("damagebits") & DMG_BULLET) || attacker.index == victim.index)
@@ -631,7 +623,7 @@ public void ManageBuildingDestroyed(const JailFighter base, const int building, 
 {
 	switch (gamemode.iLRType) 
 	{
-		default: {	}
+		case -1: {	}
 	}
 	Call_OnBuildingDestroyed(base, building, event);
 }
@@ -653,7 +645,7 @@ public void ManageOnPlayerJarated(const JailFighter jarateer, const JailFighter 
 {
 	switch (gamemode.iLRType)
 	{
-		default: {	}
+		case -1: {	}
 	}
 	Call_OnPlayerJarated(jarateer, jarateed, event);
 }
@@ -664,7 +656,7 @@ public void ManageUberDeployed(const JailFighter patient, const JailFighter medi
 {
 	switch (gamemode.iLRType)
 	{
-		default: {	}
+		case -1: {	}
 	}
 	Call_OnUberDeployed(patient, medic, event);
 }
@@ -791,7 +783,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 {
 	if (!IsClientValid(client) || !IsPlayerAlive(client))
 		return;
-		
+
 	switch (action)
 	{
 		case MenuAction_Select:
@@ -841,7 +833,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				case Suicide:
 				{
 					CPrintToChatAll(TAG ... "%N has chosen to kill themselves. What a shame...", client);
-					SetPawnTimer(KillThatBitch, (GetRandomFloat(0.5, 7.0)), client);	// Meme lol
+					SetPawnTimer(KillThatBitch, GetRandomFloat(0.5, 7.0), client);	// Meme lol
 					arrLRS.Set( request, value+1 );
 					return;
 				}
@@ -900,7 +892,7 @@ public void ResetVariables(const JailFighter base, const bool compl)
 	base.bInJump = false;
 	base.bUnableToTeleport = false;
 	base.flSpeed = 0.0;
-	base.flKillSpree = 0.0;
+	base.flKillingSpree = 0.0;
 	base.bIsQueuedFreeday = false;
 	if (compl)
 	{

@@ -8,10 +8,8 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	if (!IsClientValid(client))
 		return Plugin_Continue;
 
-	ResetPlayer(client);
-
 	JailFighter player = JailFighter(client);
-	player.SetCustomModel("");
+	SetEntityModel(client, "");
 
 	switch (GetClientTeam(client))
 	{
@@ -42,12 +40,10 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		}
 	}
 
-	if (gamemode.iRoundState == StateRunning)
-		gamemode.ToggleMuting(player);
-
 	if (gamemode.bIsWarday)
 		player.TeleportToPosition(GetClientTeam(client));	// Enum value is the same as team value, so we can cheat it
 
+	gamemode.ToggleMuting(player);
 	ManageSpawn(player, event);
 	SetPawnTimer(PrepPlayer, 0.2, player.userid);
 

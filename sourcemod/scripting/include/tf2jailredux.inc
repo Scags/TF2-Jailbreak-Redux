@@ -492,7 +492,10 @@ methodmap JBPlayer
 	 *
 	 *	@return				A player instance of the JBPlayer methodmap.
 	*/
-	public native JBPlayer( const int index );
+	public JBPlayer( const int index )
+	{
+		return view_as< JBPlayer >(index);
+	}
 
 	/**
 	 *	Constructs an instance of the JailFighter internal methodmap directly from a client's userid.
@@ -502,7 +505,10 @@ methodmap JBPlayer
 	 *
 	 *	@return 			A player instance of the JBPlayer methodmap.
 	*/
-	public static native JBPlayer OfUserId( const int userid );
+	public static JBPlayer OfUserId( const int userid )
+	{
+		return view_as< JBPlayer >(GetClientOfUserId(userid));
+	}
 
 	/* **** **** [ P R O P E R T I E S ] **** **** */
 
@@ -513,7 +519,7 @@ methodmap JBPlayer
 	*/
 	property int userid 
 	{
-		public native get();
+		public get()			{ return GetClientUserId(view_as< int >(this)); }
 	}
 
 	/**
@@ -523,7 +529,7 @@ methodmap JBPlayer
 	*/
 	property int index 
 	{
-		public native get();
+		public get()			{ return view_as< int >(this); }
 	}
 
 	property StringMap hMap
@@ -1096,6 +1102,13 @@ native int JBGameMode_Size();
 */
 native void JBGameMode_ToggleMuting(const JBPlayer player, bool forcedead = false, int teamchange = 0);
 
+/**
+ *	Reset the Warden-firing votes.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_ResetVotes();
+
 methodmap JBGameMode < StringMap
 {
 	/**
@@ -1656,6 +1669,16 @@ methodmap JBGameMode < StringMap
 	{
 		JBGameMode_ToggleMuting(player, forcedead, teamchange);
 	}
+
+	/**
+	 *	Reset the Warden-firing votes.
+	 *
+	 *	@noreturn
+	*/
+	public void ResetVotes()
+	{
+		JBGameMode_ResetVotes();
+	}
 };
 
 
@@ -1671,7 +1694,7 @@ methodmap JBGameMode < StringMap
 native bool TF2JailRedux_RegisterPlugin();
 
 /**
- *	Un-registers a plugin from the last request handle.
+ *	Un-registers a sub-plugin from the last request handle.
  *	@note 					This is optional, however doing this will prevent breakage when unloading
  *							or reloading sub-plugins mid-game.
  *							Obviously, you must use the name plugin_name as you did when you registered
@@ -1687,7 +1710,7 @@ native bool TF2JailRedux_RegisterPlugin();
 native bool TF2JailRedux_UnRegisterPlugin();
 
 /**
- *	Retrieve the calling plugin's LR index
+ *	Retrieve the calling plugin's LR index.
  *
  *	@return 				LR index of this plugin if it is registered. 0 otherwise.
 */
@@ -1783,7 +1806,6 @@ typeset JBHookCB
 
 	/*
 		OnDownloads
-		OnRoundStart
 		OnCheckLivingPlayers
 	*/
 	function void ();
@@ -1794,7 +1816,10 @@ typeset JBHookCB
 	//	OnPanelAdd
 	function void (const int index, char name[64]);
 
-	//	OnRoundEnd
+	/*	
+		OnRoundEnd
+		OnRoundStart
+	*/
 	function void (Event event);
 
 	//	OnWMenuAdd
@@ -1914,11 +1939,6 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JB_Unhook");
 	MarkNativeAsOptional("JB_UnhookEx");
 
-	MarkNativeAsOptional("JBPlayer.JBPlayer");
-	MarkNativeAsOptional("JBPlayer.OfUserId");
-	MarkNativeAsOptional("JBPlayer.userid.get");
-	MarkNativeAsOptional("JBPlayer.index.get");
-
 	MarkNativeAsOptional("JB_GetValue");
 	MarkNativeAsOptional("JB_SetValue");
 	MarkNativeAsOptional("JB_Map");
@@ -1945,6 +1965,7 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBGameMode_OpenAllDoors");
 	MarkNativeAsOptional("JBGameMode_ToggleMedic");
 	// MarkNativeAsOptional("JBGameMode_ToggleMedicTeam");
+	MarkNativeAsOptional("JBGameMode_ResetVotes");
 
 	MarkNativeAsOptional("JBGameMode_GetProperty");
 	MarkNativeAsOptional("JBGameMode_SetProperty");

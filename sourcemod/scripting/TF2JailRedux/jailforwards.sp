@@ -5,7 +5,7 @@ Handle
 void InitializeForwards()
 {
 	hPrivFwds[OnDownloads] 				= CreateForward(ET_Ignore);
-	hPrivFwds[OnRoundStart] 			= CreateForward(ET_Ignore);
+	hPrivFwds[OnRoundStart] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnRoundStartPlayer]		= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
 	hPrivFwds[OnRoundEnd] 				= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnRoundEndPlayer] 		= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
@@ -55,9 +55,10 @@ void Call_OnDownloads()
 	Call_StartForward(hPrivFwds[OnDownloads]);
 	Call_Finish();
 }
-void Call_OnRoundStart()
+void Call_OnRoundStart(Event event)
 {
 	Call_StartForward(hPrivFwds[OnRoundStart]);
+	Call_PushCell(event);
 	Call_Finish();
 }
 void Call_OnRoundStartPlayer(const JailFighter player, Event event)

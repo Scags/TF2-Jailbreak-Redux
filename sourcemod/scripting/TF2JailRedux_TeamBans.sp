@@ -8,7 +8,7 @@
 #undef TAG
 #define TAG "{crimson}[TF2Jail] Teambans{burlywood} "
 
-#define PLUGIN_VERSION "1.0.0"
+#define PLUGIN_VERSION 		"1.0.1"
 #define RED 				2
 #define BLU 				3
 #define IsClientValid(%1) 	((0 < %1 <= MaxClients) && IsClientInGame(%1))
@@ -79,12 +79,12 @@ methodmap JailPlayer < JBPlayer
 {
 	public JailPlayer( const int r )
 	{
-		return view_as< JailPlayer >(JBPlayer(r));
+		return view_as< JailPlayer >(r);
 	}
 
 	public static JailPlayer OfUserId( const int id )
 	{
-		return view_as< JailPlayer >(JBPlayer.OfUserId(id));
+		return view_as< JailPlayer >(GetClientOfUserId(id));
 	}
 
 	public static JailPlayer Of( const JBPlayer player )
@@ -768,7 +768,7 @@ public void UnGuardBan(int target, int admin)
 	player.bIsGuardbanned = false;
 	player.iTimeLeft = 0;
 
-	CShowActivityEx(admin, TAG, "Unguardbanned %N.", target);
+	CShowActivity2(admin, TAG, "Unguardbanned %N.", target);
 
 	Format(query, sizeof(query), 
 			"DELETE FROM %s "
@@ -816,7 +816,7 @@ void GuardBan(int victim, int admin, int time, char reason[256] = "")
 		Format(BanMsg, sizeof(BanMsg), "permanently.");
 	else Format(BanMsg, sizeof(BanMsg), "for %d minutes.", time);
 
-	CShowActivityEx(admin, TAG, "Guardbanned %N %s", victim, BanMsg);
+	CShowActivity2(admin, TAG, "Guardbanned %N %s", victim, BanMsg);
 
 	player.bIsGuardbanned = true;
 	player.iTimeLeft = time;
@@ -880,7 +880,7 @@ public void UnWardenBan(int target, int admin)
 	char ID[32], query[256];
 	GetClientAuthId(target, AuthId_Steam2, ID, sizeof(ID));
 
-	CShowActivityEx(admin, TAG, "Unwardenbanned %N.", target);
+	CShowActivity2(admin, TAG, "Unwardenbanned %N.", target);
 
 	Format(query, sizeof(query), 
 			"DELETE FROM %s "
@@ -920,7 +920,7 @@ public void WardenBan(int victim, int admin, int time)
 		Format(BanMsg, sizeof(BanMsg), "permanently.");
 	else Format(BanMsg, sizeof(BanMsg), "for %d minutes.", time);
 
-	CShowActivityEx(admin, TAG, "Wardenbanned %N %s", victim, BanMsg);
+	CShowActivity2(admin, TAG, "Wardenbanned %N %s", victim, BanMsg);
 
 	if (player.bIsWarden)
 		JBGameMode_FireWarden(false);	// Curse you gamemode properties!

@@ -106,6 +106,42 @@ methodmap JailGameMode < StringMap
 			this.SetValue("iLivingMuteType", i);
 		}
 	}
+	property int iVoters
+	{
+		public get()
+		{
+			int i; this.GetValue("iVoters", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			this.SetValue("iVoters", i);
+		}
+	}
+	property int iVotes
+	{
+		public get()
+		{
+			int i; this.GetValue("iVotes", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			this.SetValue("iVotes", i);
+		}
+	}
+	property int iVotesNeeded
+	{
+		public get()
+		{
+			int i; this.GetValue("iVotesNeeded", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			this.SetValue("iVotesNeeded", i);
+		}
+	}
 
 #if defined _steamtools_included
 	property bool bSteam
@@ -507,6 +543,9 @@ methodmap JailGameMode < StringMap
 		this.iLRType = -1;
 		this.iMuteType = 0;
 		this.iLivingMuteType = 0;
+		this.iVoters = 0;
+		this.iVotes = 0;
+		this.iVotesNeeded = 0;
 		this.iWarden = view_as< JailFighter >(0);
 		this.bFreedayTeleportSet = false;
 		this.bTF2Attribs = false;
@@ -635,11 +674,30 @@ methodmap JailGameMode < StringMap
 			}
 		}
 	}
-	/** 
-	 *	Find and terminate the current warden.
+	/**
+	 *	Reset the Warden-firing votes.
 	 *
-	 *	@param prevent 			Prevent the player from becoming warden again.
-	 * 	@param announce 		Display to all players that the warden was fired.
+	 *	@noreturn
+	*/
+	public void ResetVotes()
+	{
+		this.iVotes = 0;
+
+		JailFighter player;
+		for (int i = MaxClients; i; --i)
+		{
+			if (!IsClientInGame(i))
+				continue;
+
+			player = JailFighter(i);
+			player.bVoted = false;	
+		}
+	}
+	/** 
+	 *	Find and terminate the current Warden.
+	 *
+	 *	@param prevent 			Prevent the player from becoming Warden again.
+	 * 	@param announce 		Display to all players that the Warden was fired.
 	 *
 	 *	@noreturn
 	*/
@@ -658,6 +716,8 @@ methodmap JailGameMode < StringMap
 			CPrintToChatAll(TAG ... "%t", "Warden Fired");
 			PrintCenterTextAll("%t", "Warden Fired");
 		}
+
+		this.ResetVotes();
 	}
 	/**
 	 *	Open all of the doors on a map.
@@ -734,7 +794,7 @@ methodmap JailGameMode < StringMap
 	 *
 	 *	@noreturn
 	*/
-	public void ToggleMuting(const JailFighter player, bool forcedead = false, int teamchange = 0)
+	public void ToggleMuting( const JailFighter player, bool forcedead = false, int teamchange = 0 )
 	{
 		if (this.iRoundState != StateRunning || this.bDisableMuting)
 		{

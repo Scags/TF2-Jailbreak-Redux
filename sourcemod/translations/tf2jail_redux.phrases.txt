@@ -256,7 +256,7 @@
 	"Admin Force LR"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"Admin has forced {default}%{1}{burlywood} to receive a Last Request."
+		"en" 			"Admin has forced {default}{1}{burlywood} to receive a Last Request."
 	}
 
 	"Admin Force LR Self"
@@ -564,5 +564,22 @@
 	"Cells Not Open"
 	{
 		"en" 			"Cells are not open."
+	}
+
+	// 1: Current votes
+	// 2: Votes needed
+	"Fire Warden Already Voted"
+	{
+		"#format"	"{1:d},{2:d}"
+		"en"		"You have already voted to cast off this Warden. ({1} votes, {2} required)"
+	}
+
+	// 1: Client name/index
+	// 2: Current votes
+	// 3: Votes needed
+	"Fire Warden Requested"
+	{
+		"#format"	"{1:N},{2:d},{3:d}"
+		"en"		"{1} wants to fire the current Warden. ({2} votes, {3} required)"
 	}
 }

@@ -30,11 +30,9 @@ public int Panel_Help(Menu menu, MenuAction action, int client, int select)
 			switch (select)
 			{
 				case 1:
-				{
 					if (gamemode.bWardenExists)
 						CPrintToChat(client, "{crimson}[TF2Jail]{default} %t", "Current Warden", gamemode.iWarden.index);
 					else CPrintToChat(client, TAG ... "%t", "No Current Warden");
-				}
 				case 2:ListLastRequestPanel(client);
 #if defined _clientprefs_included
 				case 3:MusicPanel(client);
@@ -68,7 +66,7 @@ public Action Command_BecomeWarden(int client, int args)
 
 	if (gamemode.bWardenExists)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{default} %t", "CurrentWarden", gamemode.iWarden.index);
+		CPrintToChat(client, "{crimson}[TF2Jail]{default} %t", "Current Warden", gamemode.iWarden.index);
 		return Plugin_Handled;
 	}
 
@@ -454,7 +452,7 @@ public Action Command_CurrentWarden(int client, int args)
 		return Plugin_Handled;
 	}
 	if (gamemode.bWardenExists)
-		CReplyToCommand(client, "{crimson}[TF2Jail]{default} %t", "CurrentWarden", gamemode.iWarden.index);
+		CReplyToCommand(client, "{crimson}[TF2Jail]{default} %t", "Current Warden", gamemode.iWarden.index);
 	else CReplyToCommand(client, TAG ... "%t", "No Current Warden");
 
 	return Plugin_Handled;
@@ -496,7 +494,6 @@ public int MusicTogglePanel(Menu menu, MenuAction action, int client, int select
 			player.bNoMusic = true;
 			CPrintToChat(client, TAG ... "{burlywood}%t", "Music Off");
 		}
-		else return;
 	}
 }
 #endif
@@ -1276,6 +1273,33 @@ public Action Command_WardenToggleMedic(int client, int args)
 	else CPrintToChatAll(TAG ... "%t", "Medic Room Disabled", client);
 	
 	gamemode.ToggleMedic(gamemode.bMedicDisabled);
+	return Plugin_Handled;
+}
+
+public Action Command_FireWarden(int client, int args)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Handled;
+
+	if (!client)
+	{
+		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
+		return Plugin_Handled;
+	}
+
+	if (!cvarTF2Jail[WardenFiring].BoolValue)
+	{
+		CPrintToChat(client, TAG ... "%t", "Not Enabled");
+		return Plugin_Handled;
+	}
+
+	if (!gamemode.bWardenExists)
+	{
+		CPrintToChat(client, TAG ... "%t", "No Current Warden");
+		return Plugin_Handled;
+	}
+
+	JailFighter(client).AttemptFireWarden();
 	return Plugin_Handled;
 }
 

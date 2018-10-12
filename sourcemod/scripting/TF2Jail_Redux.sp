@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"1.0.1"
+#define PLUGIN_VERSION		"1.1.0"
 #define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -96,6 +96,8 @@ enum	// Cvar name
 	MarkerType,
 	EngieBuildings,
 	LRTimer,
+	WardenFiring,
+	WardenFiringRatio,
 	Version
 };
 
@@ -183,6 +185,8 @@ public void OnPluginStart()
 	cvarTF2Jail[MarkerType] 				= CreateConVar("sm_tf2jr_warden_marker_type", "1", "If \"sm_tf2jr_warden_markers\" is enabled, what type of markers should there be? 0 = Circles; 1 = Annotations.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[EngieBuildings] 			= CreateConVar("sm_tf2jr_engi_pda", "0", "Allow Engineers to keep their PDA's?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[LRTimer] 					= CreateConVar("sm_tf2jr_lr_timer", "0", "When an LR is given, should the round timer be set to a certain time? 0 to disable.", FCVAR_NOTIFY, true, 0.0);
+	cvarTF2Jail[WardenFiring] 				= CreateConVar("sm_tf2jr_warden_fire", "0", "Allow players (Reds) vote to fire the current Warden?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[WardenFiringRatio] 			= CreateConVar("sm_tf2jr_warden_fire_ratio", "0.6", "Percentage of players required for fire Wardens.", FCVAR_NOTIFY, true, 0.5, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -247,6 +251,8 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_wtm", Command_WardenToggleMedic, "Allows the Warden to toggle the medic room.");
 	RegConsoleCmd("sm_wtmedic", Command_WardenToggleMedic, "Allows the Warden to toggle the medic room.");
 	RegConsoleCmd("sm_wtogglemedic", Command_WardenToggleMedic, "Allows the Warden to toggle the medic room.");
+	RegConsoleCmd("sm_fire", Command_FireWarden, "Vote for Warden to be fired.");
+	RegConsoleCmd("sm_firewarden", Command_FireWarden, "Vote for Warden to be fired.");
 
 	RegAdminCmd("sm_rw", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
 	RegAdminCmd("sm_removewarden", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
@@ -317,6 +323,7 @@ public void OnPluginStart()
 	{
 		if (IsClientInGame(i))
 		{
+			OnClientConnected(i);
 			OnClientPutInServer(i);
 			OnClientPostAdminCheck(i);
 		}
@@ -461,6 +468,13 @@ public void OnMapStart()
 	int len = arrLRS.Length;
 	for (int i = 0; i < len; i++)
 		arrLRS.Set( i, 0 );
+
+	if (!bLate)
+	{
+		gamemode.iVotesNeeded = 0;
+		gamemode.ResetVotes();
+	}
+	else bLate = false;
 }
 
 public void OnMapEnd()
@@ -472,16 +486,29 @@ public void OnMapEnd()
 	ConvarsSet(false);
 }
 
+public void OnClientConnected(int client)
+{
+	if (hJailFields[client])
+		delete hJailFields[client];
+
+	hJailFields[client] = new StringMap();
+
+	JailFighter player = JailFighter(client);
+	player.bVoted = false;
+	player.bIsVIP = false;
+	player.bIsAdmin = false;
+	player.bIsMuted = false;
+
+	gamemode.iVoters++;
+	gamemode.iVotesNeeded = RoundToFloor(float(gamemode.iVoters) * cvarTF2Jail[WardenFiringRatio].FloatValue);
+}
+
 public void OnClientPutInServer(int client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, OnPlayerTakeDamage);
 	SDKHook(client, SDKHook_Touch, OnTouch);
 	SDKHook(client, SDKHook_PreThink, PreThink);
 
-	if (hJailFields[client])
-		delete hJailFields[client];
-
-	hJailFields[client] = new StringMap();
 	JailFighter player = JailFighter(client);
 	player.iCustom = 0;
 	player.iKillCount = 0;
@@ -497,7 +524,7 @@ public void OnClientPutInServer(int client)
 	player.bLasering = false;
 	player.bIsMuted = false;
 	player.flSpeed = 0.0;
-	player.flKillSpree = 0.0;
+	player.flKillingSpree = 0.0;
 
 	SetPawnTimer(WelcomeMessage, 5.0, player.userid);
 	ManageClientStartVariables(player);
@@ -523,6 +550,27 @@ public void OnClientPostAdminCheck(int client)
 	// Brute force them to be unmuted, then let properties take over
 
 	gamemode.ToggleMuting(player);
+}
+
+public void OnClientDisconnect(int client)
+{
+	JailFighter player = JailFighter(client);
+
+	if (player.bVoted)
+		gamemode.iVotes--;
+
+	gamemode.iVoters--;
+	gamemode.iVotesNeeded = RoundToFloor(float(gamemode.iVoters) * cvarTF2Jail[WardenFiringRatio].FloatValue);
+
+	if (player.bIsWarden)
+	{
+		player.WardenUnset();
+		PrintCenterTextAll("Warden has disconnected!");
+		gamemode.bWardenExists = false;
+	}
+	// If they're warden, they wouldn't vote... right?
+	else if (gamemode.iVotes >= gamemode.iVotesNeeded)
+		gamemode.FireWarden();
 }
 
 public Action OnTouch(int toucher, int touchee)
@@ -565,7 +613,6 @@ public Action Timer_PlayerThink(Handle timer)
 			if (player.bIsWarden)
 			{
 				ManageWardenThink(player);
-				player.UnmutePlayer();
 
 				int target = GetClientAimTarget(i, true);
 				if (!IsClientValid(target))
@@ -1248,7 +1295,7 @@ public void FreeKillSystem(const JailFighter attacker, const int killcount)
 		return;
 
 	float curtime = GetGameTime();
-	if (curtime <= attacker.flKillSpree)
+	if (curtime <= attacker.flKillingSpree)
 		attacker.iKillCount++;
 	else attacker.iKillCount = 0;
 
@@ -1266,7 +1313,7 @@ public void FreeKillSystem(const JailFighter attacker, const int killcount)
 					else PrintToConsole(i, "**********\n%L\nIP:%s\n**********", attacker.index, strIP);
 		attacker.iKillCount = 0;
 	}
-	else attacker.flKillSpree = curtime + 15;
+	else attacker.flKillingSpree = curtime + 15;
 }
 
 public void EnableWarden(const int roundcount)
@@ -1307,11 +1354,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JB_HookEx", Native_HookEx);
 	CreateNative("JB_Unhook", Native_Unhook);
 	CreateNative("JB_UnhookEx", Native_UnhookEx);
-		/* Player Methodmap */
-	CreateNative("JBPlayer.JBPlayer", Native_JBInstance);
-	CreateNative("JBPlayer.OfUserId", Native_JBInstance_Userid);
-	CreateNative("JBPlayer.userid.get", Native_JBPlayer_Userid);
-	CreateNative("JBPlayer.index.get", Native_JBPlayer_Index);
 		/* Player */
 	CreateNative("JB_TeleportToPosition", Native_JB_TeleportToPosition);
 	CreateNative("JB_ListLRS", Native_JB_ListLRS);
@@ -1325,6 +1367,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JB_UnHorsemann", Native_JB_UnHorsemann);
 	CreateNative("JB_WardenMenu", Native_JB_WardenMenu);
 	CreateNative("JB_ClimbWall", Native_JB_ClimbWall);
+	CreateNative("JB_AttemptFireWarden", Native_JB_AttemptFireWarden);
 	CreateNative("JB_NoMusic", Native_JB_NoMusic);
 	CreateNative("JB_Map", Native_JB_StringMap);
 	CreateNative("JB_GetValue", Native_JB_GetValue);
@@ -1338,6 +1381,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBGameMode_OpenAllDoors", Native_JBGameMode_OpenAllDoors);
 	CreateNative("JBGameMode_ToggleMedic", Native_JBGameMode_ToggleMedic);
 	// CreateNative("JBGameMode_ToggleMedicTeam", Native_JBGameMode_ToggleMedicTeam);
+	CreateNative("JBGameMode_ToggleMuting", Native_JBGameMode_ToggleMuting);
+	CreateNative("JBGameMode_ResetVotes", Native_JBGameMode_ResetVotes);
 		/* Gamemode StringMap */
 	CreateNative("JBGameMode_GetProperty", Native_JBGameMode_GetProperty);
 	CreateNative("JBGameMode_SetProperty", Native_JBGameMode_SetProperty);
@@ -1349,13 +1394,14 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBGameMode_Clear", Native_JBGameMode_Clear);
 	CreateNative("JBGameMode_Snapshot", Native_JBGameMode_Snapshot);
 	CreateNative("JBGameMode_Size", Native_JBGameMode_Size);
-	CreateNative("JBGameMode_ToggleMuting", Native_JBGameMode_ToggleMuting);
 		/* Gamemode Methodmap */
 	CreateNative("JBGameMode.JBGameMode", Native_JBGameMode_Instance);
 
 	InitializeForwards();
 
 	RegPluginLibrary("TF2Jail_Redux");
+
+	bLate = late;
 
 	return APLRes_Success;
 }
@@ -1435,24 +1481,6 @@ public int Native_UnhookEx(Handle plugin, int numParams)
 	return 0;
 }
 
-public int Native_JBInstance(Handle plugin, int numParams)
-{
-	return view_as< int >(JailFighter(GetNativeCell(1)));
-}
-public int Native_JBInstance_Userid(Handle plugin, int numParams)
-{
-	return view_as< int >(JailFighter.OfUserId(GetNativeCell(1)));
-}
-public int Native_JBPlayer_Userid(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	return player.userid;
-}
-public int Native_JBPlayer_Index(Handle plugin, int numParams)
-{
-	JailFighter player = GetNativeCell(1);
-	return player.index;
-}
 public int Native_JB_StringMap(Handle plugin, int numParams)
 {
 	return view_as< int >(hJailFields[GetNativeCell(1)]);
@@ -1519,6 +1547,10 @@ public int Native_JB_ClimbWall(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).ClimbWall(GetNativeCell(2), view_as< float >(GetNativeCell(3)), view_as< float >(GetNativeCell(4)), GetNativeCell(5));
 }
+public int Native_JB_AttemptFireWarden(Handle plugin, int numParams)
+{
+	JailFighter(GetNativeCell(1)).AttemptFireWarden();
+}
 public int Native_JB_NoMusic(Handle plugin, int numParams)
 {
 	return JailFighter(GetNativeCell(1)).bNoMusic;
@@ -1557,6 +1589,14 @@ public int Native_JBGameMode_ToggleMedic(Handle plugin, int numParams)
 	int team = GetNativeCell(1);
 	gamemode.ToggleMedicTeam(team);
 }*/
+public int Native_JBGameMode_ToggleMuting(Handle plugin, int numParams)
+{
+	gamemode.ToggleMuting(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
+}
+public int Native_JBGameMode_ResetVotes(Handle plugin, int numParams)
+{
+	gamemode.ResetVotes();
+}
 
 public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)
 {
@@ -1623,10 +1663,6 @@ public int Native_JBGameMode_Snapshot(Handle plugin, int numParams)
 public int Native_JBGameMode_Size(Handle plugin, int numParams)
 {
 	return gamemode.Size;
-}
-public int Native_JBGameMode_ToggleMuting(Handle plugin, int numParams)
-{
-	gamemode.ToggleMuting(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
 }
 
 public int Native_JBGameMode_Instance(Handle plugin, int numParams)

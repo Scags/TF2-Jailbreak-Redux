@@ -12,34 +12,29 @@
 
 methodmap CHHHDay < JailGameMode
 {
-	public static CHHHDay Manage()
+	public static void Initialize()
 	{
-		return view_as< CHHHDay >(gamemode);
-	}
-
-	public void Initialize()
-	{
-		this.bIsWardenLocked = true;
-		this.bIsWarday = true;
-		this.bDisableCriticals = true;
+		gamemode.bIsWardenLocked = true;	// Static methods can't use 'this' for semi-obvious reasons
+		gamemode.bIsWarday = true;
+		gamemode.bDisableCriticals = true;
 		CPrintToChatAll("{burlywood}BOO!");
 		EmitSoundToAll(SPAWN);
 		EmitSoundToAll(SPAWNRUMBLE);
-		this.DoorHandler(OPEN);
+		gamemode.DoorHandler(OPEN);
 	}
 
-	public void Activate( const JailFighter player )
+	public static void Activate( const JailFighter player )
 	{
 		player.MakeHorsemann();	// Fuck server commands, hard coding feels more solid
 	}
 
-	public Action HookSound( const JailFighter player, char sample[PLATFORM_MAX_PATH], int &entity )
+	public static Action HookSound( const JailFighter player, char sample[PLATFORM_MAX_PATH], int &entity )
 	{
 		if (player.bIsHHH)
 		{
 			if (!strncmp(sample, "vo", 2, false))
 				return Plugin_Handled;
-			
+
 			if (strncmp(sample, "player/footsteps/", 17, false) != -1)
 			{
 				if (StrContains(sample, "1.wav", false) != -1 || StrContains(sample, "3.wav", false) != -1) 
@@ -53,20 +48,20 @@ methodmap CHHHDay < JailGameMode
 		return Plugin_Continue;
 	}
 
-	public void Terminate( Event event )
+	public static void Terminate( Event event )
 	{
 		EmitSoundToAll(DEATH);
 		EmitSoundToAll(DEATHVO);
 		EmitSoundToAll(DEATHVO2);
 	}
 
-	public void ManageEnd( const JailFighter player )
+	public static void ManageEnd( const JailFighter player )
 	{
 		if (player.bIsHHH)
 			SetPawnTimer(UnHorsemannify, 1.0, player);
 	}
 
-	public void ManageDeath( const JailFighter attacker, const JailFighter victim, Event event )
+	public static void ManageDeath( const JailFighter attacker, const JailFighter victim, Event event )
 	{
 		if (victim.bIsHHH)
 		{
@@ -74,19 +69,19 @@ methodmap CHHHDay < JailGameMode
 			SetPawnTimer(UnHorsemannify, 0.2, victim);
 		}
 	}
-};
 
-public void HHHDayDownload()
-{
-	PrecacheModel(HHH, true);
-	PrecacheModel(AXE, true);
-	PrecacheSound(SPAWN, true);
-	PrecacheSound(SPAWNRUMBLE, true);
-	PrecacheSound(SPAWNVO, true);
-	PrecacheSound(BOO, true);
-	PrecacheSound(DEATH, true);
-	PrecacheSound(DEATHVO, true);
-	PrecacheSound(DEATHVO2, true);
-	PrecacheSound(LEFTFOOT, true);
-	PrecacheSound(RIGHTFOOT, true);
-}
+	public static void SetDownloads()
+	{
+		PrecacheModel(HHH, true);
+		PrecacheModel(AXE, true);
+		PrecacheSound(SPAWN, true);
+		PrecacheSound(SPAWNRUMBLE, true);
+		PrecacheSound(SPAWNVO, true);
+		PrecacheSound(BOO, true);
+		PrecacheSound(DEATH, true);
+		PrecacheSound(DEATHVO, true);
+		PrecacheSound(DEATHVO2, true);
+		PrecacheSound(LEFTFOOT, true);
+		PrecacheSound(RIGHTFOOT, true);
+	}
+};

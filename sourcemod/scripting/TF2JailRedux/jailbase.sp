@@ -22,7 +22,13 @@ float
 	vecWardayRed[3]						// Red warday map position
 ;
 
-StringMap hJailFields[MAX_TF_PLAYERS];
+bool
+	bLate								// Late-loaded plugin
+;
+
+StringMap
+	hJailFields[MAX_TF_PLAYERS]
+;
 
 methodmap JailFighter
 {
@@ -212,6 +218,18 @@ methodmap JailFighter
 			hJailFields[this.index].SetValue("bLasering", i);
 		}
 	}
+	property bool bVoted
+	{
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bVoted", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bVoted", i);
+		}
+	}
 #if defined _clientprefs_included
 	property bool bNoMusic
 	{
@@ -247,16 +265,16 @@ methodmap JailFighter
 			hJailFields[this.index].SetValue("flSpeed", i);
 		}
 	}
-	property float flKillSpree
+	property float flKillingSpree
 	{
 		public get()
 		{
-			float i; hJailFields[this.index].GetValue("flKillSpree", i);
+			float i; hJailFields[this.index].GetValue("flKillingSpree", i);
 			return i;
 		}
 		public set( const float i )
 		{
-			hJailFields[this.index].SetValue("flKillSpree", i);
+			hJailFields[this.index].SetValue("flKillingSpree", i);
 		}
 	}
 
@@ -619,7 +637,7 @@ methodmap JailFighter
 			for (int i = MaxClients; i; --i)
 				if (IsClientInGame(i))
 					ClearSyncHud(i, hTextNodes[2]);
-					
+
 		this.bIsWarden = false;
 		this.bLasering = false;
 		this.SetCustomModel("");
@@ -726,7 +744,7 @@ methodmap JailFighter
 	}
 	/**
 	 *	Teleport a player either to a freeday or warday location.
-	 *	@note 				If gamemode teleport properties are not true, player will be teleported to map's origin
+	 *	@note 				If gamemode teleport properties are not true, player will not be teleported.
 	 *
 	 *	@param location 	Location to teleport the client.
 	 *
@@ -760,7 +778,7 @@ methodmap JailFighter
 
 		Call_OnLRGiven(this);
 		int time = cvarTF2Jail[LRTimer].IntValue;
-		if (time != 0/* && JBGameMode_GetProperty("iTimeLeft") > time*/)
+		if (time/* && JBGameMode_GetProperty("iTimeLeft") > time*/)
 			JBGameMode_SetProperty("iTimeLeft", time);
 	}
 	/**
@@ -834,5 +852,28 @@ methodmap JailFighter
 
 		if (attackdelay)
 			SetPawnTimer(NoAttacking, 0.1, EntIndexToEntRef(weapon));
+	}
+	/**
+	 *	Have player attempt to vote to fire the current Warden.
+	 *
+	 *	@noreturn
+	*/
+	public void AttemptFireWarden()
+	{
+		int votes = JBGameMode_GetProperty("iVotes");
+		int total = JBGameMode_GetProperty("iVotesNeeded");
+		if (this.bVoted)
+		{
+			CPrintToChat(this.index, TAG ... "%t", "Fire Warden Already Voted", votes, total);
+			return;
+		}
+
+		this.bVoted = true;
+		++votes;
+		JBGameMode_SetProperty("iVotes", votes);
+		CPrintToChatAll(TAG ... "%t", "Fire Warden Requested", this.index, votes, total);
+
+		if (votes >= total)
+			JBGameMode_FireWarden();
 	}
 };
