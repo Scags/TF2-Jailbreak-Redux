@@ -8,7 +8,7 @@
 #undef TAG
 #define TAG "{crimson}[TF2Jail] Teambans{burlywood} "
 
-#define PLUGIN_VERSION 		"1.0.1"
+#define PLUGIN_VERSION 		"1.0.2"
 #define RED 				2
 #define BLU 				3
 #define IsClientValid(%1) 	((0 < %1 <= MaxClients) && IsClientInGame(%1))
@@ -452,7 +452,7 @@ public Action Cmd_GuardBan(int client, int args)
 			for (int i = 3; i <= args; i++)
 			{
 				GetCmdArg(i, s, sizeof(s));
-				StrCat(reason, sizeof(reason), s);
+				Format(reason, sizeof(reason), "%s %s", reason, s);
 			}
 			GuardBan(target_list[0], client, time, reason);
 		}
@@ -698,7 +698,7 @@ public void OfflineBan(const char[] ID, int admin)
 	hTheDB.Query(CCB_OfflineGuardBan, query);
 
 	int timestamp = GetTime();
-	char ID2[32];	if (admin) GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2)); else ID2 = "Console";
+	char ID2[32] = "Console"; if (admin) GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2)); else ID2 = "Console";
 
 	hTheDB.Format(query, sizeof(query), 
 			"INSERT INTO %s "
