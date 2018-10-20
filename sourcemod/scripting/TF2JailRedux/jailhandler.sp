@@ -920,7 +920,7 @@ public void ManageEntityCreated(int ent, const char[] classname)
 	if (StrEqual(classname, "func_breakable") && cvarTF2Jail[VentHit].BoolValue)
 		RequestFrame(HookVent, EntIndexToEntRef(ent));
 
-	if (StrContains(classname, "obj_", false) != -1)
+	if (StrEqual(classname, "obj_dispenser") || StrEqual(classname, "obj_sentrygun") || StrEqual(classname, "obj_teleporter"))
 		SDKHook(ent, SDKHook_Spawn, OnBuildingSpawn);
 }
 /**

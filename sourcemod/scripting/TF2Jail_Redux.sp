@@ -1338,7 +1338,7 @@ public Action OnEntSpawn(int ent)
 public Action OnBuildingSpawn(int ent)
 {
 	if (IsValidEntity(ent))
-		if (!gamemode.bAllowBuilding)
+		if (!gamemode.bAllowBuilding && GetEntPropEnt(ent, Prop_Send, "m_hBuilder") != -1)
 			RemoveEntity(ent);
 	return Plugin_Continue;
 }
