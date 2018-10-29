@@ -25,21 +25,6 @@ enum
 	StateEnding = 2,
 };
 
-enum eTextNodeParams
-{	// Hud Text Paramaters
-	Float:fCoord_X,
-	Float:fCoord_Y,
-	Float:fHoldTime,
-	iRed,
-	iBlue,
-	iGreen,
-	iAlpha,
-	iEffect,
-	Float:fFXTime,
-	Float:fFadeIn,
-	Float:fFadeOut,
-};
-
 enum
 {	// Freeday/warday position integers
 	FREEDAY = 1,
@@ -47,446 +32,13 @@ enum
 	WBLU = 3
 };
 
-stock char sDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear", "prop_door_rotating" };
-
-
-/**	base.GetValue
- *	Gets the property of the internal JailFighter methodmap.
- *
- *	@param client 		Player index.
- *	@param key			Name of property you want to access data from.
- *	@param item			Reference to use of the variable to overwrite with data from the property.
- *
- *	@return				Property value called if it was valid
-*/
-native any JB_GetValue(const int client, const char key[64]);
-
-/**	base.GetValue
- *	Sets the property of the internal JB methodmap.
- *	@note 				You can use this to create new properties which GetValue can access!
- *
- *	@param client 		Player index.
- *	@param key			Name of the property you want to override data from (works like StringMap).
- *	@param value		Data you want the property to hold.
- *
- *	@noreturn
-*/
-native void JB_SetValue(const int client, const char key[64], any value);
-
-/**		AVAILABLE PROPERTIES
- *	int iLRCustom							// For the Custom LR
- *	int iKillCount							// For the ghetto rigged freekill system
- *	bool bIsWarden 							// Client is/isn't Warden
- *	bool bIsMuted							// Varies with CVars
- *	bool bIsQueuedFreeday					// Freeday for Self or Freeday for Others
- *	bool bIsFreeday 						// Client is/isn't a freeday
- *	bool bLockedFromWarden					// Upon being fired or retiring
- *	bool bIsVIP								// Default Reserve flag
- *	bool bIsAdmin							// Default Generic flag
- *	bool bIsHHH								// For the HHHDay LR
- *	bool bInJump							// Client is rocket/sticky jumping
- *	bool bUnableToTeleport 					// Client can/can't teleport with Eureka Effect
- *	float flSpeed 							// Client speed, isn't used
- *	float flKillSpree 						// Also for the ghetto rigged freekill system
-*/
-
-/**	base.SpawnWeapon
- *	Creates and spawns a weapon to a player.
- *
- *	@param client 		Player index.
- *	@param name 		Entity name of the weapon being spawned (Cannot be a wearable).
- *	@param index 		Item index of the weapon.
- *	@param level		Item level of the weapon.
- *	@param qual			Item quality of the weapon.
- *	@param att 			Item attributes separated by " ; ".
- *
- *	@return				The weapon spawned to the client.
-*/
-stock int TF2_SpawnWeapon(const int client, char[] name, int index, int level, int qual, char[] att)
-{
-	Handle hWeapon = TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
-	if (hWeapon == null)
-		return -1;
-	
-	TF2Items_SetClassname(hWeapon, name);
-	TF2Items_SetItemIndex(hWeapon, index);
-	TF2Items_SetLevel(hWeapon, level);
-	TF2Items_SetQuality(hWeapon, qual);
-	char atts[32][32];
-	int count = ExplodeString(att, " ; ", atts, 32, 32);
-	count &= ~1;
-	if (count > 0) 
-	{
-		TF2Items_SetNumAttributes(hWeapon, count/2);
-		int i2 = 0;
-		for (int i = 0 ; i < count ; i += 2) 
-		{
-			TF2Items_SetAttribute(hWeapon, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
-			i2++;
-		}
-	}
-	else TF2Items_SetNumAttributes(hWeapon, 0);
-
-	int entity = TF2Items_GiveNamedItem(client, hWeapon);
-	delete hWeapon;
-	EquipPlayerWeapon(client, entity);
-	return entity;
-}
-/**	base.GetWeaponSlotIndex
- *	Retrieve an item definition index of a player's weaponslot.
- *
- *	@param client 		Player index.
- *	@param slot 		Slot to grab the item index from.
- *
- *	@return 			Index of the valid, equipped weapon.
-*/
-stock int GetIndexOfWeaponSlot(const int client, const int slot)
-{
-	int weapon = GetPlayerWeaponSlot(client, slot);
-	return GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-}
-
-/**	base.SetWepInvis
- *	Set the alpha magnitude a player's weapons.
- *
- *	@param client 		Player index.
- *	@param alpha 		Number from 0 to 255 to set on the weapon.
- *
- *	@noreturn
-*/
-stock void SetWeaponInvis(const int client, const int alpha)
-{
-	int transparent = alpha;
-	for (int i = 0; i < 5; i++) 
-	{
-		int entity = GetPlayerWeaponSlot(client, i); 
-		if (IsValidEdict(entity) && IsValidEntity(entity))
-		{
-			if (transparent > 255)
-				transparent = 255;
-			if (transparent < 0)
-				transparent = 0;
-			SetEntityRenderMode(entity, RENDER_TRANSCOLOR); 
-			SetEntityRenderColor(entity, 150, 150, 150, transparent); 
-		}
-	}
-}
-
-/**	base.ForceTeamChange
- *	Silently switch a player's team.
- *
- *	@param client 		Player index.
- *	@param team 		Team to switch to.
- *	@param spawn 		Determine whether or not to respawn the client.
- *
- *	@noreturn
-*/
-stock void ForceClientTeamChange(const int client, const int iTeam, bool spawn = true)
-{
-	if (TF2_GetPlayerClass(client) > TFClass_Unknown)
-	{
-		SetEntProp(client, Prop_Send, "m_lifeState", 2);
-		ChangeClientTeam(client, iTeam);
-		SetEntProp(client, Prop_Send, "m_lifeState", 0);
-		if (spawn)
-			TF2_RespawnPlayer(client);
-	}
-}
-
-/**	base.TeleportToPosition
- *	Teleport a player either to a freeday or warday location.
- *	@note 				If gamemode teleport properties are not true, teleportation will fail
- *
- *	@param client 		Player index.
- *	@param location 	Location to teleport the client.
- *
- *	@noreturn
-*/
-native void JB_TeleportToPosition(const int client, const int location);
-
-/**	base.ListLRS
- *	List the last request menu to the player.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-native void JB_ListLRS(const int client);
-
-/**	base.PreEquip
- *	Remove all weapons, disguises, and wearables from a client.
- *
- *	@param client 		Player index.
- *	@param weps 		True to remove all weapons, false otherwise.
- *
- *	@noreturn
-*/
-stock void RemoveAll(const int client, bool weps = true)
-{
-	TF2_RemovePlayerDisguise(client);
-	int ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_wearabl*")) != -1)
-	{
-		if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client) 
-		{
-			TF2_RemoveWearable(client, ent);
-			AcceptEntityInput(ent, "Kill");
-		}
-	}
-	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "tf_powerup_bottle")) != -1)
-	{
-		if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client) 
-		{
-			TF2_RemoveWearable(client, ent);
-			AcceptEntityInput(ent, "Kill");
-		}
-	}
-	if (weps)
-		TF2_RemoveAllWeapons(client);
-}
-
-/**	base.TeleToSpawn
- *	Teleport a player to the appropriate spawn location.
- *
- *	@param client 		Player index.
- *	@param team 		Team spawn to teleport the client to.
- *
- *	@noreturn
-*/
-stock void TeleportToSpawn(const int client, int team = 0)	// Props to Chdata!
-{
-	int iEnt = -1;
-	float vPos[3], vAng[3];
-	ArrayList hArray = new ArrayList();
-	while ((iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1)
-	{
-		if (team <= 1)
-			hArray.Push(iEnt);
-		else if (GetEntProp(iEnt, Prop_Send, "m_iTeamNum") == team)
-			hArray.Push(iEnt);
-	}
-	iEnt = hArray.Get(GetRandomInt(0, hArray.Length - 1));
-	delete hArray;
-	
-	// Technically you'll never find a map without a spawn point. not a good map at least.
-	GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", vPos);
-	GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
-	TeleportEntity(client, vPos, vAng, NULL_VECTOR);
-}
-
-/**	base.SpawnSmallHealthPack
- *	Spawn a small healthpack at the client's origin.
- *
- *	@param client 		Player index.
- *	@param ownerteam 	Team to give the healthpack.
- *
- *	@noreturn
-*/
-stock void SpawnSmallHealthPackAt(const int client, int ownerteam = 0)
-{
-	if (!IsPlayerAlive(client))
-		return;
-	int healthpack = CreateEntityByName("item_healthkit_small");
-	if (IsValidEntity(healthpack)) 
-	{
-		float pos[3]; GetClientAbsOrigin(client, pos);
-		pos[2] += 20.0;
-		DispatchKeyValue(healthpack, "OnPlayerTouch", "!self,Kill,,0,-1");  // For safety, though it normally doesn't respawn
-		DispatchSpawn(healthpack);
-		SetEntProp(healthpack, Prop_Send, "m_iTeamNum", ownerteam, 4);
-		SetEntityMoveType(healthpack, MOVETYPE_VPHYSICS);
-		float vel[3];
-		vel[0] = float(GetRandomInt(-10, 10)), vel[1] = float(GetRandomInt(-10, 10)), vel[2] = 50.0;
-		TeleportEntity(healthpack, pos, NULL_VECTOR, vel);
-		//CreateTimer(17.0, Timer_RemoveCandycaneHealthPack, EntIndexToEntRef(healthpack), TIMER_FLAG_NO_MAPCHANGE);
-	}
-}
-
-/**	base.MutePlayer
- *	Mute a client through the plugin.
- *	@note 				Players that are deemed as admins will never be muted.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-native void JB_MutePlayer(const int client);
-
-/**	base.GiveFreeday
- *	Initialize a player as a freeday.
- *	@note 				Does not teleport them to the freeday location.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-native void JB_GiveFreeday(const int client);
-
-/**	base.RemoveFreeday
- *	Terminate a player as a freeday.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-native void JB_RemoveFreeday(const int client);
-
-/**	base.StripToMelee
- *	Remove all player weapons that are not their melee.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-stock void StripPlayerToMelee(const int client)
-{
-	TF2_RemoveWeaponSlot(client, 0);
-	TF2_RemoveWeaponSlot(client, 1);
-	TF2_RemoveWeaponSlot(client, 3);
-	TF2_RemoveWeaponSlot(client, 4);
-	TF2_RemoveWeaponSlot(client, 5);
-
-	char sClassName[64];
-	int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
-	if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
-		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
-}
-/**	base.EmptyWeaponSlots
- *	Strip a player of all of their ammo.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-stock void EmptyPlayerWeaponSlots(const int client)
-{
-	if (!IsPlayerAlive(client))
-		return;
-
-	int offset = FindDataMapInfo(client, "m_hMyWeapons") - 4;
-	int weapon;
-
-	for (int i = 0; i < 2; i++)
-	{
-		offset += 4;
-
-		weapon = GetEntDataEnt2(client, offset);
-
-		if (!IsValidEntity(weapon))
-			continue;
-
-		int clip = GetEntProp(weapon, Prop_Send, "m_iClip1");
-		if (clip != -1)
-			SetEntProp(weapon, Prop_Send, "m_iClip1", 0);
-
-		clip = GetEntProp(weapon, Prop_Send, "m_iClip2");
-		if (clip != -1)
-			SetEntProp(weapon, Prop_Send, "m_iClip2", 0);
-			
-		int iOffset = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;
-		int iAmmoTable = FindSendPropInfo("CTFPlayer", "m_iAmmo");
-		SetEntData(client, iAmmoTable+iOffset, 0, 4, true);
-	}
-
-	char sClassName[64];
-	int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
-	if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
-		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
-}
-
-/**	base.UnmutePlayer
- *	Unmute a player through the plugin.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-native void JB_UnmutePlayer(const int client);
-
-/**	base.WardenSet
- *	Initialize a player as the warden.
- *	@note 				This automatically gives the player the warden menu
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-native void JB_WardenSet(const int client);
-
-/**	base.WardenUnset
- *	Terminate a player as the warden.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-native void JB_WardenUnset(const int client);
-
-/**	base.MakeHorsemann
- *	Convert a player into the Horseless Headless Horsemann.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-native void JB_MakeHorsemann(const int client);
-
-/**	base.UnHorsemann
- *	Terminate a player as the Horseless Headless Horsemann.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-native void JB_UnHorsemann(const int client);
-
-/**	base.WardenMenu
- *	Give a player the warden menu.
- *
- *	@param client 		Player index.
- *
- *	@noreturn
-*/
-native void JB_WardenMenu(const int client);
-
-/**	base.ClimbWall
- *	Allow a player to climb walls upon hitting them.
- *
- *	@param client 		Player index.
- *	@param weapon 		Weapon the client is using to attack.
- *	@param upwardvel	Velocity to send the client (in hammer units).
- *	@param health 		Health to take from the client.
- *	@param attackdelay 	Length in seconds to delay the player in attacking again.
- *
- *	@noreturn
-*/
-native void JB_ClimbWall(const int client, const int weapon, const float upwardvel, const float health, const bool attackdelay);
-
-/**	base.bNoMusic
- *	Get's player's Music Cookie.
- *
- *	@param client 		Player index.
- *
- *	@return 			True if music is toggled off. False otherwise.
-*/
-native bool JB_NoMusic(const int client);
-
-/**	base.hMap
- *	Retrieve this player's StringMap address.
- *	@note 				This can be used alongside StringMap methods to get/set to and create keys in the core StringMap!
- *
- *	@param client 		Player index.
- *
- *	@return 			Pointer to this players StringMap.
-*/
-native StringMap JB_Map(const int client);
+stock char strDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear", "prop_door_rotating" };
 
 
 methodmap JBPlayer
 {
 	/** [ C O N S T R U C T O R S ]
-	 *	Constructs an instance of the JailFighter internal methodmap.
+	 *	Constructs an instance of the JBPLayer methodmap.
 	 *
 	 *	@param index		Index of a player.
 	 *
@@ -498,8 +50,7 @@ methodmap JBPlayer
 	}
 
 	/**
-	 *	Constructs an instance of the JailFighter internal methodmap directly from a client's userid.
-	 *	@note 				Syntax is like so: JBPlayer.OfUserid(userid)
+	 *	Constructs an instance of the JBPLayer methodmap directly from a client's userid.
 	 *
 	 *	@param userid 		UserId of the client.
 	 *
@@ -508,6 +59,18 @@ methodmap JBPlayer
 	public static JBPlayer OfUserId( const int userid )
 	{
 		return view_as< JBPlayer >(GetClientOfUserId(userid));
+	}
+
+	/**
+	 *	Constructs an instance of the JBPLayer methodmap from the 'any' tag.
+	 *
+	 *	@param thing 		Object to initialize.
+	 *
+	 *	@return 			A player instance of the JBPlayer methodmap.
+	*/
+	public static JBPlayer Of( const any thing )
+	{
+		return view_as< JBPlayer >(thing));
 	}
 
 	/* **** **** [ P R O P E R T I E S ] **** **** */
@@ -534,10 +97,8 @@ methodmap JBPlayer
 
 	property StringMap hMap
 	{
-		public get()
-		{
-			return JB_Map(this.index);
-		}
+		public native get();
+
 	}
 
 	/**
@@ -547,25 +108,19 @@ methodmap JBPlayer
 	*/
 	property bool bNoMusic
 	{
-		public get()
-		{
-			return JB_NoMusic(this.index);
-		}
+		public native get();
 	}
 
 	/**
 	 *	Gets the property of the internal JailFighter methodmap.
-	 *	@note 				If you are getting a float value, you MUST view_as<float>
+	 *	@note 				If you are getting a float value, you MUST view_as< float >.
 	 *
 	 *	@param key			Name of property you want to access data from.
 	 *	@param item			Reference to use of the variable to overwrite with data from the property.
 	 *
-	 *	@return				Property value called if it was valid
+	 *	@return				Property value called if it was valid.
 	*/
-	public any GetValue( const char key[64] )
-	{
-		return JB_GetValue(this.index, key);
-	}
+	public native any GetValue( const char key[64] );
 
 	/**
 	 *	Sets the property of the internal JB methodmap.
@@ -576,10 +131,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void SetValue( const char key[64], any value )
-	{
-		JB_SetValue(this.index, key, value);
-	}
+	public native void SetValue( const char key[64], any value );
 
 	property int iCustom
 	{
@@ -637,16 +189,21 @@ methodmap JBPlayer
 		public get() 				{ return this.GetValue("bIsMuted"); }
 		public set( const bool i )	{ this.SetValue("bIsMuted", i); }
 	}
+	property bool bVoted
+	{
+		public get() 				{ return this.GetValue("bVoted"); }
+		public set( const bool i )	{ this.SetValue("bVoted", i); }
+	}
 
 	property float flSpeed
 	{
 		public get() 				{ return this.GetValue("flSpeed"); }
 		public set( const float i )	{ this.SetValue("flSpeed", i); }
 	}
-	property float flKillSpree
+	property float flKillingSpree
 	{
-		public get() 				{ return this.GetValue("flKillSpree"); }
-		public set( const float i )	{ this.SetValue("flKillSpree", i); }
+		public get() 				{ return this.GetValue("flKillingSpree"); }
+		public set( const float i )	{ this.SetValue("flKillingSpree", i); }
 	}
 
 	/**
@@ -660,10 +217,7 @@ methodmap JBPlayer
 	 *
 	 *	@return				The weapon spawned to the client.
 	*/
-	public int SpawnWeapon( char[] name, const int index, const int level, const int qual, char[] att )
-	{
-		return TF2_SpawnWeapon(this.index, name, index, level, qual, att);
-	}
+	public native int SpawnWeapon( char[] name, const int index, const int level, const int qual, char[] att );
 
 	/**
 	 *	Retrieve an item definition index of a player's weaponslot.
@@ -672,10 +226,7 @@ methodmap JBPlayer
 	 *
 	 *	@return 			Index of the valid, equipped weapon.
 	*/
-	public int GetWeaponSlotIndex( const int slot )
-	{
-		return GetIndexOfWeaponSlot(this.index, slot);
-	}
+	public native int GetWeaponSlotIndex( const int slot );
 
 	/**
 	 *	Set the alpha magnitude a player's weapons.
@@ -684,10 +235,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void SetWepInvis( const int alpha )
-	{
-		SetWeaponInvis(this.index, alpha);
-	}
+	public native void SetWepInvis( const int alpha );
 
 	/**
 	 *	Silently switch a player's team.
@@ -697,43 +245,32 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void ForceTeamChange( const int team, bool spawn = true )
-	{
-		ForceClientTeamChange(this.index, team, spawn);
-	}
+	public native void ForceTeamChange( const int team, bool spawn = true );
 
 	/**
 	 *	Teleport a player either to a freeday or warday location.
-	 *	@note 				If gamemode teleport properties are not true, teleportation will fail
+	 *	@note 				If gamemode teleport properties for the location are not true, 
+	 * 						teleportation will fail.
 	 *
 	 *	@param location 	Location to teleport the client.
 	 *
 	 *	@noreturn
 	*/
-	public void TeleportToPosition( const int location )
-	{
-		JB_TeleportToPosition(this.index, location);
-	}
+	public native void TeleportToPosition( const int location );
 
 	/**
 	 *	List the last request menu to the player.
 	 *
 	 *	@noreturn
 	*/
-	public void ListLRS()
-	{
-		JB_ListLRS(this.index);
-	}
+	public native void ListLRS();
 
 	/**
 	 *	Remove all weapons, disguises, and wearables from a client.
 	 *
 	 *	@noreturn
 	*/
-	public void PreEquip( bool weps = true )
-	{
-		RemoveAll(this.index, weps);
-	}
+	public native void PreEquip( bool weps = true );
 
 	/**
 	 *	Teleport a player to the appropriate spawn location.
@@ -742,10 +279,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void TeleToSpawn( int team = 0 )
-	{
-		TeleportToSpawn(this.index, team);
-	}
+	public native void TeleToSpawn( int team = 0 );
 
 	/**
 	 *	Spawn a small healthpack at the client's origin.
@@ -754,10 +288,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void SpawnSmallHealthPack( int ownerteam = 0 )
-	{
-		SpawnSmallHealthPackAt(this.index, ownerteam);
-	}
+	public native void SpawnSmallHealthPack( int ownerteam = 0 );
 
 	/**
 	 *	Mute a client through the plugin.
@@ -765,10 +296,7 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void MutePlayer()
-	{
-		JB_MutePlayer(this.index);
-	}
+	public native void MutePlayer();
 
 	/**
 	 *	Initialize a player as a freeday.
@@ -776,50 +304,35 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void GiveFreeday()
-	{
-		JB_GiveFreeday(this.index);
-	}
+	public native void GiveFreeday();
 
 	/**
 	 *	Terminate a player as a freeday.
 	 *
 	 *	@noreturn
 	*/
-	public void RemoveFreeday()
-	{
-		JB_RemoveFreeday(this.index);
-	}
+	public native void RemoveFreeday();
 
 	/**
 	 *	Remove all player weapons that are not their melee.
 	 *
 	 *	@noreturn
 	*/
-	public void StripToMelee()
-	{
-		StripPlayerToMelee(this.index);
-	}
+	public native void StripToMelee();
 
 	/**
 	 *	Strip a player of all of their ammo.
 	 *
 	 *	@noreturn
 	*/
-	public void EmptyWeaponSlots()
-	{
-		EmptyPlayerWeaponSlots(this.index);
-	}
+	public native void EmptyWeaponSlots();
 
 	/**
 	 *	Unmute a player through the plugin.
 	 *
 	 *	@noreturn
 	*/
-	public void UnmutePlayer()
-	{
-		JB_UnmutePlayer(this.index);
-	}
+	public native void UnmutePlayer();
 
 	/**
 	 *	Initialize a player as the warden.
@@ -827,50 +340,35 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void WardenSet()
-	{
-		JB_WardenSet(this.index);
-	}
+	public native void WardenSet();
 
 	/**
 	 *	Terminate a player as the warden.
 	 *
 	 *	@noreturn
 	*/
-	public void WardenUnset()
-	{
-		JB_WardenUnset(this.index);
-	}
+	public native void WardenUnset();
 
 	/**
 	 *	Convert a player into the Horseless Headless Horsemann.
 	 *
 	 *	@noreturn
 	*/
-	public void MakeHorsemann()
-	{
-		JB_MakeHorsemann(this.index);
-	}
+	public native void MakeHorsemann();
 
 	/**
 	 *	Terminate a player as the Horseless Headless Horsemann.
 	 *
 	 *	@noreturn
 	*/
-	public void UnHorsemann()
-	{
-		JB_UnHorsemann(this.index);
-	}
+	public native void UnHorsemann();
 
 	/**
 	 *	Give a player the warden menu.
 	 *
 	 *	@noreturn
 	*/
-	public void WardenMenu()
-	{
-		JB_WardenMenu(this.index);
-	}
+	public native void WardenMenu();
 
 	/**
 	 *	Allow a player to climb walls upon hitting them.
@@ -882,12 +380,26 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public void ClimbWall( const int weapon, const float upwardvel, const float health, const bool attackdelay )
-	{
-		JB_ClimbWall(this.index, weapon, upwardvel, health, attackdelay);
-	}
+	public native void ClimbWall( const int weapon, const float upwardvel, const float health, const bool attackdelay );
+
+	/**
+	 *	Have the player vote to fire the Current Warden.
+	 *
+	 *	@noreturn
+	*/
+	public native void AttemptFireWarden();
 };
 
+enum JBGameMode{}
+
+/**
+ *	Retrieve an instance of the JailGameMode StringMap.
+ *	@note 					This inherits from StringMap, so you can perform
+ * 							StringMap methods on it!
+ *
+ *	@return 				Handle to the JailGameMode internal StringMap.
+*/
+native JBGameMode JBGameMode_Instance();
 
 /**
  *	Retrieve the amount of living/playing players in the server.
@@ -956,6 +468,25 @@ native void JBGameMode_ToggleMedic(const bool status);
 // native void JBGameMode_ToggleMedicTeam(int team = 0);
 
 /**
+ *	Trigger muting on clients.
+ *
+ *	@param player 			JBPlayer instance of player to toggle muting for.
+ *	@param forcedead 		Force the client to be treated as dead, even if they aren't.
+ *	@param teamchange 		Force team-based muting onto the client, even if they aren't
+ *							on that team.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_ToggleMuting(const JBPlayer player, bool forcedead = false, int teamchange = 0);
+
+/**
+ *	Reset the Warden-firing votes.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_ResetVotes();
+
+/**
  *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
  *
  *	@param prop_name 		Property key to call from.
@@ -1009,105 +540,6 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	bool bDisableKillSpree
  *	float flMusicTime
 */
-
-
-/**
- *	Set an array into this the GameMode StringMap
- *
- *	@param key			Key string.
- *	@param array		Array to store.
- *	@param num_items	Number of items in the array.
- *	@param replace		If false, operation will fail if the key is already set.
- *
- *	@return				True on success, false on failure.
-*/
-native bool JBGameMode_SetArray(const char[] key, const any[] array, int num_items, bool replace = true);
-
-/**
- *	Sets a string value in the GameMode StringMap, either inserting a new entry or replacing an old one.
- *
- *	@param key			Key string.
- *	@param string		String to store.
- *	@param replace		If false, operation will fail if the key is already set.
- *
- *	@return				True on success, false on failure.
-*/
-native bool JBGameMode_SetString(const char[] key, const char[] string, bool replace = true);
-
-/**
- *	Retrieves an array in the GameMode StringMap.
- *
- *	@param key			Key string.
- *	@param array		Buffer to store array.
- *	@param max_size		Maximum size of array buffer.
- *	@param size			Optional parameter to store the number of elements written to the buffer.
- *
- *	@return				True on success.  False if the key is not set, or the key is set 
- *						as a value or string (not an array).
-*/
-native bool JBGameMode_GetArray(const char[] key, any[] array, int max_size, int &size = 0);
-
-/**
- *	Retrieves a string in the GameMode StringMap.
- *
- *	@param key			Key string.
- *	@param string		Buffer to store value.
- *	@param max_size		Maximum size of string buffer.
- *	@param size			Optional parameter to store the number of bytes written to the buffer.
- *
- *	@return				True on success.  False if the key is not set, or the key is set 
- *						as a value or array (not a string).
-*/
-native bool JBGameMode_GetString(const char[] key, char[] string, int max_size, int &size = 0);
-
-/**
- *	Removes a key entry from the GameMode StringMap.
- *
- *	@param key			Key string.
- *
- *	@return				True on success, false if the value was never set.
-*/
-native bool JBGameMode_Remove(const char[] key);
-
-/**
- *	Clears all entries from the GameMode StringMap.
- *
- *	@noreturn
-*/
-native void JBGameMode_Clear();
-
-/**
- *	Create a snapshot of the GameMode StringMap's keys. See StringMapSnapshot.
- *
- *	@return 			Handle to key Snapshot.
-*/
-native StringMapSnapshot JBGameMode_Snapshot();
-
-/**
- *	Retrieves the number of elements in the GameMode StringMap.
- *
- *	@return 			Element count.
-*/
-native int JBGameMode_Size();
-
-/**
- *	Trigger muting on clients.
- *
- *	@param player 			JBPlayer instance of player to toggle muting for.
- *	@param forcedead 		Force the client to be treated as dead, even if they aren't.
- *	@param teamchange 		Force team-based muting onto the client, even if they aren't
- *							on that team.
- *
- *	@noreturn
-*/
-native void JBGameMode_ToggleMuting(const JBPlayer player, bool forcedead = false, int teamchange = 0);
-
-/**
- *	Reset the Warden-firing votes.
- *
- *	@noreturn
-*/
-native void JBGameMode_ResetVotes();
 
 methodmap JBGameMode < StringMap
 {
@@ -1689,28 +1121,47 @@ methodmap JBGameMode < StringMap
  *							simply hook what forward you need.
  *							You MUST register a Last Request sub-plugin in order for it to work.
  *
- *	@return					True on success, false if plugin was already registered.
- */
+ *	@return					True on success.
+*/
 native bool TF2JailRedux_RegisterPlugin();
+
+/**
+ *	Registers a sub-plugin to be added to the last request handle.
+ *	@note 					This native is explicitly made for using multiple last requests
+ *							with a single plugin. Indices collect upon registration are 
+ * 							incremented above the plugin index; TF2JailRedux_LRIndex()+1, +2, etc.
+ *
+ *	@return					True on success.
+*/
+native bool TF2JailRedux_RegisterLR();
 
 /**
  *	Un-registers a sub-plugin from the last request handle.
  *	@note 					This is optional, however doing this will prevent breakage when unloading
  *							or reloading sub-plugins mid-game.
- *							Obviously, you must use the name plugin_name as you did when you registered
- *							the plugin originally.
- *							This is best suited to be used OnPluginEnd() but it's return can be used to
- *							your advantage (see @return).
+ *							This is best suited to be used OnPluginEnd().
  *
- *	@return 				Returns true if the plugin is unregistered. Just because a plugin is unregistered
- *							does not mean that it is unloaded. Therefore you can use a global bool to 
- * 							determine if you should continue with your 	forward-hooked code. See the VSH 
- * 							or PH sub-plugin for usage.
+ *	@return 				True on success. False if the plugin is not registered.
 */
 native bool TF2JailRedux_UnRegisterPlugin();
 
 /**
+ *	Un-registers a last request from a sub-plugin.
+ *	@note 					This is optional, however doing this will prevent breakage when unloading
+ * 							or reloading sub-plugins mid-game. This MUST be done before unregistering
+ * 							the plugin in its entirety.
+ * 							This is best suited to be used OnPLuginEnd().
+ *
+ *	@param idx 				Index of the last request to remove. This must be greater than
+ * 							TF2JailRedux_LRIndex(). See TF2JailRedux_RegisterLR().
+ *
+ *	@return 				True on success. False if the plugin is not registered.
+*/
+native bool TF2JailRedux_UnRegisterLR(int idx);
+
+/**
  *	Retrieve the calling plugin's LR index.
+ *	@note 					This does not work on LR pack sub-plugins.
  *
  *	@return 				LR index of this plugin if it is registered. 0 otherwise.
 */
@@ -1762,6 +1213,11 @@ enum	// JB Hook Types
 	OnDoorsUnlock,
 	OnPlayerPreppedPre,
 	OnLRGiven,
+	OnSoundHook,
+	OnEntCreated,
+	OnCalcAttack,
+	OnRebelGiven,
+	OnRebelRemoved,
 	OnPlayMusic
 };
 
@@ -1779,30 +1235,33 @@ typeset JBHookCB
 		OnFreedayGiven
 		OnFreedayRemoved
 		OnLRGiven
+		OnPreThink
+		OnRebelGiven
+		OnRebelRemoved
 	*/
-	function void (const JBPlayer Player);
+	function void (const JBPlayer player);
 	
 	/*
 		OnPlayerSpawned
 		OnRoundEndPlayer
 	*/
-	function void (const JBPlayer Player, Event event);
+	function void (const JBPlayer player, Event event);
 
 	/*
 		OnClientTouch
 		OnPlayerJarated
-		OnUberDeployed		Medic is Player, Patient is Victim
+		OnUberDeployed		Medic is player, Patient is victim
 	*/
-	function void (const JBPlayer Player, const JBPlayer Victim);
+	function void (const JBPlayer player, const JBPlayer victim);
 
 	//	OnBuildingDestroyed
-	function void (const JBPlayer Attacker, const int building, Event event);
+	function void (const JBPlayer attacker, const int building, Event event);
 
 	/*
 		OnPlayerDied
 		OnPlayerAirblasted
 	*/
-	function void (const JBPlayer Victim, const JBPlayer Attacker, Event event);
+	function void (const JBPlayer victim, const JBPlayer attacker, Event event);
 
 	/*
 		OnDownloads
@@ -1811,7 +1270,7 @@ typeset JBHookCB
 	function void ();
 
 	//	OnMenuAdd
-	function void (const int index, int &max, char strName[32]);
+	function void (const int index, int &max, char name[32]);
 
 	//	OnPanelAdd
 	function void (const int index, char name[64]);
@@ -1826,19 +1285,19 @@ typeset JBHookCB
 	function void (Menu &menu);	
 
 	// 	OnHudShow
-	function void (char strHud[128]);
+	function void (char hud[128]);
 
 	// 	OnLRPicked			Return anything but Continue to prevent setting the next iLRPresetType to index
-	function Action (const JBPlayer Player, const int index, ArrayList array);
+	function Action (const JBPlayer player, const int index, ArrayList array);
 
 	// 	OnHurtPlayer
-	function void (const JBPlayer Victim, const JBPlayer Attacker, Event event);
+	function void (const JBPlayer victim, const JBPlayer attacker, Event event);
 
 	// 	OnTakeDamage
-	function Action (const JBPlayer Victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom);
+	function Action (const JBPlayer victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom);
 
 	//	OnWMenuSelect
-	function Action (const JBPlayer Player, const char[] index);
+	function Action (const JBPlayer player, const char[] index);
 
 	//	OnPlayMusic
 	function Action (char song[PLATFORM_MAX_PATH], float &time);
@@ -1855,10 +1314,7 @@ typeset JBHookCB
 	function Action ();
 
 	//	OnWardenKilled		Return anything but Continue to stop "Warden has been killed" message
-	function Action (const JBPlayer Victim, const JBPlayer Attacker, Event event);
-
-	//	OnPreThink
-	function void (const JBPlayer Player, int buttons);
+	function Action (const JBPlayer victim, const JBPlayer attacker, Event event);
 
 	//	OnFFTimer
 	function void (float &time);
@@ -1870,7 +1326,16 @@ typeset JBHookCB
 		OnWardenGet
 		OnPlayerPreppedPre
 	*/
-	function Action (const JBPlayer Player);
+	function Action (const JBPlayer player);
+
+	//	OnSoundHook
+	function Action (int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], JBPlayer player, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed);
+
+	//	OnEntCreated
+	function Action (int ent, const char[] classname);
+
+	//	OnCalcAttack
+	function Action (JBPlayer player, int weapon, char[] weaponname, bool &result);
 };
 
 /**
@@ -1931,7 +1396,9 @@ public SharedPlugin __pl_tf2jailredux = {
 public void __pl_tf2jailredux_SetNTVOptional()
 {
 	MarkNativeAsOptional("TF2JailRedux_RegisterPlugin");
+	MarkNativeAsOptional("TF2JailRedux_RegisterLR");
 	MarkNativeAsOptional("TF2JailRedux_UnRegisterPlugin");
+	MarkNativeAsOptional("TF2JailRedux_UnRegisterLR");
 	MarkNativeAsOptional("TF2JailRedux_LRIndex");
 
 	MarkNativeAsOptional("JB_Hook");
@@ -1939,23 +1406,34 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JB_Unhook");
 	MarkNativeAsOptional("JB_UnhookEx");
 
-	MarkNativeAsOptional("JB_GetValue");
-	MarkNativeAsOptional("JB_SetValue");
-	MarkNativeAsOptional("JB_Map");
+	MarkNativeAsOptional("JBPlayer.GetValue");
+	MarkNativeAsOptional("JBPlayer.SetValue");
 
-	MarkNativeAsOptional("JB_TeleportToPosition");
-	MarkNativeAsOptional("JB_ListLRS");
-	MarkNativeAsOptional("JB_MutePlayer");
-	MarkNativeAsOptional("JB_GiveFreeday");
-	MarkNativeAsOptional("JB_RemoveFreeday");
-	MarkNativeAsOptional("JB_UnmutePlayer");
-	MarkNativeAsOptional("JB_WardenSet");
-	MarkNativeAsOptional("JB_WardenUnset");
-	MarkNativeAsOptional("JB_MakeHorsemann");
-	MarkNativeAsOptional("JB_UnHorsemann");
-	MarkNativeAsOptional("JB_WardenMenu");
-	MarkNativeAsOptional("JB_ClimbWall");
-	MarkNativeAsOptional("JB_NoMusic");
+	MarkNativeAsOptional("JBPlayer.bNoMusic.get");
+	MarkNativeAsOptional("JBPlayer.hMap.get");
+
+	MarkNativeAsOptional("JBPlayer.SpawnWeapon");
+	MarkNativeAsOptional("JBPlayer.GetWeaponSlotIndex");
+	MarkNativeAsOptional("JBPlayer.SetWepInvis");
+	MarkNativeAsOptional("JBPlayer.ForceTeamChange");
+	MarkNativeAsOptional("JBPlayer.TeleportToPosition");
+	MarkNativeAsOptional("JBPlayer.ListLRS");
+	MarkNativeAsOptional("JBPlayer.PreEquip");
+	MarkNativeAsOptional("JBPlayer.TeleToSpawn");
+	MarkNativeAsOptional("JBPlayer.SpawnSmallHealthPack");
+	MarkNativeAsOptional("JBPlayer.MutePlayer");
+	MarkNativeAsOptional("JBPlayer.GiveFreeday");
+	MarkNativeAsOptional("JBPlayer.RemoveFreeday");
+	MarkNativeAsOptional("JBPlayer.StripToMelee");
+	MarkNativeAsOptional("JBPlayer.EmptyWeaponSlots");
+	MarkNativeAsOptional("JBPlayer.UnmutePlayer");
+	MarkNativeAsOptional("JBPlayer.WardenSet");
+	MarkNativeAsOptional("JBPlayer.WardenUnset");
+	MarkNativeAsOptional("JBPlayer.MakeHorsemann");
+	MarkNativeAsOptional("JBPlayer.UnHorsemann");
+	MarkNativeAsOptional("JBPlayer.WardenMenu");
+	MarkNativeAsOptional("JBPlayer.ClimbWall");
+	MarkNativeAsOptional("JBPlayer.AttemptFireWarden");
 
 	MarkNativeAsOptional("JBGameMode_Playing");
 	MarkNativeAsOptional("JBGameMode_ManageCells");
@@ -1967,16 +1445,9 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	// MarkNativeAsOptional("JBGameMode_ToggleMedicTeam");
 	MarkNativeAsOptional("JBGameMode_ResetVotes");
 
+	MarkNativeAsOptional("JBGameMode_Instance");
 	MarkNativeAsOptional("JBGameMode_GetProperty");
 	MarkNativeAsOptional("JBGameMode_SetProperty");
-	MarkNativeAsOptional("JBGameMode_SetArray");
-	MarkNativeAsOptional("JBGameMode_SetString");
-	MarkNativeAsOptional("JBGameMode_GetArray");
-	MarkNativeAsOptional("JBGameMode_GetString");
-	MarkNativeAsOptional("JBGameMode_Remove");
-	MarkNativeAsOptional("JBGameMode_Clear");
-	MarkNativeAsOptional("JBGameMode_Snapshot");
-	MarkNativeAsOptional("JBGameMode_Size");
 
 	MarkNativeAsOptional("JBGameMode.JBGameMode");
 }

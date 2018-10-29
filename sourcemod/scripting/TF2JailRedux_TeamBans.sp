@@ -698,7 +698,7 @@ public void OfflineBan(const char[] ID, int admin)
 	hTheDB.Query(CCB_OfflineGuardBan, query);
 
 	int timestamp = GetTime();
-	char ID2[32] = "Console"; if (admin) GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2)); else ID2 = "Console";
+	char ID2[32]; if (admin) GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2)); else ID2 = "Console";
 
 	hTheDB.Format(query, sizeof(query), 
 			"INSERT INTO %s "

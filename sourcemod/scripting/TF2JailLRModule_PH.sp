@@ -233,6 +233,7 @@ enum
 	RoundTime,
 	PickCount,
 	MedicToggling,
+	Leech,
 	Version
 };
 
@@ -271,6 +272,7 @@ public void OnPluginStart()
 	JBPH[RoundTime] 			 = CreateConVar("sm_jbph_round_time", "300", "Round time in seconds. THIS ADDS TO YOUR \"sm_jbph_freeze_time\" CVAR.", FCVAR_NOTIFY, true, 0.0);
 	JBPH[PickCount] 			 = CreateConVar("sm_jbph_lr_max", "5", "How many times can Prophunt be picked in a single map? 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
 	JBPH[MedicToggling] 		 = CreateConVar("sm_jbph_medic_toggle", "1", "Disable the medic room?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	JBPH[Leech] 				 = CreateConVar("sm_jbph_leech", "0", "Allow Hunters to leech damage dealt to props? Damage dealt comes back as health.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	RegConsoleCmd("sm_propreroll", Cmd_Reroll);
 	RegAdminCmd("sm_unregisterph", Cmd_UnLoad, ADMFLAG_ROOT);
@@ -590,18 +592,19 @@ public Action Cmd_ReLoad(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool &result)
+public Action fwdOnCalcAttack(JBPlayer player, int weapon, char[] weaponname, bool &result)
 {
-	if (!IsClientValid(client) || NOTPH)
+	if (NOTPH)
 		return Plugin_Continue;
 
-	if (IsPlayerAlive(client) && GetClientTeam(client) == BLU && IsValidEntity(weapon))
+	int client = player.index;
+	if (GetClientTeam(client) == BLU && IsValidEntity(weapon))
 	{
 		if (!strcmp(weaponname, "tf_weapon_flamethrower"))
 		{
-			JailHunter player = JailHunter(client);
-			player.bFlaming = true;
-			player.iFlameCount = 0;
+			JailHunter base = JailHunter.Of(player);
+			base.bFlaming = true;
+			base.iFlameCount = 0;
 		}
 		else DoSelfDamage(client, weapon);
 
@@ -621,11 +624,24 @@ public Action fwdOnTakeDamage(const JBPlayer player, int &attacker, int& inflict
 
 	//JailHunter player = JailHunter(attacker);
 	JailHunter victim = JailHunter.Of(player);
+	bool validatkr = IsClientValid(attacker);
 
-	if (!victim.bTouched && GetClientTeam(victim.index) == RED && IsClientValid(attacker))
+	if (!victim.bTouched && GetClientTeam(victim.index) == RED && validatkr)
 	{
 		EmitSoundToAll("prophunt/found.mp3", victim.index);
 		victim.bTouched = true;
+	}
+
+	if (JBPH[Leech].BoolValue && validatkr && victim.bIsProp)
+	{
+		int hp, maxhp;
+		hp = GetEntProp(attacker, Prop_Data, "m_iHealth");
+		maxhp = GetEntProp(attacker, Prop_Data, "m_iMaxHealth");
+		hp += RoundFloat(damage);
+		if (hp > maxhp)
+			hp = maxhp;
+
+		SetEntityHealth(attacker, hp);
 	}
 
 	if (damagetype & DMG_DROWN && victim.bIsProp && attacker <= 0)
@@ -812,17 +828,15 @@ stock void AddVelocity(const int client, const float speed)
 	TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 }
 
-public void fwdOnPreThink(const JBPlayer Player, int buttons)
+public void fwdOnPreThink(const JBPlayer Player)
 {
 	if (NOTPH)
 		return;
 
 	int client = Player.index;
-
-	if (!IsClientInGame(client) || !IsPlayerAlive(client))
-		return;
-
 	JailHunter player = JailHunter.Of(Player);
+	int buttons = GetClientButtons(client);
+
 	if (GetClientTeam(client) == BLU)
 	{
 		if (!(buttons & IN_ATTACK))
@@ -1181,7 +1195,8 @@ public Action fwdOnTimeEnd()
 	ForceTeamWin(RED);
 	return Plugin_Handled;
 }
-public Action fwdOnPlayerPreppedPre(const JBPlayer Player)	// For safety, although OnPlayerSpawned should take care of autobalanced players
+
+public Action fwdOnPlayerPreppedPre(const JBPlayer Player)
 {
 	if (NOTPH)
 		return Plugin_Continue;
@@ -1243,4 +1258,6 @@ public void CheckJBHooks()
 		LogError("Error loading OnPlayerPreppedPre Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnPreThink, fwdOnPreThink))
 		LogError("Error Loading OnPreThink Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnCalcAttack, fwdOnCalcAttack))
+		LogError("Error loading OnCalcAttack Forwards for JB PH Sub-Plugin!");
 }

@@ -142,6 +142,18 @@ methodmap JailGameMode < StringMap
 			this.SetValue("iVotesNeeded", i);
 		}
 	}
+	property int iLRs
+	{
+		public get()
+		{
+			int i; this.GetValue("iLRs", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			this.SetValue("iLRs", i);
+		}
+	}
 
 #if defined _steamtools_included
 	property bool bSteam
@@ -504,7 +516,7 @@ methodmap JailGameMode < StringMap
 	}
 
 	/**
-	 *	Purpose: Store the plugin names from registered sub-plugins.
+	 *	Purpose: Store the plugin handles from registered sub-plugins.
 	 *	Add a setter if you need. Don't see why you'd need one though.
 	*/
 	property ArrayList hPlugins
@@ -512,6 +524,19 @@ methodmap JailGameMode < StringMap
 		public get()
 		{
 			ArrayList i; this.GetValue("hPlugins", i);
+			return i;
+		}
+	}
+
+	/**
+	 *	Purpose: Store the plugin handles from registered sub-plugin LR packs.
+	 *	Add a setter if you need. Don't see why you'd need one though.
+	*/
+	property ArrayList hPacks
+	{
+		public get()
+		{
+			ArrayList i; this.GetValue("hPacks", i);
 			return i;
 		}
 	}
@@ -546,6 +571,7 @@ methodmap JailGameMode < StringMap
 		this.iVoters = 0;
 		this.iVotes = 0;
 		this.iVotesNeeded = 0;
+		this.iLRs = 0;
 		this.iWarden = view_as< JailFighter >(0);
 		this.bFreedayTeleportSet = false;
 		this.bTF2Attribs = false;
@@ -580,6 +606,7 @@ methodmap JailGameMode < StringMap
 		this.bMarkerExists = false;
 		this.flMusicTime = 0.0;
 		this.SetValue("hPlugins", new ArrayList());
+		this.SetValue("hPacks", new ArrayList());
 		// this.SetValue("hWardenMenu", new Menu(WardenMenu));
 	}
 	/**
@@ -610,7 +637,7 @@ methodmap JailGameMode < StringMap
 	*/
 	public void DoorHandler( const eDoorsMode status, bool announce = false, bool fromwarden = true, bool overridefwds = false )
 	{
-		if (sCellNames[0] != '\0')
+		if (strCellNames[0] != '\0')
 		{
 			char name[32];
 			switch (status)
@@ -654,13 +681,13 @@ methodmap JailGameMode < StringMap
 					CPrintToChatAll(TAG ... "%t", "Warden Work Cells", this.iWarden.index, name);
 				else CPrintToChatAll(ADMTAG ... "%t", "Admin Work Cells", name);
 
-			for (i = 0; i < sizeof(sDoorsList); i++)
+			for (i = 0; i < sizeof(strDoorsList); i++)
 			{
 				ent = -1;
-				while ((ent = FindEntityByClassnameSafe(ent, sDoorsList[i])) != -1)
+				while ((ent = FindEntityByClassnameSafe(ent, strDoorsList[i])) != -1)
 				{
 					GetEntPropString(ent, Prop_Data, "m_iName", name, sizeof(name));
-					if (StrEqual(name, sCellNames, false))
+					if (StrEqual(name, strCellNames, false))
 					{
 						switch (status)
 						{
@@ -729,10 +756,10 @@ methodmap JailGameMode < StringMap
 	public void OpenAllDoors()
 	{
 		int ent;
-		for (int i = 0; i < sizeof(sDoorsList); i++)
+		for (int i = 0; i < sizeof(strDoorsList); i++)
 		{
 			ent = -1;
-			while ((ent = FindEntityByClassname(ent, sDoorsList[i])) != -1)
+			while ((ent = FindEntityByClassname(ent, strDoorsList[i])) != -1)
 			{
 				if (IsValidEntity(ent))
 				{
@@ -827,6 +854,39 @@ methodmap JailGameMode < StringMap
 			case 4:if (team == RED) player.MutePlayer();
 			case 5:if (team == BLU) player.MutePlayer();
 			default:player.MutePlayer();
+		}
+	}
+
+	/**
+	 *	Get the position of a certain teleportation location.
+	 *
+	 *	@param location  		Location index to get.
+	 *	@param array 			Array to copy to.
+	 *
+	 *	@noreturn
+	*/
+	public void GetTelePosition( const int location, float[] array )
+	{
+		switch (location)
+		{
+			case FREEDAY:
+			{
+				array[0] = vecFreedayPosition[0];
+				array[1] = vecFreedayPosition[1];
+				array[2] = vecFreedayPosition[2];
+			}
+			case WRED:
+			{
+				array[0] = vecWardayRed[0];
+				array[1] = vecWardayRed[1];
+				array[2] = vecWardayRed[2];
+			}
+			case WBLU:
+			{
+				array[0] = vecWardayBlu[0];
+				array[1] = vecWardayBlu[1];
+				array[2] = vecWardayBlu[2];
+			}
 		}
 	}
 };

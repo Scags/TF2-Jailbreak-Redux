@@ -126,29 +126,36 @@ stock int GetItemQuality(const int item)
 		return GetEntProp(item, Prop_Send, "m_iEntityQuality");
 	return -1;
 }
-stock int AttachParticle(const int ent, const char[] particleType, float offset = 0.0, bool battach = true)
+stock int AttachParticle(const int ent, const char[] particleType, float selfdestruct = 0.0, float offset = 0.0, bool battach = true)
 {
 	int particle = CreateEntityByName("info_particle_system");
-	char tName[32];
+	char tName[16];
 	float pos[3]; GetEntPropVector(ent, Prop_Send, "m_vecOrigin", pos);
+
 	pos[2] += offset;
 	TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
 	Format(tName, sizeof(tName), "target%i", ent);
+
 	DispatchKeyValue(ent, "targetname", tName);
 	DispatchKeyValue(particle, "targetname", "tf2particle");
 	DispatchKeyValue(particle, "parentname", tName);
 	DispatchKeyValue(particle, "effect_name", particleType);
 	DispatchSpawn(particle);
 	SetVariantString(tName);
+
 	if (battach)
 	{
 		AcceptEntityInput(particle, "SetParent", particle, particle, 0);
 		SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", ent);
 	}
+
 	ActivateEntity(particle);
 	AcceptEntityInput(particle, "start");
-	CreateTimer(3.0, EraseEntity, EntIndexToEntRef(particle));
-	return particle;
+
+	int ref = EntIndexToEntRef(particle);
+	if (selfdestruct != 0.0)
+		SetPawnTimer(RemoveEnt, selfdestruct, ref, TIMER_FLAG_NO_MAPCHANGE);
+	return ref;
 }
 stock void CreateParticles(char[] particlename, float Pos[3] = NULL_VECTOR, float time)
 {
@@ -159,9 +166,12 @@ stock void CreateParticles(char[] particlename, float Pos[3] = NULL_VECTOR, floa
 		ActivateEntity(particle);
 		AcceptEntityInput(particle, "start");
 		TeleportEntity(particle, Pos, NULL_VECTOR, NULL_VECTOR);
-		CreateTimer(time, EraseEntity, EntIndexToEntRef(particle));
+		if (time != 0.0)
+			CreateTimer(time, EraseEntity, EntIndexToEntRef(particle));
+		return particle;
 	}
 	else LogError("CreateParticles: **** Couldn't Create 'info_particle_system Entity' ****");
+	return -1;
 }
 stock int SetWeaponAmmo(const int weapon, const int ammo)
 {
@@ -385,13 +395,6 @@ stock void SetNextAttack(const int weapon, float duration = 0.0)
 	SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", next);
 	SetEntPropFloat(weapon, Prop_Send, "m_flNextSecondaryAttack", next);
 }
-stock void ResetPlayer(const int client)
-{
-	TF2_RegeneratePlayer(client);
-	SetEntityHealth( client, GetEntProp(client, Prop_Data, "m_iMaxHealth") );
-	SetEntProp( client, Prop_Send, "m_iHealth", GetEntProp(client, Prop_Data, "m_iMaxHealth") );
-}
-
 
 /**
  * Wrapper function for easily setting up non-repeating timers
@@ -975,7 +978,6 @@ stock bool IsInRange(const int client, const int target, const float dist)
 	}
 	return false;
 }
-
 stock void AddClientsToMenu(Menu &menu, bool alive = false, int team = 2)
 {
 	char strName[32], strID[8];
@@ -992,4 +994,178 @@ stock void AddClientsToMenu(Menu &menu, bool alive = false, int team = 2)
 		GetClientName(i, strName, sizeof(strName));
 		menu.AddItem(strID, strName);
 	}
+}
+stock int TF2_SpawnWeapon(const int client, char[] name, int index, int level, int qual, char[] att)
+{
+	Handle hWeapon = TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
+	if (hWeapon == null)
+		return -1;
+	
+	TF2Items_SetClassname(hWeapon, name);
+	TF2Items_SetItemIndex(hWeapon, index);
+	TF2Items_SetLevel(hWeapon, level);
+	TF2Items_SetQuality(hWeapon, qual);
+	char atts[32][32];
+	int count = ExplodeString(att, " ; ", atts, 32, 32);
+	count &= ~1;
+	if (count > 0) 
+	{
+		TF2Items_SetNumAttributes(hWeapon, count/2);
+		int i2 = 0;
+		for (int i = 0 ; i < count ; i += 2) 
+		{
+			TF2Items_SetAttribute(hWeapon, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
+			i2++;
+		}
+	}
+	else TF2Items_SetNumAttributes(hWeapon, 0);
+
+	int entity = TF2Items_GiveNamedItem(client, hWeapon);
+	delete hWeapon;
+	EquipPlayerWeapon(client, entity);
+	return entity;
+}
+stock int GetIndexOfWeaponSlot(const int client, const int slot)
+{
+	int weapon = GetPlayerWeaponSlot(client, slot);
+	return GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+}
+stock void SetWeaponInvis(const int client, const int alpha)
+{
+	int transparent = alpha;
+	for (int i = 0; i < 5; i++) 
+	{
+		int entity = GetPlayerWeaponSlot(client, i); 
+		if (IsValidEdict(entity) && IsValidEntity(entity))
+		{
+			if (transparent > 255)
+				transparent = 255;
+			if (transparent < 0)
+				transparent = 0;
+			SetEntityRenderMode(entity, RENDER_TRANSCOLOR); 
+			SetEntityRenderColor(entity, 150, 150, 150, transparent); 
+		}
+	}
+}
+stock void ForceClientTeamChange(const int client, const int iTeam, bool spawn = true)
+{
+	if (TF2_GetPlayerClass(client) > TFClass_Unknown)
+	{
+		SetEntProp(client, Prop_Send, "m_lifeState", 2);
+		ChangeClientTeam(client, iTeam);
+		SetEntProp(client, Prop_Send, "m_lifeState", 0);
+		if (spawn)
+			TF2_RespawnPlayer(client);
+	}
+}
+stock void RemoveAll(const int client, bool weps = true)
+{
+	TF2_RemovePlayerDisguise(client);
+	int ent = -1;
+	while ((ent = FindEntityByClassname(ent, "tf_wearabl*")) != -1)
+	{
+		if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client) 
+		{
+			TF2_RemoveWearable(client, ent);
+			AcceptEntityInput(ent, "Kill");
+		}
+	}
+	ent = -1;
+	while ((ent = FindEntityByClassname(ent, "tf_powerup_bottle")) != -1)
+	{
+		if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client) 
+		{
+			TF2_RemoveWearable(client, ent);
+			AcceptEntityInput(ent, "Kill");
+		}
+	}
+	if (weps)
+		TF2_RemoveAllWeapons(client);
+}
+stock void TeleportToSpawn(const int client, int team = 0)	// Props to Chdata!
+{
+	int iEnt = -1;
+	float vPos[3], vAng[3];
+	ArrayList hArray = new ArrayList();
+	while ((iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1)
+	{
+		if (team <= 1)
+			hArray.Push(iEnt);
+		else if (GetEntProp(iEnt, Prop_Send, "m_iTeamNum") == team)
+			hArray.Push(iEnt);
+	}
+	iEnt = hArray.Get(GetRandomInt(0, hArray.Length - 1));
+	delete hArray;
+	
+	// Technically you'll never find a map without a spawn point. not a good map at least.
+	GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", vPos);
+	GetEntPropVector(iEnt, Prop_Send, "m_angRotation", vAng);
+	TeleportEntity(client, vPos, vAng, NULL_VECTOR);
+}
+stock void SpawnSmallHealthPackAt(const int client, int ownerteam = 0)
+{
+	if (!IsPlayerAlive(client))
+		return;
+	int healthpack = CreateEntityByName("item_healthkit_small");
+	if (IsValidEntity(healthpack)) 
+	{
+		float pos[3]; GetClientAbsOrigin(client, pos);
+		pos[2] += 20.0;
+		DispatchKeyValue(healthpack, "OnPlayerTouch", "!self,Kill,,0,-1");  // For safety, though it normally doesn't respawn
+		DispatchSpawn(healthpack);
+		SetEntProp(healthpack, Prop_Send, "m_iTeamNum", ownerteam, 4);
+		SetEntityMoveType(healthpack, MOVETYPE_VPHYSICS);
+		float vel[3];
+		vel[0] = float(GetRandomInt(-10, 10)), vel[1] = float(GetRandomInt(-10, 10)), vel[2] = 50.0;
+		TeleportEntity(healthpack, pos, NULL_VECTOR, vel);
+		//CreateTimer(17.0, Timer_RemoveCandycaneHealthPack, EntIndexToEntRef(healthpack), TIMER_FLAG_NO_MAPCHANGE);
+	}
+}
+stock void StripPlayerToMelee(const int client)
+{
+	TF2_RemoveWeaponSlot(client, 0);
+	TF2_RemoveWeaponSlot(client, 1);
+	TF2_RemoveWeaponSlot(client, 3);
+	TF2_RemoveWeaponSlot(client, 4);
+	TF2_RemoveWeaponSlot(client, 5);
+
+	char sClassName[64];
+	int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
+	if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
+		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
+}
+stock void EmptyPlayerWeaponSlots(const int client)
+{
+	if (!IsPlayerAlive(client))
+		return;
+
+	int offset = FindDataMapInfo(client, "m_hMyWeapons") - 4;
+	int weapon;
+
+	for (int i = 0; i < 2; i++)
+	{
+		offset += 4;
+
+		weapon = GetEntDataEnt2(client, offset);
+
+		if (!IsValidEntity(weapon))
+			continue;
+
+		int clip = GetEntProp(weapon, Prop_Send, "m_iClip1");
+		if (clip != -1)
+			SetEntProp(weapon, Prop_Send, "m_iClip1", 0);
+
+		clip = GetEntProp(weapon, Prop_Send, "m_iClip2");
+		if (clip != -1)
+			SetEntProp(weapon, Prop_Send, "m_iClip2", 0);
+			
+		int iOffset = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;
+		int iAmmoTable = FindSendPropInfo("CTFPlayer", "m_iAmmo");
+		SetEntData(client, iAmmoTable+iOffset, 0, 4, true);
+	}
+
+	char sClassName[64];
+	int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
+	if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
+		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
 }

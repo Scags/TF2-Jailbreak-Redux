@@ -9,7 +9,7 @@ void InitializeForwards()
 	hPrivFwds[OnRoundStartPlayer]		= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
 	hPrivFwds[OnRoundEnd] 				= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnRoundEndPlayer] 		= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
-	hPrivFwds[OnWardenGet] 				= CreateForward(ET_Hook, Param_Cell);
+	hPrivFwds[OnWardenGet] 				= CreateForward(ET_Hook,   Param_Cell);
 	hPrivFwds[OnClientTouch]			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
 	hPrivFwds[OnRedThink] 				= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnBlueThink] 				= CreateForward(ET_Ignore, Param_Cell);
@@ -30,7 +30,7 @@ void InitializeForwards()
 	hPrivFwds[OnHurtPlayer] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, /*Param_Cell, Param_Cell, Param_Cell, */Param_Cell);
 	hPrivFwds[OnTakeDamage] 			= CreateForward(ET_Hook,   Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
 	hPrivFwds[OnWMenuAdd] 				= CreateForward(ET_Ignore, Param_CellByRef);
-	hPrivFwds[OnWMenuSelect] 			= CreateForward(ET_Hook, Param_Cell, Param_String);
+	hPrivFwds[OnWMenuSelect] 			= CreateForward(ET_Hook,   Param_Cell, Param_String);
 	hPrivFwds[OnClientInduction] 		= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnVariableReset] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnTimeEnd] 				= CreateForward(ET_Hook);
@@ -46,8 +46,13 @@ void InitializeForwards()
 	hPrivFwds[OnDoorsClose] 			= CreateForward(ET_Hook);
 	hPrivFwds[OnDoorsLock] 				= CreateForward(ET_Hook);
 	hPrivFwds[OnDoorsUnlock] 			= CreateForward(ET_Hook);
-	hPrivFwds[OnPlayerPreppedPre] 		= CreateForward(ET_Hook, Param_Cell);
+	hPrivFwds[OnPlayerPreppedPre] 		= CreateForward(ET_Hook,   Param_Cell);
 	hPrivFwds[OnLRGiven] 				= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnSoundHook] 				= CreateForward(ET_Hook,   Param_Array, Param_CellByRef, Param_String, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_String, Param_CellByRef);
+	hPrivFwds[OnEntCreated]				= CreateForward(ET_Hook,   Param_Cell, Param_String);
+	hPrivFwds[OnCalcAttack] 			= CreateForward(ET_Hook,   Param_Cell, Param_Cell, Param_String, Param_CellByRef);
+	hPrivFwds[OnRebelGiven] 			= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnRebelRemoved] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
 }
 void Call_OnDownloads()
@@ -120,21 +125,21 @@ void Call_OnWardenThink(const JailFighter player)
 	Call_PushCell(player);
 	Call_Finish();
 }
-void Call_OnHudShow(char strHud[128])
+void Call_OnHudShow(char hud[128])
 {
 	Call_StartForward(hPrivFwds[OnHudShow]);
-	Call_PushStringEx(strHud, 128, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+	Call_PushStringEx(hud, 128, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);	// Is the latter flag needed?
 	Call_Finish();
 }
 Action Call_OnLRPicked(const JailFighter player, const int index, ArrayList array)
 {
-	Action result = Plugin_Continue;
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnLRPicked]);
 	Call_PushCell(player);
 	Call_PushCell(index);
 	Call_PushCell(array);
-	Call_Finish(result);
-	return result;
+	Call_Finish(action);
+	return action;
 }
 void Call_OnPlayerDied(const JailFighter player, const JailFighter attacker, Event event)
 {
@@ -223,7 +228,7 @@ void Call_OnHurtPlayer(const JailFighter victim, const JailFighter attacker, /*i
 }
 Action Call_OnTakeDamage(const JailFighter victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	Action result = Plugin_Continue;
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnTakeDamage]);
 	Call_PushCell(victim);
 	Call_PushCellRef(attacker);
@@ -231,11 +236,11 @@ Action Call_OnTakeDamage(const JailFighter victim, int &attacker, int &inflictor
 	Call_PushFloatRef(damage);
 	Call_PushCellRef(damagetype);
 	Call_PushCellRef(weapon);
-	Call_PushArray(damageForce, 3);
-	Call_PushArray(damagePosition, 3);
+	Call_PushArrayEx(damageForce, 3, SM_PARAM_COPYBACK);
+	Call_PushArrayEx(damagePosition, 3, SM_PARAM_COPYBACK);
 	Call_PushCell(damagecustom);
-	Call_Finish(result);
-	return result;
+	Call_Finish(action);
+	return action;
 }
 void Call_OnWMenuAdd(Menu & menu)
 {
@@ -254,12 +259,12 @@ Action Call_OnWMenuSelect(const JailFighter player, const char[] index)
 }
 Action Call_OnPlayMusic(char song[PLATFORM_MAX_PATH], float &time)
 {
-	Action result = Plugin_Handled;	// Start as handled because most LRs won't have a background song... probably
+	Action action = Plugin_Handled;	// Start as handled because most LRs won't have a background song... probably
 	Call_StartForward(hPrivFwds[OnPlayMusic]);
 	Call_PushStringEx(song, PLATFORM_MAX_PATH, SM_PARAM_STRING_BINARY|SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_PushFloatRef(time);
-	Call_Finish(result);
-	return result;
+	Call_Finish(action);
+	return action;
 }
 void Call_OnClientInduction(const JailFighter player)
 {
@@ -275,22 +280,22 @@ void Call_OnVariableReset(const JailFighter player)
 }
 Action Call_OnTimeEnd()
 {
-	Action result = Plugin_Continue;
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnTimeEnd]);
-	Call_Finish(result);
-	return result;
+	Call_Finish(action);
+	return action;
 }
-void Call_OnLastGuard(Action &result)
+void Call_OnLastGuard(Action &action)
 {
 	Call_StartForward(hPrivFwds[OnLastGuard]);
-	Call_Finish(result);
+	Call_Finish(action);
 }
 Action Call_OnLastPrisoner()
 {
-	Action result = Plugin_Continue;
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnLastPrisoner]);
-	Call_Finish(result);
-	return result;
+	Call_Finish(action);
+	return action;
 }
 void Call_OnCheckLivingPlayers()
 {
@@ -299,13 +304,13 @@ void Call_OnCheckLivingPlayers()
 }
 Action Call_OnWardenKilled(const JailFighter victim, const JailFighter attacker, Event event)
 {
-	Action result = Plugin_Continue;
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnWardenKilled]);
 	Call_PushCell(victim);
 	Call_PushCell(attacker);
 	Call_PushCell(event);
-	Call_Finish(result);
-	return result;
+	Call_Finish(action);
+	return action;
 }
 void Call_OnFreedayGiven(const JailFighter player)
 {
@@ -319,11 +324,10 @@ void Call_OnFreedayRemoved(const JailFighter player)
 	Call_PushCell(player);
 	Call_Finish();
 }
-void Call_OnPreThink(const JailFighter player, int buttons)
+void Call_OnPreThink(const JailFighter player)
 {
 	Call_StartForward(hPrivFwds[OnPreThink]);
 	Call_PushCell(player);
-	Call_PushCell(buttons);
 	Call_Finish();
 }
 void Call_OnFFTimer(float &time)
@@ -334,43 +338,93 @@ void Call_OnFFTimer(float &time)
 }
 Action Call_OnDoorsOpen()
 {
-	Action result = Plugin_Continue;
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnDoorsOpen]);
-	Call_Finish(result);
-	return result;
+	Call_Finish(action);
+	return action;
 }
 Action Call_OnDoorsClose()
 {
-	Action result = Plugin_Continue;
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnDoorsClose]);
-	Call_Finish(result);
-	return result;
+	Call_Finish(action);
+	return action;
 }
 Action Call_OnDoorsLock()
 {
-	Action result = Plugin_Continue;
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnDoorsLock]);
-	Call_Finish(result);
-	return result;
+	Call_Finish(action);
+	return action;
 }
 Action Call_OnDoorsUnlock()
 {
-	Action result = Plugin_Continue;
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnDoorsUnlock]);
-	Call_Finish(result);
-	return result;
+	Call_Finish(action);
+	return action;
 }
 Action Call_OnPlayerPreppedPre(const JailFighter player)
 {
-	Action result = Plugin_Continue;
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnPlayerPreppedPre]);
 	Call_PushCell(player);
-	Call_Finish(result);
-	return result;
+	Call_Finish(action);
+	return action;
 }
 void Call_OnLRGiven(const JailFighter player)
 {
 	Call_StartForward(hPrivFwds[OnLRGiven]);
+	Call_PushCell(player);
+	Call_Finish();
+}
+Action Call_OnSoundHook(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], JailFighter player, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
+{
+	Action action = Plugin_Continue;
+	Call_StartForward(hPrivFwds[OnSoundHook]);
+	Call_PushArrayEx(clients, 64, SM_PARAM_COPYBACK);
+	Call_PushCellRef(numClients);
+	Call_PushStringEx(sample, PLATFORM_MAX_PATH, SM_PARAM_STRING_COPY, 0);
+	Call_PushCell(player);
+	Call_PushCellRef(channel);
+	Call_PushFloatRef(volume);
+	Call_PushCellRef(level);
+	Call_PushCellRef(pitch);
+	Call_PushCellRef(flags);
+	Call_PushStringEx(soundEntry, PLATFORM_MAX_PATH, SM_PARAM_STRING_COPY, 0);
+	Call_PushCellRef(seed);
+	Call_Finish(action);
+	return action;
+}
+Action Call_OnEntCreated(int entity, const char[] name)
+{
+	Action action = Plugin_Continue;
+	Call_StartForward(hPrivFwds[OnEntCreated]);
+	Call_PushCell(entity);
+	Call_PushString(name);
+	Call_Finish(action);
+	return action;
+}
+Action Call_OnCalcAttack(JailFighter player, int weapon, char[] weaponname, bool &result)
+{
+	Action action = Plugin_Continue;
+	Call_StartForward(hPrivFwds[OnCalcAttack]);
+	Call_PushCell(player);
+	Call_PushCell(weapon);
+	Call_PushString(weaponname);
+	Call_PushCellRef(result);
+	Call_Finish(action);
+	return action;
+}
+void Call_OnRebelGiven(const JailFighter player)
+{
+	Call_StartForward(hPrivFwds[OnRebelGiven]);
+	Call_PushCell(player);
+	Call_Finish();
+}
+void Call_OnRebelRemoved(const JailFighter player)
+{
+	Call_StartForward(hPrivFwds[OnRebelRemoved]);
 	Call_PushCell(player);
 	Call_Finish();
 }

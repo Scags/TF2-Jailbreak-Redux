@@ -35,7 +35,7 @@ enum /** LRs **/
  *	and decreases by 1 everytime you successfully 'TF2JailRedux_UnRegisterPlugin()'
  *	Sub-Plugins are completely manageable as their own plugin, with no need to touch this one
 */
-#define LRMAX		ClassWars + (gamemode.hPlugins.Length)
+#define LRMAX		ClassWars + (gamemode.iLRs)
 
 #include "TF2JailRedux/lastrequests.sp"
 
@@ -86,10 +86,11 @@ public void ManageDownloads()
 	PrecacheSound("vo/announcer_ends_30sec.mp3", true);
 	PrecacheSound("vo/announcer_ends_10sec.mp3", true);
 
-	for (int s = 1; s <= 5; s++)
+	char s[PLATFORM_MAX_PATH];
+	for (int i = 1; i <= 5; i++)
 	{
-		Format(snd, PLATFORM_MAX_PATH, "vo/announcer_ends_%isec.mp3", s);
-		PrecacheSound(snd, true);
+		Format(s, PLATFORM_MAX_PATH, "vo/announcer_ends_%isec.mp3", s);
+		PrecacheSound(s, true);
 	}
 
 	PrecacheSound(GravSound, true);
@@ -146,7 +147,7 @@ public void ManageSpawn(const JailFighter base, Event event)
 /**
  *	Manage each player just after spawn or regeneration
 */
-public void PrepPlayer(const int userid)
+public void PrepPlayer(int userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (!IsClientValid(client) || !IsPlayerAlive(client))
@@ -160,20 +161,27 @@ public void PrepPlayer(const int userid)
 		case HHHDay:return;				// Prevent clearing everything
 		case -1:{	}
 	}
+
 	if (Call_OnPlayerPreppedPre(base) != Plugin_Continue)
 		return;
 
 	SetEntityModel(client, "");
 
-	if (cvarTF2Jail[EngieBuildings].BoolValue)
+	int team = GetClientTeam(client);
+	bool killpda;
+
+	if (TF2_GetPlayerClass(client) == TFClass_Engineer)
 	{
-		if (TF2_GetPlayerClass(client) != TFClass_Engineer)
+		switch (cvarTF2Jail[EngieBuildings].IntValue)
 		{
-			TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
-			TF2_RemoveWeaponSlot(client, TFWeaponSlot_Grenade);
+			case 0:killpda = true;
+			case 1:if (team != RED) killpda = true;
+			case 2:if (team != BLU) killpda = true;
 		}
 	}
-	else
+	else killpda = true;
+
+	if (killpda)
 	{
 		TF2_RemoveWeaponSlot(client, TFWeaponSlot_Building);
 		TF2_RemoveWeaponSlot(client, TFWeaponSlot_Grenade);
@@ -183,7 +191,7 @@ public void PrepPlayer(const int userid)
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item1);
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Item2);
 
-	if (GetClientTeam(client) == RED)
+	if (team == RED)
 		base.EmptyWeaponSlots();
 
 	Call_OnPlayerPrepped(base);
@@ -191,7 +199,7 @@ public void PrepPlayer(const int userid)
 /**
  *	Calls without including players, so we don't fire the same thing for every player
 */
-public void ManageOnRoundStart(Event event)
+public void ManageRoundStart(Event event)
 {
 	switch (gamemode.iLRType)
 	{
@@ -250,7 +258,7 @@ public void ManageOnRoundStart(Event event)
 /**
  *	Calls on round start for each living player
 */
-public void ManageRoundStart(const JailFighter player, Event event)
+public void ManageRoundStartPlayer(const JailFighter player, Event event)
 {
 	int client = player.index;
 
@@ -481,21 +489,22 @@ public Action SoundHook(int clients[64], int &numClients, char sample[PLATFORM_M
 	JailFighter base = JailFighter(entity);
 	switch (gamemode.iLRType)
 	{
+		case -1: {	}
 		case HHHDay:return CHHHDay.HookSound(base, sample, entity);
 	}
 
-	return Plugin_Continue;
+	return Call_OnSoundHook(clients, numClients, sample, base, channel, volume, level, pitch, flags, soundEntry, seed);
 }
 /**
  *	PreThink management, will not fire for dead players
 */
-public void ManageOnPreThink(const JailFighter base, int buttons)
+public void ManageOnPreThink(const JailFighter base)
 {
 	switch (gamemode.iLRType)
 	{
 		case -1: {	}
 	}
-	Call_OnPreThink(base, buttons);
+	Call_OnPreThink(base);
 }
 /**
  *	Calls when a a player is hurt without SDKHooks
@@ -510,6 +519,7 @@ public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victi
 	{
 		case -1: {	}
 	}
+
 	Call_OnHurtPlayer(victim, attacker, /*damage, custom, weapon, */event);
 }
 /** 
@@ -524,7 +534,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 			if (IsClientValid(attacker))
 			{
 				JailFighter base = JailFighter(attacker);
-				if (base.bIsFreeday)
+				if (base.bIsFreeday && victim.index != attacker)
 				{	// Registers with Razorbacks ^^
 					base.RemoveFreeday();
 					PrintCenterTextAll("%t", "Attack Guard Lose Freeday", attacker);
@@ -541,6 +551,8 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 					damagetype |= DMG_CRIT;
 					return Plugin_Changed;
 				}
+				else if (GetClientTeam(attacker) == RED && GetClientTeam(victim.index) == BLU && gamemode.iRoundState == StateRunning)
+					base.MarkRebel();
 			}
 		}
 	}
@@ -676,7 +688,6 @@ public Action ManageMusic(char song[PLATFORM_MAX_PATH], float & time)
 		}*/
 		default:return Call_OnPlayMusic(song, time);
 	}
-	return Plugin_Handled;
 }
 /**
  *	Manage what happens when the round timer hits 0
@@ -688,12 +699,11 @@ public Action ManageTimeEnd()
 	{
 		default:return Call_OnTimeEnd();
 	}
-	return Plugin_Continue;
 }
 /**
  *	Determines if a player's attack is to be critical
 */
-/*public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool & result)
+public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool &result)
 {
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
@@ -703,9 +713,11 @@ public Action ManageTimeEnd()
 
  	JailFighter base = JailFighter(client);
  	switch (gamemode.iLRType)
- 	{ 	}
- 	return Plugin_Continue;
-}*/
+ 	{
+ 		case -1: {	}
+ 	}
+ 	return Call_OnCalcAttack(base, weapon, weaponname, result);
+}
 /**
  *	Add lr to the LR menu obviously
 */
@@ -879,18 +891,22 @@ public void ManageClientStartVariables(const JailFighter base)
 	Call_OnClientInduction(base);
 }
 /**
- *	Fires on both client disconnect and round start
+ *	Fires on round begin
  *	Yet again another way to make a new forward
 */
 public void ResetVariables(const JailFighter base, const bool compl)
 {
 	base.iCustom = 0;
 	base.iKillCount = 0;
+	base.iRebelParticle = -1;
+	base.iWardenParticle = -1;
+	base.iFreedayParticle = -1;
 	base.bIsWarden = false;
 	base.bLockedFromWarden = false;
 	base.bIsHHH = false;
 	base.bInJump = false;
 	base.bUnableToTeleport = false;
+	base.bIsRebel = false;
 	base.flSpeed = 0.0;
 	base.flKillingSpree = 0.0;
 	base.bIsQueuedFreeday = false;
@@ -908,6 +924,9 @@ public void ResetVariables(const JailFighter base, const bool compl)
 */
 public void ManageEntityCreated(int ent, const char[] classname)
 {
+	if (Call_OnEntCreated(ent, classname) != Plugin_Continue)
+		return;
+
 	if (StrContains(classname, "tf_ammo_pack", false) != -1)
 		SDKHook(ent, SDKHook_Spawn, OnEntSpawn);
 

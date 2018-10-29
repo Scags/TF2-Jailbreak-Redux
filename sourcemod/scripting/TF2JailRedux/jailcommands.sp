@@ -306,11 +306,6 @@ public Action Command_GiveLastRequest(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	if (!client)
-	{
-		CReplyToCommand(client, TAG ... "%t", "Command is in-game only");
-		return Plugin_Handled;
-	}
 	if (gamemode.iRoundState != StateRunning)
 	{
 		CPrintToChat(client, TAG ... "%t", "Needs Active Round");
@@ -332,7 +327,7 @@ public Action Command_GiveLastRequest(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (!args)
+	if (!args && client)
 	{
 		if (IsVoteInProgress())
 			return Plugin_Handled;
@@ -348,23 +343,22 @@ public Action Command_GiveLastRequest(int client, int args)
 	}
 
 	char targetname[32]; GetCmdArgString(targetname, sizeof(targetname));
-	int target = FindTarget(client, targetname);
-	if (!IsClientValid(target))
-	{
-		CPrintToChat(client, TAG ... "%t", "Player no longer available");
-		return Plugin_Handled;
-	}
-	if (!IsPlayerAlive(target))
-	{
-		CPrintToChat(client, TAG ... "%", "Target must be alive");
-		return Plugin_Handled;
-	}
-	if (GetClientTeam(target) != RED)
+	char clientName[32];
+	int target_list[MAXPLAYERS];
+	bool tn_is_ml;
+
+	int target_count = ProcessTargetString(targetname, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+
+	if (target_count != 1)
+		ReplyToTargetError(client, target_count);
+
+
+	if (GetClientTeam(target_list[0]) != RED)
 	{
 		CPrintToChat(client, TAG ... "%t", "Target Not On Red");
 		return Plugin_Handled;
 	}
-	JailFighter(target).ListLRS();
+	JailFighter(target_list[0]).ListLRS();
 
 	return Plugin_Handled;
 }
@@ -638,21 +632,16 @@ public Action AdminForceWarden(int client, int args)
 	{
 		char arg[64];
 		GetCmdArgString(arg, sizeof(arg));
+		char clientName[32];
+		int target_list[MAXPLAYERS];
+		bool tn_is_ml;
 
-		int target = FindTarget(client, arg, true);
-		if (!IsClientValid(target))
-		{
-			CReplyToCommand(client, TAG ... "%t", "Player no longer available");
-			return Plugin_Handled;
-		}
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
 
-		if (!IsPlayerAlive(target))
-		{
-			CReplyToCommand(client, TAG ... "%", "Target must be alive");
-			return Plugin_Handled;
-		}
+		if (target_count != 1)
+			ReplyToTargetError(client, target_count);
 
-		if (GetClientTeam(target) != BLU)
+		if (GetClientTeam(target_list[0]) != BLU)
 		{
 			CReplyToCommand(client, TAG ... "%t", "Target Need Blue Team");
 			return Plugin_Handled;
@@ -661,9 +650,8 @@ public Action AdminForceWarden(int client, int args)
 		if (gamemode.bWardenExists)
 			gamemode.iWarden.WardenUnset();
 
-		JailFighter targ = JailFighter(target);
-		targ.WardenSet();
-		CPrintToChatAll(ADMTAG ... "%t", "Admin Force Warden", target);
+		JailFighter(target_list[0]).WardenSet();
+		CPrintToChatAll(ADMTAG ... "%t", "Admin Force Warden", target_list[0]);
 		
 		return Plugin_Handled;
 	}
@@ -691,21 +679,17 @@ public Action AdminForceLR(int client, int args)
 	{
 		char arg[64];
 		GetCmdArgString(arg, sizeof(arg));
+		char clientName[32];
+		int target_list[MAXPLAYERS];
+		bool tn_is_ml;
 
-		int target = FindTarget(client, arg, true);
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
 
-		if (!IsClientValid(target))
-		{
-			CReplyToCommand(client, TAG ... "%t", "Player no longer available");
-			return Plugin_Handled;
-		}
-		if (!IsPlayerAlive(client))
-		{
-			CReplyToCommand(client, TAG ... "%t", "Target must be alive");
-			return Plugin_Handled;
-		}
-		CPrintToChatAll(ADMTAG ... "%t", "Admin Force LR", target);
-		JailFighter(target).ListLRS();
+		if (target_count != 1)
+			ReplyToTargetError(client, target_count);
+
+		CPrintToChatAll(ADMTAG ... "%t", "Admin Force LR", target_list[0]);
+		JailFighter(target_list[0]).ListLRS();
 
 		return Plugin_Handled;
 	}
@@ -771,18 +755,18 @@ public Action AdminMapCompatibilityCheck(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	if (sCellNames[0] != '\0')
+	if (strCellNames[0] != '\0')
 	{
-		int cell_door = FindEntity(sCellNames, "func_door");
+		int cell_door = FindEntity(strCellNames, "func_door");
 		if (IsValidEntity(cell_door))
 			CReplyToCommand(client, ADMTAG ... "%t", "Doors Work");
 		else CReplyToCommand(client, "{orange}[TF2Jail]{fullred} %t", "Doors Don't Work");
 	}
 
-	if (sCellOpener[0] != '\0')
+	if (strCellOpener[0] != '\0')
 	{
-		int open_cells = FindEntity(sCellOpener, "func_button");
-		if (IsValidEntity(open_cells))
+		int opencells = FindEntity(strCellOpener, "func_button");
+		if (IsValidEntity(opencells))
 			CReplyToCommand(client, ADMTAG ... "%t", "Buttons Work");
 		else CReplyToCommand(client, "{orange}[TF2Jail]{fullred} %t", "Buttons Don't Work");
 	}
@@ -798,22 +782,24 @@ public Action AdminGiveFreeday(int client, int args)
 	{
 		char arg[64];
 		GetCmdArgString(arg, sizeof(arg));
+		char clientName[32];
+		int target_list[MAXPLAYERS];
+		bool tn_is_ml;
 
-		int target = FindTarget(client, arg, true);
-		if (!IsClientValid(target))
-		{
-			CReplyToCommand(client, TAG ... "%t", "Player no longer available");
-			return Plugin_Handled;
-		}
-		JailFighter targ = JailFighter(target);
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, 0, clientName, sizeof(clientName), tn_is_ml);
+
+		if (target_count != 1)
+			ReplyToTargetError(client, target_count);
+
+		JailFighter targ = JailFighter(target_list[0]);
 
 		if (targ.bIsFreeday)
 		{
 			CReplyToCommand(client, TAG ... "%t", "Target Is Freeday");
 			return Plugin_Handled;
 		}
-		
-		CPrintToChatAll(ADMTAG ... "%t", "Admin Give Freeday", target);
+
+		CPrintToChatAll(ADMTAG ... "%t", "Admin Give Freeday", target_list[0]);
 		targ.GiveFreeday();
 
 		return Plugin_Handled;
@@ -872,22 +858,23 @@ public Action AdminRemoveFreeday(int client, int args)
 		char arg[64];
 		GetCmdArgString(arg, sizeof(arg));
 
-		int target = FindTarget(client, arg, true);
-		
-		if (!IsClientValid(target))
-		{
-			CReplyToCommand(client, TAG ... "%t", "Player no longer available");
-			return Plugin_Handled;
-		}
+		char clientName[32];
+		int target_list[MAXPLAYERS];
+		bool tn_is_ml;
 
-		JailFighter targ = JailFighter(target);
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+
+		if (target_count != 1)
+			ReplyToTargetError(client, target_count);
+
+		JailFighter targ = JailFighter(target_list[0]);
 		if (!targ.bIsFreeday)
 		{
 			CReplyToCommand(client, TAG ... "Target is not a freeday.");
 			return Plugin_Handled;
 		}
 
-		CPrintToChatAll(ADMTAG ... "%t", "Admin Remove Freeday", target);
+		CPrintToChatAll(ADMTAG ... "%t", "Admin Remove Freeday", target_list[0]);
 		targ.RemoveFreeday();
 
 		return Plugin_Handled;
@@ -1457,7 +1444,17 @@ public Action BaseProp(int client, int args)
 		return Plugin_Handled;
 	}
 	char arg2[64]; GetCmdArg(2, arg2, 64);
-	player = JBPlayer(FindTarget(client, arg1));
+	char clientName[32];
+	int target_list[MAXPLAYERS];
+	bool tn_is_ml;
+
+	int target_count = ProcessTargetString(arg1, client, target_list, MAXPLAYERS, 0, clientName, sizeof(clientName), tn_is_ml);
+
+	if (target_count != 1)
+		ReplyToTargetError(client, target_count);
+
+	player = JBPlayer(target_list[0]);
+
 	val = player.GetValue(arg2);
 	CReplyToCommand(client, "%N's %s value: %i", player.index, arg2, val);
 	return Plugin_Handled;

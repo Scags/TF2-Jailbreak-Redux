@@ -31,6 +31,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 			}
 		}
 	}
+
 	if (gamemode.bTF2Attribs)
 	{
 		switch (TF2_GetPlayerClass(client))
@@ -61,8 +62,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	if (victim.index == attacker || attacker <= 0)
 		return Plugin_Continue;
 
-	JailFighter atkr = JailFighter(attacker);
-	ManageHurtPlayer(atkr, victim, event);
+	ManageHurtPlayer(JailFighter(attacker), victim, event);
 
 	return Plugin_Continue;
 }
@@ -92,8 +92,10 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 
 	if (victim.bIsFreeday)
 		victim.RemoveFreeday();
+	else if (victim.bIsRebel)
+		victim.ClearRebel();
 
-	if (victim.bIsWarden)
+	else if (victim.bIsWarden)
 	{
 		victim.WardenUnset();
 		gamemode.bWardenExists = false;
@@ -120,7 +122,8 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 {
 	if (!bEnabled.BoolValue)
 	{
-		Steam_SetGameDescription("Team Fortress");
+		if (gamemode.bSteam)
+			Steam_SetGameDescription("Team Fortress");
 		return Plugin_Continue;
 	}
 
@@ -129,31 +132,31 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 	if (gamemode.bIsMapCompatible)
 	{
 		int ent;
-		if (sCellOpener[0] != '\0')
+		if (strCellOpener[0] != '\0')
 		{
-			ent = FindEntity(sCellOpener, "func_button");
+			ent = FindEntity(strCellOpener, "func_button");
 			if (IsValidEntity(ent))
 				SetEntProp(ent, Prop_Data, "m_bLocked", 1, 1);
 			else LogError("***TF2JB ERROR*** Entity name not found for Cell Door Opener! Please verify integrity of the config and the map.");
 		}
 
-		if (sFFButton[0] != '\0')
+		if (strFFButton[0] != '\0')
 		{
-			ent = FindEntity(sFFButton, "func_button");
+			ent = FindEntity(strFFButton, "func_button");
 			if (IsValidEntity(ent))
 				SetEntProp(ent, Prop_Data, "m_bLocked", 1, 1);
 		}
 
-		if (sCellNames[0] != '\0')
+		if (strCellNames[0] != '\0')
 		{
-			char sEntityName[32];
-			for (i = 0; i < sizeof(sDoorsList); i++)
+			char entname[32];
+			for (i = 0; i < sizeof(strDoorsList); i++)
 			{
 				ent = -1;
-				while ((ent = FindEntityByClassnameSafe(ent, sDoorsList[i])) != -1)
+				while ((ent = FindEntityByClassnameSafe(ent, strDoorsList[i])) != -1)
 				{
-					GetEntPropString(ent, Prop_Data, "m_iName", sEntityName, sizeof(sEntityName));
-					if (StrEqual(sEntityName, sCellNames, false))	// Laziness, hook first cell door opening so open door timer catches and doesn't open on its own
+					GetEntPropString(ent, Prop_Data, "m_iName", entname, sizeof(entname));
+					if (StrEqual(entname, strCellNames, false))	// Laziness, hook first cell door opening so open door timer catches and doesn't open on its own
 						HookSingleEntityOutput(ent, "OnOpen", OnFirstCellOpening, true);
 				}
 			}
@@ -257,13 +260,13 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	}
 
 	bool warday;
-	float delay;
+	float time;
 	int wep;
 
 	gamemode.iLRType = gamemode.iLRPresetType;
 	gamemode.iRoundState = StateRunning;
 
-	ManageOnRoundStart(event);	// THESE FIRE BEFORE INITIALIZATION FUNCTIONS IN THE PLAYER LOOP
+	ManageRoundStart(event);	// THESE FIRE BEFORE INITIALIZATION FUNCTIONS IN THE PLAYER LOOP
 	ManageCells();				// This is the only (easy) way for the VSH sub-plugin to grab a random player
 	ManageFFTimer();			// And force them to be a boss, then ManageRoundStart() we force non-bosses to red team
 	ManageHUDText();			// If you need to do something that goes against this functionality, you'll have to
@@ -280,7 +283,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 			continue;
 
 		player = JailFighter(i);
-		ManageRoundStart(player, event);
+		ManageRoundStartPlayer(player, event);
 
 		if (warday)
 		{
@@ -307,20 +310,20 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	if (gamemode.bIsMapCompatible)
 	{
-		float dooropen = cvarTF2Jail[DoorOpenTimer].FloatValue;
-		if (dooropen != 0.0)
-			SetPawnTimer(Open_Doors, dooropen, gamemode.iRoundCount);
+		time = cvarTF2Jail[DoorOpenTimer].FloatValue;
+		if (time != 0.0)
+			SetPawnTimer(Open_Doors, time, gamemode.iRoundCount);
 	}
 
-	delay = cvarTF2Jail[WardenDelay].FloatValue;
-	if (delay != 0.0)
+	time = cvarTF2Jail[WardenDelay].FloatValue;
+	if (time != 0.0)
 	{
-		if (delay == -1.0)
+		if (time == -1.0)
 			gamemode.FindRandomWarden();
 		else
 		{
 			gamemode.bIsWardenLocked = true;
-			SetPawnTimer(EnableWarden, delay, gamemode.iRoundCount);
+			SetPawnTimer(EnableWarden, time, gamemode.iRoundCount);
 		}
 	}
 
@@ -341,7 +344,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 	{
 		if (!IsClientInGame(i))
 			continue;
-		
+
 		if (attrib)
 			TF2Attrib_RemoveAll(i);
 
@@ -349,6 +352,8 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 
 		if (player.bIsFreeday)
 			player.RemoveFreeday();
+		else if (player.bIsRebel)
+			player.ClearRebel();
 
 		for (x = 0; x < sizeof(hTextNodes); x++)
 			if (hTextNodes[x] != null)
@@ -357,7 +362,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 		if (GetClientMenu(i) != MenuSource_None)
 			CancelClientMenu(i, true);
 
-		StopSound(i, SNDCHAN_AUTO, BackgroundSong);
+		StopSound(i, SNDCHAN_AUTO, strBackgroundSong);
 
 		ManageRoundEnd(player, event);
 		player.UnmutePlayer();
@@ -392,7 +397,7 @@ public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 
 	JailFighter player = JailFighter.OfUserId( event.GetInt("userid") );
 
-	if (IsClientValid(player.index))
+	if (IsClientValid(player.index) && gamemode.iRoundState != StateEnding)
 		SetPawnTimer(PrepPlayer, 0.2, player.userid);
 
 	return Plugin_Continue;

@@ -582,4 +582,18 @@
 		"#format"	"{1:N},{2:d},{3:d}"
 		"en"		"{1} wants to fire the current Warden. ({2} votes, {3} required)"
 	}
+	
+	// 1: Client name/index
+	"Prisoner Has Rebelled"
+	{
+		"#format"	"{1:N}"
+		"en"		"{default{{1}{burlywood} has rebelled."
+	}
+	
+	// 1: Client name/index
+	"Rebel Timer Start"
+	{
+		"#format"	"{1:d}"
+		"en"		"Your rebel status will be removed automatically in {1} seconds."
+	}
 }

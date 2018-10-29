@@ -52,6 +52,7 @@ public void OnAllPluginsLoaded()
 	//JB_Hook(OnWardenKilled, 			fwdOnWardenKilled);
 	//JB_Hook(OnTimeLeft, 				fwdOnTimeLeft);
 	//JB_Hook(OnPlayerPrepped, 			fwdOnPlayerPrepped);
+	//JB_Hook(OnPlayerPreppedPre, 		fwdOnPlayerPreppedPre);
 	//JB_Hook(OnHurtPlayer, 			fwdOnHurtPlayer);
 	//JB_Hook(OnTakeDamage, 			fwdOnTakeDamage);
 	//JB_Hook(OnLastGuard, 				fwdOnLastGuard);

@@ -75,7 +75,7 @@ methodmap CHHHJr < JailBoss
 						//hHHHTeleTimer = CreateTimer(bEnableSuperDuperJump ? 4.0 : 2.0, HHHTeleTimer, Hale, TIMER_FLAG_NO_MAPCHANGE);
 					}
 
-					CreateTimer(3.0, EraseEntity, EntIndexToEntRef(AttachParticle(client, "ghost_appearation")));
+					AttachParticle(client, "ghost_appearation", 3.0);
 					float pos[3]; GetClientAbsOrigin(target, pos);
 					SetEntPropFloat(client, Prop_Send, "m_flNextAttack", currtime+2);
 					if (GetEntProp(target, Prop_Send, "m_bDucked"))
@@ -90,7 +90,7 @@ methodmap CHHHJr < JailBoss
 						TF2_StunPlayer(client, 2.0, 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, target);
 					TeleportEntity(client, pos, NULL_VECTOR, NULL_VECTOR);
 					SetEntProp(client, Prop_Send, "m_bGlowEnabled", 0);
-					CreateTimer(3.0, EraseEntity, EntIndexToEntRef(AttachParticle(client, "ghost_appearation", _, false)));
+					AttachParticle(client, "ghost_appearation", 3.0, _, false);
 
 					// Chdata's HHH teleport rework
 					float vPos[3];

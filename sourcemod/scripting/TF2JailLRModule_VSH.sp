@@ -176,7 +176,7 @@ methodmap JailBoss < JBPlayer
 			GetEntPropVector(i, Prop_Send, "m_vecOrigin", pos2);
 			distance = GetVectorDistance(pos, pos2);
 			if( !TF2_IsPlayerInCondition(i, TFCond_Ubercharged) && distance < rageDist ) {
-				CreateTimer(5.0, EraseEntity, EntIndexToEntRef(AttachParticle(i, "yikes_fx", 75.0)));
+				AttachParticle(i, "yikes_fx", 5.0, 75.0);
 				TF2_StunPlayer(i, 5.0, _, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
 			}
 		}
@@ -187,7 +187,7 @@ methodmap JailBoss < JBPlayer
 			distance = GetVectorDistance(pos, pos2);
 			if( distance < rageDist ) {
 				SetEntProp(i, Prop_Send, "m_bDisabled", 1);
-				AttachParticle(i, "yikes_fx", 75.0);
+				AttachParticle(i, "yikes_fx", 5.0, 75.0);
 				SetVariantInt(1);
 				AcceptEntityInput(i, "RemoveHealth");
 				SetPawnTimer(EnableSG, 8.0, EntIndexToEntRef(i)); //CreateTimer(8.0, EnableSG, EntIndexToEntRef(i));
@@ -392,8 +392,6 @@ public void OnPluginStart()
 	
 	AutoExecConfig(true, "LRModuleVSH");
 
-	AddNormalSoundHook(HookSound);
-
 	AddMultiTargetFilter("@boss", HaleTargetFilter, "The current Boss/Bosses", false);
 	AddMultiTargetFilter("@hale", HaleTargetFilter, "The current Boss/Bosses", false);
 	AddMultiTargetFilter("@!boss", HaleTargetFilter, "All non-Boss players", false);
@@ -572,8 +570,15 @@ public Action EraseEntity(Handle timer, any entid)
 {
 	int ent = EntRefToEntIndex(entid);
 	if (ent > 0 && IsValidEntity(ent))
-		AcceptEntityInput(ent, "Kill");
+		RemoveEntity(ent);
 	return Plugin_Continue;
+}
+
+public void RemoveEnt(int ref)
+{
+	int ent = EntRefToEntIndex(ref);
+	if (IsValidEntity(ent))
+		RemoveEntity(ent);
 }
 
 public Action cdVoiceMenu(int client, const char[] command, int argc)
@@ -608,13 +613,17 @@ public Action DoTaunt(int client, const char[] command, int argc)
 	return Plugin_Continue;
 }
 
-public void OnEntityCreated(int entity, const char[] classname)
+public Action fwdOnEntCreated(int entity, const char[] classname)
 {
 	if (NOTVSH)
-		return;
+		return Plugin_Continue;
 	
 	if (!strcmp(classname, "tf_projectile_pipe", false))
 		SDKHook(entity, SDKHook_SpawnPost, OnEggBombSpawned);
+	else if (!strcmp(classname, "tf_ammo_pack", false))
+		return Plugin_Handled;	// Let people have ammo
+
+	return Plugin_Continue;
 }
 
 stock void SpawnRandomAmmo()
@@ -957,41 +966,6 @@ public void ManagePlayBossIntro(const JailBoss base)
 	}
 }
 
-public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool &result)
-{
-	if (NOTVSH || !IsClientValid(client))
-		return Plugin_Continue;
-	
-	JailBoss base = JailBoss(client);
-	switch (base.iType) 
-	{
-		case  - 1: {  }
-		case HHHjr: 
-		{
-			if (base.iClimbs < 10) 
-			{
-				base.ClimbWall(weapon, 600.0, 0.0, false);
-				base.flWeighDown = 0.0;
-				base.iClimbs++;
-			}
-		}
-	}
-	if (base.bIsBoss) 
-	{  // Fuck random crits
-		if (TF2_IsPlayerCritBuffed(base.index))
-			return Plugin_Continue;
-		result = false;
-		return Plugin_Changed;
-	}
-	
-	if (!base.bIsBoss) 
-	{
-		if (TF2_GetPlayerClass(base.index) == TFClass_Sniper && IsWeaponSlotActive(base.index, TFWeaponSlot_Melee))
-			base.ClimbWall(weapon, 600.0, 15.0, true);
-	}
-	return Plugin_Continue;
-}
-
 public void ManageRoundEndBossInfo(bool bossWon)
 {
 	char victory[PLATFORM_MAX_PATH];
@@ -1003,11 +977,11 @@ public void ManageRoundEndBossInfo(bool bossWon)
 
 	switch (base.iType) 
 	{
-		case Vagineer:Format(gameMessage, 4096, "\nThe Vagineer (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case HHHjr:Format(gameMessage, 4096, "\nThe Horseless Headless Horsemann Jr. (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case CBS:Format(gameMessage, 4096, "\nThe Christian Brutal Sniper (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case Bunny:Format(gameMessage, 4096, "\nThe Easter Bunny (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case Hale:Format(gameMessage, 4096, "\nSaxton Hale (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case Vagineer:Format(gameMessage, 256, "\nThe Vagineer (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case HHHjr:Format(gameMessage, 256, "\nThe Horseless Headless Horsemann Jr. (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case CBS:Format(gameMessage, 256, "\nThe Christian Brutal Sniper (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case Bunny:Format(gameMessage, 256, "\nThe Easter Bunny (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case Hale:Format(gameMessage, 256, "\nSaxton Hale (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
 	}
 	if (bossWon) 
 	{
@@ -1033,80 +1007,6 @@ public void ManageRoundEndBossInfo(bool bossWon)
 				ShowHudText(i, -1, "%s", gameMessage);
 		}
 	}
-}
-
-
-public Action HookSound(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
-{
-	if (NOTVSH)
-		return Plugin_Continue;
-
-	if (!IsClientValid(entity))
-		return Plugin_Continue;
-		
-	if (StrContains(sample, "fall_damage", false) != -1)
-		return Plugin_Handled;
-
-	switch (JailBoss(entity).iType) 
-	{
-		case -1: 
-		{
-			if (StrEqual(sample, "player/pl_impact_stun.wav", false))
-				return Plugin_Handled;
-		}
-		case Hale: 
-		{
-			if (!strncmp(sample, "vo", 2, false))
-				return Plugin_Handled;
-		}
-		case Vagineer: 
-		{
-			if (StrContains(sample, "vo/engineer_laughlong01", false) != - 1)
-			{
-				strcopy(sample, PLATFORM_MAX_PATH, VagineerKSpree);
-				return Plugin_Changed;
-			}
-			
-			if (!strncmp(sample, "vo", 2, false))
-			{
-				if (StrContains(sample, "positivevocalization01", false) != - 1) // For backstab sound
-					return Plugin_Continue;
-				if (StrContains(sample, "engineer_moveup", false) != - 1)
-					Format(sample, PLATFORM_MAX_PATH, "%s%i.wav", VagineerJump, GetRandomInt(1, 2));
-				
-				else if (StrContains(sample, "engineer_no", false) != - 1 || GetRandomInt(0, 9) > 6)
-					strcopy(sample, PLATFORM_MAX_PATH, "vo/engineer_no01.mp3");
-				
-				else strcopy(sample, PLATFORM_MAX_PATH, "vo/engineer_jeers02.mp3");
-				return Plugin_Changed;
-			}
-			else return Plugin_Continue;
-		}
-		case HHHjr: 
-		{
-			if (!strncmp(sample, "vo", 2, false))
-			{
-				if (GetRandomInt(0, 30) <= 10) 
-				{
-					Format(sample, PLATFORM_MAX_PATH, "%s0%i.mp3", HHHLaught, GetRandomInt(1, 4));
-					return Plugin_Changed;
-				}
-				if (StrContains(sample, "halloween_boss") == - 1)
-					return Plugin_Handled;
-			}
-		}
-		case Bunny: 
-		{
-			if (StrContains(sample, "gibberish", false) == -1
-				 && StrContains(sample, "burp", false) == -1
-				 && !GetRandomInt(0, 2)) // Do sound things
-			{
-				strcopy(sample, PLATFORM_MAX_PATH, BunnyRandomVoice[GetRandomInt(0, sizeof(BunnyRandomVoice) - 1)]);
-				return Plugin_Changed;
-			}
-		}
-	}
-	return Plugin_Continue;
 }
 
 public void ManageBossEquipment(const JailBoss base)
@@ -1619,6 +1519,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 {
 	if (NOTVSH)
 		return Plugin_Continue;
+	PrintToConsoleAll("OnGivedNamedItem=>CALLED\n%N::%s::%d", client, classname, iItemDefinitionIndex);
 	
 	Handle hItemOverride = null;
 	switch (iItemDefinitionIndex) 
@@ -1987,11 +1888,11 @@ public void ManageBossCheckHealth(const JailBoss base)
 			
 			switch (boss.iType) 
 			{
-				case Vagineer:Format(gameMessage, 4096, "%s\nThe Vagineer's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case HHHjr:Format(gameMessage, 4096, "%s\nThe Horseless Headless Horsemann Jr's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case CBS:Format(gameMessage, 4096, "%s\nThe Christian Brutal Sniper's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case Hale:Format(gameMessage, 4096, "%s\nSaxton Hale's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case Bunny:Format(gameMessage, 4096, "%s\nThe Easter Bunny's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case Vagineer:Format(gameMessage, 256, "%s\nThe Vagineer's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case HHHjr:Format(gameMessage, 256, "%s\nThe Horseless Headless Horsemann Jr's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case CBS:Format(gameMessage, 256, "%s\nThe Christian Brutal Sniper's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case Hale:Format(gameMessage, 256, "%s\nSaxton Hale's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case Bunny:Format(gameMessage, 256, "%s\nThe Easter Bunny's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
 			}
 			totalHealth += boss.iHealth;
 		}
@@ -2016,11 +1917,11 @@ public void ManageMessageIntro()
 	switch (base.iType) 
 	{
 		case  - 1: {  }
-		case Hale:Format(gameMessage, 4096, "\n%N has become Saxton Hale with %i Health", base.index, base.iHealth);
-		case Vagineer:Format(gameMessage, 4096, "\n%N has become the Vagineer with %i Health", base.index, base.iHealth);
-		case CBS:Format(gameMessage, 4096, "\n%N has become the Christian Brutal Sniper with %i Health", base.index, base.iHealth);
-		case HHHjr:Format(gameMessage, 4096, "\n%N has become The Horseless Headless Horsemann Jr. with %i Health", base.index, base.iHealth);
-		case Bunny:Format(gameMessage, 4096, "\n%N has become The Easter Bunny with %i Health", base.index, base.iHealth);
+		case Hale:Format(gameMessage, 256, "\n%N has become Saxton Hale with %i Health", base.index, base.iHealth);
+		case Vagineer:Format(gameMessage, 256, "\n%N has become the Vagineer with %i Health", base.index, base.iHealth);
+		case CBS:Format(gameMessage, 256, "\n%N has become the Christian Brutal Sniper with %i Health", base.index, base.iHealth);
+		case HHHjr:Format(gameMessage, 256, "\n%N has become The Horseless Headless Horsemann Jr. with %i Health", base.index, base.iHealth);
+		case Bunny:Format(gameMessage, 256, "\n%N has become The Easter Bunny with %i Health", base.index, base.iHealth);
 	}
 	SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
 	for (i = MaxClients; i; --i) {
@@ -2055,6 +1956,8 @@ public void fwdOnRoundStartPlayer(const JBPlayer Player)
 
 	JailBoss base = JailBoss.Of(Player);
 	base.iDamage = 0;
+	TF2_RemoveAllWeapons(base.index);	// Hacky bug patch: Remove weapons to force TF2Items_OnGiveNamedItem to fire for each
+
 	if (GetClientTeam(base.index) == BLU && !base.bIsBoss)
 	{
 		SetEntityMoveType(base.index, MOVETYPE_WALK);
@@ -2089,7 +1992,7 @@ public void fwdOnRoundStart()
 		iTeamBansCVar = 1;
 	}
 
-	JailBoss rand = JailBoss( GetRandomClient(true) );
+	JailBoss rand = JailBoss( GetRandomClient(true) );	// It's probably best to keep the second param true
 	if (rand.index <= 0)
 		ForceTeamWin(RED);
 
@@ -2510,6 +2413,8 @@ public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Even
 			}
 		}
 	}
+	if (!victim.bIsBoss)
+		TF2_RemoveWeaponSlot(victim.index, 3);		// Ugh
 }
 public void fwdOnBuildingDestroyed(const JBPlayer Attacker, const int building, Event event)
 {
@@ -2570,7 +2475,7 @@ public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 {
 	if (NOTVSH)
 		return;
-		
+
 	JailBoss spawn = JailBoss.Of(Player);
 
 	if (spawn.bIsBoss)
@@ -2640,7 +2545,7 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, Even
 			}
 		}
 	}
-		
+
 	if (custom == TF_CUSTOM_TELEFRAG)
 		damage = (IsPlayerAlive(attacker.index) ? 9001 : 1); // Telefrags normally 1-shot the boss but let's cap damage at 9k
 	
@@ -2822,6 +2727,132 @@ public Action fwdOnPlayerPreppedPre(const JBPlayer player)
 	return Plugin_Handled;
 }
 
+public void fwdOnRoundEndPlayer(const JBPlayer player, Event event)
+{
+	if (NOTVSH)
+		return;
+
+	JailBoss base = JailBoss.Of(player);
+	if (base.bIsBoss)
+		return;
+
+	SetPawnTimer(TF2ItemsFix, _, base.index);
+}
+
+public Action fwdOnSoundHook(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], JBPlayer player, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
+{
+	if (NOTVSH)
+		return Plugin_Continue;
+		
+	//if (StrContains(sample, "fall_damage", false) != -1)	// This doesn't work
+	//	return Plugin_Handled;
+
+	switch (JailBoss.Of(player).iType) 
+	{
+		case -1: 
+		{
+			//if (StrEqual(sample, "player/pl_impact_stun.wav", false))	// Neither does this
+			//	return Plugin_Handled;
+		}
+		case Hale: 
+		{
+			if (!strncmp(sample, "vo", 2, false))
+				return Plugin_Handled;
+		}
+		case Vagineer: 
+		{
+			if (StrContains(sample, "vo/engineer_laughlong01", false) != -1)
+			{
+				strcopy(sample, PLATFORM_MAX_PATH, VagineerKSpree);
+				return Plugin_Changed;
+			}
+			
+			if (!strncmp(sample, "vo", 2, false))
+			{
+				if (StrContains(sample, "positivevocalization01", false) != -1) // For backstab sound
+					return Plugin_Continue;
+				if (StrContains(sample, "engineer_moveup", false) != - 1)
+					Format(sample, PLATFORM_MAX_PATH, "%s%i.wav", VagineerJump, GetRandomInt(1, 2));
+				
+				else if (StrContains(sample, "engineer_no", false) != - 1 || GetRandomInt(0, 9) > 6)
+					strcopy(sample, PLATFORM_MAX_PATH, "vo/engineer_no01.mp3");
+				
+				else strcopy(sample, PLATFORM_MAX_PATH, "vo/engineer_jeers02.mp3");
+				return Plugin_Changed;
+			}
+			else return Plugin_Continue;
+		}
+		case HHHjr: 
+		{
+			if (!strncmp(sample, "vo", 2, false))
+			{
+				if (GetRandomInt(0, 30) <= 10) 
+				{
+					Format(sample, PLATFORM_MAX_PATH, "%s0%i.mp3", HHHLaught, GetRandomInt(1, 4));
+					return Plugin_Changed;
+				}
+				if (StrContains(sample, "halloween_boss") == -1)
+					return Plugin_Handled;
+			}
+		}
+		case Bunny: 
+		{
+			if (StrContains(sample, "gibberish", false) == -1
+				 && StrContains(sample, "burp", false) == -1
+				 && !GetRandomInt(0, 2)) // Do sound things
+			{
+				strcopy(sample, PLATFORM_MAX_PATH, BunnyRandomVoice[GetRandomInt(0, sizeof(BunnyRandomVoice) - 1)]);
+				return Plugin_Changed;
+			}
+		}
+	}
+	return Plugin_Continue;
+}
+
+public Action fwdOnCalcAttack(JBPlayer player, int weapon, char[] weaponname, bool &result)
+{
+	if (NOTVSH)
+		return Plugin_Continue;
+	
+	JailBoss base = JailBoss.Of(player);
+	switch (base.iType) 
+	{
+		case  - 1: {  }
+		case HHHjr: 
+		{
+			if (base.iClimbs < 10) 
+			{
+				base.ClimbWall(weapon, 600.0, 0.0, false);
+				base.flWeighDown = 0.0;
+				base.iClimbs++;
+			}
+		}
+	}
+	if (base.bIsBoss) 
+	{  // Fuck random crits
+		if (TF2_IsPlayerCritBuffed(base.index))
+			return Plugin_Continue;
+		result = false;
+		return Plugin_Changed;
+	}
+	
+	if (!base.bIsBoss) 
+	{
+		if (TF2_GetPlayerClass(base.index) == TFClass_Sniper && IsWeaponSlotActive(base.index, TFWeaponSlot_Melee))
+			base.ClimbWall(weapon, 600.0, 15.0, true);
+	}
+	return Plugin_Continue;
+}
+
+public void TF2ItemsFix(const int client)
+{
+	if (!IsClientInGame(client))
+		return;
+
+	TF2_RemoveAllWeapons(client);
+	TF2_RegeneratePlayer(client);
+}
+
 public void LoadJBHooks()
 {
 	if (!JB_HookEx(OnDownloads, fwdOnDownloads))
@@ -2832,6 +2863,8 @@ public void LoadJBHooks()
 		LogError("Failed to load OnRoundStart forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnRoundEnd, fwdOnRoundEnd))
 		LogError("Failed to load OnRoundEnd forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnRoundEndPlayer, fwdOnRoundEndPlayer))
+		LogError("Failed to load OnRoundEndPlayer forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnRedThink, fwdOnRedThink))
 		LogError("Failed to load OnRedThink forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnBlueThink, fwdOnBlueThink))
@@ -2874,6 +2907,10 @@ public void LoadJBHooks()
 		LogError("Failed to load OnCheckLivingPlayers forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnPlayerPreppedPre, fwdOnPlayerPreppedPre))
 		LogError("Failed to load OnPlayerPreppedPre forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnSoundHook, fwdOnSoundHook))
+		LogError("Failed to load OnSoundHook forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnEntCreated, fwdOnEntCreated))
+		LogError("Failed to load OnEntCreated forwards for JB VSH Sub-Plugin!");
 }
 
 stock bool OnlyScoutsLeft(const int team)

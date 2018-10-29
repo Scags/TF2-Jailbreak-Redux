@@ -1,33 +1,38 @@
 char
-	strCustomLR[64],					// Used for formatting the player custom lr say hook
-	snd[PLATFORM_MAX_PATH],				// Stack saving sound
-	BackgroundSong[PLATFORM_MAX_PATH],	// Background song
-	sCellNames[32],						// Names of Cells
-	sCellOpener[32],					// Cell button
-	sFFButton[32]						// FF button
+	strCustomLR[64],						// Used for formatting the player custom lr on say hook
+	strBackgroundSong[PLATFORM_MAX_PATH],	// Background song
+	strCellNames[32],						// Names of Cells
+	strCellOpener[32],						// Cell button
+	strFFButton[32],						// FF button
+	strRebelParticles[64],					// Rebel particles
+	strFreedayParticles[64],				// Freeday particles
+	strWardenParticles[64]					// Warden particles
 ;
 
 int
-	EnumTNPS[4][eTextNodeParams],		// Hud params
-	iHalo,								// Particle
-	iLaserBeam,							// Particle
-	iHalo2,								// Particle
-	iHHHParticle[MAX_TF_PLAYERS][3]		// HHH particles
+	EnumTNPS[4][eTextNodeParams],			// Hud params
+	iHalo,									// Particle
+	iLaserBeam,								// Particle
+	iHalo2,									// Particle
+	iHHHParticle[MAX_TF_PLAYERS][3],		// HHH particles
+	iRebelColors[4], 						// Rebel colors
+	iFreedayColors[4], 						// Freeday colors
+	iWardenColors[4] 						// Warden colors
 ;
 
 float
-	vecOld[MAX_TF_PLAYERS][3],			// Freeday particle vector
-	vecFreedayPosition[3], 				// Freeday map position
-	vecWardayBlu[3], 					// Blue warday map position
-	vecWardayRed[3]						// Red warday map position
+	vecOld[MAX_TF_PLAYERS][3],				// Freeday beam vector
+	vecFreedayPosition[3], 					// Freeday map position
+	vecWardayBlu[3], 						// Blue warday map position
+	vecWardayRed[3]							// Red warday map position
 ;
 
 bool
-	bLate								// Late-loaded plugin
+	bLate									// Late-loaded plugin
 ;
 
 StringMap
-	hJailFields[MAX_TF_PLAYERS]
+	hJailFields[MAX_TF_PLAYERS]				// Get/Set
 ;
 
 methodmap JailFighter
@@ -83,6 +88,42 @@ methodmap JailFighter
 		public set( const int i )
 		{
 			hJailFields[this.index].SetValue("iKillCount", i);
+		}
+	}
+	property int iRebelParticle
+	{
+		public get()
+		{
+			int i; hJailFields[this.index].GetValue("iRebelParticle", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			hJailFields[this.index].SetValue("iRebelParticle", i);
+		}
+	}
+	property int iFreedayParticle
+	{
+		public get()
+		{
+			int i; hJailFields[this.index].GetValue("iFreedayParticle", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			hJailFields[this.index].SetValue("iFreedayParticle", i);
+		}
+	}
+	property int iWardenParticle
+	{
+		public get()
+		{
+			int i; hJailFields[this.index].GetValue("iWardenParticle", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			hJailFields[this.index].SetValue("iWardenParticle", i);
 		}
 	}
 
@@ -228,6 +269,18 @@ methodmap JailFighter
 		public set( const bool i )
 		{
 			hJailFields[this.index].SetValue("bVoted", i);
+		}
+	}
+	property bool bIsRebel
+	{
+		public get()
+		{
+			bool i; hJailFields[this.index].GetValue("bIsRebel", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			hJailFields[this.index].SetValue("bIsRebel", i);
 		}
 	}
 #if defined _clientprefs_included
@@ -487,11 +540,29 @@ methodmap JailFighter
 	*/
 	public void GiveFreeday()
 	{
+		if (GetClientTeam(this.index) != RED || !IsPlayerAlive(this.index))
+			this.ForceTeamChange(RED);
+
 		int flags = GetEntityFlags(this.index) | FL_NOTARGET;
 		SetEntityFlags(this.index, flags);
 
 		this.bIsQueuedFreeday = false;
 		this.bIsFreeday = true;
+
+		if (cvarTF2Jail[RendererParticles].BoolValue && strFreedayParticles[0] != '\0')
+		{
+			if (this.iFreedayParticle != -1)
+			{
+				int old = EntRefToEntIndex(this.iFreedayParticle);
+				if (IsValidEntity(old))
+					RemoveEntity(old);
+			}
+
+			this.iFreedayParticle = AttachParticle(this.index, strFreedayParticles);
+		}
+
+		if (cvarTF2Jail[RendererColor].BoolValue)
+			SetEntityRenderColor(this.index, iFreedayColors[0], iFreedayColors[1], iFreedayColors[2], iFreedayColors[3]);
 
 		Call_OnFreedayGiven(this);
 	}
@@ -506,6 +577,18 @@ methodmap JailFighter
 		int flags = GetEntityFlags(client) & ~FL_NOTARGET;
 		SetEntityFlags(client, flags);
 		this.bIsFreeday = false;
+
+		if (this.iFreedayParticle != -1)
+		{
+			int old = EntRefToEntIndex(this.iFreedayParticle);
+			if (IsValidEntity(old))
+				RemoveEntity(old);
+
+			this.iFreedayParticle = -1;
+		}
+
+		if (cvarTF2Jail[RendererColor].BoolValue)
+			SetEntityRenderColor(this.index);
 
 		Call_OnFreedayRemoved(this);
 	}
@@ -594,7 +677,7 @@ methodmap JailFighter
 
 		this.bIsWarden = true;	
 		this.UnmutePlayer();
-		
+
 		char strWarden[64];
 		int client = this.index;
 		Format(strWarden, sizeof(strWarden), "%t", "New Warden Center", client);
@@ -620,6 +703,21 @@ methodmap JailFighter
 				event.Fire();
 			}
 		}
+
+		if (cvarTF2Jail[RendererParticles].BoolValue && strWardenParticles[0] != '\0')
+		{
+			if (this.iWardenParticle != -1)
+			{
+				int old = EntRefToEntIndex(this.iWardenParticle);
+				if (IsValidEntity(old))
+					RemoveEntity(old);
+			}
+
+			this.iWardenParticle = AttachParticle(this.index, strWardenParticles);
+		}
+
+		if (cvarTF2Jail[RendererColor].BoolValue)
+			SetEntityRenderColor(this.index, iWardenColors[0], iWardenColors[1], iWardenColors[2], iWardenColors[3]);
 
 		ManageWarden(this);
 	}
@@ -650,6 +748,18 @@ methodmap JailFighter
 			if (time != 0.0)
 				SetPawnTimer(DisableWarden, time, JBGameMode_GetProperty("iRoundCount"));
 		}
+
+		if (this.iWardenParticle != -1)
+		{
+			int old = EntRefToEntIndex(this.iWardenParticle);
+			if (IsValidEntity(old))
+				RemoveEntity(old);
+
+			this.iWardenParticle = -1;
+		}
+
+		if (cvarTF2Jail[RendererColor].BoolValue)
+			SetEntityRenderColor(this.index);
 	}
 	/**
 	 *	Remove all weapons, disguises, and wearables from a client.
@@ -875,5 +985,62 @@ methodmap JailFighter
 
 		if (votes >= total)
 			JBGameMode_FireWarden();
+	}
+
+	public void MarkRebel()
+	{
+		if (this.bIsRebel)
+			return;
+
+		if (!cvarTF2Jail[Rebellers].BoolValue)
+			return;
+
+		this.bIsRebel = true;
+		if (cvarTF2Jail[RendererParticles].BoolValue && strRebelParticles[0] != '\0')
+		{
+			if (this.iRebelParticle != -1)
+			{
+				int old = EntRefToEntIndex(this.iRebelParticle);
+				if (IsValidEntity(old))
+					RemoveEntity(old);
+			}
+
+			this.iRebelParticle = AttachParticle(this.index, strRebelParticles);
+		}
+
+		if (cvarTF2Jail[RendererColor].BoolValue)
+			SetEntityRenderColor(this.index, iRebelColors[0], iRebelColors[1], iRebelColors[2], iRebelColors[3]);
+
+		CPrintToChatAll(TAG ... "%t", "Prisoner Has Rebelled", this.index);
+
+		float time = cvarTF2Jail[RebelTime].FloatValue;
+		if (time != 0.0)
+		{
+			CPrintToChat(this.index, TAG ... "%t", "Rebel Timer Start", RoundFloat(time));
+			SetPawnTimer(RemoveRebel, time, this.userid, JBGameMode_GetProperty("iRoundCount"));
+		}
+
+		Call_OnRebelGiven(this);
+	}
+
+	public void ClearRebel()
+	{
+		if (!this.bIsRebel)
+			return;
+
+		this.bIsRebel = false;
+		if (this.iRebelParticle != -1)
+		{
+			int old = EntRefToEntIndex(this.iRebelParticle);
+			if (IsValidEntity(old))
+				RemoveEntity(old);
+
+			this.iRebelParticle = -1;
+		}
+
+		if (cvarTF2Jail[RendererColor].BoolValue)
+			SetEntityRenderColor(this.index);
+
+		Call_OnRebelRemoved(this);
 	}
 };
