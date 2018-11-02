@@ -9,7 +9,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		return Plugin_Continue;
 
 	JailFighter player = JailFighter(client);
-	SetEntityModel(client, "");
+	//SetEntityModel(client, "");
 
 	switch (GetClientTeam(client))
 	{

@@ -165,7 +165,7 @@ public void PrepPlayer(int userid)
 	if (Call_OnPlayerPreppedPre(base) != Plugin_Continue)
 		return;
 
-	SetEntityModel(client, "");
+	//SetEntityModel(client, "");
 
 	int team = GetClientTeam(client);
 	bool killpda;
