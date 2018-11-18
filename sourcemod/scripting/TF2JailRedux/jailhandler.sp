@@ -686,8 +686,11 @@ public Action ManageMusic(char song[PLATFORM_MAX_PATH], float & time)
 			time = 9001.0;
 			return Plugin_Continue;
 		}*/
-		default:return Call_OnPlayMusic(song, time);
+		default:return Call_OnPlayMusic(song, time);	// Defaults to Handled
 	}
+#if SOURCEMOD_V_MINOR == 9
+	return Plugin_Handled;	// Dammit dvander
+#endif
 }
 /**
  *	Manage what happens when the round timer hits 0
@@ -699,6 +702,9 @@ public Action ManageTimeEnd()
 	{
 		default:return Call_OnTimeEnd();
 	}
+#if SOURCEMOD_V_MINOR == 9
+	return Plugin_Continue;
+#endif
 }
 /**
  *	Determines if a player's attack is to be critical

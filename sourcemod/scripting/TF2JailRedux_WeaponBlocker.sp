@@ -358,7 +358,7 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 
 			wep = Player.SpawnWeapon(classname, index, 1, 0, (index == 21 ? "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1" : ""));
 			if (team + 2 == RED)
-			{ SetWeaponAmmo(wep, 0); SetWeaponClip(wep, 0); }
+			{ SetWeaponAmmo(client, wep, 0); SetWeaponClip(wep, 0); }
 		}
 	}
 }
@@ -380,25 +380,14 @@ stock void RemovePlayerBack(int client, int idx)
 			if (idx == GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex"))
 				TF2_RemoveWearable(client, edict);	// One linerrrrrrrrrr
 }
-stock int SetWeaponAmmo(const int weapon, const int ammo)
+stock void SetWeaponAmmo(const int client, const int weapon, const int ammo)
 {
-	int owner = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity");
-	if (owner <= 0)
-		return 0;
-	if (IsValidEntity(weapon))
-	{
-		int iOffset = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;
-		int iAmmoTable = FindSendPropInfo("CTFPlayer", "m_iAmmo");
-		SetEntData(owner, iAmmoTable+iOffset, ammo, 4, true);
-	}
-	return 0;
+	int iOffset = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;
+	int iAmmoTable = FindSendPropInfo("CTFPlayer", "m_iAmmo");
+	SetEntData(client, iAmmoTable+iOffset, ammo, 4, true);
 }
-stock int SetWeaponClip(const int weapon, const int ammo)
+stock void SetWeaponClip(const int weapon, const int ammo)
 {
-	if (IsValidEntity(weapon))
-	{
-		int iAmmoTable = FindSendPropInfo("CTFWeaponBase", "m_iClip1");
-		SetEntData(weapon, iAmmoTable, ammo, 4, true);
-	}
-	return 0;
+	int iAmmoTable = FindSendPropInfo("CTFWeaponBase", "m_iClip1");
+	SetEntData(weapon, iAmmoTable, ammo, 4, true);
 }

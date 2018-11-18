@@ -237,13 +237,13 @@ enum
 	Version
 };
 
-bool 
+bool
 	bFirstBlood,
 	bAbleToReroll,
 	bDisabled
 ;
 
-int 
+int
 	iGameTime	// Pre-round-start global time
 ;
 

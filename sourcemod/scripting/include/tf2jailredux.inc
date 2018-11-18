@@ -143,6 +143,21 @@ methodmap JBPlayer
 		public get() 				{ return this.GetValue("iKillCount"); }
 		public set( const int i )	{ this.SetValue("iKillCount", i); }
 	}
+	property int iRebelParticle
+	{
+		public get() 				{ return this.GetValue("iRebelParticle"); }
+		public set( const int i )	{ this.SetValue("iRebelParticle", i); }
+	}
+	property int iWardenParticle
+	{
+		public get() 				{ return this.GetValue("iWardenParticle"); }
+		public set( const int i )	{ this.SetValue("iWardenParticle", i); }
+	}
+	property int iFreedayParticle
+	{
+		public get() 				{ return this.GetValue("iFreedayParticle"); }
+		public set( const int i )	{ this.SetValue("iFreedayParticle", i); }
+	}
 
 	property bool bIsWarden
 	{
@@ -193,6 +208,11 @@ methodmap JBPlayer
 	{
 		public get() 				{ return this.GetValue("bVoted"); }
 		public set( const bool i )	{ this.SetValue("bVoted", i); }
+	}
+	property bool bIsRebel
+	{
+		public get() 				{ return this.GetValue("bIsRebel"); }
+		public set( const bool i )	{ this.SetValue("bIsRebel", i); }
 	}
 
 	property float flSpeed
@@ -388,6 +408,20 @@ methodmap JBPlayer
 	 *	@noreturn
 	*/
 	public native void AttemptFireWarden();
+
+	/**
+	 *	Mark a player as a rebel.
+	 *
+	 *	@noreturn
+	*/
+	public native void MarkRebel();
+
+	/**
+	 *	Clear a player's rebel status.
+	 *
+	 *	@noreturn
+	*/
+	public native void ClearRebel();
 };
 
 enum JBGameMode{}
@@ -487,6 +521,16 @@ native void JBGameMode_ToggleMuting(const JBPlayer player, bool forcedead = fals
 native void JBGameMode_ResetVotes();
 
 /**
+ *	Get the position of a certain teleportation location.
+ *
+ *	@param location  		Location index to get.
+ *	@param array 			Array to copy to.
+ *
+ *	@return 				True if the location property is valid.
+*/
+native bool JBGameMode_GetTelePosition(const int location, float[] array);
+
+/**
  *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
  *
  *	@param prop_name 		Property key to call from.
@@ -560,6 +604,7 @@ methodmap JBGameMode < StringMap
 			return JBGameMode_Playing();
 		}
 	}
+
 	/**
 	 *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
 	 *	@deprecated 			Use JBGameMode.SetValue instead, or use the preset properties below.
@@ -1111,6 +1156,19 @@ methodmap JBGameMode < StringMap
 	{
 		JBGameMode_ResetVotes();
 	}
+
+	/**
+	 *	Get the position of a certain teleportation location.
+	 *
+	 *	@param location  		Location index to get.
+	 *	@param array 			Array to copy to.
+	 *
+	 *	@return 				True if the location property is valid.
+	*/
+	public bool GetTelePosition( const int location, float[] array )
+	{
+		return JBGameMode_GetTelePosition(location, array);
+	}
 };
 
 
@@ -1240,7 +1298,7 @@ typeset JBHookCB
 		OnRebelRemoved
 	*/
 	function void (const JBPlayer player);
-	
+
 	/*
 		OnPlayerSpawned
 		OnRoundEndPlayer
@@ -1434,6 +1492,8 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.WardenMenu");
 	MarkNativeAsOptional("JBPlayer.ClimbWall");
 	MarkNativeAsOptional("JBPlayer.AttemptFireWarden");
+	MarkNativeAsOptional("JBPlayer.MarkRebel");
+	MarkNativeAsOptional("JBPlayer.ClearRebel");
 
 	MarkNativeAsOptional("JBGameMode_Playing");
 	MarkNativeAsOptional("JBGameMode_ManageCells");

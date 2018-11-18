@@ -1,11 +1,6 @@
 
 methodmap JailGameMode < StringMap
 {
-	public JailGameMode()
-	{
-		return view_as< JailGameMode >(new StringMap());
-	}
-
 	property int iRoundState
 	{
 		public get()
@@ -554,60 +549,58 @@ methodmap JailGameMode < StringMap
 		}
 	}
 
-	/**
-	 *	Initialize all JailGameMode Properties to a default.
-	 *
-	 *	@noreturn
-	*/
-	public void Init()	// When adding a new property, make sure you initialize it to a default 
+	// When adding a new property, make sure you initialize it to a default
+	public JailGameMode()
 	{
-		this.iRoundState = 0;
-		this.iTimeLeft = 0;
-		this.iRoundCount = 0;
-		this.iLRPresetType = -1;
-		this.iLRType = -1;
-		this.iMuteType = 0;
-		this.iLivingMuteType = 0;
-		this.iVoters = 0;
-		this.iVotes = 0;
-		this.iVotesNeeded = 0;
-		this.iLRs = 0;
-		this.iWarden = view_as< JailFighter >(0);
-		this.bFreedayTeleportSet = false;
-		this.bTF2Attribs = false;
-		this.bIsFreedayRound = false;
-		this.bDisableCriticals = false;
-		this.bWardenExists = false;
-		this.bFirstDoorOpening = false;
-		this.bIsWardenLocked = false;
-		this.bAdminLockedLR = false;
-		this.bIsWarday = false;
-		this.bOneGuardLeft = false;
-		this.bOnePrisonerLeft = false;
-		this.bIsLRInUse = false;
-		this.b1stRoundFreeday = false;
-		this.bCellsOpened = false;
-		this.bIsMapCompatible = false;
-		this.bAllowBuilding = false;
-		this.bSilentWardenKills = false;
-		this.bMedicDisabled = false;
-		this.bDisableMuting = false;
-		this.bDisableKillSpree = false;
+		JailGameMode gm = view_as< JailGameMode >(new StringMap());
+		gm.iRoundState = 0;
+		gm.iTimeLeft = 0;
+		gm.iRoundCount = 0;
+		gm.iLRPresetType = -1;
+		gm.iLRType = -1;
+		gm.iMuteType = 0;
+		gm.iLivingMuteType = 0;
+		gm.iVoters = 0;
+		gm.iVotes = 0;
+		gm.iVotesNeeded = 0;
+		gm.iLRs = 0;
+		gm.iWarden = view_as< JailFighter >(0);
+		gm.bFreedayTeleportSet = false;
+		gm.bTF2Attribs = false;
+		gm.bIsFreedayRound = false;
+		gm.bDisableCriticals = false;
+		gm.bWardenExists = false;
+		gm.bFirstDoorOpening = false;
+		gm.bIsWardenLocked = false;
+		gm.bAdminLockedLR = false;
+		gm.bIsWarday = false;
+		gm.bOneGuardLeft = false;
+		gm.bOnePrisonerLeft = false;
+		gm.bIsLRInUse = false;
+		gm.b1stRoundFreeday = false;
+		gm.bCellsOpened = false;
+		gm.bIsMapCompatible = false;
+		gm.bAllowBuilding = false;
+		gm.bSilentWardenKills = false;
+		gm.bMedicDisabled = false;
+		gm.bDisableMuting = false;
+		gm.bDisableKillSpree = false;
 #if defined _steamtools_included
-		this.bSteam = false;
+		gm.bSteam = false;
 #endif
 #if defined _sourcebans_included || defined _sourcebanspp_included
-		this.bSB = false;
+		gm.bSB = false;
 #endif
-		this.bSC = false;
+		gm.bSC = false;
 #if defined _voiceannounce_ex_included
-		this.bVA = false;
+		gm.bVA = false;
 #endif
-		this.bMarkerExists = false;
-		this.flMusicTime = 0.0;
-		this.SetValue("hPlugins", new ArrayList());
-		this.SetValue("hPacks", new ArrayList());
-		// this.SetValue("hWardenMenu", new Menu(WardenMenu));
+		gm.bMarkerExists = false;
+		gm.flMusicTime = 0.0;
+		gm.SetValue("hPlugins", new ArrayList());
+		gm.SetValue("hPacks", new ArrayList());
+		// gm.SetValue("hWardenMenu", new Menu(WardenMenu));
+		return gm;
 	}
 	/**
 	 *	Find and Initialize a random player as the warden.
@@ -863,9 +856,9 @@ methodmap JailGameMode < StringMap
 	 *	@param location  		Location index to get.
 	 *	@param array 			Array to copy to.
 	 *
-	 *	@noreturn
+	 *	@return 				True if the location property is valid.
 	*/
-	public void GetTelePosition( const int location, float[] array )
+	public bool GetTelePosition( const int location, float[] array )
 	{
 		switch (location)
 		{
@@ -874,19 +867,23 @@ methodmap JailGameMode < StringMap
 				array[0] = vecFreedayPosition[0];
 				array[1] = vecFreedayPosition[1];
 				array[2] = vecFreedayPosition[2];
+				return this.bFreedayTeleportSet;
 			}
 			case WRED:
 			{
 				array[0] = vecWardayRed[0];
 				array[1] = vecWardayRed[1];
 				array[2] = vecWardayRed[2];
+				return this.bWardayTeleportSetRed;
 			}
 			case WBLU:
 			{
 				array[0] = vecWardayBlu[0];
 				array[1] = vecWardayBlu[1];
 				array[2] = vecWardayBlu[2];
+				return this.bWardayTeleportSetBlue;
 			}
 		}
+		return false;
 	}
 };

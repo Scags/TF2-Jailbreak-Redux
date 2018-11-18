@@ -1255,6 +1255,7 @@ public Action Command_WardenToggleMedic(int client, int args)
 		CPrintToChat(client, TAG ... "%t", "Not Warden");
 		return Plugin_Handled;
 	}
+
 	if (gamemode.bMedicDisabled)
 		CPrintToChatAll(TAG ... "%t", "Medic Room Enabled", client);
 	else CPrintToChatAll(TAG ... "%t", "Medic Room Disabled", client);
@@ -1443,6 +1444,7 @@ public Action BaseProp(int client, int args)
 		CReplyToCommand(client, "%s value: %i", arg1, val);
 		return Plugin_Handled;
 	}
+
 	char arg2[64]; GetCmdArg(2, arg2, 64);
 	char clientName[32];
 	int target_list[MAXPLAYERS];

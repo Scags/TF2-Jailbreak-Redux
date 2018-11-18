@@ -17,7 +17,7 @@
 
 public Plugin myinfo =
 {
-	name = "TF2Jail Redux Team Bans",
+	name = "TF2Jail Redux TeamBans",
 	author = "Scag/Ragenewb",
 	description = "Guardbanning functionality for TF2Jail Redux",
 	version = PLUGIN_VERSION,
@@ -124,7 +124,7 @@ public void OnPluginStart()
 	cvarJBANS[JoinMessage] 			= CreateConVar("sm_jbans_banmessage", "Please visit our website to appeal.", "Message to the client on join if banned.", FCVAR_NOTIFY);
 	cvarJBANS[Prefix] 				= CreateConVar("sm_jbans_tableprefix", "", "Prefix for database tables. (Can be blank)", FCVAR_NOTIFY);
 	cvarJBANS[SQLDriver] 			= CreateConVar("sm_jbans_sqldriver", "default", "Config entry to use for database.", FCVAR_NOTIFY);
-	cvarJBANS[Debug] 				= CreateConVar("sm_jbans_debug", "1", "Enable console debugging for TF2Jail Redux GuardBans?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarJBANS[Debug] 				= CreateConVar("sm_jbans_debug", "0", "Enable console debugging for TF2Jail Redux GuardBans?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarJBANS[RageTableRefresh]		= CreateConVar("sm_jbans_ragetable_refresh", "2", "Refresh the Rage Ban menu every 'x' mapchanges.", FCVAR_NOTIFY, true, 1.0, true, 10.0);
 	cvarJBANS[IgnoreMidRound]		= CreateConVar("sm_jbans_ignore_midround", "1", "If a guardbanned player spawns on Blue team in the middle of the round, ignore forcing them to Red team?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
@@ -243,7 +243,6 @@ public void OnClientPostAdminCheck(int client)
 		...	"WHERE steamid = '%s';",
 			strCoreTable, ID);
 
-	// Has to happen after OnClientPutInServer .-.
 	hTheDB.Query(CCB_Induction, query, GetClientUserId(client));
 
 	if (cvarJBANS[Debug].BoolValue)
@@ -253,7 +252,7 @@ public void OnClientPostAdminCheck(int client)
 	hTheDB.Query(CCB_Induction_Warden, query, GetClientUserId(client));
 }
 
-public void fwdOnPlayerSpawn(const JBPlayer Player)
+public void fwdOnPlayerSpawn(const JBPlayer Player, Event event)
 {
 	if (!bEnabled.BoolValue)
 		return;
@@ -846,7 +845,7 @@ void GuardBan(int victim, int admin, int time, char reason[256] = "")
 		LogMessage("[JBANS] Querying client %N's ban with query: %s", victim, query);
 
 	int timestamp = GetTime();
-	char ID2[32];	if (admin) GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2)); else ID2 = "Console";
+	char ID2[32]; if (admin) GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2)); else ID2 = "Console";
 
 	hTheDB.Format(query, sizeof(query),
 			"INSERT INTO %s "

@@ -587,7 +587,7 @@
 	"Prisoner Has Rebelled"
 	{
 		"#format"	"{1:N}"
-		"en"		"{default{{1}{burlywood} has rebelled."
+		"en"		"{default}{1}{burlywood} has rebelled."
 	}
 	
 	// 1: Client name/index

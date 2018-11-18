@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"1.1.2"
+#define PLUGIN_VERSION		"1.1.3"
 #define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -154,7 +154,6 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
 	gamemode = new JailGameMode();
-	gamemode.Init();
 
 	LoadTranslations("common.phrases");
 	LoadTranslations("tf2jail_redux.phrases");
@@ -209,7 +208,7 @@ public void OnPluginStart()
 	cvarTF2Jail[WardenFiringRatio] 			= CreateConVar("sm_tf2jr_warden_fire_ratio", "0.6", "Percentage of players required for fire Wardens.", FCVAR_NOTIFY, true, 0.05, true, 1.0);
 	cvarTF2Jail[NoCritOnLock] 				= CreateConVar("sm_tf2jr_crit_on_lock", "0", "When Warden locks, should guards lose their crits?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[Rebellers] 					= CreateConVar("sm_tf2jr_rebellers", "0", "Enable the Rebel system.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[RebelTime] 					= CreateConVar("sm_tf2jr_rebel_timer", "30", "Timer for the Rebel system, if it's enabled.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[RebelTime] 					= CreateConVar("sm_tf2jr_rebel_timer", "30", "Timer for the Rebel system, if it's enabled.", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[RendererColor] 				= CreateConVar("sm_tf2jr_renderer_color", "1" ,"Parse renderer colors from the \"TF2Jail_RoleRenders\" config?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[RendererParticles] 			= CreateConVar("sm_tf2jr_renderer_particles", "1", "Parse renderer particles from the \"TF2Jail_RoleRenders\" config?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
@@ -335,6 +334,8 @@ public void OnPluginStart()
 	AddMultiTargetFilter("@warden", WardenGroup, "The Warden.", false);
 	AddMultiTargetFilter("@!warden", WardenGroup, "All but the Warden.", false);
 	AddMultiTargetFilter("@freedays", FreedaysGroup, "All Freedays.", false);
+	AddMultiTargetFilter("@rebels", RebelsGroup, "All Rebels", false);
+	AddMultiTargetFilter("@!rebels", RebelsGroup, "All but the Rebels", false);
 
 	AddNormalSoundHook(SoundHook);
 
@@ -390,6 +391,28 @@ public bool FreedaysGroup(const char[] pattern, Handle clients)
 			if (IsClientInGame(i) && view_as< ArrayList >(clients).FindValue(i) == -1)
 				if (JailFighter(i).bIsFreeday)
 					view_as< ArrayList >(clients).Push(i);
+	return true;
+}
+
+public bool RebelsGroup(const char[] pattern, Handle clients)
+{
+	if (bEnabled.BoolValue)
+	{
+		bool non = StrContains(pattern, "!", false) != -1;
+		for (int i = MaxClients; i; --i) 
+		{
+			if (IsClientInGame(i) && view_as< ArrayList >(clients).FindValue(i) == -1)
+			{
+				if (JailFighter(i).bIsRebel) 
+				{
+					if (!non)
+						view_as< ArrayList >(clients).Push(i);
+				}
+				else if (non)
+					view_as< ArrayList >(clients).Push(i);
+			}
+		}
+	}
 	return true;
 }
 
@@ -1036,12 +1059,12 @@ public void ParseRoleRenderersConfig()
 	delete kv;
 }
 
-void SetRoleRender(KeyValues kv, const char[] role, int color[4], char[] particle, int size)
+public void SetRoleRender(KeyValues kv, const char[] role, int color[4], char[] particle, int size)
 {
 	if (!kv.JumpToKey(role))
 		return;
 
-	color[0] = 256, color[1] = 256, color[2] = 256, color[3] = 256;
+	color[0] = color[1] = color[2] = color[3] = 256;
 	kv.GetColor("Color", color[0], color[1], color[2], color[3]);
 
 	kv.GetString("Particle", particle, size);
@@ -1173,6 +1196,7 @@ public void DisableWarden(const int roundcount)
 	CPrintToChatAll(TAG ... "%t", "Warden Locked Lack");
 	gamemode.DoorHandler(OPEN);
 	gamemode.bIsWardenLocked = true;
+
 	if (cvarTF2Jail[NoCritOnLock].BoolValue)
 		gamemode.bDisableCriticals = true;
 }
@@ -1424,7 +1448,7 @@ public Action OnBuildingSpawn(int ent)
 	int client = GetEntPropEnt(ent, Prop_Send, "m_hBuilder");
 	if (client != -1 && !gamemode.bAllowBuilding)
 	{
-		switch (cvarTF2Jail[EngieBuildings])
+		switch (cvarTF2Jail[EngieBuildings].IntValue)
 		{
 			case 0:{ RemoveEntity(ent); return Plugin_Handled; }
 			case 1:if (GetClientTeam(client) != RED) { RemoveEntity(ent); return Plugin_Handled; }
@@ -1571,7 +1595,7 @@ public int Native_UnRegisterPlugin(Handle plugin, int numParams)
 	// Get rid of it
 	holder.Erase(idx);
 
-	arrLRS.Erase(idx - holder.Length + LRMAX + 1);
+	arrLRS.Erase(idx - holder.Length + LRMAX);
 
 	gamemode.iLRs--;
 
@@ -1610,7 +1634,7 @@ public int Native_UnRegisterLR(Handle plugin, int numParams)
 		return false;
 
 	// TF2JailRedux_UnRegisterLR(TF2JailRedux_LRIndex() + num)
-	arrLRS.Erase(GetNativeCell(1) - holder.Length + LRMAX + 1);
+	arrLRS.Erase(GetNativeCell(1) - holder.Length + LRMAX);
 	gamemode.iLRs--;
 
 	return true;
@@ -1819,8 +1843,9 @@ public int Native_JBGameMode_ResetVotes(Handle plugin, int numParams)
 public int Native_JBGameMode_GetTelePosition(Handle plugin, int numParams)
 {
 	float vec[3];
-	gamemode.GetTelePosition(GetNativeCell(1), vec);
+	bool ret = gamemode.GetTelePosition(GetNativeCell(1), vec);
 	SetNativeArray(2, vec, 3);
+	return ret;
 }
 
 public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)

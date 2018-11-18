@@ -986,7 +986,11 @@ methodmap JailFighter
 		if (votes >= total)
 			JBGameMode_FireWarden();
 	}
-
+	/**
+	 *	Mark a player as a rebel.
+	 *
+	 *	@noreturn
+	*/
 	public void MarkRebel()
 	{
 		if (this.bIsRebel)
@@ -1022,7 +1026,11 @@ methodmap JailFighter
 
 		Call_OnRebelGiven(this);
 	}
-
+	/**
+	 *	Clear a player's rebel status.
+	 *
+	 *	@noreturn
+	*/
 	public void ClearRebel()
 	{
 		if (!this.bIsRebel)

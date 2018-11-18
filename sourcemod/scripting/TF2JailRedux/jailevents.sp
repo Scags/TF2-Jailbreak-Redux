@@ -9,27 +9,25 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		return Plugin_Continue;
 
 	JailFighter player = JailFighter(client);
+	int team = GetClientTeam(client);
 	//SetEntityModel(client, "");
 
-	switch (GetClientTeam(client))
+	if (player.bIsQueuedFreeday)
 	{
-		case RED:
+		player.GiveFreeday();
+		player.TeleportToPosition(FREEDAY);
+	}
+
+	if (team == BLU)
+	{
+		if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue && gamemode.iRoundState != StateRunning)
 		{
-			if (player.bIsQueuedFreeday)
-			{
-				player.GiveFreeday();
-				player.TeleportToPosition(FREEDAY);
-			}
+			player.ForceTeamChange(RED);
+			EmitSoundToClient(client, NO);
+			CPrintToChat(client, TAG ... "%t", "Muted Can't Join");
 		}
-		case BLU:
-		{
-			if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue && gamemode.iRoundState != StateRunning)
-			{
-				player.ForceTeamChange(RED);
-				EmitSoundToClient(client, NO);
-				CPrintToChat(client, TAG ... "%t", "Muted Can't Join");
-			}
-		}
+		else if (player.bIsFreeday)	// They changed teams, sucks for them
+			player.RemoveFreeday();
 	}
 
 	if (gamemode.bTF2Attribs)
@@ -42,7 +40,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	if (gamemode.bIsWarday)
-		player.TeleportToPosition(GetClientTeam(client));	// Enum value is the same as team value, so we can cheat it
+		player.TeleportToPosition(team);	// Enum value is the same as team value, so we can cheat it
 
 	gamemode.ToggleMuting(player);
 	ManageSpawn(player, event);
