@@ -21,7 +21,7 @@ enum /** LRs **/
 	TinyRound = 7,
 	HotPrisoner = 8,
 	Gravity = 9,
-	RandomKill = 10,
+	SWA = 10,
 	Warday = 11,
 	ClassWars = 12,
 	// VSH = 13			// DO NOT SET ANY NEW LRS UNDER THESE NUMBERS UNLESS YOU DISABLE OR ADJUST THE SUB PLUGIN CONVARS!
@@ -67,7 +67,7 @@ char strLRNames[][] = {
 	"Tiny Round",
 	"Hot Prisoner",
 	"Low Gravity",
-	"Sniper!",
+	"Stealy Wheely Automobiley",
 	"Warday",
 	"Class Wars"
 	// "",	// VSH
@@ -126,7 +126,7 @@ public void ManageHUDText()
 		case TinyRound:		strcopy(strHudName, sizeof(strHudName), "Tiny Round");
 		case HotPrisoner:	strcopy(strHudName, sizeof(strHudName), "Hot Prisoners");
 		case Gravity:		strcopy(strHudName, sizeof(strHudName), "Low Gravity");
-		case RandomKill:	strcopy(strHudName, sizeof(strHudName), "Sniper!");
+		case SWA:			strcopy(strHudName, sizeof(strHudName), "Stealy Wheely Automobiley");
 		case Warday:		strcopy(strHudName, sizeof(strHudName), "Warday");
 		case ClassWars:		strcopy(strHudName, sizeof(strHudName), "Class Warfare");
 	}
@@ -207,31 +207,30 @@ public void ManageRoundStart(Event event)
 		{
 			gamemode.bIsWardenLocked = true;
 			gamemode.bIsFreedayRound = true;
-			CPrintToChatAll("{burlywood}Freeday is now active for {default}ALL players{burlywood}.");
+			CPrintToChatAll("%t %t", "Plugin Tag", "Freeday All Start");
 		}
 		case GuardMelee:EmitSoundToAll(GunSound);
 		case TinyRound:
 		{
 			EmitSoundToAll(TinySound);
-			CPrintToChatAll("{burlywood}SuperSmall for everyone activated.");
+			CPrintToChatAll("%t %t", "Plugin Tag", "Tiny Round Start");
 			gamemode.bIsWardenLocked = true;
 		}
 		case Gravity:
 		{
-			CPrintToChatAll("{burlywood}Where did the gravity go?");
+			CPrintToChatAll("%t %t", "Plugin Tag", "Gravity Start");
 			EmitSoundToAll(GravSound);
 			hEngineConVars[2].SetInt(100);
 		}
-		case RandomKill:
+		case SWA:
 		{
-			CPrintToChatAll("{burlywood}Look out! Sniper!");
-			SDKHooks_TakeDamage(GetRandomClient(), 0, 0, 9001.0, DMG_DIRECT|DMG_BULLET, _, _, _);	// Lol rip, no fun for this guy
-			EmitSoundToAll(SuicideSound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_CONVO);
-			SetPawnTimer(RandSniper, GetRandomFloat(30.0, 60.0), gamemode.iRoundCount);
+			gamemode.ToggleMedic(false);
+			gamemode.bIsWarday = true;
+			gamemode.DoorHandler(OPEN);
 		}
 		case Warday:
 		{
-			CPrintToChatAll("{burlywood}*War kazoo sounds*");
+			CPrintToChatAll("%t %t", "Plugin Tag", "Warday Start");
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
 		}
@@ -264,7 +263,7 @@ public void ManageRoundStartPlayer(const JailFighter player, Event event)
 
 	switch (gamemode.iLRType)
 	{
-		case FreedaySelf, FreedayOther:if (player.bIsFreeday) CPrintToChatAll("%t", "Freeday Active", client);
+		case FreedaySelf, FreedayOther:if (player.bIsFreeday) CPrintToChatAll("%t %t", "Plugin Tag", "Freeday Active", client);
 		case GuardMelee:
 		{
 			if (GetClientTeam(client) == BLU)
@@ -285,6 +284,11 @@ public void ManageRoundStartPlayer(const JailFighter player, Event event)
 		}
 		case TinyRound:SetEntPropFloat(client, Prop_Send, "m_flModelScale", 0.3);
 		case Warday, ClassWars:SetPawnTimer(ResetPlayer, 0.2, client);
+		case SWA:
+		{
+			TF2_AddCondition(client, TFCond_HalloweenKart, -1.0);
+			player.iHealth = 300;
+		}
 		case HHHDay:CHHHDay.Activate(player);
 		case HotPrisoner:CHotPrisoner.Activate(player);
 	}
@@ -312,7 +316,6 @@ public void ManageOnRoundEnd(Event event)
 	switch (gamemode.iLRType)
 	{
 		case Gravity:hEngineConVars[2].SetInt(800);
-		case RandomKill:SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), gamemode.iRoundCount);
 		case HHHDay:CHHHDay.Terminate(event);
 		case HotPrisoner:CHotPrisoner.Terminate(event);
 	}
@@ -441,6 +444,12 @@ public void ManageRedThink(const JailFighter player)
 	switch (gamemode.iLRType)
 	{
 		case -1: {	}
+		case SWA:
+		{
+			SetEntityHealth(player.index, player.iHealth);
+			if (player.iHealth < 0)
+				SDKHooks_TakeDamage(player.index, 0, 0, 9001.0, DMG_DIRECT);
+		}
 	}
 	Call_OnRedThink(player);
 }
@@ -451,9 +460,18 @@ public void ManageBlueThink(const JailFighter player)
 {
 	switch (gamemode.iLRType)
 	{
-		default:if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 1)
-			TF2_AddCondition(player.index, TFCond_Buffed, 0.2);
+		case -1: {	}
+		case SWA:
+		{
+			SetEntityHealth(player.index, player.iHealth);
+			if (player.iHealth < 0)
+				SDKHooks_TakeDamage(player.index, 0, 0, 9001.0, DMG_DIRECT);
+		}
 	}
+
+	if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 1)
+		TF2_AddCondition(player.index, TFCond_Buffed, 0.2);
+	
 	Call_OnBlueThink(player);
 }
 /**
@@ -511,12 +529,13 @@ public void ManageOnPreThink(const JailFighter base)
 */
 public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victim, Event event)
 {
-	// int damage = event.GetInt("damageamount");
+	int damage = event.GetInt("damageamount");
 	// int custom = event.GetInt("custom");
 	// int weapon = event.GetInt("weaponid");
 	
 	switch (gamemode.iLRType)
 	{
+		case SWA:victim.iHealth -= damage;
 		case -1: {	}
 	}
 
@@ -566,14 +585,6 @@ public void ManagePlayerDeath(const JailFighter attacker, const JailFighter vict
 	switch (gamemode.iLRType)
 	{
 		case HHHDay:CHHHDay.ManageDeath(attacker, victim, event);
-		case RandomKill:
-		{
-			if ((attacker.index <= 0 && event.GetInt("damagebits") & DMG_BULLET) || attacker.index == victim.index)
-			{
-				event.SetString("weapon", "sniperrifle");
-				EmitSoundToAll(SuicideSound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_CONVO);
-			}
-		}
 	}
 	Call_OnPlayerDied(victim, attacker, event);
 }
@@ -700,6 +711,32 @@ public Action ManageTimeEnd()
 {
 	switch (gamemode.iLRType)
 	{
+		case SWA:
+		{
+			int players[2];
+			int i;
+			for (i = MaxClients; i; --i)
+				if (IsClientInGame(i) && IsPlayerAlive(i))
+					++players[GetClientTeam(i)-2];
+
+			if (players[0] > players[1])
+				ForceTeamWin(RED);
+			else if (players[1] > players[0])
+				ForceTeamWin(BLU);
+			else	// Draw, nobody wins
+			{
+				i = CreateEntityByName("game_round_win");
+				if (i != -1)
+				{
+					SetVariantInt(0);
+					AcceptEntityInput(i, "SetTeam");
+					AcceptEntityInput(i, "RoundWin");
+				}
+				else ServerCommand("sm_slay @all");
+			}
+
+			return Plugin_Handled;
+		}
 		default:return Call_OnTimeEnd();
 	}
 #if SOURCEMOD_V_MINOR == 9
@@ -783,7 +820,7 @@ public void AddLRToPanel(Menu &panel)
 			case 7:name = "Tiny Round- Honey I shrunk the players";
 			case 8:name = "Hot Prisoner- Prisoners are too hot to touch";
 			case 9:name = "Low Gravity- Where did the gravity go";
-			case 10:name = "Sniper- A hired gun to take out some folks";
+			case 10:name = "Stealy Wheely Automobiley- Learn how the Mercedes bends";
 			case 11:name = "Warday- Team Deathmatch";
 			case 12:name = "Class Wars- Class versus class Warday";
 		}
@@ -837,7 +874,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			{
 				case -1:	// Random
 				{
-					CPrintToChatAll(TAG ... "%N has chosen a {default}Random Last Request{burlywood} as their last request!", client);
+					CPrintToChatAll("%t %t", "Plugin Tag", "Random Select", client);
 					int randlr = GetRandomInt(2, LRMAX);
 					gamemode.iLRPresetType = randlr;
 					arrLRS.Set( randlr, arrLRS.Get(randlr)+1 );
@@ -850,35 +887,35 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				}
 				case Suicide:
 				{
-					CPrintToChatAll(TAG ... "%N has chosen to kill themselves. What a shame...", client);
+					CPrintToChatAll("%t %t", "Plugin Tag", "Suicide Select", client);
 					SetPawnTimer(KillThatBitch, GetRandomFloat(0.5, 7.0), client);	// Meme lol
 					arrLRS.Set( request, value+1 );
 					return;
 				}
 				case Custom:
 				{
-					CPrintToChatAll(TAG ... "%N has chosen to type out their LR in chat.", client);
+					CPrintToChatAll("%t %t", "Plugin Tag", "Custom Select", client);
 					base.iCustom = base.userid;
 				}
 				case FreedaySelf:
 				{
-					CPrintToChatAll(TAG ... "%N has chosen {default}Freeday for Themselves{burlywood} next round.", client);
+					CPrintToChatAll("%t %t", "Plugin Tag", "Freeday Self Select", client);
 					base.bIsQueuedFreeday = true;
 				}
 				case FreedayOther:
 				{
-					CPrintToChatAll(TAG ... "%N is picking Freedays for next round...", client);
+					CPrintToChatAll("%t %t", "Plugin Tag", "Freeday Other Select", client);
 					FreedayforClientsMenu(client);
 				}
-				case FreedayAll:	CPrintToChatAll(TAG ... "%N has chosen to grant a {default}Freeday for All{burlywood} next round.", client);
-				case GuardMelee:	CPrintToChatAll(TAG ... "%N has chosen to strip the guards of their weapons.", client);
-				case HHHDay:		CPrintToChatAll(TAG ... "%N has chosen {default}Horseless Headless Horsemann Kill Round{burlywood} next round.", client);
-				case TinyRound:		CPrintToChatAll(TAG ... "%N has chosen {default}Super Small{burlywood} for everyone.", client);
-				case HotPrisoner:	CPrintToChatAll(TAG ... "%N has chosen to ignite all of the prisoners next round!", client);
-				case Gravity:		CPrintToChatAll(TAG ... "%N has chosen {default}Low Gravity{burlywood} as their last request.", client);
-				case RandomKill:	CPrintToChatAll(TAG ... "%N has chosen to hire a Sniper for the next round!", client);
-				case Warday:		CPrintToChatAll(TAG ... "%N has chosen to do a {default}Warday{burlywood}.", client);
-				case ClassWars:		CPrintToChatAll(TAG ... "%N has chosen {default}Class Warfare{burlywood} as their last request.", client);
+				case FreedayAll:	CPrintToChatAll("%t %t", "Plugin Tag", "Freeday All Select", client);
+				case GuardMelee:	CPrintToChatAll("%t %t", "Plugin Tag", "Guard Melee Select", client);
+				case HHHDay:		CPrintToChatAll("%t %t", "Plugin Tag", "HHHDay Select", client);
+				case TinyRound:		CPrintToChatAll("%t %t", "Plugin Tag", "Tiny Round Select", client);
+				case HotPrisoner:	CPrintToChatAll("%t %t", "Plugin Tag", "Hot Prisoner Select", client);
+				case Gravity:		CPrintToChatAll("%t %t", "Plugin Tag", "Gravity Round Select", client);
+				case SWA:			CPrintToChatAll("%t %t", "Plugin Tag", "Automobile Start", client);
+				case Warday:		CPrintToChatAll("%t %t", "Plugin Tag", "Warday Select", client);
+				case ClassWars:		CPrintToChatAll("%t %t", "Plugin Tag", "ClassWars Select", client);
 			}
 
 			gamemode.iLRPresetType = request;
@@ -907,6 +944,7 @@ public void ResetVariables(const JailFighter base, const bool compl)
 	base.iRebelParticle = -1;
 	base.iWardenParticle = -1;
 	base.iFreedayParticle = -1;
+	base.iHealth = 0;
 	base.bIsWarden = false;
 	base.bLockedFromWarden = false;
 	base.bIsHHH = false;
@@ -949,7 +987,7 @@ public void ManageEntityCreated(int ent, const char[] classname)
 		SDKHook(ent, SDKHook_Spawn, OnBuildingSpawn);
 }
 /**
- *	Unique to the player Custom lr, formats the public char sCustomLR
+ *	Unique to the player Custom lr, formats the public char strCustomLR
 */
 public void OnClientSayCommand_Post(int client, const char[] sCommand, const char[] cArgs)
 {
@@ -957,7 +995,7 @@ public void OnClientSayCommand_Post(int client, const char[] sCommand, const cha
 	if (base.iCustom > 0)
 	{
 		strcopy(strCustomLR, sizeof(strCustomLR), cArgs);
-		CPrintToChat(client, TAG ... "Your custom last request is {default}%s", strCustomLR);
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Custom Activate", strCustomLR);
 		base.iCustom = 0;
 	}
 }
@@ -980,7 +1018,7 @@ public void ManageWardenMenu(Menu &menu)
 			JailFighter player = JailFighter(client);
 			if (!player.bIsWarden)
 			{
-				CPrintToChat(client, TAG ... "%t", "Not Warden");
+				CPrintToChat(client, "%t %t", "Plugin Tag", "Not Warden");
 				return;
 			}
 
@@ -991,6 +1029,5 @@ public void ManageWardenMenu(Menu &menu)
 			FakeClientCommandEx(client, info);
 			player.WardenMenu();
 		}
-		// case MenuAction_End:delete menu;	// It's technically global so :/
 	}
 }

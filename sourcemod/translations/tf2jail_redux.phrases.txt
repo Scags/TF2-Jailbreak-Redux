@@ -1,5 +1,15 @@
 "Phrases"
 {
+	"Plugin Tag"
+	{
+		"en" 			"{crimson}[TF2Jail]{burlywood}"
+	}
+	
+	"Admin Tag"
+	{
+		"en" 			"{orange}[TF2Jail]{burlywood}"
+	}
+	
 	// 1: Client name/index
 	"Taken Ammo"
 	{
@@ -537,7 +547,7 @@
 	"Freeday Active"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"{burlywood}Freeday is now active for {default}{1}{burlywood}."
+		"en" 			"Freeday is now active for {default}{1}{burlywood}."
 	}
 
 	"Attack Guard Lose Freeday"
@@ -590,10 +600,166 @@
 		"en"		"{default}{1}{burlywood} has rebelled."
 	}
 	
-	// 1: Client name/index
+	// 1: Time of rebel timer
 	"Rebel Timer Start"
 	{
 		"#format"	"{1:d}"
 		"en"		"Your rebel status will be removed automatically in {1} seconds."
+	}
+	
+	"Rebel Timer Remove"
+	{
+		"en" 		"Your rebel status has been removed."
+	}
+	
+	"Warden Disconnected"
+	{
+		"en" 		"Warden has disconnected!"
+	}
+	
+	"Announce Timer"
+	{
+		"#format" 	"{1:s}"
+		"en" 		"V{1} by {default}Scag/Ragenewb{burlywood}."
+	}
+	
+	"Freeday All Start"
+	{
+		"en" 		"Freeday is now active for {default}ALL players{burlywood}."
+	}
+	
+	"Tiny Round Start"
+	{
+		"en" 		"SuperSmall for everyone activated."
+	}
+	
+	"Gravity Start"
+	{
+		"en" 		"Where did the gravity go?"
+	}
+	
+	"Warday Start"
+	{
+		"en" 		"{burlywood}*War kazoo sounds*"
+	}
+	
+	"Random Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen a {default}Random Last Request{burlywood} as their last request!"
+	}
+	
+	"Suicide Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen to kill themselves. What a shame..."
+	}
+	
+	"Custom Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen to type out their LR in chat."
+	}
+	
+	"Freeday Self Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen {default}Freeday for Themselves{burlywood} next round."
+	}
+	
+	"Freeday Other Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} is picking Freedays for next round..."
+	}
+	
+	"Freeday All Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen to grant a {default}Freeday for All{burlywood} next round."
+	}
+	
+	"Guard Melee Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen to strip the guards of their weapons."
+	}
+	
+	"HHHDay Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen {default}Horseless Headless Horsemann Kill Round{burlywood} next round."
+	}
+	
+	"Tiny Round Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen {default}Super Small{burlywood} for everyone."
+	}
+	
+	"Hot Prisoner Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen to ignite all of the prisoners next round!"
+	}
+	
+	"Gravity Round Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen {default}Low Gravity{burlywood} as their last request."
+	}
+	
+	"Automobile Start"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen {default}Stealy Wheely Automobiley{burlywood} as their last request."
+	}
+	
+	"Warday Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen to do a {default}Warday{burlywood}."
+	}
+	
+	"ClassWars Select"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has chosen {default}Class Warfare{burlywood} as their last request."
+	}
+	
+	"Custom Activate"
+	{
+		"#format" 	"{1:s}"
+		"en" 		"Your custom last request is {default}{1}"
+	}
+	
+	"Music Panel"
+	{
+		"en" 		"Turn the TF2Jail Music..."
+	}
+	
+	"On"
+	{
+		"en" 		"On"
+	}
+	
+	"Off"
+	{
+		"en" 		"Off"
+	}
+	
+	"Exit"
+	{
+		"en" 		"Exit"
+	}
+	
+	"Repeats Surpassed"
+	{
+		"en" 		"You have surpassed the maximum amount of repeat annotations for this round."
+	}
+	
+	"Weapon Config"
+	{
+		"en" 		"Running Weapon Blocker config."
 	}
 }

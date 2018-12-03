@@ -12,7 +12,9 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	int team = GetClientTeam(client);
 	//SetEntityModel(client, "");
 
-	if (player.bIsQueuedFreeday)
+	if (player.bIsFreeday)	// They changed teams, sucks for them
+		player.RemoveFreeday();
+	else if (player.bIsQueuedFreeday)
 	{
 		player.GiveFreeday();
 		player.TeleportToPosition(FREEDAY);
@@ -24,10 +26,8 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		{
 			player.ForceTeamChange(RED);
 			EmitSoundToClient(client, NO);
-			CPrintToChat(client, TAG ... "%t", "Muted Can't Join");
+			CPrintToChat(client, "%t %t", "Plugin Tag", "Muted Can't Join");
 		}
-		else if (player.bIsFreeday)	// They changed teams, sucks for them
-			player.RemoveFreeday();
 	}
 
 	if (gamemode.bTF2Attribs)
@@ -120,8 +120,10 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 {
 	if (!bEnabled.BoolValue)
 	{
+#if defined _SteamWorks_Included
 		if (gamemode.bSteam)
-			Steam_SetGameDescription("Team Fortress");
+			SteamWorks_SetGameDescription("Team Fortress");
+#endif
 		return Plugin_Continue;
 	}
 
@@ -234,10 +236,10 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 							AcceptEntityInput(flamemanager, "Kill");
 					}
 					player.ForceTeamChange(RED);
-					CPrintToChat(player.index, TAG ... "%t", "Autobalanced");
+					CPrintToChat(player.index, "%t %t", "Plugin Tag", "Autobalanced");
 
-					lBlue--;	// Avoid loopception
-					lRed++;
+					--lBlue;	// Avoid loopception
+					++lRed;
 				}
 			}
 		}
@@ -247,10 +249,10 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	{
 		gamemode.DoorHandler(OPEN);
 
-		char s1stDay[32];
-		FormatEx(s1stDay, sizeof(s1stDay), "%t", "First Day Freeday");
-		SetTextNode(hTextNodes[0], s1stDay, EnumTNPS[0][fCoord_X], EnumTNPS[0][fCoord_Y], EnumTNPS[0][fHoldTime], EnumTNPS[0][iRed], EnumTNPS[0][iGreen], EnumTNPS[0][iBlue], EnumTNPS[0][iAlpha], EnumTNPS[0][iEffect], EnumTNPS[0][fFXTime], EnumTNPS[0][fFadeIn], EnumTNPS[0][fFadeOut]);
-		PrintCenterTextAll(s1stDay);
+		char firstday[32];
+		FormatEx(firstday, sizeof(firstday), "%t", "First Day Freeday");
+		SetTextNode(hTextNodes[0], firstday, EnumTNPS[0][fCoord_X], EnumTNPS[0][fCoord_Y], EnumTNPS[0][fHoldTime], EnumTNPS[0][iRed], EnumTNPS[0][iGreen], EnumTNPS[0][iBlue], EnumTNPS[0][iAlpha], EnumTNPS[0][iEffect], EnumTNPS[0][fFXTime], EnumTNPS[0][fFadeIn], EnumTNPS[0][fFadeOut]);
+		PrintCenterTextAll(firstday);
 		
 		gamemode.iTimeLeft = cvarTF2Jail[RoundTime_Freeday].IntValue;
 		gamemode.iLRType = -1;
@@ -380,6 +382,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 	gamemode.bSilentWardenKills = false;
 	gamemode.bDisableMuting = false;
 	gamemode.bDisableKillSpree = false;
+	gamemode.bIgnoreRebels = false;
 	gamemode.iLRType = -1;
 	gamemode.iTimeLeft = 0; // Had to set it to 0 here because it kept glitching out... odd
 	gamemode.iRoundState = StateEnding;

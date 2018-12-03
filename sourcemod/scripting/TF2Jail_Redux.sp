@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"1.1.3"
+#define PLUGIN_VERSION		"1.2.0"
 #define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -30,13 +30,15 @@
 #include <tf2jailredux>
 
 #undef REQUIRE_EXTENSIONS
-#tryinclude <steamtools>
+#tryinclude <SteamWorks>
 #define REQUIRE_EXTENSIONS
 
 #undef REQUIRE_PLUGIN
 #include <tf2attributes>
-#tryinclude <sourcebans>
 #tryinclude <sourcebanspp>
+#if !defined _sourcebanspp_included
+#tryinclude <sourcebans>
+#endif
 #tryinclude <sourcecomms>
 #tryinclude <basecomm>
 #tryinclude <clientprefs>
@@ -103,6 +105,8 @@ enum	// Cvar name
 	RebelTime,
 	RendererColor,
 	RendererParticles,
+	LocDistance,
+	HideParticles,
 	Version
 };
 
@@ -128,7 +132,7 @@ ConVar
 	hEngineConVars[3]
 ;
 
-Handle 
+Handle
 	hTextNodes[4],
 #if defined _clientprefs_included
 	MusicCookie,
@@ -211,6 +215,8 @@ public void OnPluginStart()
 	cvarTF2Jail[RebelTime] 					= CreateConVar("sm_tf2jr_rebel_timer", "30", "Timer for the Rebel system, if it's enabled.", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[RendererColor] 				= CreateConVar("sm_tf2jr_renderer_color", "1" ,"Parse renderer colors from the \"TF2Jail_RoleRenders\" config?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[RendererParticles] 			= CreateConVar("sm_tf2jr_renderer_particles", "1", "Parse renderer particles from the \"TF2Jail_RoleRenders\" config?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[LocDistance]				= CreateConVar("sm_tf2jr_filter_distance", "300", "Distance (hu) to register players as in the area of the location target filters.", FCVAR_NOTIFY, true, 0.0);
+	cvarTF2Jail[HideParticles] 				= CreateConVar("sm_tf2jr_hide_particles", "1", "Hide renderer particles from players when they are cloaked?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -334,8 +340,20 @@ public void OnPluginStart()
 	AddMultiTargetFilter("@warden", WardenGroup, "The Warden.", false);
 	AddMultiTargetFilter("@!warden", WardenGroup, "All but the Warden.", false);
 	AddMultiTargetFilter("@freedays", FreedaysGroup, "All Freedays.", false);
+	AddMultiTargetFilter("@!freedays", FreedaysGroup, "All but the Freedays", false);
 	AddMultiTargetFilter("@rebels", RebelsGroup, "All Rebels", false);
 	AddMultiTargetFilter("@!rebels", RebelsGroup, "All but the Rebels", false);
+	// Target filters are cool! Who can disagree?
+	AddMultiTargetFilter("@freedayloc", FreedayLocGroup, "The Freeday location", false);
+	AddMultiTargetFilter("@!freedayloc", FreedayLocGroup, "All but the Freeday location", false);
+	AddMultiTargetFilter("@wardayred", WardayRedLocGroup, "The Red Warday location", false);
+	AddMultiTargetFilter("@!wardayred", WardayRedLocGroup, "All but the Red Warday location", false);
+	AddMultiTargetFilter("@wardayblue", WardayBluLocGroup, "The Blue Warday location", false);
+	AddMultiTargetFilter("@!wardayblue", WardayBluLocGroup, "All but the Blue Warday location", false);
+	AddMultiTargetFilter("@wardayloc", WardayAnyLocGroup, "The Warday locations", false);
+	AddMultiTargetFilter("@!wardayloc", WardayAnyLocGroup, "All but the Warday locations", false);
+	AddMultiTargetFilter("@medic", MedicLocGroup, "The Medic Room", false);
+	AddMultiTargetFilter("@!medic", MedicLocGroup, "All but the Medic Room", false);
 
 	AddNormalSoundHook(SoundHook);
 
@@ -366,19 +384,21 @@ public bool WardenGroup(const char[] pattern, Handle clients)
 {
 	if (bEnabled.BoolValue)
 	{
+		ArrayList cast = view_as< ArrayList >(clients);
 		bool non = StrContains(pattern, "!", false) != -1;
+
 		for (int i = MaxClients; i; --i) 
 		{
-			if (IsClientInGame(i) && view_as< ArrayList >(clients).FindValue(i) == -1)
-			{
-				if (JailFighter(i).bIsWarden) 
-				{
-					if (!non)
-						view_as< ArrayList >(clients).Push(i);
-				}
-				else if (non)
-					view_as< ArrayList >(clients).Push(i);
-			}
+			if (!IsClientInGame(i) || !IsPlayerAlive(i))
+				continue;
+
+			if (cast.FindValue(i) != -1)
+				continue;
+
+			if (!non && JailFighter(i).bIsWarden) 
+				cast.Push(i);
+			else if (non)
+				cast.Push(i);
 		}
 	}
 	return true;
@@ -387,10 +407,24 @@ public bool WardenGroup(const char[] pattern, Handle clients)
 public bool FreedaysGroup(const char[] pattern, Handle clients)
 {
 	if (bEnabled.BoolValue)
-		for (int i = MaxClients; i; --i)
-			if (IsClientInGame(i) && view_as< ArrayList >(clients).FindValue(i) == -1)
-				if (JailFighter(i).bIsFreeday)
-					view_as< ArrayList >(clients).Push(i);
+	{
+		ArrayList cast = view_as< ArrayList >(clients);
+		bool non = StrContains(pattern, "!", false) != -1;
+
+		for (int i = MaxClients; i; --i) 
+		{
+			if (!IsClientInGame(i) || !IsPlayerAlive(i))
+				continue;
+
+			if (cast.FindValue(i) != -1)
+				continue;
+
+			if (!non && JailFighter(i).bIsFreeday) 
+				cast.Push(i);
+			else if (non)
+				cast.Push(i);
+		}
+	}
 	return true;
 }
 
@@ -398,28 +432,170 @@ public bool RebelsGroup(const char[] pattern, Handle clients)
 {
 	if (bEnabled.BoolValue)
 	{
+		ArrayList cast = view_as< ArrayList >(clients);
 		bool non = StrContains(pattern, "!", false) != -1;
+
 		for (int i = MaxClients; i; --i) 
 		{
-			if (IsClientInGame(i) && view_as< ArrayList >(clients).FindValue(i) == -1)
+			if (!IsClientInGame(i) || !IsPlayerAlive(i))
+				continue;
+
+			if (cast.FindValue(i) != -1)
+				continue;
+
+			if (!non && JailFighter(i).bIsRebel) 
+				cast.Push(i);
+			else if (non)
+				cast.Push(i);
+		}
+	}
+	return true;
+}
+
+public bool FreedayLocGroup(const char[] pattern, Handle clients)
+{
+	if (bEnabled.BoolValue)
+		return CalcLocGroup(FREEDAY, pattern, view_as< ArrayList >(clients));
+	return true;
+}
+
+public bool WardayRedLocGroup(const char[] pattern, Handle clients)
+{
+	if (bEnabled.BoolValue)
+		return CalcLocGroup(WRED, pattern, view_as< ArrayList >(clients));
+	return true;
+}
+
+public bool WardayBluLocGroup(const char[] pattern, Handle clients)
+{
+	if (bEnabled.BoolValue)
+		return CalcLocGroup(WBLU, pattern, view_as< ArrayList >(clients));
+	return true;
+}
+
+public bool WardayAnyLocGroup(const char[] pattern, Handle clients)
+{
+	if (bEnabled.BoolValue)
+	{
+		float vec[3], vec2[3], dist;
+		int i;
+		ArrayList cast = view_as< ArrayList >(clients);
+		bool non = StrContains(pattern, "!", false) != -1;
+
+		if (gamemode.GetTelePosition(WRED, vec))
+		{
+			for (i = MaxClients; i; --i)
 			{
-				if (JailFighter(i).bIsRebel) 
-				{
-					if (!non)
-						view_as< ArrayList >(clients).Push(i);
-				}
+				if (!IsClientInGame(i) || !IsPlayerAlive(i))
+					continue;
+
+				if (cast.FindValue(i) != -1)
+					continue;
+
+				GetClientAbsOrigin(i, vec2);
+				dist = GetVectorDistance(vec, vec2);
+
+				if (!non && dist < cvarTF2Jail[LocDistance].FloatValue)
+					cast.Push(i);
 				else if (non)
-					view_as< ArrayList >(clients).Push(i);
+					cast.Push(i);
+			}
+		}
+
+		if (gamemode.GetTelePosition(WBLU, vec))
+		{
+			for (i = MaxClients; i; --i)
+			{
+				if (!IsClientInGame(i) || !IsPlayerAlive(i))
+					continue;
+
+				if (cast.FindValue(i) != -1)
+					continue;
+
+				GetClientAbsOrigin(i, vec2);
+				dist = GetVectorDistance(vec, vec2);
+
+				if (!non && dist < cvarTF2Jail[LocDistance].FloatValue)
+					cast.Push(i);
+				else if (non)
+					cast.Push(i);
 			}
 		}
 	}
 	return true;
 }
 
+public bool MedicLocGroup(const char[] pattern, Handle clients)
+{
+	if (bEnabled.BoolValue)
+	{
+		int ent = -1;
+		while ((ent = FindEntityByClassname(ent, "trigger_hurt")) != -1)
+		{
+			if (GetEntPropFloat(ent, Prop_Data, "m_flDamage") > 0)
+				continue;
+
+			float vec[3], vec2[3], dist;
+			bool non = StrContains(pattern, "!", false) != -1;
+			ArrayList cast = view_as< ArrayList >(clients);
+
+			GetEntPropVector(ent, Prop_Send, "m_vecOrigin", vec);
+
+			for (int i = MaxClients; i; --i)
+			{
+				if (!IsClientInGame(i) || !IsPlayerAlive(i))
+					continue;
+
+				if (cast.FindValue(i) != -1)
+					continue;
+
+				GetClientAbsOrigin(i, vec2);
+				dist = GetVectorDistance(vec, vec2);
+
+				if (!non && dist < cvarTF2Jail[LocDistance].FloatValue)
+					cast.Push(i);
+				else if (non)
+					cast.Push(i);
+			}
+
+			break;
+		}
+	}
+	return true;
+}
+
+public bool CalcLocGroup(const int type, const char[] pattern, ArrayList &clients)
+{
+	float vec[3];
+	if (!gamemode.GetTelePosition(type, vec))
+		return false;
+
+	float vec2[3], dist;
+	bool non = StrContains(pattern, "!", false) != -1;
+
+	for (int i = MaxClients; i; --i)
+	{
+		if (!IsClientInGame(i) || !IsPlayerAlive(i))
+			continue;
+
+		if (clients.FindValue(i) != -1)
+			continue;
+
+		GetClientAbsOrigin(i, vec2);
+		dist = GetVectorDistance(vec, vec2);
+
+		if (!non && dist < cvarTF2Jail[LocDistance].FloatValue)
+			clients.Push(i);
+		else if (non)
+			clients.Push(i);
+	}
+	return true;
+}
+
 public void OnAllPluginsLoaded()
 {
-#if defined _steamtools_included
-	gamemode.bSteam = LibraryExists("SteamTools");
+#if defined _SteamWorks_Included
+	gamemode.bSteam = LibraryExists("SteamWorks");
 #endif
 #if defined _sourcebans_included || defined _sourcebanspp_included
 	gamemode.bSB = (LibraryExists("sourcebans") || LibraryExists("sourcebans++"));
@@ -433,8 +609,8 @@ public void OnAllPluginsLoaded()
 
 public void OnLibraryAdded(const char[] name)
 {
-#if defined _steamtools_included
-	if (!strcmp(name, "SteamTools", false))
+#if defined _SteamWorks_Included
+	if (!strcmp(name, "SteamWorks", false))
 		gamemode.bSteam = true;
 #endif
 #if defined _sourcebans_included || defined _sourcebanspp_included
@@ -453,8 +629,8 @@ public void OnLibraryAdded(const char[] name)
 
 public void OnLibraryRemoved(const char[] name)
 {
-#if defined _steamtools_included
-	if (!strcmp(name, "SteamTools", false))
+#if defined _SteamWorks_Included
+	if (!strcmp(name, "SteamWorks", false))
 		gamemode.bSteam = false;
 #endif
 #if defined _sourcebans_included || defined _sourcebanspp_included
@@ -486,12 +662,12 @@ public void OnConfigsExecuted()
 	ParseConfigs(); // Parse all configuration files under 'addons/sourcemod/configs/tf2jail/...'.
 	BuildMenu();
 
-#if defined _steamtools_included
+#if defined _SteamWorks_Included
 	if (gamemode.bSteam)
 	{
 		char sDescription[32];
 		Format(sDescription, sizeof(sDescription), "TF2Jail Redux v%s", PLUGIN_VERSION);
-		Steam_SetGameDescription(sDescription);
+		SteamWorks_SetGameDescription(sDescription);
 	}
 #endif
 }
@@ -508,6 +684,7 @@ public void OnMapStart()
 
 	ManageDownloads();	// Handler
 
+	// This code isn't mine, but idk who did this before
 	HookEntityOutput("item_ammopack_full", "OnPlayerTouch", OnEntTouch);
 	HookEntityOutput("item_ammopack_medium", "OnPlayerTouch", OnEntTouch);
 	HookEntityOutput("item_ammopack_small", "OnPlayerTouch", OnEntTouch);
@@ -563,6 +740,7 @@ public void OnClientPutInServer(int client)
 	player.iRebelParticle = -1;
 	player.iWardenParticle = -1;
 	player.iFreedayParticle = -1;
+	player.iHealth = 0;
 	player.bIsWarden = false;
 	player.bIsQueuedFreeday = false;
 	player.bIsFreeday = false;
@@ -616,7 +794,7 @@ public void OnClientDisconnect(int client)
 	if (player.bIsWarden)
 	{
 		player.WardenUnset();
-		PrintCenterTextAll("Warden has disconnected!");
+		PrintCenterTextAll("%t","Warden Disconnect");
 		gamemode.bWardenExists = false;
 	}
 	// If they're warden, they wouldn't vote... right?
@@ -648,6 +826,7 @@ public Action Timer_PlayerThink(Handle timer)
 
 	JailFighter player;
 	int state = gamemode.iRoundState;
+	bool hideparticles = cvarTF2Jail[HideParticles].BoolValue;
 
 	for (int i = MaxClients; i; --i)
 	{
@@ -658,6 +837,9 @@ public Action Timer_PlayerThink(Handle timer)
 			continue;
 
 		player = JailFighter(i);
+
+		if (hideparticles)
+			HideCurrentParticles(player);
 		if (GetClientTeam(i) == BLU)
 		{
 			ManageBlueThink(player);
@@ -701,7 +883,7 @@ public Action Timer_PlayerThink(Handle timer)
 public Action Timer_Announce(Handle timer)
 {
 	if (bEnabled.BoolValue)
-		CPrintToChatAll("{crimson}[TF2Jail Redux]{burlywood} V%s by {default}Scag/Ragenewb{burlywood}.", PLUGIN_VERSION);
+		CPrintToChatAll("%t %t", "Plugin Tag", "Announce Timer", PLUGIN_VERSION);
 }
 
 public Action Timer_Round(Handle timer)
@@ -868,7 +1050,7 @@ public Action EurekaTele(int client, const char[] command, int args)
 
 	if (player.bUnableToTeleport)
 	{
-		CPrintToChat(client, TAG ... "%t", "Can't Teleport");
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Can't Teleport");
 		return Plugin_Handled;
 	}
 
@@ -1032,7 +1214,7 @@ public void ParseNodeConfig()
 		EnumTNPS[count][fFadeIn] = kv.GetFloat("FadeIn", 0.1);
 		EnumTNPS[count][fFadeOut] = kv.GetFloat("FadeOut", 0.2);
 
-		count++;
+		++count;
 	} while kv.GotoNextKey(false);
 
 	delete kv;
@@ -1128,7 +1310,7 @@ public void WelcomeMessage(const int userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (IsClientValid(client))
-		CPrintToChat(client, TAG ... "%t", "Welcome Message");
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Welcome Message");
 }
 
 public void KillThatBitch(const int client)
@@ -1136,45 +1318,13 @@ public void KillThatBitch(const int client)
 	EmitSoundToAll(SuicideSound);
 	ForcePlayerSuicide(client);
 	if (IsPlayerAlive(client))	// In case they're kartified or something idk
-		SDKHooks_TakeDamage(client, 0, 0, 9001.0, DMG_DIRECT, _, _, _);
+		SDKHooks_TakeDamage(client, 0, 0, 9001.0, DMG_DIRECT);
 }
 
 public void UnHorsemannify(const JailFighter player)
 {
 	if (IsClientInGame(player.index))
 		player.UnHorsemann();
-}
-
-public void RandSniper(const int roundcount)
-{
-	if (roundcount != gamemode.iRoundCount)
-		return;
-
-	int rand = GetRandomClient();
-
-	if (!IsClientValid(rand))
-		return;
-
-	EmitSoundToAll(SuicideSound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_CONVO);
-	SDKHooks_TakeDamage(rand, 0, 0, 9001.0, DMG_DIRECT|DMG_BULLET, _, _, _);
-
-	SetPawnTimer(RandSniper, GetRandomFloat(30.0, 60.0), roundcount);
-}
-
-public void EndRandSniper(const int roundcount)
-{
-	if (roundcount != gamemode.iRoundCount)
-		return;
-
-	int rand = GetRandomClient();
-
-	if (!IsClientValid(rand))
-		return;
-
-	EmitSoundToAll(SuicideSound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_CONVO);
-	SDKHooks_TakeDamage(rand, 0, 0, 9001.0, DMG_DIRECT|DMG_BULLET, _, _, _);
-
-	SetPawnTimer(EndRandSniper, GetRandomFloat(0.1, 0.3), roundcount);
 }
 
 public void ResetModelProps(const int client)
@@ -1193,7 +1343,7 @@ public void DisableWarden(const int roundcount)
 	 || gamemode.bIsWardenLocked)
 		return;
 
-	CPrintToChatAll(TAG ... "%t", "Warden Locked Lack");
+	CPrintToChatAll("%t %t", "Plugin Tag", "Warden Locked Lack");
 	gamemode.DoorHandler(OPEN);
 	gamemode.bIsWardenLocked = true;
 
@@ -1275,7 +1425,7 @@ public void CreateMarker(const int client)
 
 	if (!TR_DidHit(trace))
 	{
-		CPrintToChat(client, TAG ... "%t", "No Marker");
+		CPrintToChat(client, "%t %t", "Plugin Tag", "No Marker");
 		delete trace;
 		return;
 	}
@@ -1330,6 +1480,24 @@ public bool TraceRayFilterPlayers(int ent, int mask)
 	return (ent > MaxClients || !ent);
 }
 
+public void HideCurrentParticles(const JailFighter player)
+{
+	int currparticles[3], u;
+	currparticles[0] = EntRefToEntIndex(player.iWardenParticle);
+	currparticles[1] = EntRefToEntIndex(player.iFreedayParticle);
+	currparticles[2] = EntRefToEntIndex(player.iRebelParticle);
+	if (TF2_IsPlayerInCondition(player.index, TFCond_Cloaked))
+	{
+		for (u = 0; u < 3; ++u)
+			if (IsValidEntity(currparticles[u]))
+				SetEntityRenderColor(currparticles[u], 0, 0, 0, 0);
+	}
+	else for (u = 0; u < 3; ++u)
+		if (IsValidEntity(currparticles[u]))
+			SetEntityRenderColor(currparticles[u]);
+}
+
+
 public void DoHorsemannParticles(const int client)
 {
 	int lefteye = MakeParticle(client, "halloween_boss_eye_glow", "lefteye");
@@ -1359,7 +1527,7 @@ public void Open_Doors(const int roundcount)
 		return;
 
 	gamemode.DoorHandler(OPEN);
-	CPrintToChatAll(TAG ... "%t", "Door Open Timer", cvarTF2Jail[DoorOpenTimer].IntValue);
+	CPrintToChatAll("%t %t", "Plugin Tag", "Door Open Timer", cvarTF2Jail[DoorOpenTimer].IntValue);
 	gamemode.bCellsOpened = true;
 }
 
@@ -1369,7 +1537,7 @@ public void EnableFFTimer(const int roundcount)
 		return;
 
 	hEngineConVars[0].SetBool(true);
-	CPrintToChatAll(TAG ... "%t", "FF On");
+	CPrintToChatAll("%t %t", "Plugin Tag", "FF On");
 }
 
 public void FreeKillSystem(const JailFighter attacker, const int killcount)
@@ -1383,8 +1551,8 @@ public void FreeKillSystem(const JailFighter attacker, const int killcount)
 	if (gamemode.iRoundState != StateRunning)
 		return;
 
-	float curtime = GetGameTime();
-	if (curtime <= attacker.flKillingSpree)
+	float currtime = GetGameTime();
+	if (currtime <= attacker.flKillingSpree)
 		attacker.iKillCount++;
 	else attacker.iKillCount = 0;
 
@@ -1398,11 +1566,11 @@ public void FreeKillSystem(const JailFighter attacker, const int killcount)
 			if (IsClientInGame(i))
 				if (JailFighter(i).bIsAdmin)
 					if (messagetype)
-						CPrintToChat(i, "{crimson}**********\n%L\nIP:%s\n**********", attacker.index, ip);
-					else PrintToConsole(i, "**********\n%L\nIP:%s\n**********", attacker.index, ip);
+						CPrintToChat(i, "%t **********\n%L\nIP:%s\n**********", "Plugin Tag", attacker.index, ip);
+					else PrintToConsole(i, "%t **********\n%L\nIP:%s\n**********", "Plugin Tag", attacker.index, ip);
 		attacker.iKillCount = 0;
 	}
-	else attacker.flKillingSpree = curtime + 15;
+	else attacker.flKillingSpree = currtime + 15;
 }
 
 public void EnableWarden(const int roundcount)
@@ -1414,14 +1582,14 @@ public void EnableWarden(const int roundcount)
 		return;
 
 	gamemode.bIsWardenLocked = false;
-	CPrintToChatAll(TAG ... "%t", "Warden Enabled");
+	CPrintToChatAll("%t %t", "Plugin Tag", "Warden Enabled");
 }
 
 public void ResetPlayer(const int client)
 {
 	TF2_RegeneratePlayer(client);
-	SetEntityHealth( client, GetEntProp(client, Prop_Data, "m_iMaxHealth") );
-	SetEntProp( client, Prop_Send, "m_iHealth", GetEntProp(client, Prop_Data, "m_iMaxHealth") );
+	SetEntityHealth(client, GetEntProp(client, Prop_Data, "m_iMaxHealth"));
+	SetEntProp(client, Prop_Send, "m_iHealth", GetEntProp(client, Prop_Data, "m_iMaxHealth"));
 }
 
 public void RemoveRebel(const int userid, const int roundcount)

@@ -126,6 +126,18 @@ methodmap JailFighter
 			hJailFields[this.index].SetValue("iWardenParticle", i);
 		}
 	}
+	property int iHealth
+	{
+		public get()
+		{
+			int i; hJailFields[this.index].GetValue("iHealth", i);
+			return i;
+		}
+		public set( const int i )
+		{
+			hJailFields[this.index].SetValue("iHealth", i);
+		}
+	}
 
 	property bool bIsWarden
 	{
@@ -651,8 +663,6 @@ methodmap JailFighter
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
 		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
-
-		//CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Your weapons and ammo have been stripped.");
 	}
 	/**	Props to VoIDed
 	 *	Sets the custom model of this player.
@@ -682,7 +692,7 @@ methodmap JailFighter
 		int client = this.index;
 		Format(strWarden, sizeof(strWarden), "%t", "New Warden Center", client);
 		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
-		CPrintToChatAll("{crimson}[TF2Jail]{default} %t.", "New Warden", client);
+		CPrintToChatAll("%t %t.", "Plugin Tag", "New Warden", client);
 
 		float annot = cvarTF2Jail[WardenAnnotation].FloatValue;
 		if (annot != 0.0)
@@ -974,14 +984,14 @@ methodmap JailFighter
 		int total = JBGameMode_GetProperty("iVotesNeeded");
 		if (this.bVoted)
 		{
-			CPrintToChat(this.index, TAG ... "%t", "Fire Warden Already Voted", votes, total);
+			CPrintToChat(this.index, "%t %t", "Plugin Tag", "Fire Warden Already Voted", votes, total);
 			return;
 		}
 
 		this.bVoted = true;
 		++votes;
 		JBGameMode_SetProperty("iVotes", votes);
-		CPrintToChatAll(TAG ... "%t", "Fire Warden Requested", this.index, votes, total);
+		CPrintToChatAll("%t %t", "Plugin Tag", "Fire Warden Requested", this.index, votes, total);
 
 		if (votes >= total)
 			JBGameMode_FireWarden();
@@ -997,6 +1007,12 @@ methodmap JailFighter
 			return;
 
 		if (!cvarTF2Jail[Rebellers].BoolValue)
+			return;
+
+		if (JBGameMode_GetProperty("bIgnoreRebels"))
+			return;
+
+		if (Call_OnRebelGiven(this) != Plugin_Continue)
 			return;
 
 		this.bIsRebel = true;
@@ -1015,16 +1031,14 @@ methodmap JailFighter
 		if (cvarTF2Jail[RendererColor].BoolValue)
 			SetEntityRenderColor(this.index, iRebelColors[0], iRebelColors[1], iRebelColors[2], iRebelColors[3]);
 
-		CPrintToChatAll(TAG ... "%t", "Prisoner Has Rebelled", this.index);
+		CPrintToChatAll("%t %t", "Plugin Tag", "Prisoner Has Rebelled", this.index);
 
 		float time = cvarTF2Jail[RebelTime].FloatValue;
 		if (time != 0.0)
 		{
-			CPrintToChat(this.index, TAG ... "%t", "Rebel Timer Start", RoundFloat(time));
+			CPrintToChat(this.index, "%t %t", "Plugin Tag", "Rebel Timer Start", RoundFloat(time));
 			SetPawnTimer(RemoveRebel, time, this.userid, JBGameMode_GetProperty("iRoundCount"));
 		}
-
-		Call_OnRebelGiven(this);
 	}
 	/**
 	 *	Clear a player's rebel status.
@@ -1048,6 +1062,8 @@ methodmap JailFighter
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
 			SetEntityRenderColor(this.index);
+
+		CPrintToChat(this.index, "%t %t", "Plugin Tag", "Rebel Timer Remove");
 
 		Call_OnRebelRemoved(this);
 	}

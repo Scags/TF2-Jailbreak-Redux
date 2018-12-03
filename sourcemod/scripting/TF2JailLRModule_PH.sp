@@ -977,6 +977,8 @@ public void fwdOnRoundStart()
 	gamemode.bDisableCriticals = true;
 	gamemode.bIsWardenLocked = true;
 	gamemode.bFirstDoorOpening = true;
+	gamemode.bDisableKillSpree = true;
+	gamemode.bIgnoreRebels = true;
 	gamemode.DoorHandler(OPEN);
 	//gamemode.OpenAllDoors();
 

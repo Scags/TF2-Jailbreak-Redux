@@ -1980,6 +1980,7 @@ public void fwdOnRoundStart()
 	gamemode.bIsWarday = true;
 	gamemode.bAllowBuilding = true;
 	gamemode.bDisableKillSpree = true;
+	gamemode.bIgnoreRebels = true;
 	if (JBVSH[DisableMuting].BoolValue)
 		gamemode.bDisableMuting = true;
 	gamemode.DoorHandler(OPEN);

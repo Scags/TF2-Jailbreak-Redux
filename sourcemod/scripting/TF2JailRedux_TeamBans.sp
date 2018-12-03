@@ -118,6 +118,8 @@ methodmap JailPlayer < JBPlayer
 public void OnPluginStart()
 {
 	LoadTranslations("common.phrases");
+	LoadTranslations("tf2jail_redux.phrases");
+	LoadTranslations("tf2jailredux_teambans.phrases");
 
 	bEnabled 						= CreateConVar("sm_jbans_enable", "1", "Status of the plugin: (1 = on, 0 = off)", FCVAR_NOTIFY);
 	cvarJBANS[Version] 				= CreateConVar("tf2jbans_version", PLUGIN_VERSION, "TF2Jail Redux GuardBans version. (DO NOT TOUCH)", FCVAR_SPONLY|FCVAR_DONTRECORD|FCVAR_REPLICATED|FCVAR_NOTIFY);
@@ -271,8 +273,8 @@ public void fwdOnPlayerSpawn(const JBPlayer Player, Event event)
 		return;
 
 	char BanMsg[64]; cvarJBANS[JoinMessage].GetString(BanMsg, sizeof(BanMsg));	
-	PrintCenterText(base.index, "You are guardbanned");
-	CPrintToChat(base.index, TAG ... "%s", BanMsg);
+	PrintCenterText(base.index, "%t", "Guardbanned Center");
+	CPrintToChat(base.index, "%t %s", "Plugin Tag Teambans", BanMsg);
 	base.ForceTeamChange(RED, running ? false : true);
 }
 
@@ -283,8 +285,8 @@ public Action fwdOnWardenGet(const JBPlayer Player)
 		return Plugin_Continue;
 
 	char BanMsg[64]; cvarJBANS[JoinMessage].GetString(BanMsg, sizeof(BanMsg));	
-	PrintCenterText(player.index, "You are wardenbanned");
-	CPrintToChat(player.index, TAG ... "%s", BanMsg);
+	PrintCenterText(player.index, "%t", "Wardenbanned Center");
+	CPrintToChat(player.index, "%t %s", "Plugin Tag Teambans", BanMsg);
 	return Plugin_Handled;
 }
 
@@ -386,7 +388,7 @@ public Action Cmd_UnGuardBan(int client, int args)
 {
 	if (!bEnabled.BoolValue)
 	{
-		CReplyToCommand(client, TAG ... "This plugin is not enabled.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Not Enabled");
 		return Plugin_Handled;
 	}
 
@@ -416,7 +418,7 @@ public Action Cmd_GuardBan(int client, int args)
 {
 	if (!bEnabled.BoolValue)
 	{
-		CReplyToCommand(client, TAG ... "This plugin is not enabled.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Not Enabled");
 		return Plugin_Handled;
 	}
 
@@ -444,7 +446,7 @@ public Action Cmd_GuardBan(int client, int args)
 	if (!IsFakeClient(target_list[0]))
 	{
 		if (JailPlayer(target_list[0]).bIsGuardbanned)
-			CReplyToCommand(client, TAG ... "%N is already guardbanned.", target_list[0]);
+			CReplyToCommand(client, "%t %t ", "Plugin Tag Teambans", "Already Guardbanned", target_list[0]);
 		else
 		{
 			char reason[256];
@@ -456,7 +458,7 @@ public Action Cmd_GuardBan(int client, int args)
 			GuardBan(target_list[0], client, time, reason);
 		}
 	}
-	else CReplyToCommand(client, TAG ... "Cannot target player.");
+	else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Unable to target");
 	return Plugin_Handled;
 }
 
@@ -464,13 +466,13 @@ public Action Cmd_IsBanned(int client, int args)
 {
 	if (!bEnabled.BoolValue)
 	{
-		CReplyToCommand(client, TAG ... "This plugin is not enabled.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Not Enabled");
 		return Plugin_Handled;
 	}
 
 	if (args != 1)
 	{
-		CReplyToCommand(client, TAG ... "Usage: sm_gbs <player>");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Cmd Usage IsBanned");
 		return Plugin_Handled;
 	}
 
@@ -494,12 +496,12 @@ public Action Cmd_IsBanned(int client, int args)
 		if (player.bIsGuardbanned)
 		{
 			if (player.iTimeLeft <= 0)
-				CReplyToCommand(client, TAG ... "%N is guardbanned permanently.", target_list[0]);
-			else CReplyToCommand(client, TAG ... "%N is guardbanned for %i more minutes.", target_list[0], player.iTimeLeft);
+				CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Guardbanned permanently", target_list[0]);
+			else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Guardbanned Time Left", target_list[0], player.iTimeLeft);
 		}
-		else CReplyToCommand(client, TAG ... "%N is not guardbanned.", target_list[0]);
+		else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Not Guardbanned", target_list[0]);
 	}
-	else CReplyToCommand(client, TAG ... "Cannot target player.");
+	else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Unable to Target");
 	return Plugin_Handled;
 }
 
@@ -507,19 +509,19 @@ public Action Cmd_OfflineUnGuardBan(int client, int args)
 {
 	if (!bEnabled.BoolValue)
 	{
-		CReplyToCommand(client, TAG ... "This plugin is not enabled.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Not Enabled");
 		return Plugin_Handled;
 	}
 
 	if (!args)
 	{
-		CReplyToCommand(client, TAG ... "Usage: sm_tuboff <steamid>.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Cmd Usage OfflineUnguardban");
 		return Plugin_Handled;
 	}
 
 	char ID[32]; GetCmdArgString(ID, sizeof(ID));
 	OfflineUnBan(ID, client);
-	CReplyToCommand(client, TAG ... "Successfully Unguardbanned Steam ID %s.", ID);
+	CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Offline Unguardban", ID);
 
 	return Plugin_Handled;
 }
@@ -528,20 +530,20 @@ public Action Cmd_OfflineGuardBan(int client, int args)
 {
 	if (!bEnabled.BoolValue)
 	{
-		CReplyToCommand(client, TAG ... "This plugin is not enabled.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Not Enabled");
 		return Plugin_Handled;
 	}
 
 	if (!args)
 	{
-		CReplyToCommand(client, TAG ... "Usage: sm_gboff <steamid>.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Cmd Usage OfflineGuardban");
 		return Plugin_Handled;
 	}
 
 	char ID[32]; GetCmdArgString( ID, sizeof(ID));
 
 	OfflineBan(ID, client);
-	CReplyToCommand(client, TAG ... "Successfully Guardbanned Steam ID %s.", ID);
+	CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Offline Guardban", ID);
 
 	return Plugin_Handled;
 }
@@ -550,13 +552,13 @@ public Action Cmd_RageBan(int client, int args)
 {
 	if (!bEnabled.BoolValue)
 	{
-		CReplyToCommand(client, TAG ... "This plugin is not enabled.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Not Enabled");
 		return Plugin_Handled;
 	}
 
 	if (!client)
 	{
-		CReplyToCommand(client, TAG ... "Command must be done in-game.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Command is in-game only");
 		return Plugin_Handled;
 	}
 
@@ -568,7 +570,7 @@ public Action Cmd_WardenUnBan(int client, int args)
 {
 	if (!bEnabled.BoolValue)
 	{
-		CReplyToCommand(client, TAG ... "This plugin is not enabled.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Not Enabled");
 		return Plugin_Handled;
 	}
 
@@ -592,7 +594,7 @@ public Action Cmd_WardenBan(int client, int args)
 {
 	if (!bEnabled.BoolValue)
 	{
-		CReplyToCommand(client, TAG ... "This plugin is not enabled.");
+		CReplyToCommand(client, "%t %t", "Not Enabled");
 		return Plugin_Handled;
 	}
 
@@ -618,12 +620,10 @@ public Action Cmd_WardenBan(int client, int args)
 	}
 
 	if (!IsFakeClient(target_list[0]))
-	{
 		if (JailPlayer(target_list[0]).bIsWardenBanned)
-			CReplyToCommand(client, TAG ... "%s %N is already Wardenbanned.", target_list[0]);
+			CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Already Wardenbanned", target_list[0]);
 		else WardenBan(target_list[0], client, time);
-	}
-	else CReplyToCommand(client, TAG ... "Cannot target player.");
+	else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Cannot target bot");
 	return Plugin_Handled;
 }
 
@@ -631,19 +631,19 @@ public Action Cmd_OfflineWardenUnBan(int client, int args)
 {
 	if (!bEnabled.BoolValue)
 	{
-		CReplyToCommand(client, TAG ... "This plugin is not enabled.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Not Enabled");
 		return Plugin_Handled;
 	}
 
 	if (!args)
 	{
-		CReplyToCommand(client, TAG ... "Usage: sm_wuboff <steamid>.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Cmd Usage OfflineUnwardenban");
 		return Plugin_Handled;
 	}
 
 	char ID[32]; GetCmdArgString(ID, sizeof(ID));
 	OfflineUnWardenBan(ID, client);
-	CReplyToCommand(client, TAG ... "Successfully Unwardenbanned Steam ID %s.", ID);
+	CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Offline Unwardenban", ID);
 
 	return Plugin_Handled;
 }
@@ -652,20 +652,20 @@ public Action Cmd_OfflineWardenBan(int client, int args)
 {
 	if (!bEnabled.BoolValue)
 	{
-		CReplyToCommand(client, TAG ... "This plugin is not enabled.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Not Enabled");
 		return Plugin_Handled;
 	}
 
 	if (!args)
 	{
-		CReplyToCommand(client, TAG ... "Usage: sm_wboff <steamid>.");
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Cmd Usage OfflineWardenban");
 		return Plugin_Handled;
 	}
 
 	char ID[32]; GetCmdArgString( ID, sizeof(ID));
 
 	OfflineWardenBan(ID, client);
-	CReplyToCommand(client, TAG ... "Successfully Wardenbanned Steam ID %s.", ID);
+	CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Offline Wardenban", ID);
 
 	return Plugin_Handled;
 }
@@ -680,7 +680,7 @@ public void OfflineBan(const char[] ID, int admin)
 	Call_PushString(ID);
 	Call_PushCell(admin);
 	Call_Finish(action);
-	if (action == Plugin_Handled || action == Plugin_Stop)	// allow returning Plugin_Changed
+	if (action == Plugin_Handled || action == Plugin_Stop)	// Allow returning Plugin_Changed
 		return;
 
 	char query[512];
@@ -767,7 +767,8 @@ public void UnGuardBan(int target, int admin)
 	player.bIsGuardbanned = false;
 	player.iTimeLeft = 0;
 
-	CShowActivity2(admin, TAG, "Unguardbanned %N.", target);
+	char idk[64]; FormatEx(idk, sizeof(idk), "%t", "Plugin Tag Teambans");
+	CShowActivity2(admin, idk, " %t", "Unguardban", target);
 
 	Format(query, sizeof(query), 
 			"DELETE FROM %s "
@@ -808,14 +809,13 @@ void GuardBan(int victim, int admin, int time, char reason[256] = "")
 	if (action == Plugin_Handled || action == Plugin_Stop)
 		return;
 
-	char ID[32], BanMsg[32];
+	char ID[32], idk[64];
 	GetClientAuthId(victim, AuthId_Steam2, ID, sizeof(ID));
+	FormatEx(idk, sizeof(idk), "%t", "Plugin Tag Teambans");
 
 	if (!time)
-		Format(BanMsg, sizeof(BanMsg), "permanently.");
-	else Format(BanMsg, sizeof(BanMsg), "for %d minutes.", time);
-
-	CShowActivity2(admin, TAG, "Guardbanned %N %s", victim, BanMsg);
+		CShowActivity2(admin, idk, " %t", "Guardban Permanent", victim);
+	else CShowActivity2(admin, idk, " %t", "Guardban Timed", victim, time);
 
 	player.bIsGuardbanned = true;
 	player.iTimeLeft = time;
@@ -863,7 +863,10 @@ public void UnWardenBan(int target, int admin)
 
 	JailPlayer player = JailPlayer(target);
 	if (!player.bIsWardenBanned)
+	{
+		CReplyToCommand(admin, "%t %t", "Plugin Tag Teambans", "Not Wardenbanned");
 		return;
+	}
 
 	Action action = Plugin_Continue;
 	Call_StartForward(hOnWardenUnBan);
@@ -876,10 +879,11 @@ public void UnWardenBan(int target, int admin)
 	player.bIsWardenBanned = false;
 	player.iWardenTimeLeft = 0;
 
-	char ID[32], query[256];
+	char ID[32], idk[64], query[256];
 	GetClientAuthId(target, AuthId_Steam2, ID, sizeof(ID));
+	FormatEx(idk, sizeof(idk), "%t", "Plugin Tag Teambans");
 
-	CShowActivity2(admin, TAG, "Unwardenbanned %N.", target);
+	CShowActivity2(admin, idk, " %t", "Unwardenban", target);
 
 	Format(query, sizeof(query), 
 			"DELETE FROM %s "
@@ -912,14 +916,13 @@ public void WardenBan(int victim, int admin, int time)
 	if (action == Plugin_Handled || action == Plugin_Stop)
 		return;
 
-	char ID[32], BanMsg[32];
+	char ID[32], idk[64];
 	GetClientAuthId(victim, AuthId_Steam2, ID, sizeof(ID));
+	FormatEx(idk, sizeof(idk), "%t", "Plugin Tag Teambans");
 
 	if (!time)
-		Format(BanMsg, sizeof(BanMsg), "permanently.");
-	else Format(BanMsg, sizeof(BanMsg), "for %d minutes.", time);
-
-	CShowActivity2(admin, TAG, "Wardenbanned %N %s", victim, BanMsg);
+		CShowActivity2(admin, idk, " %t", "Wardenban Permanent", victim);
+	else CShowActivity2(admin, idk, " %t", "Wardenban Timed", victim, time);
 
 	if (player.bIsWarden)
 		JBGameMode_FireWarden(false);	// Curse you gamemode properties!
@@ -971,7 +974,7 @@ public void OfflineWardenBan(const char[] ID, int admin)
 	Call_PushString(ID);
 	Call_PushCell(admin);
 	Call_Finish(action);
-	if (action == Plugin_Handled || action == Plugin_Stop)	// allow returning Plugin_Changed
+	if (action == Plugin_Handled || action == Plugin_Stop)	// Allow returning Plugin_Changed
 		return;
 
 	char query[512];
@@ -994,12 +997,16 @@ public void RageBanMenu(int client)
 		return;
 
 	Menu rage = new Menu(RageMenu);
-	rage.SetTitle("Rage Ban Menu");
+	char s[16];
+
+	FormatEx(s, sizeof(s), "%t", "Rage Ban Menu");
+	rage.SetTitle(s);
 	int len = hRageTableNames.Length;
+
 	if (!len)
 	{
 		delete rage;
-		CPrintToChat(client, TAG ... "No players found.");
+		CPrintToChat(client, "%t %t", "Plugin Tag Teambans", "No matching clients");
 		return;
 	}
 	else
@@ -1024,7 +1031,7 @@ public int RageMenu(Menu menu, MenuAction action, int client, int select)
 		{
 			char ID[32]; menu.GetItem(select, ID, sizeof(ID));
 			OfflineBan(ID, client);
-			CPrintToChat(client, TAG ... "Successfully Rage Banned player with Steam ID %s.", ID);
+			CPrintToChat(client, "%t %t", "Plugin Tag Teambans", "Rageban", ID);
 		}
 		case MenuAction_End:delete menu;
 	}
@@ -1033,12 +1040,14 @@ public int RageMenu(Menu menu, MenuAction action, int client, int select)
 public void DisplayBannableMenu(const int client)
 {
 	Menu menu = new Menu(BanMenu);
-	menu.SetTitle("Select a player to guardban");
 
 	char name[32], ID[8];
 	JailPlayer player;
 	int i, count;
 
+	FormatEx(name, sizeof(name), "%t", "Ban Menu");
+
+	menu.SetTitle(name);
 	for (i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i) || IsFakeClient(i))
@@ -1060,9 +1069,10 @@ public void DisplayBannableMenu(const int client)
 	if (!count)
 	{
 		delete menu;
-		CPrintToChat(client, TAG ... "No players found.");
+		CPrintToChat(client, "%t %t", "Plugin Tag Teambans", "No matching clients");
 		return;
 	}
+
 	menu.ExitButton = true;
 	menu.Display(client, -1);
 }
@@ -1077,17 +1087,18 @@ public int BanMenu(Menu menu, MenuAction action, int client, int select)
 			int banned = GetClientOfUserId(StringToInt(ID));
 			if (!banned)
 			{
-				CPrintToChat(client, TAG ... "Client is no longer in-game.");
+				CPrintToChat(client, "%t %t", "Plugin Tag Teambans", "Player no longer available");
 				return;
 			}
 
 			if (JailPlayer(banned).bIsGuardbanned)
 			{
-				CPrintToChat(client, TAG ... "Client is already guardbanned.");
+				CPrintToChat(client, "%t %t", "Plugin Tag Teambans", "Already Guardbanned");
 				return;
 			}
 
 			Menu time = new Menu(BanTimeMenu);
+			char s[32]; FormatEx(s, sizeof(s), "%t", "Select Time");
 			time.SetTitle("Select a time in minutes");
 			time.AddItem(ID, "10");
 			time.AddItem(ID, "30");
@@ -1095,7 +1106,7 @@ public int BanMenu(Menu menu, MenuAction action, int client, int select)
 			time.AddItem(ID, "120");
 			time.AddItem(ID, "720");
 			time.AddItem(ID, "1440");
-			time.AddItem(ID, "0 - Permanent");
+			time.AddItem(ID, "0");
 			time.Display(client, -1);
 		}
 		case MenuAction_End:delete menu;
@@ -1112,16 +1123,17 @@ public int BanTimeMenu(Menu menu, MenuAction action, int client, int select)
 			int banned = GetClientOfUserId(StringToInt(ID));
 			if (!banned)
 			{
-				CPrintToChat(client, TAG ... "Client is no longer in-game.");
+				CPrintToChat(client, "%t %t", "Plugin Tag Teambans", "Player no longer available");
 				return;
 			}
 
 			if (JailPlayer(banned).bIsGuardbanned)
 			{
-				CPrintToChat(client, TAG ... "Client is already guardbanned.");
+				CPrintToChat(client, "%t %t", "Plugin Tag Teambans", "Already Guardbanned");
 				return;
 			}
 
+			// TODO: Make this translation-determinant
 			int time;
 			switch (select)
 			{
@@ -1134,7 +1146,6 @@ public int BanTimeMenu(Menu menu, MenuAction action, int client, int select)
 				case 6:time = 0;
 			}
 
-			CPrintToChat(client, TAG ... "Successfully guardbanned client for %d minutes.", time);
 			GuardBan(banned, client, time);
 		}
 	}
@@ -1143,11 +1154,13 @@ public int BanTimeMenu(Menu menu, MenuAction action, int client, int select)
 public void DisplayUnbannableMenu(const int client)
 {
 	Menu menu = new Menu(UnbanMenu);
-	menu.SetTitle("Select a player to unguardban");
 
 	char name[32], ID[8];
 	JailPlayer player;
 	int i, count;
+
+	FormatEx(name, sizeof(name), "%t", "Unban Menu");
+	menu.SetTitle(name);
 	for (i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i) || IsFakeClient(i))
@@ -1169,7 +1182,7 @@ public void DisplayUnbannableMenu(const int client)
 	if (!count)
 	{
 		delete menu;
-		CPrintToChat(client, TAG ... "No players found.");
+		CPrintToChat(client, "%t %t", "Plugin Tag Teambans", "No matching clients");
 		return;
 	}
 
@@ -1186,13 +1199,13 @@ public int UnbanMenu(Menu menu, MenuAction action, int client, int select)
 			int banned = GetClientOfUserId(StringToInt(ID));
 			if (!banned)
 			{
-				CPrintToChat(client, TAG ... "Client is no longer in-game.");
+				CPrintToChat(client, "%t %t", "Plugin Tag Teambans", "Player no longer available");
 				return;
 			}
 
 			if (!JailPlayer(banned).bIsGuardbanned)
 			{
-				CPrintToChat(client, TAG ... "Client is not guardbanned.");
+				CPrintToChat(client, "%t %t", "Plugin Tag Teambans", "Not Guardbanned");
 				return;
 			}
 

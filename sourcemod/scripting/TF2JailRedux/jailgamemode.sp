@@ -150,7 +150,7 @@ methodmap JailGameMode < StringMap
 		}
 	}
 
-#if defined _steamtools_included
+#if defined _SteamWorks_Included
 	property bool bSteam
 	{
 		public get()
@@ -480,6 +480,18 @@ methodmap JailGameMode < StringMap
 			this.SetValue("bDisableKillSpree", i);
 		}
 	}
+	property bool bIgnoreRebels
+	{
+		public get()
+		{
+			bool i; this.GetValue("bIgnoreRebels", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bIgnoreRebels", i);
+		}
+	}
 
 	property float flMusicTime
 	{
@@ -548,7 +560,6 @@ methodmap JailGameMode < StringMap
 			return i;
 		}
 	}
-
 	// When adding a new property, make sure you initialize it to a default
 	public JailGameMode()
 	{
@@ -585,7 +596,8 @@ methodmap JailGameMode < StringMap
 		gm.bMedicDisabled = false;
 		gm.bDisableMuting = false;
 		gm.bDisableKillSpree = false;
-#if defined _steamtools_included
+		gm.bIgnoreRebels = false;
+#if defined _SteamWorks_Included
 		gm.bSteam = false;
 #endif
 #if defined _sourcebans_included || defined _sourcebanspp_included
@@ -671,8 +683,8 @@ methodmap JailGameMode < StringMap
 			int i, ent = -1;
 			if (announce)
 				if (fromwarden)
-					CPrintToChatAll(TAG ... "%t", "Warden Work Cells", this.iWarden.index, name);
-				else CPrintToChatAll(ADMTAG ... "%t", "Admin Work Cells", name);
+					CPrintToChatAll("%t %t", "Plugin Tag", "Warden Work Cells", this.iWarden.index, name);
+				else CPrintToChatAll("%t %t", "Admin Tag", "Admin Work Cells", name);
 
 			for (i = 0; i < sizeof(strDoorsList); i++)
 			{
@@ -713,7 +725,7 @@ methodmap JailGameMode < StringMap
 			player.bVoted = false;	
 		}
 	}
-	/** 
+	/**
 	 *	Find and terminate the current Warden.
 	 *
 	 *	@param prevent 			Prevent the player from becoming Warden again.
@@ -733,7 +745,7 @@ methodmap JailGameMode < StringMap
 			player.bLockedFromWarden = true;
 		if (announce)
 		{
-			CPrintToChatAll(TAG ... "%t", "Warden Fired");
+			CPrintToChatAll("%t %t", "Plugin Tag", "Warden Fired");
 			PrintCenterTextAll("%t", "Warden Fired");
 		}
 

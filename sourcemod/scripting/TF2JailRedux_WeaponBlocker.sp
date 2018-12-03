@@ -52,7 +52,7 @@ public void OnMapStart()
 
 public Action Cmd_RefreshList(int client, int args)
 {
-	CReplyToCommand(client, "{crimson}[TF2Jail]{burlywood} Running Weapon Blocker config.");
+	CReplyToCommand(client, "%t %t", "Plugin Tag", "Weapon Config");
 	RunConfig();
 	return Plugin_Handled;
 }

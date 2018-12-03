@@ -158,6 +158,11 @@ methodmap JBPlayer
 		public get() 				{ return this.GetValue("iFreedayParticle"); }
 		public set( const int i )	{ this.SetValue("iFreedayParticle", i); }
 	}
+	property int iHealth
+	{
+		public get() 				{ return this.GetValue("iHealth"); }
+		public set( const int i )	{ this.SetValue("iHealth", i); }
+	}
 
 	property bool bIsWarden
 	{
@@ -1023,7 +1028,6 @@ methodmap JBGameMode < StringMap
 			this.SetValue("bDisableKillSpree", i);
 		}
 	}
-
 	property bool bAllowBuilding
 	{
 		public get()
@@ -1034,6 +1038,18 @@ methodmap JBGameMode < StringMap
 		public set( const bool i )
 		{
 			this.SetValue("bAllowBuilding", i);
+		}
+	}
+	property bool bIgnoreRebels
+	{
+		public get()
+		{
+			bool i; this.GetValue("bIgnoreRebels", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bIgnoreRebels", i);
 		}
 	}
 
@@ -1294,7 +1310,6 @@ typeset JBHookCB
 		OnFreedayRemoved
 		OnLRGiven
 		OnPreThink
-		OnRebelGiven
 		OnRebelRemoved
 	*/
 	function void (const JBPlayer player);
@@ -1383,6 +1398,7 @@ typeset JBHookCB
 	/*
 		OnWardenGet
 		OnPlayerPreppedPre
+		OnRebelGiven
 	*/
 	function Action (const JBPlayer player);
 
@@ -1504,6 +1520,7 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBGameMode_ToggleMedic");
 	// MarkNativeAsOptional("JBGameMode_ToggleMedicTeam");
 	MarkNativeAsOptional("JBGameMode_ResetVotes");
+	MarkNativeAsOptional("JBGameMode_GetTelePosition");
 
 	MarkNativeAsOptional("JBGameMode_Instance");
 	MarkNativeAsOptional("JBGameMode_GetProperty");

@@ -46,7 +46,7 @@ public Plugin myinfo =
 {
 	name = "TF2Jail Repeat Annotaions",
 	author = "Scag/Ragenewb",
-	description = "Head annotations for prisoners asking for a repeat",
+	description = "Head annotations repeat-asking prisoners",
 	version = PLUGIN_VERSION,
 	url = "https://github.com/Scags/TF2-Jailbreak-Redux"
 };
@@ -70,6 +70,8 @@ public void OnPluginStart()
 
 	AutoExecConfig(true, "TF2Jail_Repeat");
 
+	LoadTranslations("tf2jail_redux.phrases");
+
 	JB_Hook(OnRoundStartPlayer, fwdOnRoundStartPlayer);
 	JB_Hook(OnClientInduction, fwdOnClientInduction);
 	RegConsoleCmd("sm_repeat", SayRepeat);
@@ -77,7 +79,7 @@ public void OnPluginStart()
 
 public Action SayRepeat(int client, int args)
 {
-	if (JBGameMode_GetProperty("iRoundState") != StateRunning || !IsPlayerAlive(client) || GetClientTeam(client) != 2)
+	if (JBGameMode_GetProperty("iRoundState") != StateRunning || !client || !IsPlayerAlive(client) || GetClientTeam(client) != 2)
 		return Plugin_Handled;
 
 	JailRepeater player = JailRepeater(client);
@@ -85,13 +87,13 @@ public Action SayRepeat(int client, int args)
 	float currtime = GetGameTime();
 	if (player.flRepeatTime >= currtime)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} Slow down there cowboy.");
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Slow Down");
 		return Plugin_Handled;
 	}
 
 	if (player.iRepeats >= cvRepeatMax.IntValue)
 	{
-		CPrintToChat(client, "{crimson}[TF2Jail]{burlywood} You have surpassed the maximum amount of repeat annotations for this round.");
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Repeats Surpassed");
 		return Plugin_Handled;
 	}
 

@@ -51,7 +51,7 @@ void InitializeForwards()
 	hPrivFwds[OnSoundHook] 				= CreateForward(ET_Hook,   Param_Array, Param_CellByRef, Param_String, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_String, Param_CellByRef);
 	hPrivFwds[OnEntCreated]				= CreateForward(ET_Hook,   Param_Cell, Param_String);
 	hPrivFwds[OnCalcAttack] 			= CreateForward(ET_Hook,   Param_Cell, Param_Cell, Param_String, Param_CellByRef);
-	hPrivFwds[OnRebelGiven] 			= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnRebelGiven] 			= CreateForward(ET_Hook,   Param_Cell);
 	hPrivFwds[OnRebelRemoved] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
 }
@@ -416,11 +416,13 @@ Action Call_OnCalcAttack(JailFighter player, int weapon, char[] weaponname, bool
 	Call_Finish(action);
 	return action;
 }
-void Call_OnRebelGiven(const JailFighter player)
+Action Call_OnRebelGiven(const JailFighter player)
 {
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnRebelGiven]);
 	Call_PushCell(player);
-	Call_Finish();
+	Call_Finish(action);
+	return action;
 }
 void Call_OnRebelRemoved(const JailFighter player)
 {
