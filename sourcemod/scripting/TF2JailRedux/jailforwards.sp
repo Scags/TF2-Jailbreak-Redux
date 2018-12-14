@@ -53,6 +53,7 @@ void InitializeForwards()
 	hPrivFwds[OnCalcAttack] 			= CreateForward(ET_Hook,   Param_Cell, Param_Cell, Param_String, Param_CellByRef);
 	hPrivFwds[OnRebelGiven] 			= CreateForward(ET_Hook,   Param_Cell);
 	hPrivFwds[OnRebelRemoved] 			= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnWardenRemoved] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
 }
 void Call_OnDownloads()
@@ -427,6 +428,12 @@ Action Call_OnRebelGiven(const JailFighter player)
 void Call_OnRebelRemoved(const JailFighter player)
 {
 	Call_StartForward(hPrivFwds[OnRebelRemoved]);
+	Call_PushCell(player);
+	Call_Finish();
+}
+void Call_OnWardenRemoved(const JailFighter player)
+{
+	Call_StartForward(hPrivFwds[OnWardenRemoved]);
 	Call_PushCell(player);
 	Call_Finish();
 }

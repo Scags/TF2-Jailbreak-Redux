@@ -1195,15 +1195,16 @@ methodmap JBGameMode < StringMap
  *							simply hook what forward you need.
  *							You MUST register a Last Request sub-plugin in order for it to work.
  *
- *	@return					True on success.
+ *	@return					LR index on success. -1 on failure.
 */
-native bool TF2JailRedux_RegisterPlugin();
+native int TF2JailRedux_RegisterPlugin();
 
 /**
- *	Registers a sub-plugin to be added to the last request handle.
+ *	Registers a last request to be added to the last request handle.
  *	@note 					This native is explicitly made for using multiple last requests
  *							with a single plugin. Indices collect upon registration are 
  * 							incremented above the plugin index; TF2JailRedux_LRIndex()+1, +2, etc.
+ * 							Plugins MUST be registered prior in order to perform this.
  *
  *	@return					True on success.
 */
@@ -1292,6 +1293,7 @@ enum	// JB Hook Types
 	OnCalcAttack,
 	OnRebelGiven,
 	OnRebelRemoved,
+	OnWardenRemoved,
 	OnPlayMusic
 };
 

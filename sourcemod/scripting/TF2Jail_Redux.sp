@@ -365,9 +365,11 @@ public void OnPluginStart()
 
 	for (i = MaxClients; i; --i) 
 	{
+		if (IsClientConnected(i))
+			OnClientConnected(i);
+
 		if (IsClientInGame(i))
 		{
-			OnClientConnected(i);
 			OnClientPutInServer(i);
 			OnClientPostAdminCheck(i);
 		}
@@ -1703,7 +1705,7 @@ public int Native_RegisterPlugin(Handle plugin, int numParams)
 	ArrayList holder = gamemode.hPlugins;
 	// Shouldn't ever happen if you're UnRegistering
 	if (holder.FindValue(plugin) != -1) 
-		return false;
+		return -1;
 
 	// Handle last request count
 	arrLRS.Push(0);
@@ -1714,7 +1716,7 @@ public int Native_RegisterPlugin(Handle plugin, int numParams)
 	// Increment sub-plugin LR count
 	gamemode.iLRs++;
 
-	return true;
+	return LRMAX-1;
 }
 /*public int Native_RegisterLRPack(Handle plugin, int numParams)
 {

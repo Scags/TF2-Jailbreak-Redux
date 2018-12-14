@@ -770,6 +770,8 @@ methodmap JailFighter
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
 			SetEntityRenderColor(this.index);
+
+		Call_OnWardenRemoved(this);
 	}
 	/**
 	 *	Remove all weapons, disguises, and wearables from a client.
