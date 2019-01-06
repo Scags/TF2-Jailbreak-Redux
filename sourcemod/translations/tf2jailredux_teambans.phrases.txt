@@ -2,163 +2,192 @@
 {
 	"Plugin Tag Teambans"
 	{
-		"en" 			"{crimson}[TF2Jail] Teambans]{burlywood}"
+		"en" 			"{crimson}[TF2Jail Teambans]{burlywood}"
+		"en" 			"{crimson}[TF2Jail Teambans]{burlywood}"
 	}
 	
 	"Guardbanned Center"
 	{
 		"en" 			"You are guardbanned"
+		"pl"			"Jesteś zbanowany na role Strażnika"
 	}
 	
 	"Already Guardbanned"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"{1} is already guardbanned."
+		"pl"			"{1} jest już zbanowany na role strażnika."
 	}
 
 	"Cmd Usage IsBanned"
 	{
 		"en"	 		"Usage: sm_gbs <player>"
+		"pl"			"Użycie: sm_gbs <gracz>"
 	}
 
 	"Is Guardbanned permanently"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"{1} is guardbanned permanently."
+		"pl"			"{1} jest zbanowany w roli strażnika na zawsze."
 	}
 
 	"Is Guardbanned time left"
 	{
 		"#format" 		"{1:N},{2:d}"
 		"en" 			"{1} is guardbanned for {2} more minutes."
+		"pl"			"{1} jest zbanowany w roli strażnika na {2} minut."
 	}
 
 	"Is Not Guardbanned"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"{1} is not guardbanned."
+		"pl"			"{1} nie jest zbanowany na role strażnika."
 	}
 
 	"Cmd Usage OfflineUnguardban"
 	{
 		"en" 			"Usage: sm_tuboff <steamid>."
+		"pl"			"Użycie: sm_tuboff <steamid>."
 	}
 
 	"Offline Unguardban"
 	{
 		"#format" 		"{1:s}"
 		"en" 			"Successfully Unguardbanned Steam ID {1}."
+		"pl"			"Sukcesywnie Odbanowano Steam ID {1}."
 	}
 
 	"Cmd Usage OfflineGuardban"
 	{
 		"en" 			"Usage: sm_gboff <steamid>."
+		"pl"			"Użycie: sm_gboff <steamid>."
 	}
 
 	"Offline Guardban"
 	{
 		"#format" 		"{1:s}"
 		"en" 			"Successfully Guardbanned Steam ID {1}."
+		"pl"			"Sukcesywnie Zbanowano Steam ID {1}.
 	}
 
 	"Already Wardenbanned"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"{1} is already Wardenbanned."
+		"pl"			"{1} jest już zbanowany w roli Naczelnika."
 	}
 
 	"Cmd Usage OfflineUnwardenban"
 	{
 		"en" 			"Usage: sm_wuboff <steamid>."
+		"pl"			"Użycie: sm_wuboff <steamid>."
 	}
 
 	"Offline Unwardenban"
 	{
 		"#format" 		"{1:s}"
 		"en" 			"Successfully Unwardenbanned Steam ID %s."
+		"pl"			"Sukcesywnie Odbanowano Steam ID %s."
 	}
 
 	"Cmd Usage OfflineWardenban"
 	{
 		"en" 			"Usage: sm_wboff <steamid>."
+		"pl"			"Użycie: sm_wboff <steamid>."
 	}
 
 	"Offline Wardenban"
 	{
 		"#format" 		"{1:s}"
 		"en" 			"Successfully Wardenbanned Steam ID {1}."
+		"pl"			"Sukcesywnie Zbanowano Steam ID {1}."
 	}
 
 	"Unguardban"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Unguardbanned {1}."
+		"pl"			"Odbanowano {1} na role Strażnika."
 	}
 
 	"Guardban Permanent"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Guardbanned {1} permanently."
+		"pl"			"Zbanowano {1} w roli Strażnika na zawsze."
 	}
 
 	"Guardban Timed"
 	{
 		"#format" 		"{1:N},{2:d}"
 		"en" 			"Guardbanned {1} for {2} minutes."
+		"pl"			"Zbanowano {1} na {2} minut w roli Strażnika."
 	}
 
 	"Unwardenban"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Unwardenbanned {1}."
+		"pl"			"Odbanowano {1} w roli Naczelnika."
 	}
 
 	"Wardenban Permanent"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Wardenbanned {1} permanently."
+		"pl"			"Zbanowano {1} w roli Naczelnika na zawsze."
 	}
 
 	"Wardenban Timed"
 	{
 		"#format" 		"{1:N},{2:d}"
 		"en" 			"Wardenbanned {1} for {2} minutes."
+		"pl"			"Zbanowano {1} na {2} minut w roli Naczelnika."
 	}
 	
 	"Rage Ban Menu"
 	{
 		"en" 			"Rage Ban Menu"
+		"pl"			"Rage Ban Menu"// No real sense translation can come out from this :/
 	}
 
 	"Rageban"
 	{
 		"#format" 		"{1:s}"
 		"en" 			"Successfully Rage Banned player with Steam ID {1}."
+		"pl"			"Sukcesywnie Rage Zbanowano gracza ze Steam ID {1}."// Same here.
 	}
 
 	"Ban Menu"
 	{
 		"en" 			"Select a player to Guardban"
+		"pl"			"Wybierz gracza do zablokowania"
 	}
 
 	"Already Guardbanned"
 	{
 		"en" 			"Client is already Guardbanned."
+		"pl"			"Gracz jest już zablokowany w roli Strażnika."
 	}
 
 	"Not Guardbanned"
 	{
 		"en" 			"Client is not Guardbanned."
+		"pl"			"Gracz nie jest zablokowany w roli Strażnika."
 	}
 	
 	"Not Wardenbanned"
 	{
 		"en" 			"Client is not Wardenbanned."
+		"pl"			"Gracz nie jest zablokowany w roli Naczelnika."
 	}
 	
 	"Select Time"
 	{
 		"en" 			"Select a time in minutes"
+		"pl"			"Wybierz czas w minutach"
 	}
 }
 
