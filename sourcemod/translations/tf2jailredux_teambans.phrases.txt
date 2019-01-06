@@ -3,7 +3,7 @@
 	"Plugin Tag Teambans"
 	{
 		"en" 			"{crimson}[TF2Jail Teambans]{burlywood}"
-		"en" 			"{crimson}[TF2Jail Teambans]{burlywood}"
+		"pl" 			"{crimson}[TF2Jail Teambans]{burlywood}"
 	}
 	
 	"Guardbanned Center"
