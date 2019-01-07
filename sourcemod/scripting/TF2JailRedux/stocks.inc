@@ -154,7 +154,7 @@ stock int AttachParticle(const int ent, const char[] particleType, float selfdes
 
 	int ref = EntIndexToEntRef(particle);
 	if (selfdestruct != 0.0)
-		SetPawnTimer(RemoveEnt, selfdestruct, ref, TIMER_FLAG_NO_MAPCHANGE);
+		SetPawnTimer(RemoveEnt, selfdestruct, ref);
 	return ref;
 }
 stock void CreateParticles(char[] particlename, float Pos[3] = NULL_VECTOR, float time)

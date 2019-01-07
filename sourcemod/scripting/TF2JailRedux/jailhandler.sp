@@ -546,6 +546,7 @@ public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victi
 */
 public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
+	Action action, action2;
 	switch (gamemode.iLRType)
 	{
 		default:
@@ -562,20 +563,22 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 				if (victim.bIsFreeday && !base.bIsWarden)
 				{
 					damage *= 0.0;
-					return Plugin_Changed;
+					action = Plugin_Changed;
 				}
 
 				if (GetClientTeam(attacker) == BLU && cvarTF2Jail[CritType].IntValue == 2 && !gamemode.bDisableCriticals)
 				{
 					damagetype |= DMG_CRIT;
-					return Plugin_Changed;
+					action = Plugin_Changed;
 				}
-				else if (GetClientTeam(attacker) == RED && GetClientTeam(victim.index) == BLU && gamemode.iRoundState == StateRunning)
+				else if (GetClientTeam(attacker) == RED && GetClientTeam(victim.index) == BLU && (gamemode.iRoundState == StateRunning || gamemode.iRoundState == StateDisabled))
 					base.MarkRebel();
 			}
 		}
 	}
-	return Call_OnTakeDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+	action2 = Call_OnTakeDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+
+	return (action > action2 ? action : action2);
 }
 /**
  *	Called when a player dies obviously

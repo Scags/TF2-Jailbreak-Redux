@@ -152,7 +152,7 @@ methodmap JailHunter < JBPlayer
 		}
 		
 		if (announce)
-			CPrintToChat(client, TAG ... "You are now disguised as {default}%s{burlywood}.", modelName);
+			CPrintToChat(client, "%t You are now disguised as {default}%s{burlywood}.", "Plugin Tag", modelName);
 		
 		// This is to kill the particle effects from the Harvest Ghost prop and the like
 		SetVariantString("ParticleEffectStop");
@@ -214,7 +214,7 @@ public Plugin myinfo =
 	author = "Scag/Ragenewb, just about all props to Darkimmortal, Geit, and Powerlord",
 	description = "Prophunt embedded as an LR for TF2Jail Redux",
 	version = PLUGIN_VERSION,
-	url = ""
+	url = "https://github.com/Scags/TF2-Jailbreak-Redux"
 };
 
 enum
@@ -279,6 +279,9 @@ public void OnPluginStart()
 	RegAdminCmd("sm_registerph", Cmd_ReLoad, ADMFLAG_ROOT);
 
 	AutoExecConfig(true, "LRModulePH");
+
+	LoadTranslations("common.phrases");
+	LoadTranslations("tf2jail_redux.phrases");
 
 	g_PropData = new StringMap();
 	g_PropPath = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
@@ -523,28 +526,28 @@ public Action Cmd_Reroll(int client, int args)
 
 	if (!JBPH[Reroll].BoolValue)
 	{
-		CPrintToChat(client, TAG ... "Rerolling has been disabled.");
+		CPrintToChat(client, "%t Rerolling has been disabled.", "Plugin Tag");
 		return Plugin_Handled;
 	}
 	JailHunter player = JailHunter(client);
 	if (!player.bIsProp)
 	{
-		CPrintToChat(client, TAG ... "You are not a prop.");
+		CPrintToChat(client, "%t You are not a prop.", "Plugin Tag");
 		return Plugin_Handled;
 	}
 	if (GetClientTeam(client) != RED)
 	{
-		CPrintToChat(client, TAG ... "You are not on Red team.");
+		CPrintToChat(client, "%t You are not on Red team.", "Plugin Tag");
 		return Plugin_Handled;
 	}
 	if (!bAbleToReroll)
 	{
-		CPrintToChat(client, TAG ... "You are not allowed to reroll at this time.");
+		CPrintToChat(client, "%t You are not allowed to reroll at this time.", "Plugin Tag");
 		return Plugin_Handled;
 	}
 	if (player.iRolls >= JBPH[RerollCount].IntValue)
 	{
-		CPrintToChat(client, TAG ... "You have rerolled the maximum amount of times this round.");
+		CPrintToChat(client, "%t You have rerolled the maximum amount of times this round.", "Plugin Tag");
 		return Plugin_Handled;
 	}
 	if ( JBPH[DamageBlocksPropChange].BoolValue 
@@ -555,7 +558,7 @@ public Action Cmd_Reroll(int client, int args)
 	  || TF2_IsPlayerInCondition(client, TFCond_Milked)
 	  || TF2_IsPlayerInCondition(client, TFCond_Gas)) ) 
 	{
-		CPrintToChat(client, TAG ... "You are under effects and can't change!");
+		CPrintToChat(client, "%t You are under effects and can't change!", "Plugin Tag");
 		return Plugin_Handled;
 	}
 
@@ -573,8 +576,8 @@ public Action Cmd_Reroll(int client, int args)
 public Action Cmd_UnLoad(int client, int args)
 {
 	if (TF2JailRedux_UnRegisterPlugin())
-		CReplyToCommand(client, ADMTAG ... "Prophunt has been successfully unregistered.");
-	else CReplyToCommand(client, ADMTAG ... "Prophunt was not unregistered. Was it registered to begin with?");
+		CReplyToCommand(client, "%t Prophunt has been successfully unregistered.", "Admin Tag");
+	else CReplyToCommand(client, "%t Prophunt was not unregistered. Was it registered to begin with?", "Admin Tag");
 
 	return Plugin_Handled;
 }
@@ -583,12 +586,12 @@ public Action Cmd_ReLoad(int client, int args)
 {
 	if (TF2JailRedux_LRIndex())
 	{
-		CReplyToCommand(client, ADMTAG ... "Prophunt is already registered.");
+		CReplyToCommand(client, "%t Prophunt is already registered.", "Admin Tag");
 		return Plugin_Handled;
 	}
 
 	TF2JailRedux_RegisterPlugin();
-	CReplyToCommand(client, ADMTAG ... "Prophunt has been re-registered.");
+	CReplyToCommand(client, "%t Prophunt has been re-registered.", "Admin Tag");
 	return Plugin_Handled;
 }
 
@@ -943,7 +946,7 @@ public void fwdOnRoundStartPlayer(const JBPlayer player)
 			if (class == TFClass_Scout || class == TFClass_Spy)
 			{
 				TF2_SetPlayerClass(client, view_as< TFClassType >(NoSS[GetRandomInt(0, 5)]));
-				CPrintToChat(client, TAG ... "Your illegal class has been changed.");
+				CPrintToChat(client, "%t Your illegal class has been changed.", "Plugin Tag");
 			}
 			else if (class == TFClass_Heavy)
 			{
@@ -952,7 +955,7 @@ public void fwdOnRoundStartPlayer(const JBPlayer player)
 				else
 				{
 					TF2_SetPlayerClass(client, view_as< TFClassType >(NoHvy[GetRandomInt(0, 4)]));
-					CPrintToChat(client, TAG ... "There are too many Heavies on Blue team.");
+					CPrintToChat(client, "%t There are too many Heavies on Blue team.", "Plugin Tag");
 				}
 			}
 			else if (class == TFClass_Pyro && JBPH[Airblast].BoolValue && gamemode.bTF2Attribs)
@@ -1134,7 +1137,7 @@ public void fwdOnTimeLeft(int &time)
 public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
 {
 	if (selection == TF2JailRedux_LRIndex())
-		CPrintToChatAll(TAG ... "%N has decided to play a round of {default}Prophunt{burlywood}.", Player.index);
+		CPrintToChatAll("%t %N has decided to play a round of {default}Prophunt{burlywood}.", "Plugin Tag", Player.index);
 	return Plugin_Continue;
 }
 public void fwdOnHudShow(char strHud[128])

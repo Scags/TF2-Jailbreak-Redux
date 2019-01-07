@@ -20,7 +20,7 @@
  **/
 
 #define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"1.2.0"
+#define PLUGIN_VERSION		"1.3.0"
 #define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
 
@@ -175,7 +175,7 @@ public void OnPluginStart()
 	cvarTF2Jail[RoundTimerStatus]			= CreateConVar("sm_tf2jr_roundtimer_status", "1", "Status of the round timer.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[RoundTime] 					= CreateConVar("sm_tf2jr_roundtimer_time", "600", "Amount of time normally on the timer (if enabled).", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[RoundTime_Freeday] 			= CreateConVar("sm_tf2jr_roundtimer_time_freeday", "300", "Amount of time on 1st day freeday.", FCVAR_NOTIFY, true, 0.0);
-	cvarTF2Jail[RebelAmmo] 					= CreateConVar("sm_tf2jr_red_ammo", "1", "Should freedays be removed upon a freeday player's collection of ammo?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[RebelAmmo] 					= CreateConVar("sm_tf2jr_red_ammo", "1", "What should happen when Prisoners get ammo? 0 = nothing; 1 = remove Freedays of said prisoner; 2 = mark player as rebel", FCVAR_NOTIFY, true, 0.0, true, 2.00);
 	cvarTF2Jail[DroppedWeapons] 			= CreateConVar("sm_tf2jr_dropped_weapons", "1", "Should dropped weapons be killed on spawn?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[VentHit] 					= CreateConVar("sm_tf2jr_vent_freeday", "1", "Should freeday players lose their freeday if they hit/break a vent?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[SeeNames] 					= CreateConVar("sm_tf2jr_wardensee", "1", "Allow the Warden to see prisoner names?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -711,6 +711,8 @@ public void OnMapEnd()
 
 	hEngineConVars[2].SetInt(800);	// For admins like sans who force change the map during the low gravity LR
 	ConvarsSet(false);
+
+	gamemode.iLRPresetType = -1;
 }
 
 public void OnClientConnected(int client)
@@ -828,7 +830,6 @@ public Action Timer_PlayerThink(Handle timer)
 
 	JailFighter player;
 	int state = gamemode.iRoundState;
-	bool hideparticles = cvarTF2Jail[HideParticles].BoolValue;
 
 	for (int i = MaxClients; i; --i)
 	{
@@ -840,8 +841,6 @@ public Action Timer_PlayerThink(Handle timer)
 
 		player = JailFighter(i);
 
-		if (hideparticles)
-			HideCurrentParticles(player);
 		if (GetClientTeam(i) == BLU)
 		{
 			ManageBlueThink(player);
@@ -968,18 +967,24 @@ public Action OnPlayerTakeDamage(int victim, int &attacker, int &inflictor, floa
 
 public void OnEntTouch(const char[] output, int touchee, int toucher, float delay)
 {
-	if (!bEnabled.BoolValue || !cvarTF2Jail[RebelAmmo].BoolValue)
+	if (!bEnabled.BoolValue)
 		return;
 
 	if (!IsClientValid(toucher))
 		return;
 
+	int action =  cvarTF2Jail[RebelAmmo].IntValue;
+	if (!action)
+		return;
+
 	JailFighter player = JailFighter(toucher);
-	if (player.bIsFreeday)
+	if (player.bIsFreeday && action >= 1)
 	{
 		player.RemoveFreeday();
 		PrintCenterTextAll("%t", "Taken Ammo", toucher);
 	}
+	if (action == 2)
+		player.MarkRebel();
 }
 
 public void OnFirstCellOpening(const char[] output, int touchee, int toucher, float delay)
@@ -1482,24 +1487,6 @@ public bool TraceRayFilterPlayers(int ent, int mask)
 	return (ent > MaxClients || !ent);
 }
 
-public void HideCurrentParticles(const JailFighter player)
-{
-	int currparticles[3], u;
-	currparticles[0] = EntRefToEntIndex(player.iWardenParticle);
-	currparticles[1] = EntRefToEntIndex(player.iFreedayParticle);
-	currparticles[2] = EntRefToEntIndex(player.iRebelParticle);
-	if (TF2_IsPlayerInCondition(player.index, TFCond_Cloaked))
-	{
-		for (u = 0; u < 3; ++u)
-			if (IsValidEntity(currparticles[u]))
-				SetEntityRenderColor(currparticles[u], 0, 0, 0, 0);
-	}
-	else for (u = 0; u < 3; ++u)
-		if (IsValidEntity(currparticles[u]))
-			SetEntityRenderColor(currparticles[u]);
-}
-
-
 public void DoHorsemannParticles(const int client)
 {
 	int lefteye = MakeParticle(client, "halloween_boss_eye_glow", "lefteye");
@@ -1628,6 +1615,13 @@ public Action OnBuildingSpawn(int ent)
 	return Plugin_Continue;
 }
 
+public Action OnParticleTransmit(int ent, int client)
+{
+	if (TF2_IsPlayerInCondition(GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity"), TFCond_Cloaked))
+		return Plugin_Handled;
+	return Plugin_Continue;
+}
+
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 		/* Functional */
@@ -1705,7 +1699,7 @@ public int Native_RegisterPlugin(Handle plugin, int numParams)
 	ArrayList holder = gamemode.hPlugins;
 	// Shouldn't ever happen if you're UnRegistering
 	if (holder.FindValue(plugin) != -1) 
-		return -1;
+		return 0;
 
 	// Handle last request count
 	arrLRS.Push(0);
@@ -1822,30 +1816,30 @@ public int Native_LRIndex(Handle plugin, int numParams)
 
 public int Native_Hook(Handle plugin, int numParams)
 {
-	int JBHook = GetNativeCell(1);
-	Function Func = GetNativeFunction(2);
-	if (hPrivFwds[JBHook] != null)
-		AddToForward(hPrivFwds[JBHook], plugin, Func);
+	int hook = GetNativeCell(1);
+	Function func = GetNativeFunction(2);
+	if (hPrivFwds[hook])
+		AddToForward(hPrivFwds[hook], plugin, func);
 }
 public int Native_HookEx(Handle plugin, int numParams)
 {
-	int JBHook = GetNativeCell(1);
-	Function Func = GetNativeFunction(2);
-	if (hPrivFwds[JBHook] != null)
-		return AddToForward(hPrivFwds[JBHook], plugin, Func);
+	int hook = GetNativeCell(1);
+	Function func = GetNativeFunction(2);
+	if (hPrivFwds[hook])
+		return AddToForward(hPrivFwds[hook], plugin, func);
 	return 0;
 }
 public int Native_Unhook(Handle plugin, int numParams)
 {
-	int JBHook = GetNativeCell(1);
-	if (hPrivFwds[JBHook] != null)
-		RemoveFromForward(hPrivFwds[JBHook], plugin, GetNativeFunction(2));
+	int hook = GetNativeCell(1);
+	if (hPrivFwds[hook])
+		RemoveFromForward(hPrivFwds[hook], plugin, GetNativeFunction(2));
 }
 public int Native_UnhookEx(Handle plugin, int numParams)
 {
-	int JBHook = GetNativeCell(1);
-	if (hPrivFwds[JBHook] != null)
-		return RemoveFromForward(hPrivFwds[JBHook], plugin, GetNativeFunction(2));
+	int hook = GetNativeCell(1);
+	if (hPrivFwds[hook])
+		return RemoveFromForward(hPrivFwds[hook], plugin, GetNativeFunction(2));
 	return 0;
 }
 

@@ -10,7 +10,8 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 
 	JailFighter player = JailFighter(client);
 	int team = GetClientTeam(client);
-	//SetEntityModel(client, "");
+	SetVariantString("");
+	AcceptEntityInput(client, "SetCustomModel");
 
 	if (player.bIsFreeday)	// They changed teams, sucks for them
 		player.RemoveFreeday();
@@ -206,7 +207,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	SetPawnTimer(CheckLivingPlayers, 0.2);
 
-	if (cvarTF2Jail[Balance].BoolValue && gamemode.iPlaying > 2)
+	if (cvarTF2Jail[Balance].BoolValue && gamemode.iPlaying > 2 && Call_OnShouldAutobalance() == Plugin_Continue)
 	{
 		int flamemanager;
 		int immunity = cvarTF2Jail[AutobalanceImmunity].IntValue;
@@ -227,11 +228,14 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 			if (ratio > balance)
 			{
 				player = JailFighter(GetRandomPlayer(BLU, true));
+				if (Call_OnShouldAutobalancePlayer(player) != Plugin_Continue)
+					continue;
+
 				if ((immunity == 2 && !player.bIsAdmin) || (immunity == 1 && !player.bIsVIP) || !immunity)
 				{
-					if (HasEntProp(i, Prop_Send, "m_hFlameManager"))
+					if (HasEntProp(player.index, Prop_Send, "m_hFlameManager"))
 					{
-						flamemanager = GetEntPropEnt(i, Prop_Send, "m_hFlameManager");	// Avoid teamkilling
+						flamemanager = GetEntPropEnt(player.index, Prop_Send, "m_hFlameManager");	// Avoid teamkilling
 						if (flamemanager != -1)
 							AcceptEntityInput(flamemanager, "Kill");
 					}
@@ -481,6 +485,9 @@ public Action UberDeployed(Event event, const char[] name, bool dontBroadcast)
 	
 	JailFighter medic = JailFighter.OfUserId( event.GetInt("userid") );
 	JailFighter patient = JailFighter.OfUserId( event.GetInt("targetid") );
+	if (!medic || !patient)
+		return Plugin_Handled;
+
 	ManageUberDeployed(patient, medic, event);
 	return Plugin_Continue;
 }

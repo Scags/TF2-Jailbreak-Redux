@@ -612,15 +612,11 @@ methodmap JBGameMode < StringMap
 
 	/**
 	 *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
-	 *	@deprecated 			Use JBGameMode.SetValue instead, or use the preset properties below.
-	 *							You can also make a methodmap that inherites from JBGameMode, then
-	 *							create the properties that you need.
 	 *
 	 *	@param prop_name 		Property key to call from.
 	 *
 	 *	@return 				Value received from called key.
 	*/
-#pragma deprecated Use 'JBGameMode.SetValue' instead, or use the preset properties.
 	public bool SetProperty( const char prop_name[64], any i )
 	{
 		return this.SetValue(prop_name, i);
@@ -628,15 +624,11 @@ methodmap JBGameMode < StringMap
 
 	/**
 	 *	Get a property value from the JailGameMode StringMap.
-	 *	@deprecated 			UseJBGameMode.GetValue instead, or use the preset properties below.
-	 *							You can also make a methodmap that inherites from JBGameMode, then
-	 *							get the properties that you need.
 	 *
 	 *	@param prop_name 		Property key to call from.
 	 *
 	 *	@return 				Value received from called key.
 	*/
-#pragma deprecated Use 'JBGameMode.GetValue' instead, or use the preset properties.
 	public any GetProperty( const char prop_name[64] )
 	{
 		any i; this.GetValue(prop_name, i);
@@ -1195,7 +1187,7 @@ methodmap JBGameMode < StringMap
  *							simply hook what forward you need.
  *							You MUST register a Last Request sub-plugin in order for it to work.
  *
- *	@return					LR index on success. -1 on failure.
+ *	@return					LR index on success. 0 on failure.
 */
 native int TF2JailRedux_RegisterPlugin();
 
@@ -1294,6 +1286,8 @@ enum	// JB Hook Types
 	OnRebelGiven,
 	OnRebelRemoved,
 	OnWardenRemoved,
+	OnShouldAutobalance,
+	OnShouldAutobalancePlayer,
 	OnPlayMusic
 };
 
@@ -1385,6 +1379,7 @@ typeset JBHookCB
 		OnDoorsClose 		Return anything but Continue to not fire
 		OnDoorsLock 		Return anything but Continue to not fire
 		OnDoorsUnlock 		Return anything but Continue to not fire
+		OnShouldAutobalance Check iLRPresetType!
 	*/
 	function Action ();
 
@@ -1401,6 +1396,7 @@ typeset JBHookCB
 		OnWardenGet
 		OnPlayerPreppedPre
 		OnRebelGiven
+		OnShouldAutobalancePlayer		Check iLRPresetType!
 	*/
 	function Action (const JBPlayer player);
 
@@ -1456,6 +1452,106 @@ native void JB_Unhook(const int callbacktype, JBHookCB callback);
 */
 native bool JB_UnhookEx(const int callbacktype, JBHookCB callback);
 
+
+/**
+ *	@section TF2Jail compatibility forwards and functions
+**/
+
+#pragma deprecated Use JBGameMode_GetProperty("bWardenExists")
+stock bool TF2Jail_WardenActive()
+{
+	return JBGameMode_GetProperty("bWardenExists");
+}
+
+#pragma deprecated Use JBPlayer.bIsWarden
+stock bool TF2Jail_IsWarden(int client)
+{
+	return JBPlayer(client).bIsWarden;
+}
+
+#pragma deprecated Use JBPlayer.WardenSet()
+stock void TF2Jail_WardenSet(int client)
+{
+	JBPlayer(client).WardenSet
+}
+
+#pragma deprecated Use JBPlayer.WardenUnset()
+stock void TF2Jail_WardenUnset(int client)
+{
+	JBPlayer(client).WardenUnset();
+}
+
+#pragma deprecated Use JBPlayer.bIsFreeday
+stock bool TF2Jail_IsFreeday(int client)
+{
+	return JBPlayer(client).bIsFreeday;
+}
+
+#pragma deprecated Use JBPlayer.GiveFreeday()
+stock void TF2Jail_GiveFreeday(int client)
+{
+	JBPlayer(client).GiveFreeday();
+}
+
+#pragma deprecated Use JBPlayer.RemoveFreeday()
+stock void TF2Jail_RemoveFreeday(int client)
+{
+	JBPlayer(client).RemoveFreeday();
+}
+
+#pragma deprecated Use JBPlayer.bIsRebel
+stock bool TF2Jail_IsRebel(int client)
+{
+	return JBPlayer(client).bIsRebel;
+}
+
+#pragma deprecated Use JBPlayer.MarkRebel()
+stock void TF2Jail_MarkRebel(int client)
+{
+	JBPlayer(client).MarkRebel();
+}
+
+//stock bool TF2Jail_IsFreekiller(int client)
+//stock void TF2Jail_MarkFreekiller(int client)
+
+#pragma deprecated Use JBPlayer(client).EmptyWeaponSlots()
+stock void TF2Jail_StripToMelee(int client)
+{
+	JBPlayer(client).EmptyWeaponSlots();
+}
+
+#pragma deprecated Use JBPlayer(client).StripToMelee()
+stock void TF2Jail_StripAllWeapons(int client)
+{
+	JBPlayer(client).StripToMelee();
+}
+
+#pragma deprecated Use JBGameMode_SetProperty("bIsWardenLocked", true)
+stock void TF2Jail_LockWarden()
+{
+	JBGameMode_SetProperty("bIsWardenLocked", true);
+}
+
+#pragma deprecated Use JBGameMode_SetProperty("bIsWardenLocked", false)
+stock void TF2Jail_UnlockWarden()
+{
+	JBGameMode_SetProperty("bIsWardenLocked", false);
+}
+
+//stock void TF2Jail_Log(const char[] log, any ...);
+
+#pragma deprecated Use JBGameMode_GetProperty("iLRType") > 2 OR != -1
+stock bool TF2Jail_IsLRRound()
+{
+	return JBGameMode_GetProperty("iLRType") > 2;
+}
+
+#pragma deprecated Use JBGameMode_ManageCells() instead
+stock bool TF2Jail_ManageCells(eDoorsMode Status)
+{
+	JBGameMode_ManageCells(Status);
+	return true;
+}
 
 
 public SharedPlugin __pl_tf2jailredux = {

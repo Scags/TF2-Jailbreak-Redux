@@ -364,8 +364,8 @@ public void OnPluginStart()
 	JBVSH[DemoShieldCrits] 	= CreateConVar("sm_jbvsh_demoman_shield_crits", "1", "Sets Demoman Shield crit behaviour. 0 - No crits, 1 - Mini-crits, 2 - Crits, 3 - Scale with Charge Meter (Losing the Shield results in no more (mini)crits.)", FCVAR_NOTIFY, true, 0.0, true, 3.0);
 	JBVSH[Anchoring] 		= CreateConVar("sm_jbvsh_allow_boss_anchor", "1", "When enabled, reduces all knockback bosses experience when crouching.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	JBVSH[PickCount] 		= CreateConVar("sm_jbvsh_lr_max", "5", "What is the maximum number of times this LR can be picked in a single map? 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
-	JBVSH[Ammo]				= CreateConVar("sm_jbvsh_ammo", "4", "Spawn random ammo at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0, true, 10.0);
-	JBVSH[Health] 			= CreateConVar("sm_jbvsh_health", "4", "Spawn random health at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0, true, 10.0);
+	JBVSH[Ammo]				= CreateConVar("sm_jbvsh_ammo", "4", "Spawn random ammo at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0);
+	JBVSH[Health] 			= CreateConVar("sm_jbvsh_health", "4", "Spawn random health at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0);
 	JBVSH[TimeLeft] 		= CreateConVar("sm_jbvsh_round_time", "600", "Round time during a VSH round IF a time limit is enabled in core plugin.", FCVAR_NOTIFY, true, 0.0);
 	JBVSH[DisableMuting] 	= CreateConVar("sm_jbvsh_disable_muting", "0", "Disable plugin muting during this last request?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
@@ -391,6 +391,8 @@ public void OnPluginStart()
 	jumpHUD = CreateHudSynchronizer();
 	
 	AutoExecConfig(true, "LRModuleVSH");
+
+	LoadTranslations("tf2jail_redux.phrases");
 
 	AddMultiTargetFilter("@boss", HaleTargetFilter, "The current Boss/Bosses", false);
 	AddMultiTargetFilter("@hale", HaleTargetFilter, "The current Boss/Bosses", false);
@@ -495,7 +497,7 @@ public Action BlockSuicide(int client, const char[] command, int argc)
 public void OnClientDisconnect(int client)
 {
 	if (JailBoss(client).bIsBoss && gamemode.iRoundState >= StateRunning)
-		CPrintToChatAll("{burlywood}[TF2Jail]{fullred} Boss has disconnected!");
+		CPrintToChatAll("%t {red}Boss has disconnected!", "Plugin Tag");
 }
 
 public void OnMapStart()
@@ -770,7 +772,7 @@ public void CalcScores()
 		for (j = 0; damage - amount > 0; damage -= amount, j++) {  }
 		scoring.SetInt("points", j);
 		scoring.Fire();
-		CPrintToChat(i, TAG ... "You scored %i point%s.", j, j == 1 ? "" : "s");
+		CPrintToChat(i, "%t You scored %i point%s.", "Plugin Tag", j, j == 1 ? "" : "s");
 	}
 }
 
@@ -903,8 +905,8 @@ public Action Command_GetHPCmd(int client, int args)
 public Action Cmd_UnLoad(int client, int args)
 {
 	if (TF2JailRedux_UnRegisterPlugin())
-		CReplyToCommand(client, ADMTAG ... "Versus Saxton Hale has been successfully unregistered.");
-	else CReplyToCommand(client, ADMTAG ... "Versus Saxton Hale was not unregistered. Was it registered to begin with?");
+		CReplyToCommand(client, "%t Versus Saxton Hale has been successfully unregistered.", "Admin Tag");
+	else CReplyToCommand(client, "%t Versus Saxton Hale was not unregistered. Was it registered to begin with?", "Admin Tag");
 
 	return Plugin_Handled;
 }
@@ -913,12 +915,12 @@ public Action Cmd_ReLoad(int client, int args)
 {
 	if (TF2JailRedux_LRIndex())
 	{
-		CReplyToCommand(client, ADMTAG ... "Versus Saxton Hale is already registered.");
+		CReplyToCommand(client, "%t Versus Saxton Hale is already registered.", "Admin Tag");
 		return Plugin_Handled;
 	}
 
 	TF2JailRedux_RegisterPlugin();
-	CReplyToCommand(client, ADMTAG ... "Versus Saxton Hale has been re-registered.");
+	CReplyToCommand(client, "%t Versus Saxton Hale has been re-registered.", "Admin Tag");
 	return Plugin_Handled;
 }
 
@@ -999,7 +1001,7 @@ public void ManageRoundEndBossInfo(bool bossWon)
 
 	if (gameMessage[0] !='\0') 
 	{
-		CPrintToChatAll("{crimson}[TF2Jail] End of Round{burlywood} %s", gameMessage);
+		CPrintToChatAll("%t %s", "Plugin Tag", gameMessage);
 		SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
 		for (i = MaxClients; i; --i) 
 		{
@@ -1325,8 +1327,8 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 						if (victim.iMarketted < 5)
 							victim.iMarketted++;
 						
-						PrintCenterText(attacker, "You %s Gardened the Boss!", wepindex == 416 ? "Market" : "Sticky");
-						PrintCenterText(victim.index, "You Were Just Market Gardened!", wepindex == 416 ? "Market" : "Sticky");
+						PrintCenterText(attacker, "You %s Gardened the Boss!", (wepindex == 416 ? "Market" : "Sticky"));
+						PrintCenterText(victim.index, "You Were Just %s Gardened!", (wepindex == 416 ? "Market" : "Sticky"));
 						
 						EmitSoundToAll("player/doubledonk.wav", victim.index, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 1.0, 100, _, _, NULL_VECTOR, true, 0.0);
 						SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + 2.0);
@@ -1519,7 +1521,6 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 {
 	if (NOTVSH)
 		return Plugin_Continue;
-	PrintToConsoleAll("OnGivedNamedItem=>CALLED\n%N::%s::%d", client, classname, iItemDefinitionIndex);
 	
 	Handle hItemOverride = null;
 	switch (iItemDefinitionIndex) 
@@ -1897,11 +1898,11 @@ public void ManageBossCheckHealth(const JailBoss base)
 			totalHealth += boss.iHealth;
 		}
 		PrintCenterTextAll(gameMessage);
-		CPrintToChatAll("{crimson}[TF2Jail] Boss Health Check{burlywood} %s", gameMessage);
+		CPrintToChatAll("%t %s", "Plugin Tag", gameMessage);
 		LastBossTotalHealth = totalHealth;
 		flHealthTime = currtime + (iHealthChecks < 3 ? 10.0 : 60.0);
 	}
-	else CPrintToChat(base.index, TAG ... "You can see the Boss HP now (wait %i seconds). Last known total health was %i.", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
+	else CPrintToChat(base.index, "%t You can see the Boss HP now (wait %i seconds). Last known total health was %i.", "Plugin Tag", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
 }
 
 public void ManageMessageIntro()
@@ -2347,7 +2348,7 @@ public void fwdOnHudShow(char strHud[128])
 public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
 {
 	if (selection == TF2JailRedux_LRIndex())
-		CPrintToChatAll(TAG ... "%N has decided to play a round of {default}Versus Saxton Hale{burlywood}.", Player.index);
+		CPrintToChatAll("%t %N has decided to play a round of {default}Versus Saxton Hale{burlywood}.", "Plugin Tag", Player.index);
 
 	return Plugin_Continue;
 }

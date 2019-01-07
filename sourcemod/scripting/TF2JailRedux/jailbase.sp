@@ -571,6 +571,8 @@ methodmap JailFighter
 			}
 
 			this.iFreedayParticle = AttachParticle(this.index, strFreedayParticles);
+			if (cvarTF2Jail[HideParticles].BoolValue)
+				SDKHook(EntRefToEntIndex(this.iFreedayParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
@@ -724,6 +726,8 @@ methodmap JailFighter
 			}
 
 			this.iWardenParticle = AttachParticle(this.index, strWardenParticles);
+			if (cvarTF2Jail[HideParticles].BoolValue)
+				SDKHook(EntRefToEntIndex(this.iWardenParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
@@ -1028,6 +1032,8 @@ methodmap JailFighter
 			}
 
 			this.iRebelParticle = AttachParticle(this.index, strRebelParticles);
+			if (cvarTF2Jail[HideParticles].BoolValue)
+				SDKHook(EntRefToEntIndex(this.iRebelParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
 
 		if (cvarTF2Jail[RendererColor].BoolValue)

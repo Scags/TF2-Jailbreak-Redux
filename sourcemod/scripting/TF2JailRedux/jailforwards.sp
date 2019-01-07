@@ -54,6 +54,8 @@ void InitializeForwards()
 	hPrivFwds[OnRebelGiven] 			= CreateForward(ET_Hook,   Param_Cell);
 	hPrivFwds[OnRebelRemoved] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnWardenRemoved] 			= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnShouldAutobalance] 		= CreateForward(ET_Hook);
+	hPrivFwds[OnShouldAutobalancePlayer]= CreateForward(ET_Hook,   Param_Cell);
 	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
 }
 void Call_OnDownloads()
@@ -129,7 +131,7 @@ void Call_OnWardenThink(const JailFighter player)
 void Call_OnHudShow(char hud[128])
 {
 	Call_StartForward(hPrivFwds[OnHudShow]);
-	Call_PushStringEx(hud, 128, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);	// Is the latter flag needed?
+	Call_PushStringEx(hud, 128, 0, SM_PARAM_COPYBACK);
 	Call_Finish();
 }
 Action Call_OnLRPicked(const JailFighter player, const int index, ArrayList array)
@@ -262,7 +264,7 @@ Action Call_OnPlayMusic(char song[PLATFORM_MAX_PATH], float &time)
 {
 	Action action = Plugin_Handled;	// Start as handled because most LRs won't have a background song... probably
 	Call_StartForward(hPrivFwds[OnPlayMusic]);
-	Call_PushStringEx(song, PLATFORM_MAX_PATH, SM_PARAM_STRING_BINARY|SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+	Call_PushStringEx(song, PLATFORM_MAX_PATH, 0, SM_PARAM_COPYBACK);
 	Call_PushFloatRef(time);
 	Call_Finish(action);
 	return action;
@@ -385,14 +387,14 @@ Action Call_OnSoundHook(int clients[64], int &numClients, char sample[PLATFORM_M
 	Call_StartForward(hPrivFwds[OnSoundHook]);
 	Call_PushArrayEx(clients, 64, SM_PARAM_COPYBACK);
 	Call_PushCellRef(numClients);
-	Call_PushStringEx(sample, PLATFORM_MAX_PATH, SM_PARAM_STRING_COPY, 0);
+	Call_PushStringEx(sample, PLATFORM_MAX_PATH, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_PushCell(player);
 	Call_PushCellRef(channel);
 	Call_PushFloatRef(volume);
 	Call_PushCellRef(level);
 	Call_PushCellRef(pitch);
 	Call_PushCellRef(flags);
-	Call_PushStringEx(soundEntry, PLATFORM_MAX_PATH, SM_PARAM_STRING_COPY, 0);
+	Call_PushStringEx(soundEntry, PLATFORM_MAX_PATH, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_PushCellRef(seed);
 	Call_Finish(action);
 	return action;
@@ -436,4 +438,19 @@ void Call_OnWardenRemoved(const JailFighter player)
 	Call_StartForward(hPrivFwds[OnWardenRemoved]);
 	Call_PushCell(player);
 	Call_Finish();
+}
+Action Call_OnShouldAutobalance()
+{
+	Action action = Plugin_Continue;
+	Call_StartForward(hPrivFwds[OnShouldAutobalance]);
+	Call_Finish(action);
+	return action;
+}
+Action Call_OnShouldAutobalancePlayer(const JailFighter player)
+{
+	Action action = Plugin_Continue;
+	Call_StartForward(hPrivFwds[OnShouldAutobalancePlayer]);
+	Call_PushCell(player);
+	Call_Finish(action);
+	return action;
 }
