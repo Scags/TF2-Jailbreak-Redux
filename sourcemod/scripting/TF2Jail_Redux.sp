@@ -19,10 +19,10 @@
  **	VSH and PH are standalone subplugins, if there is an issue with them, simply delete them.	   **
  **/
 
-#define PLUGIN_NAME			"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION		"1.3.0"
-#define PLUGIN_AUTHOR		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
-#define PLUGIN_DESCRIPTION	"Deluxe version of TF2Jail"
+#define PLUGIN_NAME 		"[TF2] Jailbreak Redux"
+#define PLUGIN_VERSION 		"1.3.1"
+#define PLUGIN_AUTHOR 		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
+#define PLUGIN_DESCRIPTION 	"Deluxe version of TF2Jail"
 
 #include <sourcemod>
 #include <sdkhooks>
@@ -85,6 +85,7 @@ enum	// Cvar name
 	WardenDelay,
 	LRDefault,
 	FreeKill,
+	FreeKillTime,
 	FreeKillMessage,
 	AutobalanceImmunity,
 	NoCharge,
@@ -107,6 +108,8 @@ enum	// Cvar name
 	RendererParticles,
 	LocDistance,
 	HideParticles,
+	WardenInvite,
+	WardenToggleMuting,
 	Version
 };
 
@@ -195,6 +198,7 @@ public void OnPluginStart()
 	cvarTF2Jail[WardenDelay] 				= CreateConVar("sm_tf2jr_warden_delay", "0", "Delay in seconds after round start until players can toggle becoming the warden. 0 to disable delay. -1 to automatically pick a warden on round start.", FCVAR_NOTIFY, true, -1.0);
 	cvarTF2Jail[LRDefault] 					= CreateConVar("sm_tf2jr_lr_default", "5", "Default number of times the basic last requests can be picked in a single map. 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[FreeKill] 					= CreateConVar("sm_tf2jr_freekill", "3", "How many kills in a row must a player get before the freekiller system activates? 0 to disable. (This does not affect gameplay, prints SourceBans information to admin consoles determined by \"sm_tf2jr_admin_flag\").", FCVAR_NOTIFY, true, 0.0, true, 33.0);
+	cvarTF2Jail[FreeKillTime] 				= CreateConVar("sm_tf2jr_freekill_time", "15", "Maximum time between kills in order to increment a would-be freekiller's kill count.", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[FreeKillMessage] 			= CreateConVar("sm_tf2jr_freekill_message", "0", "If \"sm_tf2jr_freekill\" is enabled, how are admins to be notified of a freekiller? 0 = Console message; 1 = Chat message.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[AutobalanceImmunity] 		= CreateConVar("sm_tf2jr_auto_balance_immunity", "1", "Allow VIP's/admins to have autobalance immunity? (If autobalancing is enabled). 0 = disabled; 1 = VIPs only; 2 = Admins only", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	cvarTF2Jail[NoCharge] 					= CreateConVar("sm_tf2jr_demo_charge", "3", "Disable DemoMan's charge ability? 0 = Allow; 1 = Disable for Blue team; 2 = Disable for Red team; 3 = Disable for all", FCVAR_NOTIFY, true, 0.0, true, 3.0);
@@ -217,6 +221,8 @@ public void OnPluginStart()
 	cvarTF2Jail[RendererParticles] 			= CreateConVar("sm_tf2jr_renderer_particles", "1", "Parse renderer particles from the \"TF2Jail_RoleRenders\" config?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[LocDistance]				= CreateConVar("sm_tf2jr_filter_distance", "300", "Distance (hu) to register players as in the area of the location target filters.", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[HideParticles] 				= CreateConVar("sm_tf2jr_hide_particles", "1", "Hide renderer particles from players when they are cloaked?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[WardenInvite] 				= CreateConVar("sm_tf2jr_warden_invite", "0", "Allow the Warden to invite players to the Guards' team?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[WardenToggleMuting] 		= CreateConVar("sm_tf2jr_warden_mute", "0", "Allow the Warden to toggle plugin muting?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -283,6 +289,10 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_wtogglemedic", Command_WardenToggleMedic, "Allows the Warden to toggle the medic room.");
 	RegConsoleCmd("sm_fire", Command_FireWarden, "Vote for Warden to be fired.");
 	RegConsoleCmd("sm_firewarden", Command_FireWarden, "Vote for Warden to be fired.");
+	RegConsoleCmd("sm_winv", Command_WardenInvite, "Allows the Warden to invite players to the Guards team.");
+	RegConsoleCmd("sm_wardeninv", Command_WardenInvite, "Allows the Warden to invite players to the Guards team.");
+	RegConsoleCmd("sm_wmute", Command_WardenToggleMuting, "Allows the Warden to toggle plugin muting.");
+	RegConsoleCmd("sm_wardenmute", Command_WardenToggleMuting, "Allows the Warden to toggle plugin muting.");
 
 	RegAdminCmd("sm_rw", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
 	RegAdminCmd("sm_removewarden", AdminRemoveWarden, ADMFLAG_GENERIC, "Remove the currently active Warden.");
@@ -1241,22 +1251,22 @@ public void ParseRoleRenderersConfig()
 		return;
 	}
 
-	SetRoleRender(kv, "Warden", iWardenColors, strWardenParticles, sizeof(strWardenParticles));
-	SetRoleRender(kv, "Freedays", iFreedayColors, strFreedayParticles, sizeof(strFreedayParticles));
-	SetRoleRender(kv, "Rebellers", iRebelColors, strRebelParticles, sizeof(strRebelParticles));
+	SetRoleRender(kv, "Warden", iWardenColors, strWardenParticles, sizeof(strWardenParticles), flWardenOffset);
+	SetRoleRender(kv, "Freedays", iFreedayColors, strFreedayParticles, sizeof(strFreedayParticles), flFreedayOffset);
+	SetRoleRender(kv, "Rebellers", iRebelColors, strRebelParticles, sizeof(strRebelParticles), flRebelOffset);
 
 	delete kv;
 }
 
-public void SetRoleRender(KeyValues kv, const char[] role, int color[4], char[] particle, int size)
+public void SetRoleRender(KeyValues kv, const char[] role, int color[4], char[] particle, int size, float &offset)
 {
 	if (!kv.JumpToKey(role))
 		return;
 
 	color[0] = color[1] = color[2] = color[3] = 256;
 	kv.GetColor("Color", color[0], color[1], color[2], color[3]);
-
 	kv.GetString("Particle", particle, size);
+	offset = kv.GetFloat("Offset", 0.0);
 	kv.GoBack();
 }
 
@@ -1529,13 +1539,13 @@ public void EnableFFTimer(const int roundcount)
 	CPrintToChatAll("%t %t", "Plugin Tag", "FF On");
 }
 
-public void FreeKillSystem(const JailFighter attacker, const int killcount)
-{	// Ghetto rigged freekill system, gives the info needed for sourcebans
+public void FreeKillSystem(const JailFighter attacker)
+{
 	if (GetClientTeam(attacker.index) != BLU)
 		return;
 
-	if (attacker.bIsAdmin) 	// Admin abuse :o
-		return;
+//	if (attacker.bIsAdmin) 	// Admin abuse :o
+//		return;
 
 	if (gamemode.iRoundState != StateRunning)
 		return;
@@ -1545,7 +1555,7 @@ public void FreeKillSystem(const JailFighter attacker, const int killcount)
 		attacker.iKillCount++;
 	else attacker.iKillCount = 0;
 
-	if (attacker.iKillCount == killcount)
+	if (attacker.iKillCount == cvarTF2Jail[FreeKill].IntValue)
 	{
 		char ip[32];
 		bool messagetype = cvarTF2Jail[FreeKillMessage].BoolValue;
@@ -1559,7 +1569,7 @@ public void FreeKillSystem(const JailFighter attacker, const int killcount)
 					else PrintToConsole(i, "%t **********\n%L\nIP:%s\n**********", "Plugin Tag", attacker.index, ip);
 		attacker.iKillCount = 0;
 	}
-	else attacker.flKillingSpree = currtime + 15;
+	else attacker.flKillingSpree = currtime + cvarTF2Jail[FreeKillTime].FloatValue;
 }
 
 public void EnableWarden(const int roundcount)
@@ -1620,6 +1630,31 @@ public Action OnParticleTransmit(int ent, int client)
 	if (TF2_IsPlayerInCondition(GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity"), TFCond_Cloaked))
 		return Plugin_Handled;
 	return Plugin_Continue;
+}
+
+public int InviteReceiveMenu(Menu menu, MenuAction action, int client, int select)
+{
+	if (!IsClientValid(client) || !IsPlayerAlive(client))
+		return;
+
+	switch (action)
+	{
+		case MenuAction_Select:
+		{
+			char s[2]; menu.GetItem(select, s, sizeof(s));
+			switch (StringToInt(s))
+			{
+				case 0:
+				{
+					CPrintToChatAll("%t %t", "Plugin Tag", "Player Invite Accepted", client);
+					JailFighter(client).ForceTeamChange(BLU);
+				}
+				case 1:CPrintToChatAll("%t %t", "Plugin Tag", "Player Invite Denied", client);
+			}
+		}
+		case MenuAction_Cancel:if (select == MenuCancel_Exit) CPrintToChatAll("%t %t", "Plugin Tag", "Player Invite Denied", client);
+		case MenuAction_End:delete menu;
+	}
 }
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)

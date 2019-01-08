@@ -78,14 +78,8 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		TF2Attrib_RemoveAll(victim.index);
 
 	if (IsClientValid(attacker.index))
-	{
 		if (!gamemode.bDisableKillSpree)
-		{
-			int killcount = cvarTF2Jail[FreeKill].IntValue;
-			if (killcount)
-				FreeKillSystem(attacker, killcount);
-		}
-	}
+				FreeKillSystem(attacker);
 
 	SetPawnTimer(CheckLivingPlayers, 0.2);
 
@@ -486,7 +480,7 @@ public Action UberDeployed(Event event, const char[] name, bool dontBroadcast)
 	JailFighter medic = JailFighter.OfUserId( event.GetInt("userid") );
 	JailFighter patient = JailFighter.OfUserId( event.GetInt("targetid") );
 	if (!medic || !patient)
-		return Plugin_Handled;
+		return Plugin_Continue;
 
 	ManageUberDeployed(patient, medic, event);
 	return Plugin_Continue;

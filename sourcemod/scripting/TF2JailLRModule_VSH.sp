@@ -1001,7 +1001,7 @@ public void ManageRoundEndBossInfo(bool bossWon)
 
 	if (gameMessage[0] !='\0') 
 	{
-		CPrintToChatAll("%t %s", "Plugin Tag", gameMessage);
+		CPrintToChatAll("%t %s", "Plugin Tag", gameMessage[1]);
 		SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
 		for (i = MaxClients; i; --i) 
 		{

@@ -786,19 +786,11 @@ methodmap JailGameMode < StringMap
 	{
 		int ent = -1;
 		while ((ent = FindEntityByClassname(ent, "trigger_hurt")) != -1)
-		{
 			if (IsValidEntity(ent))
-			{
 				if (GetEntPropFloat(ent, Prop_Data, "m_flDamage") < 0)
-				{
-					switch (status)
-					{
-						case true: { AcceptEntityInput(ent, "Enable");  this.bMedicDisabled = false; }
-						case false:{ AcceptEntityInput(ent, "Disable"); this.bMedicDisabled = true;  }
-					}
-				}
-			}
-		}
+					AcceptEntityInput(ent, status ? "Enable" : "Disable");
+
+		this.bMedicDisabled = !status;
 	}
 	/**
 	 *	Toggle team filtering on the medic room.
@@ -836,6 +828,7 @@ methodmap JailGameMode < StringMap
 
 		int type = (!forcedead && IsPlayerAlive(player.index)) ? this.iLivingMuteType : this.iMuteType;
 		int team = teamchange ? teamchange : GetClientTeam(player.index);
+		bool ismute = player.bIsMuted;
 
 		if (!team)	// If player is in spec, assume red team rules of muting
 			team = RED;
@@ -860,6 +853,15 @@ methodmap JailGameMode < StringMap
 			case 5:if (team == BLU) player.MutePlayer();
 			default:player.MutePlayer();
 		}
+
+		char s[16];
+		if (ismute && !player.bIsMuted)
+			s = "Unmuted";
+		else if (!ismute && player.bIsMuted)
+			s = "Muted";
+
+		if (s[0] != '\0')
+			CPrintToChat(player.index, "%t %t", "Plugin Tag", s);
 	}
 
 	/**

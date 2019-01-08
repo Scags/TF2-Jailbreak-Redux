@@ -24,7 +24,10 @@ float
 	vecOld[MAX_TF_PLAYERS][3],				// Freeday beam vector
 	vecFreedayPosition[3], 					// Freeday map position
 	vecWardayBlu[3], 						// Blue warday map position
-	vecWardayRed[3]							// Red warday map position
+	vecWardayRed[3],							// Red warday map position
+	flRebelOffset,							// Rebel offset
+	flFreedayOffset,						// Freeday offset
+	flWardenOffset							// Warden offset
 ;
 
 bool
@@ -570,7 +573,7 @@ methodmap JailFighter
 					RemoveEntity(old);
 			}
 
-			this.iFreedayParticle = AttachParticle(this.index, strFreedayParticles);
+			this.iFreedayParticle = AttachParticle(this.index, strFreedayParticles, _, flFreedayOffset);
 			if (cvarTF2Jail[HideParticles].BoolValue)
 				SDKHook(EntRefToEntIndex(this.iFreedayParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
@@ -725,7 +728,7 @@ methodmap JailFighter
 					RemoveEntity(old);
 			}
 
-			this.iWardenParticle = AttachParticle(this.index, strWardenParticles);
+			this.iWardenParticle = AttachParticle(this.index, strWardenParticles, _, flWardenOffset);
 			if (cvarTF2Jail[HideParticles].BoolValue)
 				SDKHook(EntRefToEntIndex(this.iWardenParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
@@ -1031,7 +1034,7 @@ methodmap JailFighter
 					RemoveEntity(old);
 			}
 
-			this.iRebelParticle = AttachParticle(this.index, strRebelParticles);
+			this.iRebelParticle = AttachParticle(this.index, strRebelParticles, _, flRebelOffset);
 			if (cvarTF2Jail[HideParticles].BoolValue)
 				SDKHook(EntRefToEntIndex(this.iRebelParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
@@ -1074,5 +1077,20 @@ methodmap JailFighter
 		CPrintToChat(this.index, "%t %t", "Plugin Tag", "Rebel Timer Remove");
 
 		Call_OnRebelRemoved(this);
+	}
+
+	public void InviteToGuards(const JailFighter other)
+	{
+		CPrintToChatAll("%t %t", "Plugin Tag", "Warden Invite Player", this.index, other.index);
+		Menu menu = new Menu(InviteReceiveMenu);
+		menu.SetTitle("%t", "Menu Title Invited");
+		char s[16];
+		
+		FormatEx(s, sizeof(s), "%t", "Join");
+		menu.AddItem("0", s);
+		FormatEx(s, sizeof(s), "%t", "Don't Join");
+		menu.AddItem("1", s);
+
+		menu.Display(other.index, 10);
 	}
 };

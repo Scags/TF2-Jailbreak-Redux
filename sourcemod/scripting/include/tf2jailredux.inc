@@ -1553,6 +1553,26 @@ stock bool TF2Jail_ManageCells(eDoorsMode Status)
 	return true;
 }
 
+#pragma deprecated JB_Hook Action OnWardenGet(JBPlayer) instead
+forward void TF2Jail_OnWardenCreated(int client);
+
+#pragma deprecated JB_Hook void OnWardenRemoved(JBPlayer) instead
+forward void TF2Jail_OnWardenRemoved(int client);
+
+//forward void TF2Jail_OnLastRequestExecute(const char[] Handler);
+
+#pragma deprecated JB_Hook void OnFreedayGiven(JBPlayer) instead
+forward void TF2Jail_OnFreedayGiven(int client);
+
+#pragma deprecated JB_Hook void OnFreedayRemoved(JBPlayer) instead
+forward void TF2Jail_OnFreedayRemoved(int client);
+
+//forward void TF2Jail_OnFreekillerGiven(int client);
+//forward void TF2Jail_OnFreekillerRemoved(int client);
+
+#pragma deprecated JB_Hook void OnRebelGiven(JBPlayer) instead
+forward void TF2Jail_OnRebelGiven(int client);
+
 
 public SharedPlugin __pl_tf2jailredux = {
 	name = "TF2Jail_Redux",

@@ -1300,6 +1300,220 @@ public Action Command_FireWarden(int client, int args)
 	return Plugin_Handled;
 }
 
+public Action Command_WardenInvite(int client, int args)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Handled;
+	
+	if (!client)
+	{
+		CReplyToCommand(client, "%t %t", "Plugin Tag", "Command is in-game only");
+		return Plugin_Handled;
+	}
+
+	JailFighter player = JailFighter(client);
+	if (!player.bIsWarden)
+	{
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Not Warden");
+		return Plugin_Handled;
+	}
+	
+	if (!cvarTF2Jail[WardenInvite].BoolValue)
+	{
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Not Enabled");
+		return Plugin_Handled;
+	}
+
+	if (!args)
+	{
+		MakeInviteMenu(client);
+		return Plugin_Handled;
+	}
+
+	char targetname[32]; GetCmdArgString(targetname, sizeof(targetname));
+	char clientName[32];
+	int target_list[MAXPLAYERS];
+	bool tn_is_ml;
+
+	int target_count = ProcessTargetString(targetname, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+
+	if (target_count != 1)
+		ReplyToTargetError(client, target_count);
+	
+	if (GetClientTeam(target_list[0]) != RED)
+	{
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Target Not On Red");
+		return Plugin_Handled;
+	}
+
+	player.InviteToGuards(JailFighter(target_list[0]));
+	return Plugin_Handled;
+}
+
+public void MakeInviteMenu(const int client)
+{
+	Menu menu = new Menu(InviteMenu);
+	menu.SetTitle("%t", "Choose Player");
+	AddClientsToMenu(menu, true, RED);
+	menu.Display(client, -1);
+}
+
+public int InviteMenu(Menu menu, MenuAction action, int client, int select)
+{
+	switch (action)
+	{
+		case MenuAction_Select:
+		{
+			if (!IsClientValid(client) || !IsPlayerAlive(client))
+				return;
+
+			JailFighter player = JailFighter(client);
+			if (!player.bIsWarden)
+				return;
+
+			char s[8]; menu.GetItem(select, s, sizeof(s));
+			JailFighter target = JailFighter.OfUserId(StringToInt(s));
+
+			if (!IsClientValid(target.index))
+			{
+				CPrintToChat(client, "%t %t", "Plugin Tag", "Player no longer available");
+				MakeInviteMenu(client);
+				return;
+			}
+
+			if (!IsPlayerAlive(target.index))
+			{
+				CPrintToChat(client, "%t %t", "Plugin Tag", "Need Alive");
+				MakeInviteMenu(client);
+				return;
+			}
+
+			if (GetClientTeam(target.index) != RED)
+			{
+				CPrintToChat(client, "%t %t", "Plugin Tag", "Target Not On Red");
+				MakeInviteMenu(client);
+				return;
+			}
+
+			player.InviteToGuards(target);
+		}
+		case MenuAction_End:delete menu;
+	}
+}
+
+public Action Command_WardenToggleMuting(int client, int args)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Handled;
+	
+	if (!client)
+	{
+		CReplyToCommand(client, "%t %t", "Plugin Tag", "Command is in-game only");
+		return Plugin_Handled;
+	}
+
+	JailFighter player = JailFighter(client);
+	if (!player.bIsWarden)
+	{
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Not Warden");
+		return Plugin_Handled;
+	}
+	
+	if (!cvarTF2Jail[WardenToggleMuting].BoolValue)
+	{
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Not Enabled");
+		return Plugin_Handled;
+	}
+
+	DetermineMuteStyleMenu(player.index);
+	return Plugin_Handled;
+}
+
+public void DetermineMuteStyleMenu(const int client)
+{
+	Menu menu = new Menu(MuteStyleMenu);
+	menu.SetTitle("%t", "Mute Style Select");
+
+	char s[16];
+	FormatEx(s, sizeof(s), "%t", "Living");
+	menu.AddItem("0", s);
+	FormatEx(s, sizeof(s), "%t", "Dead");
+	menu.AddItem("1", s);
+	menu.Display(client, -1);
+}
+
+public int MuteStyleMenu(Menu menu, MenuAction action, int client, int select)
+{
+	switch (action)
+	{
+		case MenuAction_Select:
+		{
+			if (!IsClientValid(client) || !IsPlayerAlive(client))
+				return;
+			
+			char s[2]; menu.GetItem(select, s, sizeof(s));
+			MakeMuteToggleMenu(client, StringToInt(s));
+		}
+		case MenuAction_End:delete menu;
+	}
+}
+
+public void MakeMuteToggleMenu(const int client, const int type)
+{
+	Menu menu = new Menu(MuteToggleMenu);
+	menu.SetTitle("%t", "Mute Style Select");
+
+	char s[64], id[2];
+	int draw, currtype = (type ? gamemode.iMuteType : gamemode.iLivingMuteType);
+
+	for (int i = 0; i < 7; ++i)
+	{
+		draw = (currtype == i ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+		switch (i)
+		{
+			case 0:FormatEx(s, sizeof(s), "%t", "Mute No One");
+			case 1:FormatEx(s, sizeof(s), "%t", "Mute Red Ex VIP");
+			case 2:FormatEx(s, sizeof(s), "%t", "Mute Blue Ex VIP");
+			case 3:FormatEx(s, sizeof(s), "%t", "Mute All Ex VIP");
+			case 4:FormatEx(s, sizeof(s), "%t", "Mute All Red");
+			case 5:FormatEx(s, sizeof(s), "%t", "Mute All Blue");
+			case 6:FormatEx(s, sizeof(s), "%t", "Mute All");
+		}
+		IntToString(i, id, sizeof(id));
+		menu.AddItem(id, s, draw);
+	}
+
+	IntToString(type, id, sizeof(id));
+	menu.AddItem("7", id, ITEMDRAW_IGNORE);
+	menu.Display(client, -1);
+}
+
+public int MuteToggleMenu(Menu menu, MenuAction action, int client, int select)
+{
+	switch (action)
+	{
+		case MenuAction_Select:
+		{
+			if (!IsClientValid(client) || !IsPlayerAlive(client))
+				return;
+
+			char s[2]; menu.GetItem(select, s, sizeof(s));
+			char s2[2]; menu.GetItem(8, s2, sizeof(s2));
+
+			if (StringToInt(s2))
+				gamemode.iMuteType = StringToInt(s);
+			else gamemode.iLivingMuteType = StringToInt(s);
+
+			for (int i = MaxClients; i; --i)
+				if (IsClientInGame(i) && IsPlayerAlive(i))
+					gamemode.ToggleMuting(JailFighter(i));
+
+			CPrintToChatAll("%t %t", "Plugin Tag", "Warden Toggle Mute", client);
+		}
+		case MenuAction_End:delete menu;
+	}
+}
+
 public Action AdminWardayRed(int client, int args)
 {
 	if (!bEnabled.BoolValue)

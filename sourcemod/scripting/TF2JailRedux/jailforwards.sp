@@ -1,6 +1,21 @@
+enum	// Legacy forwards
+{
+//	Old_OnLastRequestExecute,
+	Old_OnWardenGiven,
+	Old_OnWardenRemoved,
+	Old_OnFreedayGiven,
+	Old_OnFreedayRemoved,
+//	Old_OnFreekillerGiven,
+//	Old_OnFreekillerRemoved,
+	Old_OnRebelGiven,
+	Old_OnRebelRemoved
+};
+
 Handle
-	hPrivFwds[OnPlayMusic+1]
+	hPrivFwds[OnPlayMusic+1],
+	hLegacyFwds[Old_OnRebelRemoved+1]
 ;
+
 
 void InitializeForwards()
 {
@@ -57,6 +72,16 @@ void InitializeForwards()
 	hPrivFwds[OnShouldAutobalance] 		= CreateForward(ET_Hook);
 	hPrivFwds[OnShouldAutobalancePlayer]= CreateForward(ET_Hook,   Param_Cell);
 	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
+
+	hLegacyFwds[Old_OnWardenGiven] 			= CreateGlobalForward("TF2Jail_OnWardenGiven", ET_Ignore, Param_Cell);
+	hLegacyFwds[Old_OnWardenRemoved] 		= CreateGlobalForward("TF2Jail_OnWardenRemoved", ET_Ignore, Param_Cell);
+//	hLegacyFwds[Old_OnLastRequestExecute] 	= CreateGlobalForward("TF2Jail_OnLastRequestExecute", ET_Ignore, Param_String);
+	hLegacyFwds[Old_OnFreedayGiven] 		= CreateGlobalForward("TF2Jail_OnFreedayGiven", ET_Ignore, Param_Cell);
+	hLegacyFwds[Old_OnFreedayRemoved] 		= CreateGlobalForward("TF2Jail_OnFreedayRemoved", ET_Ignore, Param_Cell);
+//	hLegacyFwds[Old_OnFreekillerGiven] 		= CreateGlobalForward("TF2Jail_OnFreekillerGiven", ET_Ignore, Param_Cell);
+//	hLegacyFwds[Old_OnFreekillerRemoved] 	= CreateGlobalForward("TF2Jail_OnFreekillerRemoved", ET_Ignore, Param_Cell);
+	hLegacyFwds[Old_OnRebelGiven] 			= CreateGlobalForward("TF2Jail_OnRebelGiven", ET_Ignore, Param_Cell);
+	hLegacyFwds[Old_OnRebelRemoved] 		= CreateGlobalForward("TF2Jail_OnRebelRemoved", ET_Ignore, Param_Cell);
 }
 void Call_OnDownloads()
 {
@@ -95,6 +120,10 @@ Action Call_OnWardenGet(const JailFighter player)
 	Call_StartForward(hPrivFwds[OnWardenGet]);
 	Call_PushCell(player);
 	Call_Finish(action);
+
+	Call_StartForward(hLegacyFwds[Old_OnWardenGiven]);
+	Call_PushCell(player);
+	Call_Finish();
 	return action;
 }
 void Call_OnClientTouch(const JailFighter toucher, const JailFighter touchee)
@@ -320,10 +349,18 @@ void Call_OnFreedayGiven(const JailFighter player)
 	Call_StartForward(hPrivFwds[OnFreedayGiven]);
 	Call_PushCell(player);
 	Call_Finish();
+
+	Call_StartForward(hLegacyFwds[Old_OnFreedayGiven]);
+	Call_PushCell(player);		// Core casts it correctly anyway
+	Call_Finish();
 }
 void Call_OnFreedayRemoved(const JailFighter player)
 {
 	Call_StartForward(hPrivFwds[OnFreedayRemoved]);
+	Call_PushCell(player);
+	Call_Finish();
+
+	Call_StartForward(hLegacyFwds[Old_OnFreedayRemoved]);
 	Call_PushCell(player);
 	Call_Finish();
 }
@@ -425,6 +462,10 @@ Action Call_OnRebelGiven(const JailFighter player)
 	Call_StartForward(hPrivFwds[OnRebelGiven]);
 	Call_PushCell(player);
 	Call_Finish(action);
+
+	Call_StartForward(hLegacyFwds[Old_OnRebelGiven]);
+	Call_PushCell(player);
+	Call_Finish();
 	return action;
 }
 void Call_OnRebelRemoved(const JailFighter player)
@@ -432,10 +473,18 @@ void Call_OnRebelRemoved(const JailFighter player)
 	Call_StartForward(hPrivFwds[OnRebelRemoved]);
 	Call_PushCell(player);
 	Call_Finish();
+
+	Call_StartForward(hLegacyFwds[Old_OnRebelRemoved]);
+	Call_PushCell(player);
+	Call_Finish();
 }
 void Call_OnWardenRemoved(const JailFighter player)
 {
 	Call_StartForward(hPrivFwds[OnWardenRemoved]);
+	Call_PushCell(player);
+	Call_Finish();
+
+	Call_StartForward(hLegacyFwds[Old_OnWardenRemoved]);
 	Call_PushCell(player);
 	Call_Finish();
 }

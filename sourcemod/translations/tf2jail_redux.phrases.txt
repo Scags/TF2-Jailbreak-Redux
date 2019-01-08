@@ -899,4 +899,103 @@
 		"en" 		"Running Weapon Blocker config."
 		"pl"		"Uruchamianie konfiguracji blokowania broni."
 	}
+	
+	"Warden Invite Player"
+	{
+		"#format" 	"{1:N},{2:N}"
+		"en" 		"Warden {default}{1}{burlywood} has invited {default}{2}{burlywood} to the Guards' team."
+	}
+	
+	"Menu Title Invited"
+	{
+		"en" 		"You have been invited to the Guards' team"
+	}
+	
+	"Join"
+	{
+		"en" 		"Join"
+	}
+	
+	"Don't Join"
+	{
+		"en" 		"Don't Join"
+	}
+	
+	"Mute Style Select"
+	{
+		"en" 		"Select the Mute style you wish to toggle"
+	}
+	
+	"Living"
+	{
+		"en" 		"Living"
+	}
+	
+	"Dead"
+	{
+		"en" 		"Dead"
+	}
+
+	"Mute No One"
+	{
+		"en" 		"No Muting"
+	}
+	
+	"Mute Red Ex VIP"
+	{
+		"en" 		"Mute all Reds (Excluding VIP)"
+	}
+	
+	"Mute Blue Ex VIP"
+	{
+		"en" 		"Mute all Blues (Excluding VIP)"
+	}
+	
+	"Mute All Ex VIP"
+	{
+		"en" 		"Mute all players (Excluding VIP)"
+	}
+	
+	"Mute All Red"
+	{
+		"en" 		"Mute ALL Reds"
+	}
+	
+	"Mute All Blue"
+	{
+		"en" 		"Mute ALL Blues"
+	}
+	
+	"Mute All"
+	{
+		"en" 		"Mute Everyone"
+	}
+
+	"Warden Toggle Mute"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"Warden {default}{1}{burlywood} has toggled muting!"
+	}
+	
+	"Player Invited Accepted"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{default}{1}{burlywood} has agreed to join the Guards' team."
+	}
+	
+	"Player Invited Denied"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{default}{1}{burlywood} has rejected the Warden's invite."
+	}
+	
+	"Unmuted"
+	{
+		"en" 		"You have been unmuted."
+	}
+	
+	"Muted"
+	{
+		"en" 		"You have been muted."
+	}
 }
