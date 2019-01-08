@@ -768,7 +768,9 @@ public void UnGuardBan(int target, int admin)
 	player.iTimeLeft = 0;
 
 	char idk[64]; FormatEx(idk, sizeof(idk), "%t", "Plugin Tag Teambans");
-	CShowActivity2(admin, idk, " %t", "Unguardban", target);
+	if (!admin)
+		CPrintToChatAll("%t Console: %t", "Plugin Tag Teambans", "Unguardban", target);
+	else CShowActivity2(admin, idk, " %t", "Unguardban", target);
 
 	Format(query, sizeof(query), 
 			"DELETE FROM %s "
