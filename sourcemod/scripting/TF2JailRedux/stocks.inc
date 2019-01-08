@@ -965,16 +965,19 @@ stock bool GetClientAimPos(const int client, float vecPos[3], float vecOrigin[3]
 	delete trace;
 	return true;
 }
-stock bool IsInRange(const int client, const int target, const float dist)
+stock bool IsInRange(const int client, const int target, const float dist, bool trace = true)
 {
 	float vecMyPos[3]; GetClientAbsOrigin(client, vecMyPos);
 	float vecTheirPos[3]; GetClientAbsOrigin(target, vecTheirPos);
 
 	if (GetVectorDistance(vecMyPos, vecTheirPos) <= dist)
 	{
-		TR_TraceRayFilter(vecMyPos, vecTheirPos, MASK_SHOT, RayType_EndPoint, TraceRayDontHitSelf, client);
-		if (TR_GetFraction() > 0.98)
-			return true;
+		if (trace)
+		{
+			TR_TraceRayFilter(vecMyPos, vecTheirPos, MASK_SHOT, RayType_EndPoint, TraceRayDontHitSelf, client);
+			return TR_GetFraction() > 0.98;
+		}
+		return true;
 	}
 	return false;
 }
