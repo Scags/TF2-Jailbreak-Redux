@@ -904,98 +904,117 @@
 	{
 		"#format" 	"{1:N},{2:N}"
 		"en" 		"Warden {default}{1}{burlywood} has invited {default}{2}{burlywood} to the Guards' team."
+		"pl"		"Naczelnik {default}{1}{burlywood} zaprosił {default}{2}{burlywood} do drużyny Strażników."
 	}
 	
 	"Menu Title Invited"
 	{
 		"en" 		"You have been invited to the Guards' team"
+		"pl"		"Zostałeś zaproszony do drużyny Strażników"
 	}
 	
 	"Join"
 	{
 		"en" 		"Join"
+		"pl"		"Dołącz"
 	}
 	
 	"Don't Join"
 	{
 		"en" 		"Don't Join"
+		"pl"		"Nie Dołączaj"
 	}
 	
 	"Mute Style Select"
 	{
 		"en" 		"Select the Mute style you wish to toggle"
+		"pl"		"Wybierz tryb Wyciszenia, jaki ma panować"
 	}
 	
 	"Living"
 	{
 		"en" 		"Living"
+		"pl"		"Żywi"
 	}
 	
 	"Dead"
 	{
 		"en" 		"Dead"
+		"pl"		"Zmarli"
 	}
 
 	"Mute No One"
 	{
 		"en" 		"No Muting"
+		"pl"		"Brak Wyciszenia"
 	}
 	
 	"Mute Red Ex VIP"
 	{
 		"en" 		"Mute all Reds (Excluding VIP)"
+		"pl"		"Wycisz wszystkich CZERWONYCH (Pomijając VIP-ów)"
 	}
 	
 	"Mute Blue Ex VIP"
 	{
 		"en" 		"Mute all Blues (Excluding VIP)"
+		"pl"		"Wycisz wszystkich NIEBIESKICH (Pomijając VIP-ów)"
 	}
 	
 	"Mute All Ex VIP"
 	{
 		"en" 		"Mute all players (Excluding VIP)"
+		"pl"		"Wycisz WSZYSTKICH (Pomijając VIP-ów)"
 	}
 	
 	"Mute All Red"
 	{
 		"en" 		"Mute ALL Reds"
+		"pl"		"Wyciesz wszystkich CZERWONYCH"
 	}
 	
 	"Mute All Blue"
 	{
 		"en" 		"Mute ALL Blues"
+		"pl"		"Wycisz wszystkich NIEBIESKICH"
 	}
 	
 	"Mute All"
 	{
 		"en" 		"Mute Everyone"
+		"pl"		"Wycisz WSZYSTKICH"
 	}
 
 	"Warden Toggle Mute"
 	{
 		"#format" 	"{1:N}"
 		"en" 		"Warden {default}{1}{burlywood} has toggled muting!"
+		"pl"		"Naczelnik {default}{1}{burlywood} zmienił tryb wyciszenia!"
 	}
 	
 	"Player Invited Accepted"
 	{
 		"#format" 	"{1:N}"
 		"en" 		"{default}{1}{burlywood} has agreed to join the Guards' team."
+		"pl"		"{default}{1}{burlywood} zgodził się na wstąpienie w szeregi Strażników."
 	}
 	
 	"Player Invited Denied"
 	{
 		"#format" 	"{1:N}"
 		"en" 		"{default}{1}{burlywood} has rejected the Warden's invite."
+		"pl"		"{default}{1}{burlywood} odrzucił propozycje Naczelnika."
 	}
 	
 	"Unmuted"
 	{
 		"en" 		"You have been unmuted."
+		"pl"		"Zostałeś od ciszony."
 	}
 	
 	"Muted"
 	{
 		"en" 		"You have been muted."
+		"pl"		"Zostałeś wyciszony."
 	}
 }
