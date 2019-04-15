@@ -2000,7 +2000,7 @@ public void fwdOnRoundStart()
 	}
 
 	if (hNoChargeCVar)
-		hNoChargeCVar.SetBool(0);
+		hNoChargeCVar.SetInt(0);
 
 	JailBoss rand = JailBoss( GetRandomClient(true) );	// It's probably best to keep the second param true
 	if (rand.index <= 0)
