@@ -160,7 +160,7 @@ void Call_OnWardenThink(const JailFighter player)
 void Call_OnHudShow(char hud[128])
 {
 	Call_StartForward(hPrivFwds[OnHudShow]);
-	Call_PushStringEx(hud, 128, 0, SM_PARAM_COPYBACK);
+	Call_PushStringEx(hud, 128, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_Finish();
 }
 Action Call_OnLRPicked(const JailFighter player, const int index, ArrayList array)

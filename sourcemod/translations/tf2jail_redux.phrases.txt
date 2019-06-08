@@ -621,7 +621,7 @@
 	"Closed"
 	{
 		"en" 			"closed"
-		"pl"			"zamknoł"
+		"pl"			"zamknął"
 	}
 
 	"Locked"
