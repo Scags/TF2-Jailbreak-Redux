@@ -333,12 +333,14 @@ enum/*CvarName*/
 
 ConVar 
 	JBVSH[Version + 1],
-	hTeamBansCVar
+	hTeamBansCVar,
+	hNoChargeCVar
 ;
 
 int 
 	iHealthChecks,		// For !halehp
-	iTeamBansCVar		// Mid-round detection in case a player is guardbanned
+	iTeamBansCVar,		// Mid-round detection in case a player is guardbanned
+	iNoChargeCVar
 ;
 
 bool
@@ -406,6 +408,9 @@ public void OnAllPluginsLoaded()
 	gamemode = new JBGameMode();
 	LoadJBHooks();
 	hTeamBansCVar = FindConVar("sm_jbans_ignore_midround");
+	hNoChargeCVar = FindConVar("sm_tf2jr_demo_charge");
+	if(hNoChargeCVar)
+		iNoChargeCVar = hNoChargeCVar.IntValue;
 }
 
 public void OnPluginEnd()
@@ -1994,6 +1999,9 @@ public void fwdOnRoundStart()
 		iTeamBansCVar = 1;
 	}
 
+	if (hNoChargeCVar)
+		hNoChargeCVar.SetInt(0);
+
 	JailBoss rand = JailBoss( GetRandomClient(true) );	// It's probably best to keep the second param true
 	if (rand.index <= 0)
 		ForceTeamWin(RED);
@@ -2036,6 +2044,9 @@ public void fwdOnRoundEnd(Event event)
 		hTeamBansCVar.SetBool(false);
 		iTeamBansCVar = 0;
 	}
+
+	if(hNoChargeCVar)
+		hNoChargeCVar.SetInt(iNoChargeCVar);
 
 	ManageRoundEndBossInfo( (event.GetInt("team") == BLU) );
 }

@@ -1400,7 +1400,7 @@ public void MusicPlay()
 	if (ManageMusic(sound, time) != Plugin_Continue)
 		return;
 
-	if (sound[0] != '\0')
+	if (sound[0] != EOS)
 	{
 		float vol = cvarTF2Jail[MusicVolume].FloatValue;
 		strcopy(strBackgroundSong, PLATFORM_MAX_PATH, sound);
