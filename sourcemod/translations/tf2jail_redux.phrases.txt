@@ -4,12 +4,14 @@
 	{
 		"en" 			"{crimson}[TF2Jail]{burlywood}"
 		"pl"			"{crimson}[TF2Jail]{burlywood}"
+		"pt"			"{crimson}[TF2Jail]{burlywood}"
 	}
 	
 	"Admin Tag"
 	{
 		"en" 			"{orange}[TF2Jail]{burlywood}"
 		"pl"			"{orange}[TF2Jail]{burlywood}"
+		"pt"			"{orange}[TF2Jail]{burlywood}"
 	}
 	
 	// 1: Client name/index
@@ -18,6 +20,7 @@
 		"#format"		"{1:N}"
 		"en"			"{1} has taken ammo and lost their Freeday!"
 		"pl"			"{1} zebrał amunicję i stracił swój Dzień Wolny!"
+		"pt"			"{1} pegou munição e perdeu seu Freeday!"
 	}
 	
 	// 1: Client name/index
@@ -26,30 +29,35 @@
 		"#format" 		"{1:N}"
 		"en" 			"{1} has hit a vent and lost their Freeday!"
 		"pl"			"{1} właśnie dokonał wandalizacji mienia i stracił swój Dzień Wolny!"
+		"pt" 			"{1} quebrou um duto de ventilação e perdeu seu Freeday!"
 	}
 	
 	"Can't Teleport"
 	{
 		"en" 			"You can't teleport yet!"
 		"pl"			"Nie możesz się teleportować!"
+		"pt" 			"O teleporte ainda está recarregando!"
 	}
 	
 	"Welcome Message"
 	{
 		"en" 			"Welcome to TF2 Jailbreak Redux. Type \"!jhelp\" for help."
 		"pl"			"Witaj na TF2 Jail. Napisz \"!jhelp\" żeby otworzyć menu pomocy."
+		"pt" 			"Bem-vindo ao TF2 Jailbreak Redux. Digite \"!jhelp\" para abrir o menu de ajuda."
 	}
 	
 	"Warden Locked Lack"
 	{
 		"en" 			"Warden has been locked due to lack of a Warden."
 		"pl"			"Pozycja Naczelnik została zablokowana z powodu braku Naczelnika."
+		"pt" 			"A Direção foi travada por falta de um Diretor."
 	}
 	
 	"No Marker"
 	{
 		"en" 			"Unable to create a marker."
 		"pl"			"Nie można utworzyć znacznika."
+		"pt" 			"Não foi possível criar um marcador."
 	}
 	
 	// 1: sm_tf2jr_cell_timer CVar value
@@ -58,18 +66,21 @@
 		"#format" 		"{1:d}"
 		"en" 			"The cell doors have opened after {1} seconds of remaining closed."
 		"pl"			"Drzwi cel otworzyły się po {1} sekund bycia zamkniętymi."
+		"pt" 			"As celas se abriram após terem permanecido {1} segundos fechadas."
 	}
 	
 	"FF On"
 	{
 		"en" 			"Friendly-Fire has been enabled!"
 		"pl"			"Funkcja Ognia Przyjacielskiego została włączona!"
+		"pt" 			"O Fogo Amigo foi ativado!"
 	}
 	
 	"Warden Enabled"
 	{
 		"en" 			"Warden has been enabled."
 		"pl"			"Pozycja Naczelnika została włączona."
+		"pt" 			"A Direção foi ativada."
 	}
 
 	// 1: Client name/index
@@ -78,6 +89,7 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has enabled Collisions!"
 		"pl"			"Naczelnik {default}{1}{burlywood} włączył Kolizje!"
+		"pt" 			"O Diretor {default}{1}{burlywood} ligou as Colisões!"
 	}
 	
 	// 1: Client name/index
@@ -86,6 +98,7 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has disabled Collisions."
 		"pl"			"Naczelnik {default}{1}{burlywood} wyłączył Kolizje."
+		"pt" 			"O Diretor {default}{1}{burlywood} desligou as Colisões."
 	}
 
 	// 1: Client name/index
@@ -94,6 +107,7 @@
 		"#format"		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has enabled Friendly-Fire!"
 		"pl"			"Naczelnik {default}{1}{burlywood} Włączył Ogień Przyjacielski!"
+		"pt" 			"O Diretor {default}{1}{burlywood} ativou o Fogo Amigo!"
 	}
 	
 	// 1: Client name/index
@@ -102,30 +116,35 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has disabled Friendly-Fire!"
 		"pl"			"Naczelnik {default}{1}{burlywood} wyłączył Ogień Przyjacielski!"
+		"pt" 			"O Diretor {default}{1}{burlywood} desativou o Fogo Amigo!"
 	}
 	
 	"Help Panel Welcome"
 	{
 		"en" 			"Welcome to TF2Jail Redux!"
 		"pl"			"Witaj na TF2Jail Redux!"
+		"pt" 			"Bem-vindo ao TF2Jail Redux!"
 	}
 	
 	"Help Panel Who's Warden"
 	{
 		"en" 			"Who's the current warden?"
 		"pl"			"Kto jest obecnym naczelnikiem?"
+		"pt" 			"Quem é o diretor atual?"
 	}
 	
 	"Help Panel What are LR's"
 	{
 		"en" 			"What are the last requests?"
 		"pl"			"Jakie są ostatnie życzenia?"
+		"pt" 			"O que é o Último Pedido?"
 	}
 	
 	"Help Panel Turn Off Music"
 	{
 		"en" 			"Turn off the background music?"
 		"pl"			"Wyłączyć muzykę w tle?"
+		"pt" 			"Desligar a música de fundo?"
 	}
 	
 	// 1: Client name/index
@@ -134,60 +153,70 @@
 		"#format" 		"{1:N}"
 		"en" 			"{1}{burlywood} is the current warden."
 		"pl"			"{1}{burlywood} jest teraz naczelnikiem."
+		"pt" 			"{1}{burlywood} é o diretor atual."
 	}
 	
 	"No Current Warden"
 	{
 		"en" 			"There is no current warden."
 		"pl"			"Nie ma teraz naczelnika."
+		"pt" 			"Não há nenhum diretor atualmente."
 	}
 	
 	"Needs Active Round"
 	{
 		"en" 			"Round Must Be Active"
 		"pl"			"Runda musi być aktywna"
+		"pt" 			"É necessário estar no Meio da Rodada"
 	}
 	
 	"Already Warden"
 	{
 		"en" 			"You are already warden."
 		"pl"			"Jesteś już naczelnikiem."
+		"pt" 			"Você já é o diretor."
 	}
 	
 	"Need Alive"
 	{
 		"en" 			"You must be alive."
 		"pl"			"Musisz być żywy."
+		"pt" 			"Você precisa estar vivo."
 	}
 	
 	"Need Blue Team"
 	{
 		"en" 			"You are not on Blue Team."
 		"pl"			"Nie jesteś w drużynie Niebieskich."
+		"pt" 			"Você não está no Time BLU."
 	}
 	
 	"Admin Lock Warden"
 	{
 		"en" 			"Admin has locked warden."
 		"pl"			"Administrator zablokował pozycje naczelnika."
+		"pt" 			"Um Administrador travou a Direção."
 	}
 	
 	"Warden Locked"
 	{
 		"en" 			"Warden is locked."
 		"pl"			"Pozycja Naczelnik jest zablokowany."
+		"pt" 			"A Direção está travada."
 	}
 	
 	"Locked From Warden"
 	{
 		"en" 			"You may not become warden until next round."
 		"pl"			"Nie możesz zostać naczelnikiem aż do następnej rundy."
+		"pt" 			"Você não pode virar o diretor até a próxima rodada."
 	}
 	
 	"Not Warden"
 	{
 		"en" 			"You are not Warden"
 		"pl"			"Nie jesteś naczelnikiem"
+		"pt" 			"Você não é o Diretor"
 	}
 	
 	// 1: Client name/index
@@ -196,54 +225,63 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has retired!"
 		"pl"			"Naczelnik {default}{1}{burlywood} się zwolnił!"
+		"pt" 			"O Diretor {default}{1}{burlywood} se afastou do cargo!"
 	}
 	
 	"Warden Retired Center"
 	{
 		"en"			"Warden has retired!"
 		"pl"			"Naczelnik się zwolnił!"
+		"pt"			"O Diretor se afastou do cargo!"
 	}
 	
 	"Map Incompatible"
 	{
 		"en" 			"Map is incompatible."
 		"pl"			"Mapa jest niekompatybilna."
+		"pt" 			"O Mapa é incompatível."
 	}
 	
 	"Admin Locked LR"
 	{
 		"en" 			"Admin has locked LR."
 		"pl"			"Administrator zablokował LR."
+		"pt" 			"Um Administrador travou o Último Pedido."
 	}
 	
 	"LR Given"
 	{
 		"en" 			"Last Request has already been given."
 		"pl"			"Ostatnie żądanie zostało już nadane."
+		"pt" 			"O Último Pedido já foi dado."
 	}
 	
 	"Choose Player"
 	{
 		"en" 			"Choose a Player"
 		"pl"			"Wybierz gracza"
+		"pt" 			"Escolha um Jogador"
 	}
 
 	"Target Not On Red"
 	{
 		"en" 			"Target is not on Red Team."
 		"pl"			"Cel nie należy do drużyny Czerwonej."
+		"pt" 			"O alvo não está no Time RED."
 	}
 
 	"Denying LR Disabled"
 	{
 		"en" 			"Denying Last Requests has been disabled."
 		"pl"			"Odmowa ostatnich życzeń została wyłączona."
+		"pt" 			"A negação de Últimos Pedidos foi desativada."
 	}
 
 	"No LR Next Round"
 	{
 		"en" 			"There is no last request set for next round."
 		"pl"			"Nie ma ostatniego życzenia ustalonego na następnej rundy."
+		"pt" 			"Não há nenhum pedido marcado para a próxima rodada."
 	}
 
 	"Warden Deny LR"
@@ -251,18 +289,21 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has denied the Last Request!"
 		"pl"			"Naczelnik {default}{1}{burlywood} odmówił ostatnie życzenie!"
+		"pt" 			"O Diretor {default}{1}{burlywood} negou o Último Pedido!"
 	}
 
 	"Last Request List"
 	{
 		"en" 			"Last Request List"
 		"pl"			"Lista Ostatnich Życzeń"
+		"pt" 			"Lista de Últimos Pedidos"
 	}
 
 	"Music On"
 	{
 		"en" 			"You've turned {lightgreen}On{default} the TF2Jail Background Music."
 		"pl"			"{lightgreen}Włączyłeś{default} Muzyke TF2Jail w tle."
+		"pt" 			"Você {lightgreen}ligou{default} a Música de Fundo do TF2Jail."
 	}
 
 	// \n Stands for new line, ignore it please
@@ -270,30 +311,35 @@
 	{
 		"en" 			"You've turned {lightgreen}Off{default} the TF2Jail Background Music.\nWhen the music stops, it won't play again."
 		"pl"			"{lightgreen}Wyłączyłeś{default} Muzyke TF2Jail w tle.\nKiedy muzyka przestanie grać, nie będzie odtwarzana ponownie."
+		"pt" 			"Você {lightgreen}desligou{default} a Música de Fundo do TF2Jail.\nQuando a música parar, ela não irá se repetir."
 	}
 
 	"Admin Removed Queued Freeday"
 	{
 		"en" 			"Admin has removed your queued Freeday!"
 		"pl"			"Administrator usunął twój przyszły Wolny Dzień!"
+		"pt" 			"Um Administrador removeu seu Último Pedido pendente!"
 	}
 
 	"Admin Removed Freeday"
 	{
 		"en" 			"Admin has removed your Freeday!"
 		"pl"			"Administrator usunął twój Wolny Dzień!"
+		"pt" 			"Um Administrador removeu o seu Freeday!"
 	}
 
 	"Admin Denied LR"
 	{
 		"en" 			"Admin has denied the current last request!"
 		"pl"			"Administrator odrzucił bieżące ostatnie życzenie!"
+		"pt" 			"Um Administrador negou o último pedido atual!"
 	}
 
 	"Target Need Blue Team"
 	{
 		"en" 			"Target is not on Blue Team."
 		"pl"			"Cel nie jest w drużynie Niebieskich."
+		"pt" 			"O alvo não está no Time BLU."
 	}
 
 	// 1: Client name/index
@@ -302,12 +348,14 @@
 		"#format" 		"{1:N}"
 		"en" 			"Admin has forced {default}{1}{burlywood} as Warden."
 		"pl"			"Admin zmusił {default}{1}{burlywood} aby został Naczelnikiem."
+		"pt" 			"Um Administrador forçou {default}{1}{burlywood} à ser o Diretor."
 	}
 
 	"Admin Force Random Warden"
 	{
 		"en" 			"Admin has forced a random player as Warden."
 		"pl"			"Administrator wylosował gracza na Naczelnika."
+		"pt" 			"Um Administrador forçou um jogador aleatório à ser o Diretor."
 	}
 
 	// 1: Client name/index
@@ -316,48 +364,56 @@
 		"#format" 		"{1:N}"
 		"en" 			"Admin has forced {default}{1}{burlywood} to receive a Last Request."
 		"pl"			"Administrator wymusił otrzymanie Ostatniego Życzenia na {default}{1}{burlywood}."
+		"pt" 			"Um Administrador forçou {default}{1}{burlywood} à receber um Último Pedido."
 	}
 
 	"Admin Force LR Self"
 	{
 		"en" 			"Admin has forced a Last Request for themselves."
 		"pl"			"Administrator wymusił na sobie Ostatnie Życzenie"
+		"pt" 			"Um Administrador forçou um Último Pedido à si mesmo."
 	}
 
 	"Admin Reset Plugin"
 	{
 		"en" 			"Admin has reset plugin!"
 		"pl"			"Admin zrestartował plugin!"
+		"pt" 			"Um Administrador resetou o plugin!"
 	}
 
 	"Doors Work"
 	{
 		"en" 			"Doors are functional."
 		"pl"			"Drzwi są funkcjonalne."
+		"pt" 			"As portas são funcionais."
 	}
 
 	"Doors Don't Work"
 	{
 		"en" 			"Doors are not functional."
 		"pl"			"Drzwi nie są funkcjonalne."
+		"pt" 			"As portas não são funcionais."
 	}
 
 	"Buttons Work"
 	{
 		"en" 			"Cell door functionality is active."
 		"pl"			"Funkcjonalność guzików od drzwi jest aktywna."
+		"pt" 			"A funcionalidade das portas das celas está ativada."
 	}
 
 	"Buttons Don't Work"
 	{
 		"en" 			"Cell door functionality is inactive."
 		"pl"			"Funkcjonalność guzików od drzwi jest nieaktywna."
+		"pt" 			"A funcionalidade das portas das celas está desativada."
 	}
 
 	"Target Is Freeday"
 	{
 		"en" 			"Target is currently a Freeday."
 		"pl"			"Cel ma teraz Dzień Wolny."
+		"pt" 			"O alvo está atualmente em um Freeday."
 	}
 
 	// 1: Client name/index
@@ -366,12 +422,14 @@
 		"#format" 		"{1:N}"
 		"en" 			"Admin has given {default}{1}{burlywood} a Freeday."
 		"pl"			"Administrator dał {default}{1}{burlywood} Dzień Wolny."
+		"pt" 			"Um Administrador deu Freeday à{default}{1}{burlywood}."
 	}
 
 	"Select For Freeday"
 	{
 		"en" 			"Select Player(s) for Freeday"
 		"pl"			"Wybierz gracza(y) na Dzień Wolny"
+		"pt" 			"Selecione o(s) Jogador(es) para o Freeday"
 	}
 
 	"Admin Remove Freeday"
@@ -379,36 +437,42 @@
 		"#format" 		"{1:N}"
 		"en" 			"Admin has removed freeday from {default}{1}."
 		"pl"			"Administrator zabrał Dzień Wolny od {default}{1}."
+		"pt" 			"Um Administrador removeu o Freeday de {default}{1}."
 	}
 
 	"Player Not Freeday"
 	{
 		"en" 			"Player is not a Freeday"
 		"pl"			"Gracz nie ma Dnia Wolnego"
+		"pt" 			"O Jogador não está em um Freeday"
 	}
 
 	"Warden Already Locked"
 	{
 		"en" 			"Warden is already locked."
 		"pl"			"Pozycja Naczelnika jest już zablokowana."
+		"pt" 			"A Direção já está travada."
 	}
 
 	"Admin Lock Warden"
 	{
 		"en" 			"Admin has locked Warden!"
 		"pl"			"Admin zablokował pozycje Naczelnika!"
+		"pt" 			"Um Administrador travou a Direção!"
 	}
 
 	"Warden Not Locked"
 	{
 		"en" 			"Warden is not locked."
 		"pl"			"Pozycja Naczelnika nie jest zablokowana."
+		"pt" 			"A Direção não está travada."
 	}
 
 	"Admin Unlock Warden"
 	{
 		"en" 			"Admin has unlocked warden."
 		"pl"			"Admin odblokował Pozycje Naczelnika."
+		"pt" 			"Um Administrador destravou a Direção."
 	}
 
 	// 1: Warden name/index
@@ -418,6 +482,7 @@
 		"#format" 		"{1:N},{2:N}"
 		"en" 			"Warden {default}{1}{burlywood} has given {default}{2}{burlywood} a Last Request."
 		"pl"			"Naczelnik {default}{1}{burlywood} dał {default}{2}{burlywood} Ostatnie Życzenie."
+		"pt" 			"O Diretor {default}{1}{burlywood} deu à {default}{2}{burlywood} um Último Pedido."
 	}
 
 	// 1: Client name/index
@@ -426,6 +491,7 @@
 		"#format" 		"{1:N}"
 		"en" 			"Freeday for {default}{1}{burlywood} is currently queued."
 		"pl"			"Dzień Wolny dla {default}{1}{burlywood} jest teraz w kolejce."
+		"pt" 			"O Freeday de {default}{1}{burlywood} está atualmente pendente."
 	}
 
 	// 1: Chooser name/index
@@ -435,36 +501,42 @@
 		"#format" 		"{1:N},{2:N}"
 		"en" 			"{default}{1}{burlywood} has chosen {default}{2}{burlywood} for Freeday."
 		"pl"			"{default}{1}{burlywood} wybrał {default}{2}{burlywood} na Dzień wolny."
+		"pt" 			"{default}{1}{burlywood} escolheu {default}{2}{burlywood} para ter um Freeday."
 	}
 
 	"Freeday Max"
 	{
 		"en" 			"You have picked the maximum amount of Freedays."
 		"pl"			"Użyłes już limit Dni Wolnych."
+		"pt" 			"Você selecionou o número limite de Freedays."
 	}
 
 	"Not Enabled"
 	{
 		"en" 			"This is not enabled."
 		"pl"			"To nie jest włączone."
+		"pt" 			"Essa opção não está ativada."
 	}
 
 	"Slow Down"
 	{
 		"en" 			"Slow down there cowboy."
 		"pl"			"Zwolnij kowbuju!"
+		"pt" 			"Calma aí parça."
 	}
 
 	"Laser Off"
 	{
 		"en" 			"You have turned Warden Lasers {default}off{burlywood}."
 		"pl"			"Zmieniłeś status lasera na {default}Wyłączony{burlywood}."
+		"pt" 			"Você {default}desligou{burlywood} o Laser do Diretor."
 	}
 
 	"Laser On"
 	{
 		"en" 			"You have turned Warden Lasers {default}on{burlywood}. Hold reload to activate."
 		"pl"			"Zmieniłeś status lasera na {default}Włączony{burlywood}. przytrzymaj r aby aktywować."
+		"pt" 			"Você {default}ligou{burlywood} o Laser do Diretor. Segure reload para usá-lo."
 	}
 
 	// 1: Client name/index
@@ -473,6 +545,7 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has toggled Medic {default}On{burlywood}!"
 		"pl"			"Naczelnik {default}{1}{burlywood} zmienił status medyka na {default}Włączony{burlywood}!"
+		"pt" 			"O Diretor {default}{1}{burlywood} fez as Salas de Medic {default}ligarem{burlywood}!"
 	}
 
 	// 1: Client name/index
@@ -481,78 +554,91 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has toggled Medic {default}Off{burlywood}!"
 		"pl"			"Naczelnik {default}{1}{burlywood} zmienił status medyka na {default}Wyłączony{burlywood}!"
+		"pt" 			"O Diretor {default}{1}{burlywood} fez as Salas de Medic {default}desligarem{burlywood}!"
 	}
 
 	"Before Or During Round"
 	{
 		"en" 			"Must be done before or during active round."
 		"pl"			"Należy wykonać przed lub w trakcie aktywnej rundy."
+		"pt" 			"Esta ação deve ser feita antes ou durante uma Rodada."
 	}
 
 	"No Warday Config At Location"
 	{
 		"en" 			"Warday configuration is not set for this location!"
 		"pl"			"Konfiguracja Dnia Wojny nie jest ustawiona dla tej lokalizacji!"
+		"pt" 			"Não há uma configuração de Warday feita para esta localização!"
 	}
 
 	"Warday Red Active"
 	{
 		"en" 			"Warday for Red team has been activated!"
 		"pl"			"Dzień Wojny dla drużyny Czerwonej został aktywowany!"
+		"pt" 			"Warday para o time RED foi ativado!"
 	}	
 
 	"Warday Blue Active"
 	{
 		"en" 			"Warday for Blue team has been activated!"
 		"pl"			"Dzień Wojny dla drużyny Niebieskiej został aktywowany!"
+		"pt" 			"Warday para o time BLU foi ativado!"
 	}
 
 	"Ignore Red Team Warday"
 	{
 		"en" 			"Warday for Red Team is not configured, ignoring..."
 		"pl"			"Dzień Wojny dla drużyny Czerwonej nie jest skonfigurowany, ignoruję..."
+		"pt" 			"O Warday não foi configurado para o time RED, ignorando..."
 	}
 
 	"Ignore Blue Team Warday"
 	{
 		"en" 			"Warday for Blue Team is not configured, ignoring..."
 		"pl"			"Dzień Wojny dla drużyny Niebieskiej nie jest skonfigurowany, ignoruję..."
+		"pt" 			"O Warday não foi configurado para o time BLU, ignorando..."
 	}
 
 	"No Warday Config"
 	{
 		"en" 			"Warday configuration is not set."
 		"pl"			"Konfiguracja Dnia Wojny nie jest ustawiona."
+		"pt" 			"A configuração do Warday apresenta problemas."
 	}
 
 	"Warden Commands"
 	{
 		"en"			"Warden Commands"
 		"pl"			"Polecenia Naczelnika"
+		"pt"			"Comandos do Diretor"
 	}
 
 	"Warday Activate"
 	{
 		"en" 			"Warday has been activated!"
 		"pl"			"Dzień Wojny został aktywowany!"
+		"pt" 			"O Warday foi ativado!"
 	}
 
 	"Reload CFG"
 	{
 		"en" 			"Reloading plugin CFG."
 		"pl"			"Ponowne ładowanie konfiguracji pluginu."
+		"pt" 			"Recarregando a configuração do plugin."
 	}
 
 	"Medic Room Enabled Admin"
 	{
 		"en" 			"Admin has toggled Medic {default}On{burlywood}!"
 		"pl"			"Admin przełączył status Medyka na {default}Włączony{burlywood}!"
+		"pt" 			"Um Administrador {default}ativou{burlywood} as Salas de Medic!"
 	}
 
 	"Medic Room Disabled Admin"
 	{
 		"en" 			"Admin has toggled Medic {default}Off{burlywood}!"
 		"pl"			"Admin przełączył status Medyka na {default}Wyłączony{burlywood}!"
+		"pt" 			"Um Administrador {default}desativou{burlywood} as Salas de Medic!"
 	}
 
 	// 1: Client name/index
@@ -561,6 +647,7 @@
 		"#format" 		"{1:N}"
 		"en" 			"{1}{burlywood} is the new Warden"
 		"pl"			"{1}{burlywood} jest nowym Naczelnikiem"
+		"pt" 			"{1}{burlywood} é o novo Diretor"
 	}
 
 	// 1: Client name/index
@@ -569,30 +656,35 @@
 		"#format" 		"{1:N}"
 		"en" 			"{1} is the new Warden"
 		"pl"			"{1} jest nowym naczelnikiem"
+		"pt" 			"{1} é o novo Diretor"
 	}
 
 	"Muted Can't Join"
 	{
 		"en" 			"You are muted, therefore you cannot join Blue Team."
 		"pl"			"Jesteś wyciszony, dlatego nie możesz dołączyć do drużyny Niebieskich."
+		"pt" 			"Você está emudecido, por isso não pode entrar no time BLU."
 	}
 
 	"Warden Killed"
 	{
 		"en" 			"Warden has been killed!"
 		"pl"			"Naczelnik został zabity!"
+		"pt" 			"O Diretor foi assassinado!"
 	}
 
 	"Autobalanced"
 	{
 		"en" 			"You have been autobalanced."
 		"pl"			"Zostałeś zautobalansowany."
+		"pt" 			"Você foi autobalanceado."
 	}
 
 	"First Day Freeday"
 	{
 		"en" 			"First Day Freeday"
 		"pl"			"Pierwszy dzień, Dniem wolnym."
+		"pt" 			"Freeday de Primeiro Dia"
 	}
 
 	// 1: Client name/index
@@ -602,6 +694,7 @@
 		"#format" 		"{1:N},{2:s}"
 		"en" 			"Warden {default}{1}{burlywood} has {2} cells."
 		"pl"			"Naczelnik {default}{1}{burlywood} {2} cele."
+		"pt" 			"O Diretor {default}{1}{burlywood} {2} as celas."
 	}
 
 	// 1: Door format, see Opened, Closed, Locked, Unlocked
@@ -610,36 +703,42 @@
 		"#format" 		"{1:s}"
 		"en" 			"Admin has {1} cells."
 		"pl"			"Admin {1} cele."
+		"pt" 			"Um Administrador {1} as celas."
 	}
 
 	"Opened"
 	{
 		"en" 			"opened"
 		"pl"			"otworzył"
+		"pt" 			"abriu"
 	}
 
 	"Closed"
 	{
 		"en" 			"closed"
-		"pl"			"zamknął"
+		"pl"			"zamknoł"
+		"pt" 			"fechou"
 	}
 
 	"Locked"
 	{
 		"en" 			"locked"
 		"pl"			"zablokował"
+		"pt" 			"travou"
 	}
 
 	"Unlocked"
 	{
 		"en" 			"unlocked"
 		"pl"			"odblokował"
+		"pt" 			"destravou"
 	}
 
 	"Warden Fired"
 	{
 		"en" 			"Warden has been fired!"
 		"pl"			"Naczelnik został zwolniony!"
+		"pt" 			"O Diretor foi despejado!"
 	}
 
 	// 1: Client name/index
@@ -648,6 +747,7 @@
 		"#format" 		"{1:N}"
 		"en" 			"Freeday is now active for {default}{1}{burlywood}."
 		"pl"			"Dzień Wolny jest aktywny dla {default}{1}{burlywood}."
+		"pt" 			"O Freeday de {default}{1}{burlywood} está ativado agora."
 	}
 
 	"Attack Guard Lose Freeday"
@@ -655,30 +755,35 @@
 		"#format" 		"{1:N}"
 		"en" 			"{1} has attacked a Guard and lost their Freeday!"
 		"pl"			"{1} Zaatakował strażnika i stracił swój Dzień Wolny!"
+		"pt" 			"{1} atacou um Guarda e perdeu seu Freeday!"
 	}
 
 	"One Guard Left"
 	{
 		"en" 			"One guard left..."
 		"pl"			"Jeden strażnik pozostał przy życiu..."
+		"pt" 			"Um guarda restante..."
 	}
 
 	"LR Chosen"
 	{
 		"en" 			"Last request has been chosen. Freedays have been stripped."
 		"pl"			"Ostanie Życzenie została wybrane. Aktywne Dni Wolne zostały zabrane."
+		"pt" 			"O Último pedido foi escolhido. Os Freedays atuais foram removidos."
 	}
 
 	"Cells Already Open"
 	{
 		"en" 			"Cells are already open."
 		"pl"			"Cele są już otwarte."
+		"pt" 			"As celas já estão abertas."
 	}
 
 	"Cells Not Open"
 	{
 		"en" 			"Cells are not open."
 		"pl"			"Cele nie są otwarte."
+		"pt" 			"As celas não estão abertas."
 	}
 
 	// 1: Current votes
@@ -688,6 +793,7 @@
 		"#format"	"{1:d},{2:d}"
 		"en"		"You have already voted to cast off this Warden. ({1} votes, {2} required)"
 		"pl"		"Już głosowałeś na zwolnienie tego naczelnika. ({1} głosów, {2} wymagane)"
+		"pt"		"Você já votou para despejar o Diretor atual. ({1} votos, {2} necessários)"
 	}
 
 	// 1: Client name/index
@@ -698,6 +804,7 @@
 		"#format"	"{1:N},{2:d},{3:d}"
 		"en"		"{1} wants to fire the current Warden. ({2} votes, {3} required)"
 		"pl"		"{1} chce zwolnić obecnego naczelnika. ({2} głosów, {3} wymagane)"
+		"pt"		"{1} quer despejar o Diretor atual. ({2} votos, {3} necessários)"
 	}
 	
 	// 1: Client name/index
@@ -706,6 +813,7 @@
 		"#format"	"{1:N}"
 		"en"		"{default}{1}{burlywood} has rebelled."
 		"pl"		"{default}{1}{burlywood} zbuntował się."
+		"pt"		"{default}{1}{burlywood} rebelou."
 	}
 	
 	// 1: Time of rebel timer
@@ -714,18 +822,21 @@
 		"#format"	"{1:d}"
 		"en"		"Your rebel status will be removed automatically in {1} seconds."
 		"pl"		"Twój status buntownika zostanie automatycznie usunięty w {1} sekund."
+		"pt"		"Seu status de Rebelde será removido automaticamente em {1} segundos."
 	}
 	
 	"Rebel Timer Remove"
 	{
 		"en" 		"Your rebel status has been removed."
 		"pl"		"Twój status rebelianta został usunięty."
+		"pt" 		"Seu status de Rebelde foi anulado."
 	}
 	
 	"Warden Disconnected"
 	{
 		"en" 		"Warden has disconnected!"
 		"pl"		"Naczelnik opuścił grę!"
+		"pt" 		"O Diretor desconectou!"
 	}
 	
 	"Announce Timer"
@@ -733,30 +844,35 @@
 		"#format" 	"{1:s}"
 		"en" 		"V{1} by {default}Scag/Ragenewb{burlywood}."
 		"pl"		"V{1} przez {default}Scag/Ragenewb{burlywood}, Tłumaczenie Polskie przez {default}Wolfyo{burlywood}."
+		"pt" 		"V{1} por {default}Scag/Ragenewb{burlywood}."
 	}
 	
 	"Freeday All Start"
 	{
 		"en" 		"Freeday is now active for {default}ALL players{burlywood}."
 		"pl"		"Wolny Dzień jest teraz aktywny dla {default}WSZYSTKICH Graczy{burlywood}."
+		"pt" 		"Freeday está ativado agora para {default}TODOS os jogadores{burlywood}."
 	}
 	
 	"Tiny Round Start"
 	{
-		"en" 		"SuperSmall for everyone activated."
-		"pl"		"SuperKarzeł aktywowany dla wszystkich."
+		"en" 		"Super Small for everyone activated."
+		"pl"		"Super Karzeł aktywowany dla wszystkich."
+		"pt" 		"Super Pequeno ativado para todos."
 	}
 	
 	"Gravity Start"
 	{
 		"en" 		"Where did the gravity go?"
 		"pl"		"Gdzie jest grawitacja?"
+		"pt" 		"Para onde a gravidade foi?"
 	}
 	
 	"Warday Start"
 	{
 		"en" 		"{burlywood}*War kazoo sounds*"
 		"pl"		"{burlywood}*Syrena Nuklearna*"
+		"pt" 		"{burlywood}*Sons de trombeta de guerra*"
 	}
 	
 	"Random Select"
@@ -764,6 +880,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen a {default}Random Last Request{burlywood} as their last request!"
 		"pl"		"{1} wybrał {default}Losowe Życzenie{burlywood} jako swoje ostatnie życzenie."
+		"pt" 		"{1} escolheu um {default}Último Pedido Aleatório{burlywood} como seu pedido!"
 	}
 	
 	"Suicide Select"
@@ -771,6 +888,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen to kill themselves. What a shame..."
 		"pl"		"{1} zdecydował się zabić. Jaka szkoda..."
+		"pt" 		"{1} escolheu se matar. Que vergonha..."
 	}
 	
 	"Custom Select"
@@ -778,6 +896,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen to type out their LR in chat."
 		"pl"		"{1} wybrał wypisanie swojego LR na czacie."
+		"pt" 		"{1} escolheu digitar seu LR no chat."
 	}
 	
 	"Freeday Self Select"
@@ -785,6 +904,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen {default}Freeday for Themselves{burlywood} next round."
 		"pl"		"{1} wybrał {default}Wolny Dzień dla siebie{burlywood} na następną rundę."
+		"pt" 		"{1} escolheu {default}Freeday para si mesmo{burlywood} para a próxima rodada."
 	}
 	
 	"Freeday Other Select"
@@ -792,6 +912,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} is picking Freedays for next round..."
 		"pl"		"{1} wybiera graczy na Wolny Dzień do następnej rundy..."
+		"pt" 		"{1} está escolhendo os Freedays para a próxima rodada..."
 	}
 	
 	"Freeday All Select"
@@ -799,6 +920,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen to grant a {default}Freeday for All{burlywood} next round."
 		"pl"		"{1} zdecydował się przyznać {default}Dzień Wolny dla każdego{burlywood} na następną rundę."
+		"pt" 		"{1} escolheu dar um {default}Freeday para Todos{burlywood} na próxima rodada."
 	}
 	
 	"Guard Melee Select"
@@ -806,6 +928,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen to strip the guards of their weapons."
 		"pl"		"{1} postanowił zabrać strażnikom ich broń."
+		"pt" 		"{1} escolheu retirar as armas dos guardas."
 	}
 	
 	"HHHDay Select"
@@ -813,6 +936,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen {default}Horseless Headless Horsemann Kill Round{burlywood} next round."
 		"pl"		"{1} wybrał {default}Horseless Headless Horsemann Kill Round{burlywood} na następną rundę."
+		"pt" 		"{1} escolheu {default}Guerra dos Cavaleiros Carentes de Cavalos e Cabeças{burlywood} para o próximo round."
 	}
 	
 	"Tiny Round Select"
@@ -820,6 +944,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen {default}Super Small{burlywood} for everyone."
 		"pl"		"{1} wybrał {default}Super Karzeł{burlywood} dla wszystkich."
+		"pt" 		"{1} escolheu {default}Super Pequeno{burlywood} para todos."
 	}
 	
 	"Hot Prisoner Select"
@@ -827,6 +952,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen to ignite all of the prisoners next round!"
 		"pl"		"{1} postanowił zapalić wszystkich więźniów w następnej rundzie!"
+		"pt" 		"{1} escolheu incendiar todos os prisioneiros na próxima rodada"
 	}
 	
 	"Gravity Round Select"
@@ -834,6 +960,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen {default}Low Gravity{burlywood} as their last request."
 		"pl"		"{1} wybrał {default}Niską Grawitacje{burlywood} jako swoje ostatnie życzenie."
+		"pt" 		"{1} escolheu {default}Gravidade Baixa{burlywood} como seu último pedido."
 	}
 	
 	"Automobile Start"
@@ -841,6 +968,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen {default}Stealy Wheely Automobiley{burlywood} as their last request."
 		"pl"		"{1} wybrał {default}Stealy Wheely Automobiley{burlywood} jako swoje ostatnie życzenie."
+		"pt" 		"{1} escolheu {default}Carrinhos Bate-Bate{burlywood} como o seu último pedido."
 	}
 	
 	"Warday Select"
@@ -848,6 +976,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen to do a {default}Warday{burlywood}."
 		"pl"		"{1} zdecydował się zrobić {default}Dzień Wojny{burlywood}."
+		"pt" 		"{1} escolheu ter um {default}Warday{burlywood}."
 	}
 	
 	"ClassWars Select"
@@ -855,6 +984,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen {default}Class Warfare{burlywood} as their last request."
 		"pl"		"{1} wybrał {default}Wojny Klasowe{burlywood} jako swoje ostatnie życzenie."
+		"pt" 		"{1} escolheu {default}Class Warfare{burlywood} como seu último pedido."
 	}
 	
 	"Custom Activate"
@@ -862,42 +992,49 @@
 		"#format" 	"{1:s}"
 		"en" 		"Your custom last request is {default}{1}"
 		"pl"		"Twoje niestandardowe ostatnie życzenie to {default}{1}"
+		"pt" 		"Seu último pedido customizado é {default}{1}"
 	}
 	
 	"Music Panel"
 	{
 		"en" 		"Turn the TF2Jail Music..."
 		"pl"		"Włącz/Wyłącz muzykę TF2Jail..."
+		"pt" 		"Alternar a Música do TF2Jail para..."
 	}
 	
 	"On"
 	{
 		"en" 		"On"
 		"pl"		"On"
+		"pt" 		"Ativado"
 	}
 	
 	"Off"
 	{
 		"en" 		"Off"
 		"pl"		"Off"
+		"pt" 		"Desativado"
 	}
 	
 	"Exit"
 	{
 		"en" 		"Exit"
 		"pl"		"Wyjście"
+		"pt" 		"Sair"
 	}
 	
 	"Repeats Surpassed"
 	{
 		"en" 		"You have surpassed the maximum amount of repeat annotations for this round."
 		"pl"		"Przekroczyłeś maksymalną liczbę powtórzeń w tej rundzie."
+		"pt" 		"Você ultrapassou o máximo de pedidos de repetição dessa rodada."
 	}
 	
 	"Weapon Config"
 	{
 		"en" 		"Running Weapon Blocker config."
 		"pl"		"Uruchamianie konfiguracji blokowania broni."
+		"pt" 		"Ligando a configuração do Bloqueio de Armas."
 	}
 	
 	"Warden Invite Player"
@@ -905,84 +1042,98 @@
 		"#format" 	"{1:N},{2:N}"
 		"en" 		"Warden {default}{1}{burlywood} has invited {default}{2}{burlywood} to the Guards' team."
 		"pl"		"Naczelnik {default}{1}{burlywood} zaprosił {default}{2}{burlywood} do drużyny Strażników."
+		"pt" 		"O Diretor {default}{1}{burlywood} convidou {default}{2}{burlywood} para o time BLU."
 	}
 	
 	"Menu Title Invited"
 	{
 		"en" 		"You have been invited to the Guards' team"
 		"pl"		"Zostałeś zaproszony do drużyny Strażników"
+		"pt" 		"Você foi convidado para o time BLU"
 	}
 	
 	"Join"
 	{
 		"en" 		"Join"
 		"pl"		"Dołącz"
+		"pt" 		"Aceitar"
 	}
 	
 	"Don't Join"
 	{
 		"en" 		"Don't Join"
 		"pl"		"Nie Dołączaj"
+		"pt" 		"Rejeitar"
 	}
 	
 	"Mute Style Select"
 	{
 		"en" 		"Select the Mute style you wish to toggle"
 		"pl"		"Wybierz tryb Wyciszenia, jaki ma panować"
+		"pt" 		"Selecione o estilo de Emudecimento que desejar"
 	}
 	
 	"Living"
 	{
 		"en" 		"Living"
 		"pl"		"Żywi"
+		"pt" 		"Vivo"
 	}
 	
 	"Dead"
 	{
 		"en" 		"Dead"
 		"pl"		"Zmarli"
+		"pt" 		"Morto"
 	}
 
 	"Mute No One"
 	{
 		"en" 		"No Muting"
 		"pl"		"Brak Wyciszenia"
+		"pt" 		"Sem Emudecimento"
 	}
 	
 	"Mute Red Ex VIP"
 	{
 		"en" 		"Mute all Reds (Excluding VIP)"
 		"pl"		"Wycisz wszystkich CZERWONYCH (Pomijając VIP-ów)"
+		"pt" 		"Emudecer todos os REDs (Excluíndo VIPs)"
 	}
 	
 	"Mute Blue Ex VIP"
 	{
 		"en" 		"Mute all Blues (Excluding VIP)"
 		"pl"		"Wycisz wszystkich NIEBIESKICH (Pomijając VIP-ów)"
+		"pt" 		"Emudecer todos os BLUs (Excluíndo VIPs)"
 	}
 	
 	"Mute All Ex VIP"
 	{
 		"en" 		"Mute all players (Excluding VIP)"
 		"pl"		"Wycisz WSZYSTKICH (Pomijając VIP-ów)"
+		"pt" 		"Emudecer todos os jogadores (Excluíndo VIPs)"
 	}
 	
 	"Mute All Red"
 	{
 		"en" 		"Mute ALL Reds"
 		"pl"		"Wyciesz wszystkich CZERWONYCH"
+		"pt" 		"Emudecer TODOS os REDs"
 	}
 	
 	"Mute All Blue"
 	{
 		"en" 		"Mute ALL Blues"
 		"pl"		"Wycisz wszystkich NIEBIESKICH"
+		"pt" 		"Emudecer TODOS os BLUs"
 	}
 	
 	"Mute All"
 	{
 		"en" 		"Mute Everyone"
 		"pl"		"Wycisz WSZYSTKICH"
+		"pt" 		"Emudecer Todos"
 	}
 
 	"Warden Toggle Mute"
@@ -990,6 +1141,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"Warden {default}{1}{burlywood} has toggled muting!"
 		"pl"		"Naczelnik {default}{1}{burlywood} zmienił tryb wyciszenia!"
+		"pt" 		"O Diretor {default}{1}{burlywood} alternou o emudecimento!"
 	}
 	
 	"Player Invited Accepted"
@@ -997,6 +1149,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{default}{1}{burlywood} has agreed to join the Guards' team."
 		"pl"		"{default}{1}{burlywood} zgodził się na wstąpienie w szeregi Strażników."
+		"pt" 		"{default}{1}{burlywood} concordou em entrar para o time BLU."
 	}
 	
 	"Player Invited Denied"
@@ -1004,17 +1157,20 @@
 		"#format" 	"{1:N}"
 		"en" 		"{default}{1}{burlywood} has rejected the Warden's invite."
 		"pl"		"{default}{1}{burlywood} odrzucił propozycje Naczelnika."
+		"pt" 		"{default}{1}{burlywood} rejeitou o convite do Diretor."
 	}
 	
 	"Unmuted"
 	{
 		"en" 		"You have been unmuted."
 		"pl"		"Zostałeś od ciszony."
+		"pt" 		"Você foi desemudecido."
 	}
 	
 	"Muted"
 	{
 		"en" 		"You have been muted."
 		"pl"		"Zostałeś wyciszony."
+		"pt" 		"Você foi emudecido."
 	}
 }
