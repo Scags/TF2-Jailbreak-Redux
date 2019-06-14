@@ -334,7 +334,8 @@ enum/*CvarName*/
 ConVar 
 	JBVSH[Version + 1],
 	hTeamBansCVar,
-	hNoChargeCVar
+	hNoChargeCVar,
+	hDroppedWeaponsCVar
 ;
 
 int 
