@@ -411,6 +411,7 @@ public void OnAllPluginsLoaded()
 	LoadJBHooks();
 	hTeamBansCVar = FindConVar("sm_jbans_ignore_midround");
 	hNoChargeCVar = FindConVar("sm_tf2jr_demo_charge");
+	hDroppedWeaponsCVar = FindConVar("sm_tf2jr_dropped_weapons");
 }
 
 public void OnPluginEnd()
