@@ -334,13 +334,15 @@ enum/*CvarName*/
 ConVar 
 	JBVSH[Version + 1],
 	hTeamBansCVar,
-	hNoChargeCVar
+	hNoChargeCVar,
+	hDroppedWeaponsCVar
 ;
 
 int 
 	iHealthChecks,		// For !halehp
 	iTeamBansCVar,		// Mid-round detection in case a player is guardbanned
-	iNoChargeCVar
+	iNoChargeCVar,		// Allow for charging
+	iDroppedWeaponsCVar	// Allow dropped weapons
 ;
 
 bool
@@ -409,8 +411,7 @@ public void OnAllPluginsLoaded()
 	LoadJBHooks();
 	hTeamBansCVar = FindConVar("sm_jbans_ignore_midround");
 	hNoChargeCVar = FindConVar("sm_tf2jr_demo_charge");
-	if(hNoChargeCVar)
-		iNoChargeCVar = hNoChargeCVar.IntValue;
+	hDroppedWeaponsCVar = FindConVar("sm_tf2jr_dropped_weapons");
 }
 
 public void OnPluginEnd()
@@ -1999,8 +2000,22 @@ public void fwdOnRoundStart()
 		iTeamBansCVar = 1;
 	}
 
+	if(hNoChargeCVar)
+	{
+		iNoChargeCVar = hNoChargeCVar.IntValue;
+		hNoChargeCVar.SetInt(0);
+	}
+
+	if(hDroppedWeaponsCVar)
+	{
+		iDroppedWeaponsCVar = hDroppedWeaponsCVar.IntValue;
+		hDroppedWeaponsCVar.SetInt(1);
+	}
+
 	if (hNoChargeCVar)
 		hNoChargeCVar.SetInt(0);
+	if(hDroppedWeaponsCVar)
+		hDroppedWeaponsCVar.SetInt(iDroppedWeaponsCVar);
 
 	JailBoss rand = JailBoss( GetRandomClient(true) );	// It's probably best to keep the second param true
 	if (rand.index <= 0)
