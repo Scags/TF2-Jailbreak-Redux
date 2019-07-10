@@ -8,7 +8,7 @@
 #undef TAG
 #define TAG "{crimson}[TF2Jail] Teambans{burlywood} "
 
-#define PLUGIN_VERSION 		"1.0.2"
+#define PLUGIN_VERSION 		"1.0.3"
 #define RED 				2
 #define BLU 				3
 #define IsClientValid(%1) 	((0 < %1 <= MaxClients) && IsClientInGame(%1))
@@ -323,7 +323,7 @@ public void OnClientDisconnect(int client)
 		DataPack pack = new DataPack();
 		pack.WriteString(ID);
 		pack.WriteCell(player.iTimeLeft);
-		
+
 		if (cvarJBANS[Debug].BoolValue)
 			LogMessage("Checking out client %N with query %s", client, query);
 
@@ -342,7 +342,7 @@ public void OnClientDisconnect(int client)
 		DataPack pack = new DataPack();
 		pack.WriteString(ID);
 		pack.WriteCell(player.iWardenTimeLeft);
-		
+
 		if (cvarJBANS[Debug].BoolValue)
 			LogMessage("Checking out client %N with query %s", client, query);
 
@@ -365,21 +365,15 @@ public Action CheckTimedGuardBans(Handle timer)
 	{
 		if (!IsClientInGame(i))
 			continue;
-		
+
 		player = JailPlayer(i);
 		if (player.iTimeLeft && player.bIsGuardbanned)
-		{
-			player.iTimeLeft--;
-			if (player.iTimeLeft <= 0)
+			if (--player.iTimeLeft <= 0)
 				UnGuardBan(i, 0);
-		}
 
 		if (player.iWardenTimeLeft && player.bIsWardenBanned)
-		{
-			player.iWardenTimeLeft--;
-			if (player.iWardenTimeLeft <= 0)
+			if (--player.iWardenTimeLeft <= 0)
 				UnWardenBan(i, 0);
-		}
 	}
 	return Plugin_Continue;
 }
@@ -494,11 +488,9 @@ public Action Cmd_IsBanned(int client, int args)
 	{
 		JailPlayer player = JailPlayer(target_list[0]);
 		if (player.bIsGuardbanned)
-		{
 			if (player.iTimeLeft <= 0)
 				CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Guardbanned permanently", target_list[0]);
 			else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Guardbanned Time Left", target_list[0], player.iTimeLeft);
-		}
 		else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Not Guardbanned", target_list[0]);
 	}
 	else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Unable to Target");
@@ -697,7 +689,8 @@ public void OfflineBan(const char[] ID, int admin)
 	hTheDB.Query(CCB_OfflineGuardBan, query);
 
 	int timestamp = GetTime();
-	char ID2[32]; if (admin) GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2)); else ID2 = "Console";
+	char ID2[32]; 
+	if (admin) GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2)); else ID2 = "Console";
 
 	hTheDB.Format(query, sizeof(query), 
 			"INSERT INTO %s "
@@ -976,7 +969,7 @@ public void OfflineWardenBan(const char[] ID, int admin)
 	Call_PushString(ID);
 	Call_PushCell(admin);
 	Call_Finish(action);
-	if (action == Plugin_Handled || action == Plugin_Stop)	// Allow returning Plugin_Changed
+	if (action >= Plugin_Handled)	// Allow returning Plugin_Changed
 		return;
 
 	char query[512];
@@ -1101,7 +1094,7 @@ public int BanMenu(Menu menu, MenuAction action, int client, int select)
 
 			Menu time = new Menu(BanTimeMenu);
 			char s[32]; FormatEx(s, sizeof(s), "%t", "Select Time");
-			time.SetTitle("Select a time in minutes");
+			time.SetTitle(s);
 			time.AddItem(ID, "10");
 			time.AddItem(ID, "30");
 			time.AddItem(ID, "60");
@@ -1292,7 +1285,7 @@ public void TXN_OnSuccess(Database db, any data, int numQueries, DBResultSet[] r
 	if (bLate)
 	{
 		for (int i = MaxClients; i; --i)
-			if (IsClientInGame(i))
+			if (IsClientInGame(i) && IsClientAuthorized(i))
 				OnClientPostAdminCheck(i);
 		bLate = false;
 	}

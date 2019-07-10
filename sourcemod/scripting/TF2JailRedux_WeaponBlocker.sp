@@ -3,6 +3,7 @@
 #include <tf2jailredux>
 #include <tf2_stocks>
 #include <sdktools>
+#include <tf2wearables>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -10,7 +11,7 @@
 #define RED 				2
 #define BLU 				3
 
-#define PLUGIN_VERSION 		"1.2.0"
+#define PLUGIN_VERSION 		"1.3.0"
 
 public Plugin myinfo =
 {
@@ -28,6 +29,16 @@ ArrayList
 ConVar
 	bEnabled
 ;
+
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+	if (!LibraryExists("tf2wearables"))
+	{
+		strcopy(error, err_max, "This plugin requires the TF2Wearables API found at https://github.com/nosoop/sourcemod-tf2wearables");
+		return APLRes_Failure;
+	}
+	return APLRes_Success;
+}
 
 public void OnPluginStart()
 {
@@ -47,18 +58,6 @@ public void OnAllPluginsLoaded()
 
 public void OnMapStart()
 {
-	RunConfig();
-}
-
-public Action Cmd_RefreshList(int client, int args)
-{
-	CReplyToCommand(client, "%t %t", "Plugin Tag", "Weapon Config");
-	RunConfig();
-	return Plugin_Handled;
-}
-
-public void RunConfig()
-{
 	char cfg[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, cfg, sizeof(cfg), "configs/tf2jail/weaponblocker.cfg");
 
@@ -77,274 +76,258 @@ public void RunConfig()
 		return;
 	}
 
-	int count, check, team;
+	int count, team;
 	char index[4];
-	for (count = 0; count < 2; count++)
+	for (count = 0; count < 2; ++count)
 		hWeaponList[count].Clear();
 	count = 0;
 
 	do
 	{
-		for (;;)
+		do
 		{
-			IntToString(count, index, 4);
-			hWeaponList[team].Push( kv.GetNum(index, -1) );
-			count++;
-			check = hWeaponList[team].Length-1;
-			if (hWeaponList[team].Get(check) == -1)	// Bleh
-			{ hWeaponList[team].Erase(check); break; }
-		}
+			IntToString(count++, index, 4);
+			hWeaponList[team].Push(kv.GetNum(index, -1));
+		} while hWeaponList[team].Get(hWeaponList[team].Length-1) != -1;
+
+		hWeaponList[team].Erase(hWeaponList[team].Length-1);	// Ack
 		count = 0;
-		team++;
+		++team;
 	} while kv.GotoNextKey(false);
 
 	delete kv;
 
-	for (count = 0; count < 2; count++)
+	for (count = 0; count < 2; ++count)
 		if (hWeaponList[count].Get(0) == -1)
 			hWeaponList[count].Clear();
 }
 
-public void fwdOnPlayerPrepped(const JBPlayer Player)
+public Action Cmd_RefreshList(int client, int args)
+{
+	CReplyToCommand(client, "%t %t", "Plugin Tag", "Weapon Config");
+	OnMapStart();
+	return Plugin_Handled;
+}
+
+public void fwdOnPlayerPrepped(const JBPlayer player)
 {
 	if (!bEnabled.BoolValue)
 		return;
 
-	int team = GetClientTeam(Player.index) - 2;
+	int team = GetClientTeam(player.index) - 2;
 	int len = hWeaponList[team].Length;
 
-	if (len)
+	if (!len)
+		return;
+
+	int client = player.index, i, index, wep;
+	TFClassType class = TF2_GetPlayerClass(client);
+	char classname[64];
+	for (i = 0; i < 3; ++i)
 	{
-		int client = Player.index, i, index, u, wep, active, prepwep;
-		char classname[64];
-		for (i = 0; i < 3; i++)	// Prepare for wicked laziness and hacky coding
+		wep = TF2_GetPlayerLoadoutSlot(client, view_as< TF2LoadoutSlot >(i));
+		if (wep <= MaxClients)
+			continue;
+
+		if (hWeaponList[team].FindValue(GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex")) == -1)
+			continue;
+
+		if (TF2_IsWearable(wep))
+			TF2_RemoveWearable(client, wep);
+		else TF2_RemoveWeaponSlot(client, wep);
+
+		switch (class)
 		{
-			active = 0;
-			wep = GetPlayerWeaponSlot(client, i);
-			wep = (wep > MaxClients && IsValidEntity(wep)) ? GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") : -1;
-
-			for (u = 0; u < len; u++)
+			case TFClass_Scout:
 			{
-				prepwep = hWeaponList[team].Get(u);
-
-				if (wep == prepwep)
-				{ active = 1; break; }	// 1 is weapon
-
-				switch (prepwep)
+				switch (i)
 				{
-					case 57, 131, 133, 230, 231, 406, 444, 642:	// Secondaries
+					case 0:
 					{
-						if (IsValidEntity(FindPlayerBack(client, prepwep)) && i)
-						{ active = 2; break; }
+						classname = "tf_weapon_scattergun";
+						index = 13;
 					}
-					case 405, 608:								// Primaries
+					case 1:
 					{
-						if (IsValidEntity(FindPlayerBack(client, prepwep)) && !i)
-						{ active = 2; break; }
+						classname = "tf_weapon_pistol_scout";
+						index = 23;
+					}
+					case 2:
+					{
+						classname = "tf_weapon_bat";
+						index = 0;
 					}
 				}
 			}
-
-			if (!active)	// If no valid weapon to be spawned, try again
-				continue;
-
-			switch (TF2_GetPlayerClass(client))
+			case TFClass_Soldier:
 			{
-				case TFClass_Scout:
+				switch (i)
 				{
-					switch (i)
+					case 0:
 					{
-						case 0:
-						{
-							classname = "tf_weapon_scattergun";
-							index = 13;
-						}
-						case 1:
-						{
-							classname = "tf_weapon_pistol_scout";
-							index = 23;
-						}
-						case 2:
-						{
-							classname = "tf_weapon_bat";
-							index = 0;
-						}
+						classname = "tf_weapon_rocketlauncher";
+						index = 18;
 					}
-				}
-				case TFClass_Soldier:
-				{
-					switch (i)
+					case 1:
 					{
-						case 0:
-						{
-							classname = "tf_weapon_rocketlauncher";
-							index = 18;
-						}
-						case 1:
-						{
-							classname = "tf_weapon_shotgun_soldier";
-							index = 10;
-						}
-						case 2:
-						{
-							classname = "tf_weapon_shovel";
-							index = 6;
-						}
+						classname = "tf_weapon_shotgun_soldier";
+						index = 10;
 					}
-				}
-				case TFClass_Pyro:
-				{
-					switch (i)
+					case 2:
 					{
-						case 0:
-						{
-							classname = "tf_weapon_flamethrower";
-							index = 21;
-						}
-						case 1:
-						{
-							classname = "tf_weapon_shotgun_pyro";
-							index = 12;
-						}
-						case 2:
-						{
-							classname = "tf_weapon_fireaxe";
-							index = 2;
-						}
-					}
-				}
-				case TFClass_DemoMan:
-				{
-					switch (i)
-					{
-						case 0:
-						{
-							classname = "tf_weapon_grenadelauncher";
-							index = 19;
-						}
-						case 1:
-						{
-							classname = "tf_weapon_pipebomblauncher";
-							index = 20;
-						}
-						case 2:
-						{
-							classname = "tf_weapon_bottle";
-							index = 1;
-						}
-					}
-				}
-				case TFClass_Heavy:
-				{
-					switch (i)
-					{
-						case 0:
-						{
-							classname = "tf_weapon_minigun";
-							index = 15;
-						}
-						case 1:
-						{
-							classname = "tf_weapon_shotgun_hwg";
-							index = 11;
-						}
-						case 2:
-						{
-							classname = "tf_weapon_fists";
-							index = 5;
-						}
-					}
-				}
-				case TFClass_Engineer:
-				{
-					switch (i)
-					{
-						case 0:
-						{
-							classname = "tf_weapon_shotgun_primary";
-							index = 9;
-						}
-						case 1:
-						{
-							classname = "tf_weapon_pistol";
-							index = 22;
-						}
-						case 2:
-						{
-							classname = "tf_weapon_wrench";
-							index = 7;
-						}
-					}
-				}
-				case TFClass_Medic:
-				{
-					switch (i)
-					{
-						case 0:
-						{
-							classname = "tf_weapon_syringegun_medic";
-							index = 17;
-						}
-						case 1:
-						{
-							classname = "tf_weapon_medigun";
-							index = 29;
-						}
-						case 2:
-						{
-							classname = "tf_weapon_bonesaw";
-							index = 8;
-						}
-					}
-				}
-				case TFClass_Sniper:
-				{
-					switch (i)
-					{
-						case 0:
-						{
-							classname = "tf_weapon_sniperrifle";
-							index = 14;
-						}
-						case 1:
-						{
-							classname = "tf_weapon_smg";
-							index = 16;
-						}
-						case 2:
-						{
-							classname = "tf_weapon_club";
-							index = 3;
-						}
-					}
-				}
-				case TFClass_Spy:
-				{
-					switch (i)
-					{
-						case 0:
-						{
-							classname = "tf_weapon_revolver";
-							index = 24;
-						}
-						case 1:
-						{
-							classname = "tf_weapon_pda_spy";
-							index = 735;
-						}
-						case 2:
-						{
-							classname = "tf_weapon_knife";
-							index = 4;
-						}
+						classname = "tf_weapon_shovel";
+						index = 6;
 					}
 				}
 			}
-
-			if (active == 1)
-				TF2_RemoveWeaponSlot(client, i);
-			else if (active == 2)
-				RemovePlayerBack(client, prepwep);
+			case TFClass_Pyro:
+			{
+				switch (i)
+				{
+					case 0:
+					{
+						classname = "tf_weapon_flamethrower";
+						index = 21;
+					}
+					case 1:
+					{
+						classname = "tf_weapon_shotgun_pyro";
+						index = 12;
+					}
+					case 2:
+					{
+						classname = "tf_weapon_fireaxe";
+						index = 2;
+					}
+				}
+			}
+			case TFClass_DemoMan:
+			{
+				switch (i)
+				{
+					case 0:
+					{
+						classname = "tf_weapon_grenadelauncher";
+						index = 19;
+					}
+					case 1:
+					{
+						classname = "tf_weapon_pipebomblauncher";
+						index = 20;
+					}
+					case 2:
+					{
+						classname = "tf_weapon_bottle";
+						index = 1;
+					}
+				}
+			}
+			case TFClass_Heavy:
+			{
+				switch (i)
+				{
+					case 0:
+					{
+						classname = "tf_weapon_minigun";
+						index = 15;
+					}
+					case 1:
+					{
+						classname = "tf_weapon_shotgun_hwg";
+						index = 11;
+					}
+					case 2:
+					{
+						classname = "tf_weapon_fists";
+						index = 5;
+					}
+				}
+			}
+			case TFClass_Engineer:
+			{
+				switch (i)
+				{
+					case 0:
+					{
+						classname = "tf_weapon_shotgun_primary";
+						index = 9;
+					}
+					case 1:
+					{
+						classname = "tf_weapon_pistol";
+						index = 22;
+					}
+					case 2:
+					{
+						classname = "tf_weapon_wrench";
+						index = 7;
+					}
+				}
+			}
+			case TFClass_Medic:
+			{
+				switch (i)
+				{
+					case 0:
+					{
+						classname = "tf_weapon_syringegun_medic";
+						index = 17;
+					}
+					case 1:
+					{
+						classname = "tf_weapon_medigun";
+						index = 29;
+					}
+					case 2:
+					{
+						classname = "tf_weapon_bonesaw";
+						index = 8;
+					}
+				}
+			}
+			case TFClass_Sniper:
+			{
+				switch (i)
+				{
+					case 0:
+					{
+						classname = "tf_weapon_sniperrifle";
+						index = 14;
+					}
+					case 1:
+					{
+						classname = "tf_weapon_smg";
+						index = 16;
+					}
+					case 2:
+					{
+						classname = "tf_weapon_club";
+						index = 3;
+					}
+				}
+			}
+			case TFClass_Spy:
+			{
+				switch (i)
+				{
+					case 0:
+					{
+						classname = "tf_weapon_revolver";
+						index = 24;
+					}
+					case 1:
+					{
+						classname = "tf_weapon_pda_spy";
+						index = 735;
+					}
+					case 2:
+					{
+						classname = "tf_weapon_knife";
+						index = 4;
+					}
+				}
+			}
+		}
 
 /*	Flamethrower attributes are fucked up after Jungle Inferno, these static attribs are required whenever spawning them
 "flame_gravity"                         "0"
@@ -356,30 +339,12 @@ public void fwdOnPlayerPrepped(const JBPlayer Player)
 "flame_random_life_time_offset"         "0.1"
 */
 
-			wep = Player.SpawnWeapon(classname, index, 1, 0, (index == 21 ? "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1" : ""));
-			if (team + 2 == RED)
-			{ SetWeaponAmmo(client, wep, 0); SetWeaponClip(wep, 0); }
-		}
+		wep = player.SpawnWeapon(classname, index, 1, 0, (index == 21 ? "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1" : ""));
+		if (team + 2 == RED)
+		{ SetWeaponAmmo(client, wep, 0); SetWeaponClip(wep, 0); }
 	}
 }
 
-stock int FindPlayerBack(int client, int idx)
-{
-	int edict = MaxClients+1;
-	while ((edict = FindEntityByClassname(edict, "tf_wearabl*")) != -1)
-		if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			if (idx == GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex"))
-				return edict;	// One linerrrrrrrrrr
-	return -1;
-}
-stock void RemovePlayerBack(int client, int idx)
-{
-	int edict = MaxClients+1;
-	while ((edict = FindEntityByClassname(edict, "tf_wearabl*")) != -1)
-		if (GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity") == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			if (idx == GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex"))
-				TF2_RemoveWearable(client, edict);	// One linerrrrrrrrrr
-}
 stock void SetWeaponAmmo(const int client, const int weapon, const int ammo)
 {
 	int iOffset = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4;

@@ -24,7 +24,7 @@ float
 	vecOld[MAX_TF_PLAYERS][3],				// Freeday beam vector
 	vecFreedayPosition[3], 					// Freeday map position
 	vecWardayBlu[3], 						// Blue warday map position
-	vecWardayRed[3],							// Red warday map position
+	vecWardayRed[3],						// Red warday map position
 	flRebelOffset,							// Rebel offset
 	flFreedayOffset,						// Freeday offset
 	flWardenOffset							// Warden offset
@@ -298,14 +298,13 @@ methodmap JailFighter
 			hJailFields[this.index].SetValue("bIsRebel", i);
 		}
 	}
-#if defined _clientprefs_included
 	property bool bNoMusic
 	{
 		public get()
 		{
 			if (!AreClientCookiesCached(this.index))
 				return false;
-			char strMusic[6];
+			char strMusic[4];
 			GetClientCookie(this.index, MusicCookie, strMusic, sizeof(strMusic));
 			return (StringToInt(strMusic) == 1);
 		}
@@ -314,12 +313,11 @@ methodmap JailFighter
 			if (!AreClientCookiesCached(this.index))
 				return;
 			int value = (i ? 1 : 0);
-			char strMusic[6];
+			char strMusic[4];
 			IntToString(value, strMusic, sizeof(strMusic));
 			SetClientCookie(this.index, MusicCookie, strMusic);
 		}
 	}
-#endif
 
 	property float flSpeed
 	{
@@ -343,6 +341,18 @@ methodmap JailFighter
 		public set( const float i )
 		{
 			hJailFields[this.index].SetValue("flKillingSpree", i);
+		}
+	}
+	property float flHealTime
+	{
+		public get()
+		{
+			float i; hJailFields[this.index].GetValue("flHealTime", i);
+			return i;
+		}
+		public set( const float i )
+		{
+			hJailFields[this.index].SetValue("flHealTime", i);
 		}
 	}
 
@@ -640,13 +650,14 @@ methodmap JailFighter
 		if (!IsClientValid(client))
 			return;
 
-		int offset = FindDataMapInfo(client, "m_hMyWeapons") - 4;
 		int weapon, clip;
+		static int offset;
+		if (offset <= 0)
+			offset = FindSendPropInfo("CTFPlayer", "m_iAmmo");
 
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < 2; ++i)
 		{
-			offset += 4;
-			weapon = GetEntDataEnt2(client, offset);
+			weapon = GetPlayerWeaponSlot(client, i);
 
 			if (!IsValidEntity(weapon))
 				continue;
@@ -659,7 +670,8 @@ methodmap JailFighter
 			if (clip != -1)
 				SetEntProp(weapon, Prop_Send, "m_iClip2", 0);
 
-			SetWeaponAmmo(weapon, 0);
+			if (offset > 0)
+				SetEntData(client, GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4+offset, 0, 4, true);	// Mutually assured destruction
 		}
 
 		SetEntProp(client, Prop_Send, "m_iAmmo", 0, 4, 3);
@@ -688,6 +700,9 @@ methodmap JailFighter
 	public void WardenSet()
 	{
 		if (Call_OnWardenGet(this) != Plugin_Continue)
+			return;
+
+		if (JBGameMode_GetProperty("bWardenExists"))
 			return;
 
 		this.bIsWarden = true;	
@@ -745,6 +760,9 @@ methodmap JailFighter
 	*/
 	public void WardenUnset()
 	{
+		if (!IsClientValid(this.index))
+			return;
+
 		if (!this.bIsWarden)
 			return;
 
@@ -790,7 +808,7 @@ methodmap JailFighter
 		int client = this.index;
 		TF2_RemovePlayerDisguise(client);
 		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearabl*")) != -1)
+		while ((ent = FindEntityByClassname(ent, "tf_wearable*")) != -1)
 		{
 			if (GetOwner(ent) == client)
 			{
@@ -877,16 +895,17 @@ methodmap JailFighter
 	 *
 	 *	@param location 	Location to teleport the client.
 	 *
-	 *	@noreturn
+	 *	@return 			True if the player was teleported, false otherwise
 	*/
-	public void TeleportToPosition( const int location )
+	public bool TeleportToPosition( const int location )
 	{
 		switch (location)
 		{
-			case 1:if (JBGameMode_GetProperty("bFreedayTeleportSet")) TeleportEntity(this.index, vecFreedayPosition, NULL_VECTOR, NULL_VECTOR);
-			case 2:if (JBGameMode_GetProperty("bWardayTeleportSetRed")) TeleportEntity(this.index, vecWardayRed, NULL_VECTOR, NULL_VECTOR);
-			case 3:if (JBGameMode_GetProperty("bWardayTeleportSetBlue")) TeleportEntity(this.index, vecWardayBlu, NULL_VECTOR, NULL_VECTOR);
+			case 1:if (JBGameMode_GetProperty("bFreedayTeleportSet")) { TeleportEntity(this.index, vecFreedayPosition, NULL_VECTOR, NULL_VECTOR); return true; }
+			case 2:if (JBGameMode_GetProperty("bWardayTeleportSetRed")) { TeleportEntity(this.index, vecWardayRed, NULL_VECTOR, NULL_VECTOR); return true; }
+			case 3:if (JBGameMode_GetProperty("bWardayTeleportSetBlue")) { TeleportEntity(this.index, vecWardayBlu, NULL_VECTOR, NULL_VECTOR); return true; }
 		}
+		return false;
 	}
 	/**
 	 *	List the last request menu to the player.
@@ -899,11 +918,9 @@ methodmap JailFighter
 			return;
 
 		Menu menu = new Menu(ListLRsMenu);
-		menu.SetTitle("Select a Last Request");
-		//menu.AddItem("-1", "Random LR");	// Moved to handler
-		AddLRToMenu(menu);
-		menu.ExitButton = true;
-		menu.Display(this.index, -1);
+		menu.AddItem("-1", "Random LR");
+		AddLRsToMenu(menu);
+		menu.Display(this.index, 0);
 
 		Call_OnLRGiven(this);
 		int time = cvarTF2Jail[LRTimer].IntValue;
@@ -920,7 +937,7 @@ methodmap JailFighter
 		if (IsVoteInProgress())
 			return;
 
-		view_as< Menu >(JBGameMode_GetProperty("hWardenMenu")).Display(this.index, -1);		// Absolutely disgusting
+		view_as< Menu >(JBGameMode_GetProperty("hWardenMenu")).Display(this.index, 0);		// Absolutely disgusting
 	}
 	/**
 	 *	Allow a player to climb walls upon hitting them.
@@ -948,10 +965,10 @@ methodmap JailFighter
 		// Check for colliding entities
 		TR_TraceRayFilter(vecClientEyePos, vecClientEyeAng, MASK_PLAYERSOLID, RayType_Infinite, TraceRayDontHitSelf, client);
 
-		if (!TR_DidHit(null))
+		if (!TR_DidHit())
 			return;
 
-		int TRIndex = TR_GetEntityIndex(null);
+		int TRIndex = TR_GetEntityIndex();
 		GetEdictClassname(TRIndex, classname, sizeof(classname));
 		if (!StrEqual(classname, "worldspawn"))
 			return;
@@ -1085,12 +1102,12 @@ methodmap JailFighter
 		Menu menu = new Menu(InviteReceiveMenu);
 		menu.SetTitle("%t", "Menu Title Invited");
 		char s[16];
-		
+
 		FormatEx(s, sizeof(s), "%t", "Join");
 		menu.AddItem("0", s);
 		FormatEx(s, sizeof(s), "%t", "Don't Join");
 		menu.AddItem("1", s);
 
-		menu.Display(other.index, 10);
+		menu.Display(other.index, 15);
 	}
 };

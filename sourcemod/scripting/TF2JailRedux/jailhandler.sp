@@ -24,8 +24,8 @@ enum /** LRs **/
 	SWA = 10,
 	Warday = 11,
 	ClassWars = 12,
-	// VSH = 13			// DO NOT SET ANY NEW LRS UNDER THESE NUMBERS UNLESS YOU DISABLE OR ADJUST THE SUB PLUGIN CONVARS!
-	// PH = 14,			// THEY WILL OVERLAP!
+	// VSH = 13,
+	// PH = 14,
 };
 /**
  *	When adding a new lr, increase the LRMAX to the proper/latest enum value
@@ -33,28 +33,14 @@ enum /** LRs **/
  *	Having breaks or skips within the enum will result in nothing happening the following round if that number is selected
  *	gamemode.hPlugins.Length increases by 1 every time you successfully 'TF2JailRedux_RegisterPlugin()' with a sub-plugin
  *	and decreases by 1 everytime you successfully 'TF2JailRedux_UnRegisterPlugin()'
- *	Sub-Plugins are completely manageable as their own plugin, with no need to touch this one
+ *	Sub-Plugins are completely manageable on their own, with no need to touch this one
 */
-#define LRMAX		ClassWars + (gamemode.iLRs)
+#define LRMAX		(ClassWars + gamemode.hPlugins.Length)
 
 #include "TF2JailRedux/lastrequests.sp"
 
 /** 
- *	SINCE THE PYRO UPDATE, FORCING PLAYERS AS THE SNIPER CLASS CAN AND WILL CAUSE SERVER CRASHES
-*/
-// Not anymore... https://forums.alliedmods.net/showthread.php?t=309821
-//int arrClass[8] = { 1, 3, 4, 5, 6, 7, 8, 9 };
-
-/**
- *	ArrayList of LR usage
- *	You can determine the maximum picks per round under AddLRToMenu()
- *	Size is automatically managed
-*/
-ArrayList arrLRS;
-// int arrLRS[LRMAX + 1] = {	/* Plus 1 to counterbalance the 0 in the enum*/ 	};
-
-/** 
- *	Add your LR name to the array, referred back to in AddLRToMenu()
+ *	Add your LR name to the array, referred back to in AddLRsToMenu()
 */
 char strLRNames[][] = {
 	"Suicide",
@@ -70,8 +56,7 @@ char strLRNames[][] = {
 	"Stealy Wheely Automobiley",
 	"Warday",
 	"Class Wars"
-	// "",	// VSH
-	// ""	// PH
+	// "",	// VSH/PH
 	// Be aware of sub-plugin indices
 };
 
@@ -86,10 +71,21 @@ public void ManageDownloads()
 	PrecacheSound("vo/announcer_ends_30sec.mp3", true);
 	PrecacheSound("vo/announcer_ends_10sec.mp3", true);
 
+	PrecacheSound(")weapons/bumper_car_speed_boost_start.wav", true);
+	PrecacheSound(")weapons/bumper_car_speed_boost_stop.wav", true);
+	PrecacheSound(")weapons/bumper_car_jump.wav", true);
+	PrecacheSound(")weapons/bumper_car_jump_land.wav", true);
+
 	char s[PLATFORM_MAX_PATH];
-	for (int i = 1; i <= 5; i++)
+	for (int i = 1; i <= 8; i++)
 	{
-		Format(s, PLATFORM_MAX_PATH, "vo/announcer_ends_%isec.mp3", s);
+		if (i <= 5)
+		{
+			Format(s, PLATFORM_MAX_PATH, "vo/announcer_ends_%isec.mp3", i);
+			PrecacheSound(s, true);
+		}
+
+		Format(s, PLATFORM_MAX_PATH, "weapons/bumper_car_hit%i.wav", i);
 		PrecacheSound(s, true);
 	}
 
@@ -118,7 +114,6 @@ public void ManageHUDText()
 	switch (gamemode.iLRType)
 	{
 		case -1: {	}
-		//case FreedaySelf, FreedayOther:Format(strHudName, sizeof(strHudName), "");	// Should be blank
 		case Custom:		strcopy(strHudName, sizeof(strHudName), strCustomLR);
 		case FreedayAll:	strcopy(strHudName, sizeof(strHudName), "Freeday For All");
 		case GuardMelee:	strcopy(strHudName, sizeof(strHudName), "Guards Melee Only");
@@ -236,14 +231,11 @@ public void ManageRoundStart(Event event)
 		}
 		case ClassWars:
 		{
-			int iClassRED = GetRandomInt(1, 9);
-			int iClassBLU = GetRandomInt(1, 9);
+			TFClassType iClassRED = view_as< TFClassType >(GetRandomInt(1, 9));
+			TFClassType iClassBLU = view_as< TFClassType >(GetRandomInt(1, 9));
 			for (int i = MaxClients; i; --i)
 				if (IsClientInGame(i) && IsPlayerAlive(i))
-					if (GetClientTeam(i) == RED)
-						TF2_SetPlayerClass(i, view_as< TFClassType >(iClassRED));
-					else TF2_SetPlayerClass(i, view_as< TFClassType >(iClassBLU));
-						// Last else statement in one-liners reflects the last if statement. Learned that in C programming, heh
+					TF2_SetPlayerClass(i, GetClientTeam(i) == RED ? iClassRED : iClassBLU);
 
 			gamemode.bIsWarday = true;
 			gamemode.bIsWardenLocked = true;
@@ -303,6 +295,7 @@ public void ManageTimeLeft()
 	switch (gamemode.iLRType)
 	{
 		case -1:{	}
+		case SWA:time = 180;
 	}
 	Call_OnTimeLeft(time);
 
@@ -432,9 +425,9 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 }*/
 
 /** 
- *	Think: Code called every 0.1 seconds per client, aka poor man's SDKHook_Think
+ *	Think: Code called every 0.1 seconds per client
  *	If lr requires the same think properties from both teams, set it under both team thinks
- *	Thinks overlap on WardenThink and BlueThink so be wary of this
+ *	WardenThink and BlueThink can overlap
 */
 /**
  *	Red Team think
@@ -471,7 +464,7 @@ public void ManageBlueThink(const JailFighter player)
 
 	if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 1)
 		TF2_AddCondition(player.index, TFCond_Buffed, 0.2);
-	
+
 	Call_OnBlueThink(player);
 }
 /**
@@ -696,13 +689,13 @@ public Action ManageMusic(char song[PLATFORM_MAX_PATH], float & time)
 	{
 		/* case example:
 		{
-			song = "SomeBadassSong.mp3";
+			strcopy(song, sizeof(song), "jailbreak/SomeBadassSong.mp3");
 			time = 9001.0;
 			return Plugin_Continue;
 		}*/
 		default:return Call_OnPlayMusic(song, time);	// Defaults to Handled
 	}
-#if SOURCEMOD_V_MINOR == 9
+#if SOURCEMOD1_9
 	return Plugin_Handled;	// Dammit dvander
 #endif
 }
@@ -735,14 +728,24 @@ public Action ManageTimeEnd()
 					AcceptEntityInput(i, "SetTeam");
 					AcceptEntityInput(i, "RoundWin");
 				}
-				else ServerCommand("sm_slay @all");
+				else
+				{
+					for (i = MaxClients; i; --i)
+					{
+						if (!IsClientInGame(i) || !IsPlayerAlive(i))
+							continue;
+
+						TF2_RemoveCondition(i, TFCond_HalloweenKart);
+						ForcePlayerSuicide(i);
+					}
+				}
 			}
 
 			return Plugin_Handled;
 		}
 		default:return Call_OnTimeEnd();
 	}
-#if SOURCEMOD_V_MINOR == 9
+#if SOURCEMOD1_9
 	return Plugin_Continue;
 #endif
 }
@@ -765,40 +768,39 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
  	return Call_OnCalcAttack(base, weapon, weaponname, result);
 }
 /**
- *	Add lr to the LR menu obviously
+ *	Add lrs to the LR menu obviously
 */
-public void AddLRToMenu(Menu &menu)
+public void AddLRsToMenu(Menu menu)
 {
-	char strName[32], strID[4], strValue[16];
-	int i, max, value, disabled, len = LRMAX, def = cvarTF2Jail[LRDefault].IntValue;
+	int i, max, value, flags, def = cvarTF2Jail[LRDefault].IntValue, len = LRMAX;
+	char name[64], strID[4], strValue[16];
 
-	menu.AddItem("-1", "Random LR");
 	for (i = 0; i <= len; i++)
 	{
 		max = def;
-		disabled = ITEMDRAW_DEFAULT;
+		flags = ITEMDRAW_DEFAULT;
 		strValue[0] = '\0';
-		strName[0] = '\0';
-		// if (i == Warday)	// If you want a certain last request to have a different max, do something like this
+		name[0] = '\0';
+
+		// if (i == Warday)	// If you want to change an LR's max picks, do something like this
 			// max = 3;
-		Call_OnMenuAdd(i, max, strName);
+
+		Call_OnMenuAdd(i, max, name);
 
 		if (max)
 		{
-			value = arrLRS.Get(i);
+			value = gamemode.hLRS.Get(i);
 			Format(strValue, sizeof(strValue), " (%i/%i)", value, max);
 			if (value >= max)
-				disabled = ITEMDRAW_DISABLED;
+				flags = ITEMDRAW_DISABLED;
 		}
 
 		if (i < sizeof(strLRNames))	// If not a sub-plugin
-			Format(strName, sizeof(strName), "%s%s", strName, strLRNames[i]);
-		Format(strName, sizeof(strName), "%s%s", strName, strValue);	// Forward pre-formats strName
+			Format(name, sizeof(name), "%s%s", name, strLRNames[i]);	// TODO: dynamically avoid this issue
+		Format(name, sizeof(name), "%s%s", name, strValue);	// Forward pre-formats name
 
 		IntToString(i, strID, sizeof(strID));
-		// menu.AddItem(strID, strName, (max && value >= max) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT)	// Ternary operators are just variable declarations at
-																										// compile time, so stack is wasted in for loops
-		menu.AddItem(strID, strName, disabled); // Disables the LR selection if the max is too high
+		menu.AddItem(strID, name, flags); // Disables the LR selection if the max is too high
 	}
 }
 /**
@@ -839,13 +841,13 @@ public void AddLRToPanel(Menu &panel)
 */
 public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 {
-	if (!IsClientValid(client) || !IsPlayerAlive(client))
-		return;
-
 	switch (action)
 	{
 		case MenuAction_Select:
 		{
+			if (!IsPlayerAlive(client))
+				return;
+
 			JailFighter base;
 			char strIndex[4]; menu.GetItem(select, strIndex, sizeof(strIndex));
 			if (cvarTF2Jail[RemoveFreedayOnLR].BoolValue)
@@ -866,33 +868,36 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			gamemode.bIsLRInUse = true;
 			int request = StringToInt(strIndex);
 
-			if (Call_OnLRPicked(base, request, arrLRS) != Plugin_Continue)
+			if (Call_OnLRPicked(base, request, gamemode.hLRS) != Plugin_Continue)
 				return;
 	
 			int value;
 			if (request != -1)	// If the selection isn't random
-				value = arrLRS.Get(request);
+				value = gamemode.hLRS.Get(request);
 
 			switch (request)
 			{
 				case -1:	// Random
 				{
 					CPrintToChatAll("%t %t", "Plugin Tag", "Random Select", client);
-					int randlr = GetRandomInt(2, LRMAX);
+					int randlr = GetRandomInt(2, LRMAX);		// TODO: Make this not pick LRs that have reached their maximum
 					gamemode.iLRPresetType = randlr;
-					arrLRS.Set( randlr, arrLRS.Get(randlr)+1 );
+					value = gamemode.hLRS.Get(randlr);
+
 					if (randlr == FreedaySelf)
 						base.bIsQueuedFreeday = true;
 					else if (randlr == FreedayOther)
 						for (int i = 0; i < 3; i++)
 							JailFighter(GetRandomPlayer(RED)).bIsQueuedFreeday = true;
+
+					gamemode.hLRS.Set( randlr, value+1 );
 					return;
 				}
 				case Suicide:
 				{
 					CPrintToChatAll("%t %t", "Plugin Tag", "Suicide Select", client);
 					SetPawnTimer(KillThatBitch, GetRandomFloat(0.5, 7.0), client);	// Meme lol
-					arrLRS.Set( request, value+1 );
+					gamemode.hLRS.Set( request, value+1 );
 					return;
 				}
 				case Custom:
@@ -922,7 +927,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			}
 
 			gamemode.iLRPresetType = request;
-			arrLRS.Set( request, value+1 );
+			gamemode.hLRS.Set( request, value+1 );
 		}
 		case MenuAction_End:delete menu;
 	}
@@ -954,9 +959,10 @@ public void ResetVariables(const JailFighter base, const bool compl)
 	base.bInJump = false;
 	base.bUnableToTeleport = false;
 	base.bIsRebel = false;
+	base.bIsQueuedFreeday = false;
 	base.flSpeed = 0.0;
 	base.flKillingSpree = 0.0;
-	base.bIsQueuedFreeday = false;
+	base.flHealTime = 0.0;
 	if (compl)
 	{
 		base.bIsFreeday = false;
@@ -990,12 +996,12 @@ public void ManageEntityCreated(int ent, const char[] classname)
 		SDKHook(ent, SDKHook_Spawn, OnBuildingSpawn);
 }
 /**
- *	Unique to the player Custom lr, formats the public char strCustomLR
+ *	Unique to the player Custom lr, formats the global char strCustomLR
 */
 public void OnClientSayCommand_Post(int client, const char[] sCommand, const char[] cArgs)
 {
 	JailFighter base = JailFighter(client);
-	if (base.iCustom > 0)
+	if (base.iCustom > 0 && !IsChatTrigger())
 	{
 		strcopy(strCustomLR, sizeof(strCustomLR), cArgs);
 		CPrintToChat(client, "%t %t", "Plugin Tag", "Custom Activate", strCustomLR);

@@ -38,7 +38,7 @@ void InitializeForwards()
 	hPrivFwds[OnPlayerJarated] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	hPrivFwds[OnUberDeployed] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	hPrivFwds[OnPlayerSpawned]			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
-	hPrivFwds[OnMenuAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_CellByRef, Param_String);
+	hPrivFwds[OnMenuAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_CellByRef, Param_String, Param_CellByRef);
 	hPrivFwds[OnPanelAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_String);
 	hPrivFwds[OnTimeLeft] 				= CreateForward(ET_Ignore, Param_CellByRef);
 	hPrivFwds[OnPlayerPrepped] 			= CreateForward(ET_Ignore, Param_Cell);
@@ -71,6 +71,7 @@ void InitializeForwards()
 	hPrivFwds[OnWardenRemoved] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnShouldAutobalance] 		= CreateForward(ET_Hook);
 	hPrivFwds[OnShouldAutobalancePlayer]= CreateForward(ET_Hook,   Param_Cell);
+	hPrivFwds[OnSetWardenLock] 			= CreateForward(ET_Hook,   Param_Cell);
 	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
 
 	hLegacyFwds[Old_OnWardenGiven] 			= CreateGlobalForward("TF2Jail_OnWardenGiven", ET_Ignore, Param_Cell);
@@ -220,12 +221,12 @@ void Call_OnPlayerSpawned(const JailFighter player, Event event)
 	Call_PushCell(event);
 	Call_Finish();
 }
-void Call_OnMenuAdd(const int index, int &max, char name[32])
+void Call_OnMenuAdd(const int index, int &max, char name[64])
 {
 	Call_StartForward(hPrivFwds[OnMenuAdd]);
 	Call_PushCell(index);
 	Call_PushCellRef(max);
-	Call_PushStringEx(name, 32, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+	Call_PushStringEx(name, 64, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_Finish();
 }
 void Call_OnPanelAdd(const int index, char name[64])
@@ -293,7 +294,7 @@ Action Call_OnPlayMusic(char song[PLATFORM_MAX_PATH], float &time)
 {
 	Action action = Plugin_Handled;	// Start as handled because most LRs won't have a background song... probably
 	Call_StartForward(hPrivFwds[OnPlayMusic]);
-	Call_PushStringEx(song, PLATFORM_MAX_PATH, 0, SM_PARAM_COPYBACK);
+	Call_PushStringEx(song, PLATFORM_MAX_PATH, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_PushFloatRef(time);
 	Call_Finish(action);
 	return action;
@@ -500,6 +501,14 @@ Action Call_OnShouldAutobalancePlayer(const JailFighter player)
 	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnShouldAutobalancePlayer]);
 	Call_PushCell(player);
+	Call_Finish(action);
+	return action;
+}
+Action Call_OnSetWardenLock(const bool statusto)
+{
+	Action action = Plugin_Continue;
+	Call_StartForward(hPrivFwds[OnSetWardenLock]);
+	Call_PushCell(statusto);
 	Call_Finish(action);
 	return action;
 }

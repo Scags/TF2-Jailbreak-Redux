@@ -1173,4 +1173,10 @@
 		"pl"		"Zostałeś wyciszony."
 		"pt" 		"Você foi emudecido."
 	}
+
+	"Medic Heal Rebel"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{1} has been healing a rebel and has lose their freeday!"
+	}
 }
