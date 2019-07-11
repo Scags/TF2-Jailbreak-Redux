@@ -1177,6 +1177,6 @@
 	"Medic Heal Rebel"
 	{
 		"#format" 	"{1:N}"
-		"en" 		"{1} has been healing a rebel and has lose their freeday!"
+		"en" 		"{1} has been healing a rebel and has lost their freeday!"
 	}
 }
