@@ -359,7 +359,7 @@ public Action Command_GiveLastRequest(int client, int args)
 	int target_list[MAXPLAYERS];
 	bool tn_is_ml;
 
-	int target_count = ProcessTargetString(targetname, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+	int target_count = ProcessTargetString(targetname, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE|COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 	if (target_count != 1)
 		ReplyToTargetError(client, target_count);
@@ -654,7 +654,7 @@ public Action AdminForceWarden(int client, int args)
 		int target_list[MAXPLAYERS];
 		bool tn_is_ml;
 
-		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE|COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 		if (target_count != 1)
 			ReplyToTargetError(client, target_count);
@@ -701,7 +701,7 @@ public Action AdminForceLR(int client, int args)
 		int target_list[MAXPLAYERS];
 		bool tn_is_ml;
 
-		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE|COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 		if (target_count != 1)
 			ReplyToTargetError(client, target_count);
@@ -795,7 +795,7 @@ public Action AdminGiveFreeday(int client, int args)
 		int target_list[MAXPLAYERS];
 		bool tn_is_ml;
 
-		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, 0, clientName, sizeof(clientName), tn_is_ml);
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 		if (target_count != 1)
 			ReplyToTargetError(client, target_count);
@@ -871,7 +871,7 @@ public Action AdminRemoveFreeday(int client, int args)
 		int target_list[MAXPLAYERS];
 		bool tn_is_ml;
 
-		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE|COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 		if (target_count != 1)
 			ReplyToTargetError(client, target_count);
@@ -1335,7 +1335,7 @@ public Action Command_WardenInvite(int client, int args)
 	int target_list[MAXPLAYERS];
 	bool tn_is_ml;
 
-	int target_count = ProcessTargetString(targetname, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+	int target_count = ProcessTargetString(targetname, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE|COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 	if (target_count != 1)
 		ReplyToTargetError(client, target_count);
@@ -1673,7 +1673,7 @@ public Action BaseProp(int client, int args)
 	int target_list[MAXPLAYERS];
 	bool tn_is_ml;
 
-	int target_count = ProcessTargetString(arg1, client, target_list, MAXPLAYERS, 0, clientName, sizeof(clientName), tn_is_ml);
+	int target_count = ProcessTargetString(arg1, client, target_list, MAXPLAYERS, COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 	if (target_count != 1)
 		ReplyToTargetError(client, target_count);
