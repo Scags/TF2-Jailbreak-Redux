@@ -115,7 +115,7 @@ public void fwdOnPanelAdd(const int index, char name[64])
 	strcopy(name, sizeof(name), "-- - ");
 }
 
-public void fwdOnMenuAdd(const int index, int &max, char strName[32])
+public void fwdOnMenuAdd(const int index, int &max, char strName[64])
 {
 	if (index != TF2JailRedux_LRIndex())
 		return;
