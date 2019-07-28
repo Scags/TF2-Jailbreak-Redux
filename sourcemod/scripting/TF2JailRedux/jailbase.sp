@@ -1012,7 +1012,7 @@ methodmap JailFighter
 	*/
 	public void MarkRebel()
 	{
-		if (this.bIsRebel)
+		if (this.bIsRebel || !IsPlayerAlive(this.index) || GetClientTeam(this.index) != RED)
 			return;
 
 		if (!cvarTF2Jail[Rebellers].BoolValue)
