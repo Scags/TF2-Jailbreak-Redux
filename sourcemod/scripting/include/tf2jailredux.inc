@@ -18,7 +18,7 @@ enum eDoorsMode
 };
 
 enum
-{	// gamemode.iRoundStates
+{	// JBGameMode.iRoundStates
 	StateDisabled = -1,
 	StateStarting = 0,
 	StateRunning = 1,
@@ -34,7 +34,9 @@ enum
 
 stock char strDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear", "prop_door_rotating" };
 
-
+/**
+ *	@section Player methodmap
+*/
 methodmap JBPlayer
 {
 	/** [ C O N S T R U C T O R S ]
@@ -59,6 +61,18 @@ methodmap JBPlayer
 	public static JBPlayer OfUserId( const int userid )
 	{
 		return view_as< JBPlayer >(GetClientOfUserId(userid));
+	}
+
+	/**
+	 *	Constructs an instance of the JBPLayer methodmap directly from a client's serial.
+	 *
+	 *	@param serial 		Serial of the client.
+	 *
+	 *	@return 			A player instance of the JBPlayer methodmap.
+	*/
+	public static JBPlayer OfSerial( const int serial )
+	{
+		return view_as< JBPlayer >(GetClientFromSerial(serial));
 	}
 
 	/**
@@ -98,7 +112,6 @@ methodmap JBPlayer
 	property StringMap hMap
 	{
 		public native get();
-
 	}
 
 	/**
@@ -126,8 +139,8 @@ methodmap JBPlayer
 	 *	Sets the property of the internal JB methodmap.
 	 *	NOTE: You can use this to create new properties which GetValue can access!
 	 *
-	 *	@param key		Name of the property you want to override data from (works like StringMap).
-	 *	@param value			Data you want the property to hold.
+	 *	@param key			Name of the property you want to override data from (works like StringMap).
+	 *	@param value		Data you want the property to hold.
 	 *
 	 *	@noreturn
 	*/
@@ -279,9 +292,9 @@ methodmap JBPlayer
 	 *
 	 *	@param location 	Location to teleport the client.
 	 *
-	 *	@noreturn
+	 *	@return 			True on success, false otherwise.
 	*/
-	public native void TeleportToPosition( const int location );
+	public native bool TeleportToPosition( const int location );
 
 	/**
 	 *	List the last request menu to the player.
@@ -401,7 +414,7 @@ methodmap JBPlayer
 	 *	@param weapon 		Weapon the client is using to attack.
 	 *	@param upwardvel	Velocity to send the client (in hammer units).
 	 *	@param health 		Health to take from the client.
-	 *	@param attackdelay 	Length in seconds to delay the player in attacking again.
+	 *	@param attackdelay 	Delay the player's next attack.
 	 *
 	 *	@noreturn
 	*/
@@ -428,8 +441,15 @@ methodmap JBPlayer
 	*/
 	public native void ClearRebel();
 };
+/**
+ *	@endsection
+*/
 
 enum JBGameMode{}
+
+/**
+ *	@section non-methodmap Gamemode natives
+*/
 
 /**
  *	Retrieve an instance of the JailGameMode StringMap.
@@ -450,9 +470,9 @@ native int JBGameMode_Playing();
 /**
  *	Find and Initialize a random player as the warden.
  *
- *	@noreturn
+ *	@return 				JBPlayer instance of the new Warden if they were valid.
 */
-native void JBGameMode_FindRandomWarden();
+native JBPlayer JBGameMode_FindRandomWarden();
 
 /**
  *	Handle the cell doors.
@@ -529,11 +549,23 @@ native void JBGameMode_ResetVotes();
  *	Get the position of a certain teleportation location.
  *
  *	@param location  		Location index to get.
- *	@param array 			Array to copy to.
+ *	@param array 			Vector to copy to.
  *
  *	@return 				True if the location property is valid.
 */
 native bool JBGameMode_GetTelePosition(const int location, float[] array);
+
+/**
+ *	Toggle the Warden's lock status.
+ *	@note 					This is recommended rather than setting the raw property due
+ *							to a forward plugins can operate on.
+ *
+ *	@param status  			Location index to get.
+ *	@param unsetwarden 		If true, unset the current warden.
+ *
+ *	@return 				True on success, false otherwise.
+*/
+native bool JBGameMode_SetWardenLock(const bool status, bool unsetwarden = false);
 
 /**
  *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
@@ -554,6 +586,26 @@ native any JBGameMode_GetProperty(const char prop_name[64]);
  *	@noreturn
 */
 native void JBGameMode_SetProperty(const char prop_name[64], any value);
+
+/**
+ *	Autobalance the teams in accordance with the cvars.
+ *
+ *	@param announce 		Tell the player that they've been autobalanced.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_AutobalanceTeams(bool announce = true);
+
+/**
+ *	Autobalance the teams as evenly as possible.
+ *	@note 					Guardbanned players are handled automatically.
+ *
+ *	@param announce			Tell the player that they've been autobalanced.
+ *	@param followimmun 		If true, follow autobalance immunity rules.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_EvenTeams(bool announce = true, bool followimmun = true);
 
 /** Properties
  *	int iRoundState
@@ -579,6 +631,7 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	bool bAdminLockedLR
  *	bool bDisableCriticals
  *	bool bIsFreedayRound
+ *	bool bIsLRRound
  *	bool bWardenExists
  *	bool bAvoidTeamKills
  *	bool bIsWarday
@@ -587,7 +640,16 @@ native void JBGameMode_SetProperty(const char prop_name[64], any value);
  *	bool bMedicDisabled
  *	bool bDisableMuting
  *	bool bDisableKillSpree
+ *	bool bIsLRRound
  *	float flMusicTime
+*/
+
+/**
+ *	@endsection
+*/
+
+/**
+ *	@section Gamemode methodmap
 */
 
 methodmap JBGameMode < StringMap
@@ -613,9 +675,9 @@ methodmap JBGameMode < StringMap
 	/**
 	 *	Get a property value from the JailGameMode internal methodmap (works like StringMap).
 	 *
-	 *	@param prop_name 		Property key to call from.
+	 *	@param prop_name 	Property key to call from.
 	 *
-	 *	@return 				Value received from called key.
+	 *	@return 			Value received from called key.
 	*/
 	public bool SetProperty( const char prop_name[64], any i )
 	{
@@ -625,9 +687,9 @@ methodmap JBGameMode < StringMap
 	/**
 	 *	Get a property value from the JailGameMode StringMap.
 	 *
-	 *	@param prop_name 		Property key to call from.
+	 *	@param prop_name 	Property key to call from.
 	 *
-	 *	@return 				Value received from called key.
+	 *	@return 			Value received from called key.
 	*/
 	public any GetProperty( const char prop_name[64] )
 	{
@@ -1044,6 +1106,18 @@ methodmap JBGameMode < StringMap
 			this.SetValue("bIgnoreRebels", i);
 		}
 	}
+	property bool bIsLRRound
+	{
+		public get()
+		{
+			bool i; this.GetValue("bIsLRRound", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bIsLRRound", i);
+		}
+	}
 
 	property float flMusicTime
 	{
@@ -1061,17 +1135,17 @@ methodmap JBGameMode < StringMap
 	/**
 	 *	Find and Initialize a random player as the warden.
 	 *
-	 *	@noreturn
+	 *	@return 				JBPlayer instance of the new Warden if they were valid.
 	*/
-	public void FindRandomWarden()
+	public JBPlayer FindRandomWarden()
 	{
-		JBGameMode_FindRandomWarden();
+		return JBGameMode_FindRandomWarden();
 	}
 
 	/**
 	 *	Handle the cell doors.
 	 *
-	 *	@param status 			Type of cell door usage found in the eDoorsMode enum.
+	 *	@param status 		Type of cell door usage found in the eDoorsMode enum.
 	 *
 	 *	@noreturn
 	*/
@@ -1083,7 +1157,7 @@ methodmap JBGameMode < StringMap
 	 /**
 	 *	Find the current warden if one exists.
 	 *
-	 *	@return 				The current warden.
+	 *	@return 			JBPlayer instance of the current warden.
 	*/
 	property JBPlayer Warden
 	{
@@ -1096,8 +1170,8 @@ methodmap JBGameMode < StringMap
 	/** 
 	 *	Find and terminate the current warden.
 	 *
-	 *	@param prevent 			Prevent the player from becoming warden again.
-	 * 	@param announce 		Display to all players that the warden was fired.
+	 *	@param prevent 		Prevent the player from becoming warden again.
+	 * 	@param announce 	Display to all players that the warden was fired.
 	 *
 	 *	@noreturn
 	*/
@@ -1119,7 +1193,7 @@ methodmap JBGameMode < StringMap
 	/**
 	 *	Enable/Disable the medic room in a map
 	 *
-	 *	@param status 			True to enable it, False otherwise
+	 *	@param status 		True to enable it, False otherwise
 	 *
 	 *	@noreturn
 	*/
@@ -1131,7 +1205,7 @@ methodmap JBGameMode < StringMap
 	/**
 	 *	Toggle team filtering on the medic room
 	 *
-	 *	@param team 			Team to toggle
+	 *	@param team 		Team to toggle
 	 *
 	 *	@noreturn
 	*/
@@ -1143,10 +1217,10 @@ methodmap JBGameMode < StringMap
 	/**
 	 *	Trigger muting on clients.
 	 *
-	 *	@param player 			JBPlayer instance of player to toggle muting for.
-	 *	@param forcedead 		Force the client to be treated as dead, even if they aren't.
-	 *	@param teamchange 		Force team-based muting onto the client, even if they aren't
-	 *							on that team.
+	 *	@param player 		JBPlayer instance of player to toggle muting for.
+	 *	@param forcedead 	Force the client to be treated as dead, even if they aren't.
+	 *	@param teamchange 	Force team-based muting onto the client, even if they aren't
+	 *						on that team.
 	 *
 	 *	@noreturn
 	*/
@@ -1168,17 +1242,50 @@ methodmap JBGameMode < StringMap
 	/**
 	 *	Get the position of a certain teleportation location.
 	 *
-	 *	@param location  		Location index to get.
-	 *	@param array 			Array to copy to.
+	 *	@param location  	Location index to get.
+	 *	@param array 		Vector to copy to.
 	 *
-	 *	@return 				True if the location property is valid.
+	 *	@return 			True if the location property is valid.
 	*/
 	public bool GetTelePosition( const int location, float[] array )
 	{
 		return JBGameMode_GetTelePosition(location, array);
 	}
+
+	/**
+	 *	Autobalance the teams in accordance with the cvars.
+	 *
+	 *	@param announce 		Tell the player that they've been autobalanced.
+	 *
+	 *	@noreturn
+	*/
+	public void AutobalanceTeams(bool announce = true)
+	{
+		JBGameMode_AutobalanceTeams(announce);
+	}
+
+	/**
+	 *	Autobalance the teams as evenly as possible.
+	 *	@note 					Guardbanned players are handled automatically.
+	 *
+	 *	@param announce			Tell the player that they've been autobalanced.
+	 *	@param followimmun 		If true, follow autobalance immunity rules.
+	 *
+	 *	@noreturn
+	*/
+	public void EvenTeams(bool announce = true, bool followimmun = true)
+	{
+		JBGameMode_EvenTeams(announce, followimmun);
+	}
 };
 
+/**
+ *	@endsection
+*/
+
+/**
+ *	@section Plugin-oriented natives
+*/
 
 /**
  *	Registers a sub-plugin to be added to the last request handle.
@@ -1234,6 +1341,13 @@ native bool TF2JailRedux_UnRegisterLR(int idx);
 */
 native int TF2JailRedux_LRIndex();
 
+/**
+ *	@endsection
+*/
+
+/**
+ *	@section Forwards and Forward-oriented natives
+*/
 
 enum	// JB Hook Types
 {
@@ -1288,6 +1402,7 @@ enum	// JB Hook Types
 	OnWardenRemoved,
 	OnShouldAutobalance,
 	OnShouldAutobalancePlayer,
+	OnSetWardenLock,
 	OnPlayMusic
 };
 
@@ -1339,7 +1454,7 @@ typeset JBHookCB
 	function void ();
 
 	//	OnMenuAdd
-	function void (const int index, int &max, char name[32]);
+	function void (const int index, int &max, char name[64]);
 
 	//	OnPanelAdd
 	function void (const int index, char name[64]);
@@ -1356,8 +1471,8 @@ typeset JBHookCB
 	// 	OnHudShow
 	function void (char hud[128]);
 
-	// 	OnLRPicked			Return anything but Continue to prevent setting the next iLRPresetType to index
-	function Action (const JBPlayer player, const int index, ArrayList array);
+	// 	OnLRPicked			Return > Continue to prevent setting the next iLRPresetType to index
+	function Action (const JBPlayer player, const int index, ArrayList lrs);
 
 	// 	OnHurtPlayer
 	function void (const JBPlayer victim, const JBPlayer attacker, Event event);
@@ -1372,18 +1487,18 @@ typeset JBHookCB
 	function Action (char song[PLATFORM_MAX_PATH], float &time);
 
 	/*
-		OnTimeEnd			Return anything but Continue to override forcing Blue team to win
+		OnTimeEnd			Return > Continue to override forcing Blue team to win
 		OnLastGuard			Return Handled to stop "One Guard Left" message. Return Stop to not fire OnCheckLivingPlayers
 		OnLastPrisoner		Return Stop to not fire OnCheckLivingPlayers
-		OnDoorsOpen 		Return anything but Continue to not fire
-		OnDoorsClose 		Return anything but Continue to not fire
-		OnDoorsLock 		Return anything but Continue to not fire
-		OnDoorsUnlock 		Return anything but Continue to not fire
+		OnDoorsOpen 		Return > Continue to not fire
+		OnDoorsClose 		Return > Continue to not fire
+		OnDoorsLock 		Return > Continue to not fire
+		OnDoorsUnlock 		Return > Continue to not fire
 		OnShouldAutobalance Check iLRPresetType!
 	*/
 	function Action ();
 
-	//	OnWardenKilled		Return anything but Continue to stop "Warden has been killed" message
+	//	OnWardenKilled		Return > Continue to stop "Warden has been killed" message
 	function Action (const JBPlayer victim, const JBPlayer attacker, Event event);
 
 	//	OnFFTimer
@@ -1408,10 +1523,13 @@ typeset JBHookCB
 
 	//	OnCalcAttack
 	function Action (JBPlayer player, int weapon, char[] weaponname, bool &result);
+
+	//	OnWardenStatusChange	Return > Continue to not fire
+	function Action (const bool status);
 };
 
 /**
- *	Hook function from the core plugin and use them within another plugin.
+ *	Hook a function from the core plugin and use them within another plugin.
  *
  *	@param callbacktype 	Enum type to hook into.
  *	@param callback 		Function to call when the forward is called.
@@ -1452,10 +1570,13 @@ native void JB_Unhook(const int callbacktype, JBHookCB callback);
 */
 native bool JB_UnhookEx(const int callbacktype, JBHookCB callback);
 
+/**
+ *	@endsection
+*/
 
 /**
  *	@section TF2Jail compatibility forwards and functions
-**/
+*/
 
 #pragma deprecated Use JBGameMode_GetProperty("bWardenExists")
 stock bool TF2Jail_WardenActive()
@@ -1472,7 +1593,7 @@ stock bool TF2Jail_IsWarden(int client)
 #pragma deprecated Use JBPlayer.WardenSet()
 stock void TF2Jail_WardenSet(int client)
 {
-	JBPlayer(client).WardenSet
+	JBPlayer(client).WardenSet()
 }
 
 #pragma deprecated Use JBPlayer.WardenUnset()
@@ -1540,10 +1661,10 @@ stock void TF2Jail_UnlockWarden()
 
 //stock void TF2Jail_Log(const char[] log, any ...);
 
-#pragma deprecated Use JBGameMode_GetProperty("iLRType") > 2 OR != -1
+#pragma deprecated Use JBGameMode_GetProperty("bIsLRRound")
 stock bool TF2Jail_IsLRRound()
 {
-	return JBGameMode_GetProperty("iLRType") > 2;
+	return JBGameMode_GetProperty("bIsLRRound");
 }
 
 #pragma deprecated Use JBGameMode_ManageCells() instead
@@ -1572,6 +1693,10 @@ forward void TF2Jail_OnFreedayRemoved(int client);
 
 #pragma deprecated JB_Hook void OnRebelGiven(JBPlayer) instead
 forward void TF2Jail_OnRebelGiven(int client);
+
+/**
+ *	@endsection
+*/
 
 
 public SharedPlugin __pl_tf2jailredux = {
@@ -1639,6 +1764,7 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	// MarkNativeAsOptional("JBGameMode_ToggleMedicTeam");
 	MarkNativeAsOptional("JBGameMode_ResetVotes");
 	MarkNativeAsOptional("JBGameMode_GetTelePosition");
+	MarkNativeAsOptional("JBGameMode_SetWardenLock");
 
 	MarkNativeAsOptional("JBGameMode_Instance");
 	MarkNativeAsOptional("JBGameMode_GetProperty");

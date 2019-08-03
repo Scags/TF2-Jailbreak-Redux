@@ -9,11 +9,10 @@
 #pragma newdecls required
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.0.5"
+#define PLUGIN_VERSION		"1.0.6"
 
 #define RED 				2
 #define BLU 				3
-#define PROPHUNT_NAME 		"LRModule_PH"
 
 char g_PlayerModel[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 
@@ -100,11 +99,6 @@ methodmap JailHunter < JBPlayer
 	{
 		public get() 				{ return this.GetValue("bFirstPerson"); }
 		public set( const bool i ) 	{ this.SetValue("bFirstPerson", i); }
-	}
-	property TFClassType iOldClass
-	{
-		public get() 				{ return this.GetValue("iOldClass"); }
-		public set( const TFClassType i ){ this.SetValue("iOldClass", i); }
 	}
 
 	public void MakeProp( const bool announce, bool override = true, bool loseweps = true )
@@ -340,7 +334,6 @@ public void fwdOnClientInduction(const JBPlayer Player)
 	base.bHoldingLMB = false;
 	base.bHoldingRMB = false;
 	base.bFirstPerson = false;
-	base.iOldClass = TFClass_Unknown;
 }
 
 public void fwdOnDownloads()
@@ -465,25 +458,17 @@ public void fwdOnCheckLivingPlayers()
 	if (NOTPH)
 		return;
 
-	JailHunter base;
-	bool query = JBPH[StaticPropInfo].BoolValue;
+	if (!JBPH[StaticPropInfo].BoolValue)
+		return;
 
 	for (int i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
 			continue;
 		if (!IsPlayerAlive(i))
-		{
-			base = JailHunter(i);
-			if (base.iOldClass != TFClass_Unknown)
-			{
-				TF2_SetPlayerClass(i, base.iOldClass);
-				base.iOldClass = TFClass_Unknown;
-			}
 			continue;
-		}
-		if (query)
-			QueryClientConVar(i, "r_staticpropinfo", KickCallBack);
+
+		QueryClientConVar(i, "r_staticpropinfo", KickCallBack);
 	}
 }
 
@@ -900,7 +885,7 @@ public void fwdOnPreThink(const JBPlayer Player)
 int NoSS[7]  = { 2, 3, 4, 5, 6, 7, 9 };
 int NoHvy[6] = { 2, 3, 4, 5, 6, 9 };
 int iHeavy;
-public void fwdOnRoundStartPlayer(const JBPlayer player)
+public void fwdOnRoundStartPlayer(const JBPlayer player, Event event)
 {
 	if (NOTPH)
 		return;
@@ -922,8 +907,7 @@ public void fwdOnRoundStartPlayer(const JBPlayer player)
 	{
 		case TFTeam_Red:
 		{
-			base.iOldClass = TF2_GetPlayerClass(client);
-			TF2_SetPlayerClass(client, TFClass_Scout);
+			TF2_SetPlayerClass(client, TFClass_Scout, _, false);
 			TF2_RegeneratePlayer(client);	// Fixes first-person viewmodels
 			base.MakeProp(JBPH[PropNameOnGive].BoolValue);
 
@@ -939,24 +923,19 @@ public void fwdOnRoundStartPlayer(const JBPlayer player)
 		case TFTeam_Blue:
 		{
 			if (JBPH[ForceBluePyro].BoolValue)
-				TF2_SetPlayerClass(client, TFClass_Pyro);
+				TF2_SetPlayerClass(client, TFClass_Pyro, _, false);
 
 			TFClassType class = TF2_GetPlayerClass(client);
 
 			if (class == TFClass_Scout || class == TFClass_Spy)
 			{
-				TF2_SetPlayerClass(client, view_as< TFClassType >(NoSS[GetRandomInt(0, 5)]));
+				TF2_SetPlayerClass(client, view_as< TFClassType >(NoSS[GetRandomInt(0, 5)]), _, false);
 				CPrintToChat(client, "%t Your illegal class has been changed.", "Plugin Tag");
 			}
-			else if (class == TFClass_Heavy)
+			else if (class == TFClass_Heavy && ++iHeavy > 2)
 			{
-				if (iHeavy < 2)
-					iHeavy++;
-				else
-				{
-					TF2_SetPlayerClass(client, view_as< TFClassType >(NoHvy[GetRandomInt(0, 4)]));
-					CPrintToChat(client, "%t There are too many Heavies on Blue team.", "Plugin Tag");
-				}
+				TF2_SetPlayerClass(client, view_as< TFClassType >(NoHvy[GetRandomInt(0, 4)]), _, false);
+				CPrintToChat(client, "%t There are too many Heavies on Blue team.", "Plugin Tag");
 			}
 			else if (class == TFClass_Pyro && JBPH[Airblast].BoolValue && gamemode.bTF2Attribs)
 				TF2Attrib_SetByDefIndex(client, 823, 1.0);
@@ -1154,7 +1133,7 @@ public void fwdOnPanelAdd(const int index, char name[64])
 
 	strcopy(name, sizeof(name), "Prophunt- Find and kill all the cowardly props!");
 }
-public void fwdOnMenuAdd(const int index, int &max, char strName[32])
+public void fwdOnMenuAdd(const int index, int &max, char strName[64])
 {
 	if (index != TF2JailRedux_LRIndex())
 		return;
@@ -1176,7 +1155,6 @@ public void fwdOnResetVariables(const JBPlayer Player)
 	player.bHoldingLMB = false;
 	player.bHoldingRMB = false;
 	player.bFirstPerson = false;
-	player.iOldClass = TFClass_Unknown;
 
 	if (GetClientTeam(client) == RED)
 	{
@@ -1217,6 +1195,14 @@ public Action fwdOnPlayerPreppedPre(const JBPlayer Player)
 		player.MakeProp(JBPH[PropNameOnGive].BoolValue);
 
 	return Plugin_Handled;
+}
+
+public Action fwdOnSetWardenLock(const bool status)
+{
+	if (NOTPH)
+		return Plugin_Continue;
+
+	return !status ? Plugin_Handled : Plugin_Continue;
 }
 
 public void CheckJBHooks()
@@ -1265,4 +1251,6 @@ public void CheckJBHooks()
 		LogError("Error Loading OnPreThink Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnCalcAttack, fwdOnCalcAttack))
 		LogError("Error loading OnCalcAttack Forwards for JB PH Sub-Plugin!");
+	if (!JB_HookEx(OnSetWardenLock, fwdOnSetWardenLock))
+		LogError("Error loading OnSetWardenLock Forwards for JB PH Sub-Plugin!");
 }

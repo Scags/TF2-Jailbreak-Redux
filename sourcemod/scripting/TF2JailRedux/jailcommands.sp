@@ -11,10 +11,8 @@ public Action Command_Help(int client, int args)
 	panel.DrawItem(buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "Help Panel What are LR's");
 	panel.DrawItem(buffer);
-#if defined _clientprefs_included
 	FormatEx(buffer, sizeof(buffer), "%t", "Help Panel Turn Off Music");
 	panel.DrawItem(buffer);
-#endif
 	panel.Send(client, Panel_Help, 9001);
 	delete panel;
 	
@@ -34,9 +32,7 @@ public int Panel_Help(Menu menu, MenuAction action, int client, int select)
 						CPrintToChat(client, "%t %t", "Plugin Tag", "Current Warden", gamemode.iWarden.index);
 					else CPrintToChat(client, "%t %t", "Plugin Tag", "No Current Warden");
 				case 2:ListLastRequestPanel(client);
-#if defined _clientprefs_included
 				case 3:MusicPanel(client);
-#endif
 			}
 		}
 	}
@@ -349,7 +345,7 @@ public Action Command_GiveLastRequest(int client, int args)
 		menu.SetTitle(buffer);
 		AddClientsToMenu(menu, true);
 		menu.ExitButton = true;
-		menu.Display(client, -1);
+		menu.Display(client, 0);
 
 		return Plugin_Handled;
 	}
@@ -397,7 +393,7 @@ public Action Command_RemoveLastRequest(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (gamemode.iLRPresetType < 0)
+	if (gamemode.iLRPresetType == -1)
 	{
 		CPrintToChat(client, "%t %t", "Plugin Tag", "No LR Next Round");
 		return Plugin_Handled;
@@ -407,7 +403,7 @@ public Action Command_RemoveLastRequest(int client, int args)
 		if (IsClientInGame(i))
 			JailFighter(i).bIsQueuedFreeday = false;
 
-	arrLRS.Set( gamemode.iLRPresetType, arrLRS.Get(gamemode.iLRPresetType)-1 );
+	gamemode.hLRS.Set( gamemode.iLRPresetType, gamemode.hLRS.Get(gamemode.iLRPresetType)-1 );
 	gamemode.bIsLRInUse = false;
 	gamemode.iLRPresetType = -1;
 	CPrintToChatAll("%t %t", "Plugin Tag", "Warden Deny LR", client);
@@ -439,12 +435,13 @@ public void ListLastRequestPanel(const int client)
 	panel.SetTitle("%t", "Last Request List");
 	AddLRToPanel(panel);
 	panel.ExitButton = true;
-	panel.Display(client, -1);
+	panel.Display(client, 0);
 }
 
 public int ListLRsPanel(Menu menu, MenuAction action, int client, int select)
 {
-	return;
+	if (action == MenuAction_End)
+		delete menu;
 }
 
 public Action Command_CurrentWarden(int client, int args)
@@ -464,7 +461,6 @@ public Action Command_CurrentWarden(int client, int args)
 	return Plugin_Handled;
 }
 
-#if defined _clientprefs_included
 public Action Command_MusicOff(int client, int args)
 {
 	if (!bEnabled.BoolValue || !client)
@@ -508,7 +504,6 @@ public int MusicTogglePanel(Menu menu, MenuAction action, int client, int select
 		}
 	}
 }
-#endif
 
 public Action AdminRemoveWarden(int client, int args)
 {
@@ -562,7 +557,7 @@ public Action AdminDenyLR(int client, int args)
 	}
 
 	int type = gamemode.iLRPresetType;
-	arrLRS.Set( type, arrLRS.Get(type)-1 );
+	gamemode.hLRS.Set( type, gamemode.hLRS.Get(type)-1 );
 	gamemode.iLRPresetType = -1;
 	gamemode.bIsLRInUse = false;
 
@@ -665,17 +660,15 @@ public Action AdminForceWarden(int client, int args)
 			return Plugin_Handled;
 		}
 
-		if (gamemode.bWardenExists)
-			gamemode.iWarden.WardenUnset();
+		gamemode.iWarden.WardenUnset();
 
 		JailFighter(target_list[0]).WardenSet();
 		CPrintToChatAll("%t %t", "Admin Tag", "Admin Force Warden", target_list[0]);
-		
+
 		return Plugin_Handled;
 	}
 
-	if (gamemode.bWardenExists)
-		gamemode.iWarden.WardenUnset();
+	gamemode.iWarden.WardenUnset();
 
 	gamemode.FindRandomWarden();
 	CPrintToChatAll("%t %t", "Admin Tag", "Admin Force Random Warden");
@@ -735,11 +728,8 @@ public Action AdminResetPlugin(int client, int args)
 		return Plugin_Handled;
 
 	for (int i = MaxClients; i; --i)
-	{
-		if (!IsClientInGame(i))
-			continue;
-		ResetVariables(JailFighter(i), false);
-	}
+		if (IsClientInGame(i))
+			ResetVariables(JailFighter(i), false);
 
 	gamemode.iRoundState = 0;
 	gamemode.iTimeLeft = 0;
@@ -830,7 +820,7 @@ public void Admin_GiveFreedaysMenu(const int client)
 
 	AddClientsToMenu(menu);
 	menu.ExitButton = true;
-	menu.Display(client, -1);
+	menu.Display(client, 0);
 }
 
 public int ForceFreedayMenu(Menu menu, MenuAction action, int client, int select)
@@ -904,21 +894,21 @@ public void RemoveFreedaysMenu(int client)
 	Menu menu = new Menu(MenuHandle_RemoveFreedays);
 	menu.SetTitle("%t", "Choose Player");
 
-	char strName[32], strID[8];
+	char name[32], strID[8];
 	for (int i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
 			continue;
-			
+
 		if (JailFighter(i).bIsFreeday)
 		{
 			IntToString(GetClientUserId(i), strID, sizeof(strID));
-			GetClientName(i, strName, sizeof(strName));
-			menu.AddItem(strID, strName);
+			GetClientName(i, name, sizeof(name));
+			menu.AddItem(strID, name);
 		}
 	}
 	menu.ExitButton = true;
-	menu.Display(client, -1);
+	menu.Display(client, 0);
 }
 
 public int MenuHandle_RemoveFreedays(Menu menu, MenuAction action, int client, int select)
@@ -930,7 +920,7 @@ public int MenuHandle_RemoveFreedays(Menu menu, MenuAction action, int client, i
 			char player[32];
 			menu.GetItem(select, player, sizeof(player));
 			JailFighter targ = JailFighter.OfUserId(StringToInt(player));
-			
+
 			if (!IsClientInGame(targ.index))
 			{
 				CReplyToCommand(client, "%t %t", "Plugin Tag", "Player no longer available");
@@ -966,9 +956,8 @@ public Action AdminLockWarden(int client, int args)
 		CReplyToCommand(client, "%t %t", "Plugin Tag", "Warden Already Locked");
 		return Plugin_Handled;
 	}
-	if (gamemode.bWardenExists)
-		gamemode.iWarden.WardenUnset();
 
+	gamemode.iWarden.WardenUnset();
 	gamemode.bIsWardenLocked = true;
 	CPrintToChatAll("%t %t", "Admin Tag", "Admin Lock Warden");
 
@@ -1046,7 +1035,7 @@ public void FreedayforClientsMenu(const int client)
 	
 	AddClientsToMenu(menu, false, 0);
 	menu.ExitButton = true;
-	menu.Display(client, -1);
+	menu.Display(client, 0);
 }
 
 public int MenuHandle_FreedayForClients(Menu menu, MenuAction action, int client, int select)
@@ -1083,7 +1072,7 @@ public int MenuHandle_FreedayForClients(Menu menu, MenuAction action, int client
 				else limit = 0;
 			}
 			else 
-			{	
+			{
 				CPrintToChat(client, "%t %t", "Plugin Tag", "Freeday Max", client);
 				limit = 0;
 			}
@@ -1355,7 +1344,7 @@ public void MakeInviteMenu(const int client)
 	Menu menu = new Menu(InviteMenu);
 	menu.SetTitle("%t", "Choose Player");
 	AddClientsToMenu(menu, true, RED);
-	menu.Display(client, -1);
+	menu.Display(client, 0);
 }
 
 public int InviteMenu(Menu menu, MenuAction action, int client, int select)
@@ -1439,7 +1428,7 @@ public void DetermineMuteStyleMenu(const int client)
 	menu.AddItem("0", s);
 	FormatEx(s, sizeof(s), "%t", "Dead");
 	menu.AddItem("1", s);
-	menu.Display(client, -1);
+	menu.Display(client, 0);
 }
 
 public int MuteStyleMenu(Menu menu, MenuAction action, int client, int select)
@@ -1450,7 +1439,7 @@ public int MuteStyleMenu(Menu menu, MenuAction action, int client, int select)
 		{
 			if (!IsClientValid(client) || !IsPlayerAlive(client))
 				return;
-			
+
 			char s[2]; menu.GetItem(select, s, sizeof(s));
 			MakeMuteToggleMenu(client, StringToInt(s));
 		}
@@ -1468,7 +1457,7 @@ public void MakeMuteToggleMenu(const int client, const int type)
 
 	for (int i = 0; i < 7; ++i)
 	{
-		draw = (currtype == i ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+		draw = (i == currtype ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 		switch (i)
 		{
 			case 0:FormatEx(s, sizeof(s), "%t", "Mute No One");
@@ -1485,7 +1474,7 @@ public void MakeMuteToggleMenu(const int client, const int type)
 
 	IntToString(type, id, sizeof(id));
 	menu.AddItem("7", id, ITEMDRAW_IGNORE);
-	menu.Display(client, -1);
+	menu.Display(client, 0);
 }
 
 public int MuteToggleMenu(Menu menu, MenuAction action, int client, int select)
@@ -1505,7 +1494,7 @@ public int MuteToggleMenu(Menu menu, MenuAction action, int client, int select)
 			else gamemode.iLivingMuteType = StringToInt(s);
 
 			for (int i = MaxClients; i; --i)
-				if (IsClientInGame(i) && IsPlayerAlive(i))
+				if (IsClientInGame(i))
 					gamemode.ToggleMuting(JailFighter(i));
 
 			CPrintToChatAll("%t %t", "Plugin Tag", "Warden Toggle Mute", client);
@@ -1688,7 +1677,7 @@ public Action PluginLength(int client, int args)
 {
 	CReplyToCommand(client, "%d", gamemode.hPlugins.Length);
 }
-public Action arrLRSLength(int client, int args)
+public Action hLRSLength(int client, int args)
 {
-	CReplyToCommand(client, "%d", arrLRS.Length);
+	CReplyToCommand(client, "%d", gamemode.hLRS.Length);
 }

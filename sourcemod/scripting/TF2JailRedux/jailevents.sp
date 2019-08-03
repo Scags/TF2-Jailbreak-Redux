@@ -47,6 +47,8 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	ManageSpawn(player, event);
 	SetPawnTimer(PrepPlayer, 0.2, player.userid);
 
+	player.flHealTime = 0.0;
+
 	return Plugin_Continue;
 }
 
@@ -56,12 +58,12 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 		return Plugin_Continue;
 
 	JailFighter victim = JailFighter.OfUserId( event.GetInt("userid") );
-	int attacker = GetClientOfUserId( event.GetInt("attacker") );
+	JailFighter attacker = JailFighter.OfUserId( event.GetInt("attacker") );
 
-	if (victim.index == attacker || attacker <= 0)
+	if (victim.index == attacker.index || attacker.index <= 0)
 		return Plugin_Continue;
 
-	ManageHurtPlayer(JailFighter(attacker), victim, event);
+	ManageHurtPlayer(attacker, victim, event);
 
 	return Plugin_Continue;
 }
@@ -79,7 +81,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 
 	if (IsClientValid(attacker.index))
 		if (!gamemode.bDisableKillSpree)
-				FreeKillSystem(attacker);
+			FreeKillSystem(attacker);
 
 	SetPawnTimer(CheckLivingPlayers, 0.2);
 
@@ -91,7 +93,6 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	else if (victim.bIsWarden)
 	{
 		victim.WardenUnset();
-		gamemode.bWardenExists = false;
 
 		if (gamemode.iRoundState == StateRunning)
 			if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue || !gamemode.bSilentWardenKills)
@@ -126,24 +127,24 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 	int i;
 	if (gamemode.bIsMapCompatible)
 	{
-		int ent;
 		if (strCellOpener[0] != '\0')
 		{
-			ent = FindEntity(strCellOpener, "func_button");
-			if (IsValidEntity(ent))
-				SetEntProp(ent, Prop_Data, "m_bLocked", 1, 1);
+			i = FindEntity(strCellOpener, "func_button");
+			if (i != -1)
+				SetEntProp(i, Prop_Data, "m_bLocked", 1, 1);
 			else LogError("***TF2JB ERROR*** Entity name not found for Cell Door Opener! Please verify integrity of the config and the map.");
 		}
 
 		if (strFFButton[0] != '\0')
 		{
-			ent = FindEntity(strFFButton, "func_button");
-			if (IsValidEntity(ent))
-				SetEntProp(ent, Prop_Data, "m_bLocked", 1, 1);
+			i = FindEntity(strFFButton, "func_button");
+			if (i != -1)
+				SetEntProp(i, Prop_Data, "m_bLocked", 1, 1);
 		}
 
 		if (strCellNames[0] != '\0')
 		{
+			int ent;
 			char entname[32];
 			for (i = 0; i < sizeof(strDoorsList); i++)
 			{
@@ -201,47 +202,8 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	SetPawnTimer(CheckLivingPlayers, 0.2);
 
-	if (cvarTF2Jail[Balance].BoolValue && gamemode.iPlaying > 2 && Call_OnShouldAutobalance() == Plugin_Continue)
-	{
-		int flamemanager;
-		int immunity = cvarTF2Jail[AutobalanceImmunity].IntValue;
-		float ratio;
-		float balance = cvarTF2Jail[BalanceRatio].FloatValue;
-		float lBlue = float( GetLivingPlayers(BLU) );
-		float lRed = float( GetLivingPlayers(RED) );
-
-		for (i = MaxClients; i; --i)	// 2 player loops so that autobalance doesn't fuck over ManageRoundStart()
-		{
-			if (!IsClientInGame(i))
-				continue;
-			if (!IsPlayerAlive(i))
-				continue;
-
-			ratio = lBlue / lRed;
-
-			if (ratio > balance)
-			{
-				player = JailFighter(GetRandomPlayer(BLU, true));
-				if (Call_OnShouldAutobalancePlayer(player) != Plugin_Continue)
-					continue;
-
-				if ((immunity == 2 && !player.bIsAdmin) || (immunity == 1 && !player.bIsVIP) || !immunity)
-				{
-					if (HasEntProp(player.index, Prop_Send, "m_hFlameManager"))
-					{
-						flamemanager = GetEntPropEnt(player.index, Prop_Send, "m_hFlameManager");	// Avoid teamkilling
-						if (flamemanager != -1)
-							AcceptEntityInput(flamemanager, "Kill");
-					}
-					player.ForceTeamChange(RED);
-					CPrintToChat(player.index, "%t %t", "Plugin Tag", "Autobalanced");
-
-					--lBlue;	// Avoid loopception
-					++lRed;
-				}
-			}
-		}
-	}
+	if (cvarTF2Jail[Balance].BoolValue)
+		gamemode.AutobalanceTeams();
 
 	if (gamemode.b1stRoundFreeday)
 	{
@@ -263,13 +225,13 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	gamemode.iLRType = gamemode.iLRPresetType;
 	gamemode.iRoundState = StateRunning;
+	gamemode.bIsLRRound = gamemode.iLRType > -1;	// Possibility of someone changing/removing lrs 0-2, so != -1 works for everything
 
-	ManageRoundStart(event);	// THESE FIRE BEFORE INITIALIZATION FUNCTIONS IN THE PLAYER LOOP
-	ManageCells();				// This is the only (easy) way for the VSH sub-plugin to grab a random player
-	ManageFFTimer();			// And force them to be a boss, then ManageRoundStart() we force non-bosses to red team
-	ManageHUDText();			// If you need to do something that goes against this functionality, you'll have to
-	ManageTimeLeft();			// Loop clients on ManageRoundStart() to set what you want, then ignore OnLRActivate()
-	// Or if you aren't using the VSH subplugin, ignore this
+	ManageRoundStart(event);	// NOTE THE ORDER OF EXECUTION; *RoundStart BEFORE *RoundStartPlayer
+	ManageCells();
+	ManageFFTimer();
+	ManageHUDText();
+	ManageTimeLeft();
 
 	warday = gamemode.bIsWarday;
 
@@ -360,13 +322,14 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 		if (GetClientMenu(i) != MenuSource_None)
 			CancelClientMenu(i, true);
 
-		StopSound(i, SNDCHAN_AUTO, strBackgroundSong);
+		if (strBackgroundSong[0] != '\0')
+			StopSound(i, SNDCHAN_AUTO, strBackgroundSong);
 
 		ManageRoundEnd(player, event);
 		player.UnmutePlayer();
 	}
 	ManageOnRoundEnd(event); // Making 1 with and without clients so things dont fire once for every client in the loop
-	
+
 	hEngineConVars[0].SetBool(false);
 	hEngineConVars[1].SetBool(false);
 
@@ -381,6 +344,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 	gamemode.bDisableMuting = false;
 	gamemode.bDisableKillSpree = false;
 	gamemode.bIgnoreRebels = false;
+	gamemode.bIsLRRound = false;
 	gamemode.iLRType = -1;
 	gamemode.iTimeLeft = 0; // Had to set it to 0 here because it kept glitching out... odd
 	gamemode.iRoundState = StateEnding;

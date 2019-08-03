@@ -492,6 +492,18 @@ methodmap JailGameMode < StringMap
 			this.SetValue("bIgnoreRebels", i);
 		}
 	}
+	property bool bIsLRRound
+	{
+		public get()
+		{
+			bool i; this.GetValue("bIsLRRound", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bIsLRRound", i);
+		}
+	}
 
 	property float flMusicTime
 	{
@@ -524,7 +536,6 @@ methodmap JailGameMode < StringMap
 
 	/**
 	 *	Purpose: Store the plugin handles from registered sub-plugins.
-	 *	Add a setter if you need. Don't see why you'd need one though.
 	*/
 	property ArrayList hPlugins
 	{
@@ -533,24 +544,27 @@ methodmap JailGameMode < StringMap
 			ArrayList i; this.GetValue("hPlugins", i);
 			return i;
 		}
+		public set( const ArrayList i )
+		{
+			this.SetValue("hPlugins", i);
+		}
 	}
 
 	/**
 	 *	Purpose: Store the plugin handles from registered sub-plugin LR packs.
 	 *	Add a setter if you need. Don't see why you'd need one though.
 	*/
-	property ArrayList hPacks
+	/*property ArrayList hPacks
 	{
 		public get()
 		{
 			ArrayList i; this.GetValue("hPacks", i);
 			return i;
 		}
-	}
+	}*/
 
 	/**
 	 *	Purpose: Store the Warden Menu, but keep it exposed to sub-plugins.
-	 *	Add a setter if you need. Don't see why you'd need one though.
 	*/
 	property Menu hWardenMenu
 	{
@@ -558,6 +572,46 @@ methodmap JailGameMode < StringMap
 		{
 			Menu i; this.GetValue("hWardenMenu", i);
 			return i;
+		}
+		public set( const Menu i )
+		{
+			this.SetValue("hWardenMenu", i);
+		}
+	}
+
+	/**
+	 *	ArrayList of LR usage
+	 *	You can determine the maximum picks per round under AddLRsToMenu()
+	 *	Size is automatically managed
+	*/
+	property ArrayList hLRS
+	{
+		public get()
+		{
+			ArrayList i; this.GetValue("hLRS", i);
+			return i;
+		}
+		public set ( const ArrayList i )
+		{
+			this.SetValue("hLRS", i);
+		}
+	}
+
+	/**
+	 *	Purpose: Store the list of targetfilters allocated by map config
+	 *	Contains strings of target filter names to create and delete
+	 *	for each map
+	*/
+	property StringMap hTargetFilters
+	{
+		public get()
+		{
+			StringMap i; this.GetValue("hTargetFilters", i);
+			return i;
+		}
+		public set ( const StringMap i )
+		{
+			this.SetValue("hTargetFilters", i);
 		}
 	}
 	// When adding a new property, make sure you initialize it to a default
@@ -608,25 +662,25 @@ methodmap JailGameMode < StringMap
 		gm.bVA = false;
 #endif
 		gm.bMarkerExists = false;
+		gm.bIsLRRound = false;
 		gm.flMusicTime = 0.0;
-		gm.SetValue("hPlugins", new ArrayList());
-		gm.SetValue("hPacks", new ArrayList());
-		// gm.SetValue("hWardenMenu", new Menu(WardenMenu));
+		gm.hPlugins = new ArrayList();
+		gm.hTargetFilters = new StringMap();
 		return gm;
 	}
 	/**
-	 *	Find and Initialize a random player as the warden.
+	 *	Find and Initialize a random player as the Warden.
 	 *
-	 *	@noreturn
+	 *	@return 				JailFighter instance of the new Warden.
 	*/
-	public void FindRandomWarden()
+	public JailFighter FindRandomWarden()
 	{
 		int client = GetRandomPlayer(BLU, true);
 		if (client == -1)
-			return;
+			return view_as< JailFighter >(0);
 
-		JailFighter(client).WardenSet();
-		this.bWardenExists = true;
+		JailFighter player = JailFighter(client);
+		return player.WardenSet() ? player : view_as< JailFighter >(0);
 	}
 	/**
 	 *	Handle the cell doors.
@@ -635,7 +689,7 @@ methodmap JailGameMode < StringMap
 	 *	@param announce 		Announce message to all clients.
 	 *	@param fromwarden 		If true, current warden will be the client announced who activated cells. 
 	 *							If false, undisclosed admin is the announced activator.
-	 *							Do NOT set this param to true if there is no current warden.
+	 *							Do NOT set this param to true if there is no current Warden.
 	 *	@param overridefwds 	If true, forwards will not be called for the according action.
 	 *
 	 *	@noreturn
@@ -680,12 +734,13 @@ methodmap JailGameMode < StringMap
 					FormatEx(name, sizeof(name), "%t", "Unlocked");
 				}
 			}
-			int i, ent = -1;
+
 			if (announce)
 				if (fromwarden)
 					CPrintToChatAll("%t %t", "Plugin Tag", "Warden Work Cells", this.iWarden.index, name);
 				else CPrintToChatAll("%t %t", "Admin Tag", "Admin Work Cells", name);
 
+			int i, ent = -1;
 			for (i = 0; i < sizeof(strDoorsList); i++)
 			{
 				ent = -1;
@@ -715,15 +770,9 @@ methodmap JailGameMode < StringMap
 	{
 		this.iVotes = 0;
 
-		JailFighter player;
 		for (int i = MaxClients; i; --i)
-		{
-			if (!IsClientInGame(i))
-				continue;
-
-			player = JailFighter(i);
-			player.bVoted = false;	
-		}
+			if (IsClientConnected(i))
+				JailFighter(i).bVoted = false;
 	}
 	/**
 	 *	Find and terminate the current Warden.
@@ -837,16 +886,12 @@ methodmap JailGameMode < StringMap
 		{
 			case 0:player.UnmutePlayer();
 			case 1:
-				if (team == RED)
-					if (!player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
+				if (team == RED && !player.bIsVIP)
+					player.MutePlayer();
 				else player.UnmutePlayer();
 			case 2:
-				if (team == BLU)
-					if (!player.bIsVIP)
-						player.MutePlayer();
-					else player.UnmutePlayer();
+				if (team == BLU && !player.bIsVIP)
+					player.MutePlayer();
 				else player.UnmutePlayer();
 			case 3:if (!player.bIsVIP) player.MutePlayer();
 			case 4:if (team == RED) player.MutePlayer();
@@ -899,5 +944,123 @@ methodmap JailGameMode < StringMap
 			}
 		}
 		return false;
+	}
+
+	// No private properties yet >:(
+	/**
+	 *	Toggle the Warden's lock status.
+	 *	@note 					This is recommended rather than setting the raw property due
+	 *							to a forward plugins can operate on.
+	 *
+	 *	@param status  			Location index to get.
+	 *	@param unsetwarden 		If true, unset the current warden.
+	 *
+	 *	@return 				True on success, false otherwise.
+	*/
+	public bool SetWardenLock(const bool status, bool unsetwarden = false)
+	{
+		if (Call_OnSetWardenLock(status) != Plugin_Continue)
+			return false;
+
+		if (unsetwarden)
+			this.iWarden.WardenUnset();
+		this.bIsWardenLocked = status;
+		return true;
+	}
+
+	/**
+	 *	Autobalance the teams in accordance with the cvars.
+	 *
+	 *	@param announce 		Tell the player that they've been autobalanced.
+	 *
+	 *	@noreturn
+	*/
+	public void AutobalanceTeams(bool announce = true)
+	{
+		if (this.iPlaying <= 2)
+			return;
+
+		if (Call_OnShouldAutobalance() != Plugin_Continue)
+			return;
+
+		int immunity = cvarTF2Jail[AutobalanceImmunity].IntValue;
+		float balance = cvarTF2Jail[BalanceRatio].FloatValue;
+		float lBlue = float( GetLivingPlayers(BLU) );
+		float lRed = float( GetLivingPlayers(RED) );
+		JailFighter player;
+
+		float ratio;
+		int tries;
+		do
+		{
+			ratio = lBlue / lRed;
+			if (ratio <= balance)
+				break;
+
+			player = JailFighter(GetRandomPlayer(BLU, true));
+			if (player.index == -1)		// Fake news
+				break;
+
+			if ((immunity == 2 && !player.bIsAdmin) || (immunity == 1 && !player.bIsVIP) || !immunity)
+			{
+				if (Call_OnShouldAutobalancePlayer(player) != Plugin_Continue)
+					continue;
+
+				KillFlameManager(player.index);
+				player.ForceTeamChange(RED);
+				if (announce)
+					CPrintToChat(player.index, "%t %t", "Plugin Tag", "Autobalanced");
+
+				--lBlue;	// Avoid loopception
+				++lRed;
+			}
+		} while ++tries < 50;	// Plenty
+	}
+
+	/**
+	 *	Autobalance the teams as evenly as possible.
+	 *	@note 					Guardbanned players are handled automatically.
+	 *
+	 *	@param announce			Tell the player that they've been autobalanced.
+	 *	@param followimmun 		If true, follow autobalance immunity rules.
+	 *
+	 *	@noreturn
+	*/
+	public void EvenTeams(bool announce = true, bool followimmun = true)
+	{
+		if (this.iPlaying <= 2)		// Shouldn't they already be even then...?
+			return;
+
+		int countred, countblu;
+		int immunity = cvarTF2Jail[AutobalanceImmunity].IntValue;
+		JailFighter player;
+
+		int tries, val;
+		do
+		{
+			val = RoundFloat(FloatAbs(float((countred = GetLivingPlayers(RED)) - (countblu = GetLivingPlayers(BLU)))) / 2);
+
+			if (val <= 1)
+				break;
+
+			if (tries > 50)
+				break;
+
+			player = JailFighter(GetRandomPlayer(countred > countblu ? RED : BLU, true));
+
+			if (player.index == -1)
+				break;
+
+			// Could possibly hit an infinite loop here
+			// Rare, however. Would take low player count and/or a lot of donors/admins
+			// Which is why 'tries' exists
+			if (followimmun && !((immunity == 2 && !player.bIsAdmin) || (immunity == 1 && !player.bIsVIP) || !immunity))
+				continue;
+
+			KillFlameManager(player.index);
+			player.ForceTeamChange(countred > countblu ? BLU : RED);
+			if (announce)
+				CPrintToChat(player.index, "%t %t", "Plugin Tag", "Autobalanced");
+		} while ++tries <= 50;
 	}
 };

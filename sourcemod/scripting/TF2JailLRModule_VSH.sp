@@ -16,7 +16,7 @@
 
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.1.6"
+#define PLUGIN_VERSION		"1.2.0"
 
 Handle
 	hHudText, 
@@ -328,6 +328,7 @@ enum/*CvarName*/
 	Health,
 	TimeLeft,
 	DisableMuting,
+	HealthBar,
 	Version
 };
 
@@ -342,7 +343,8 @@ int
 	iHealthChecks,		// For !halehp
 	iTeamBansCVar,		// Mid-round detection in case a player is guardbanned
 	iNoChargeCVar,		// Allow for charging
-	iDroppedWeaponsCVar	// Allow dropped weapons
+	iDroppedWeaponsCVar,// Allow dropped weapons
+	iHealthBar			// Healthbar
 ;
 
 bool
@@ -351,6 +353,10 @@ bool
 
 float 
 	flHealthTime		// For !halehp
+;
+
+JailBoss
+	iCurrBoss			// The boss
 ;
 
 public void OnPluginStart()
@@ -372,6 +378,7 @@ public void OnPluginStart()
 	JBVSH[Health] 			= CreateConVar("sm_jbvsh_health", "4", "Spawn random health at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0);
 	JBVSH[TimeLeft] 		= CreateConVar("sm_jbvsh_round_time", "600", "Round time during a VSH round IF a time limit is enabled in core plugin.", FCVAR_NOTIFY, true, 0.0);
 	JBVSH[DisableMuting] 	= CreateConVar("sm_jbvsh_disable_muting", "0", "Disable plugin muting during this last request?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	JBVSH[HealthBar]		= CreateConVar("sm_jbvsh_health_bar", "1", "Should a boss health bar appear during the round? This is similar to a Halloween boss healthbar", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	RegConsoleCmd("sm_hale_hp", Command_GetHPCmd);
 	RegConsoleCmd("sm_halehp", Command_GetHPCmd);
@@ -628,8 +635,8 @@ public Action fwdOnEntCreated(int entity, const char[] classname)
 	
 	if (!strcmp(classname, "tf_projectile_pipe", false))
 		SDKHook(entity, SDKHook_SpawnPost, OnEggBombSpawned);
-	else if (!strcmp(classname, "tf_ammo_pack", false))
-		return Plugin_Handled;	// Let people have ammo
+	else if (!strcmp(classname, "tf_ammo_pack", false))	// Let people have ammo
+		return Plugin_Handled;
 
 	return Plugin_Continue;
 }
@@ -872,22 +879,6 @@ public void NoAttacking(const int wepref)
 	SetNextAttack(weapon, 1.56);
 }
 
-public JailBoss FindBoss(const bool balive)
-{
-	JailBoss player;
-	for (int i=MaxClients ; i ; --i) {
-		if (!IsClientInGame(i))
-			continue;
-		else if (balive && !IsPlayerAlive(i))
-			continue;
-		player = JailBoss(i);
-		if (!player.bIsBoss)
-			continue;
-		return player;
-	}
-	return view_as< JailBoss >(0);
-}
-
 /********************************************************************
 						COMMANDS
 ********************************************************************/
@@ -979,22 +970,21 @@ public void ManageRoundEndBossInfo(bool bossWon)
 	char victory[PLATFORM_MAX_PATH];
 	gameMessage[0] = '\0';
 	int i;
-	JailBoss base = FindBoss(false);
-	if (!base)
+	if (!IsClientValid(iCurrBoss.index))
 		return;
 
-	switch (base.iType) 
+	switch (iCurrBoss.iType) 
 	{
-		case Vagineer:Format(gameMessage, 256, "\nThe Vagineer (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case HHHjr:Format(gameMessage, 256, "\nThe Horseless Headless Horsemann Jr. (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case CBS:Format(gameMessage, 256, "\nThe Christian Brutal Sniper (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case Bunny:Format(gameMessage, 256, "\nThe Easter Bunny (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
-		case Hale:Format(gameMessage, 256, "\nSaxton Hale (%N) had %i (of %i) health left.", base.index, base.iHealth, base.iMaxHealth);
+		case Vagineer:Format(gameMessage, 256, "\nThe Vagineer (%N) had %i (of %i) health left.", iCurrBoss.index, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+		case HHHjr:Format(gameMessage, 256, "\nThe Horseless Headless Horsemann Jr. (%N) had %i (of %i) health left.", iCurrBoss.index, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+		case CBS:Format(gameMessage, 256, "\nThe Christian Brutal Sniper (%N) had %i (of %i) health left.", iCurrBoss.index, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+		case Bunny:Format(gameMessage, 256, "\nThe Easter Bunny (%N) had %i (of %i) health left.", iCurrBoss.index, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+		case Hale:Format(gameMessage, 256, "\nSaxton Hale (%N) had %i (of %i) health left.", iCurrBoss.index, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
 	}
 	if (bossWon) 
 	{
 		victory[0] = '\0';
-		switch (base.iType) 
+		switch (iCurrBoss.iType) 
 		{
 			case  - 1: {  }
 			case Vagineer:Format(victory, PLATFORM_MAX_PATH, "%s%i.wav", VagineerKSpreeNew, GetRandomInt(1, 5));
@@ -1010,10 +1000,8 @@ public void ManageRoundEndBossInfo(bool bossWon)
 		CPrintToChatAll("%t %s", "Plugin Tag", gameMessage[1]);
 		SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
 		for (i = MaxClients; i; --i) 
-		{
 			if (IsValidClient(i) && !(GetClientButtons(i) & IN_SCORE))
 				ShowHudText(i, -1, "%s", gameMessage);
-		}
 	}
 }
 
@@ -1086,6 +1074,16 @@ public void OnEggBombSpawned(int entity)
 	JailBoss boss = JailBoss(owner);
 	if (IsClientValid(owner) && boss.bIsBoss && boss.iType == Bunny)
 		CreateTimer(0.0, Timer_SetEggBomb, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
+}
+
+public void UpdateBossHealth()
+{
+	if (iHealthBar > MaxClients)
+	{
+		int pct = RoundToCeil( float(iCurrBoss.iHealth)/float(iCurrBoss.iMaxHealth)*255.0 );
+		Clamp(pct, 0, 255);
+		SetEntProp(iHealthBar, Prop_Send, "m_iBossHealthPercentageByte", pct);
+	}
 }
 
 public void ManageBossTransition(const JailBoss base)/* whatever stuff needs initializing should be done here */
@@ -1186,7 +1184,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 				PrintCenterText(victim.index, "You Were Just Backstabbed!");
 				int pistol = GetIndexOfWeaponSlot(attacker, TFWeaponSlot_Primary);
 				if (pistol == 525) 
-				{  //Diamondback gives 4 crits on backstab
+				{  //Diamondback gives 2 crits on backstab
 					int iCrits = GetEntProp(attacker, Prop_Send, "m_iRevengeCrits");
 					SetEntProp(attacker, Prop_Send, "m_iRevengeCrits", iCrits + 2);
 				}
@@ -1210,7 +1208,8 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 			}
 			if (damagecustom == TF_CUSTOM_TAUNT_BARBARIAN_SWING) // Gives 4 heads if successful sword killtaunt!
 			{
-				for (int i = 0; i < 4; ++i)IncrementHeadCount(attacker);
+				for (int i = 0; i < 4; ++i)
+					IncrementHeadCount(attacker);
 			}
 			if (damagecustom == TF_CUSTOM_BOOTS_STOMP && IsValidEntity(FindPlayerBack(attacker, { 405, 444, 608 }, 3)))
 			{
@@ -1238,7 +1237,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 					TF2Attrib_SetByDefIndex(victim.index, 252, 0.0);						
 				else TF2Attrib_RemoveByDefIndex(victim.index, 252);
 			}
-	
+
 			switch (wepindex) 
 			{
 				case 593: //Third Degree
@@ -1406,15 +1405,15 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 						return Plugin_Changed;
 					}
 				}
-				case 751: // Cleaner's Carbine does 2.5x damage on headshot
-				{
-					if (damagecustom == TF_CUSTOM_HEADSHOT)
-					{
-						damage = 27.0;
-						damagetype |= DMG_CRIT;
-						return Plugin_Changed;
-					}
-				}
+//				case 751: // Cleaner's Carbine does 2.5x damage on headshot
+//				{
+//					if (damagecustom == TF_CUSTOM_HEADSHOT)
+//					{
+//						damage = 27.0;
+//						damagetype |= DMG_CRIT;
+//						return Plugin_Changed;
+//					}
+//				}
 				case 525, 595:
 				{
 					int iCrits = GetEntProp(attacker, Prop_Send, "m_iRevengeCrits");
@@ -1489,16 +1488,35 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 			{
 				if (GetEntProp(client, Prop_Send, "m_bFeignDeathReady") && !TF2_IsPlayerInCondition(client, TFCond_Cloaked))
 				{
+					static ConVar feigndmg;
+					if (!feigndmg)
+						feigndmg = FindConVar("tf_feign_death_activate_damage_scale");
+
 					if (damagetype & DMG_CRIT)
 						damagetype &= ~DMG_CRIT;
-					damage = 85.0;
+					damage = 62.0/feigndmg.FloatValue;
 					return Plugin_Changed;
 				}
-				if (TF2_IsPlayerInCondition(client, TFCond_Cloaked) || TF2_IsPlayerInCondition(client, TFCond_DeadRingered))
+				if (TF2_IsPlayerInCondition(client, TFCond_DeadRingered))
 				{
+					static ConVar drdmg;
+					if (!drdmg)
+						drdmg = FindConVar("tf_feign_death_damage_scale");
+
 					if (damagetype & DMG_CRIT)
 						damagetype &= ~DMG_CRIT;
-					damage = 60.0;
+					damage = 62.0/drdmg.FloatValue;
+					return Plugin_Changed;
+				}
+				if (TF2_IsPlayerInCondition(client, TFCond_Cloaked))
+				{
+					static ConVar cloakdmg;
+					if (!cloakdmg)
+						cloakdmg = FindConVar("tf_stealth_damage_reduction");
+
+					if (damagetype & DMG_CRIT)
+						damagetype &= ~DMG_CRIT;
+					damage = 69.0/cloakdmg.FloatValue;
 					return Plugin_Changed;
 				}
 			}
@@ -1506,7 +1524,7 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 			while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1)
 			{
 				if (GetOwner(ent) == client
-					&& damage >= float(GetClientHealth(client))
+					//&& damage >= float(GetClientHealth(client))
 					&& !TF2_IsPlayerInCondition(client, TFCond_Ubercharged)
 					&& !GetEntProp(ent, Prop_Send, "m_bDisguiseWearable")
 					&& weapon == GetPlayerWeaponSlot(attacker, 2))
@@ -1621,7 +1639,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			case 127:hItemOverride = PrepareItemHandle(hItem, _, _, "114 ; 1.0 ; 179 ; 1.0");
 			case 414:hItemOverride = PrepareItemHandle(hItem, _, _, "114 ; 1.0 ; 99 ; 1.25");
 			case 1104:hItemOverride = PrepareItemHandle(hItem, _, _, "76 ; 1.25 ; 114 ; 1.0");
-			case 730:hItemOverride = PrepareItemHandle(hItem, _, _, "394 ; 0.1 ; 241 ; 1.3 ; 3 ; 0.75 ; 411 ; 5 ; 6 ; 0.2 ; 642 ; 1 ; 413 ; 1 ; 109 ; 0.40", true);
+			//case 730:hItemOverride = PrepareItemHandle(hItem, _, _, "394 ; 0.1 ; 241 ; 1.3 ; 3 ; 0.75 ; 411 ; 5 ; 6 ; 0.2 ; 642 ; 1 ; 413 ; 1 ; 109 ; 0.40", true);
 			default:hItemOverride = PrepareItemHandle(hItem, _, _, "114 ; 1.0");
 		}
 	}
@@ -1672,16 +1690,15 @@ public void fwdOnLastPrisoner()
 	if (NOTVSH)
 		return;
 
-	JailBoss player = FindBoss(false);
-	if (player.bIsBoss)
+	if (IsClientValid(iCurrBoss.index) && iCurrBoss.bIsBoss)
 	{
-		switch (player.iType)
+		switch (iCurrBoss.iType)
 		{
 			case  - 1: {  }
-			case Hale:ToCHale(player).LastPlayerSoundClip();
-			case Vagineer:ToCVagineer(player).LastPlayerSoundClip();
-			case CBS:ToCChristian(player).LastPlayerSoundClip();
-			case Bunny:ToCBunny(player).LastPlayerSoundClip();
+			case Hale:ToCHale(iCurrBoss).LastPlayerSoundClip();
+			case Vagineer:ToCVagineer(iCurrBoss).LastPlayerSoundClip();
+			case CBS:ToCChristian(iCurrBoss).LastPlayerSoundClip();
+			case Bunny:ToCBunny(iCurrBoss).LastPlayerSoundClip();
 		}
 	}
 }
@@ -1879,56 +1896,45 @@ public void ManageBossCheckHealth(const JailBoss base)
 		LastBossTotalHealth = base.iHealth;
 		return;
 	}
-	if (currtime >= flHealthTime) 
-	{  // If a non-boss is checking health, reveal all Boss' hp
-		iHealthChecks++;
-		JailBoss boss;
-		int totalHealth;
-		gameMessage[0] = '\0';
-		for (int i = MaxClients; i; --i) 
-		{
-			if (!IsValidClient(i) || !IsPlayerAlive(i)) // Exclude dead bosses for health check
-				continue;
-			boss = JailBoss(i);
-			if (!boss.bIsBoss)
-				continue;
-			
-			switch (boss.iType) 
+	if (IsClientValid(iCurrBoss.index))
+	{
+		if (currtime >= flHealthTime)
+		{  // If a non-boss is checking health, reveal all Boss' hp
+			iHealthChecks++;
+			gameMessage[0] = '\0';
+			switch (iCurrBoss.iType) 
 			{
-				case Vagineer:Format(gameMessage, 256, "%s\nThe Vagineer's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case HHHjr:Format(gameMessage, 256, "%s\nThe Horseless Headless Horsemann Jr's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case CBS:Format(gameMessage, 256, "%s\nThe Christian Brutal Sniper's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case Hale:Format(gameMessage, 256, "%s\nSaxton Hale's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case Bunny:Format(gameMessage, 256, "%s\nThe Easter Bunny's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case Vagineer:Format(gameMessage, 256, "%s\nThe Vagineer's current health is: %i of %i", gameMessage, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+				case HHHjr:Format(gameMessage, 256, "%s\nThe Horseless Headless Horsemann Jr's current health is: %i of %i", gameMessage, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+				case CBS:Format(gameMessage, 256, "%s\nThe Christian Brutal Sniper's current health is: %i of %i", gameMessage, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+				case Hale:Format(gameMessage, 256, "%s\nSaxton Hale's current health is: %i of %i", gameMessage, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+				case Bunny:Format(gameMessage, 256, "%s\nThe Easter Bunny's current health is: %i of %i", gameMessage, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
 			}
-			totalHealth += boss.iHealth;
+			PrintCenterTextAll(gameMessage);
+			CPrintToChatAll("%t %s", "Plugin Tag", gameMessage);
+			LastBossTotalHealth = iCurrBoss.iHealth;
+			flHealthTime = currtime + (iHealthChecks < 3 ? 10.0 : 60.0);
 		}
-		PrintCenterTextAll(gameMessage);
-		CPrintToChatAll("%t %s", "Plugin Tag", gameMessage);
-		LastBossTotalHealth = totalHealth;
-		flHealthTime = currtime + (iHealthChecks < 3 ? 10.0 : 60.0);
+		else CPrintToChat(base.index, "%t You can see the Boss HP now (wait %i seconds). Last known total health was %i.", "Plugin Tag", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
 	}
-	else CPrintToChat(base.index, "%t You can see the Boss HP now (wait %i seconds). Last known total health was %i.", "Plugin Tag", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
 }
 
 public void ManageMessageIntro()
 {
-	JailBoss base = FindBoss(false);
-
 	gameMessage[0] = '\0';
 	//gamemode.OpenAllDoors();
 
-	if (!base)
+	if (!IsClientValid(iCurrBoss.index))
 		return;
 	int i;
-	switch (base.iType) 
+	switch (iCurrBoss.iType) 
 	{
 		case  - 1: {  }
-		case Hale:Format(gameMessage, 256, "\n%N has become Saxton Hale with %i Health", base.index, base.iHealth);
-		case Vagineer:Format(gameMessage, 256, "\n%N has become the Vagineer with %i Health", base.index, base.iHealth);
-		case CBS:Format(gameMessage, 256, "\n%N has become the Christian Brutal Sniper with %i Health", base.index, base.iHealth);
-		case HHHjr:Format(gameMessage, 256, "\n%N has become The Horseless Headless Horsemann Jr. with %i Health", base.index, base.iHealth);
-		case Bunny:Format(gameMessage, 256, "\n%N has become The Easter Bunny with %i Health", base.index, base.iHealth);
+		case Hale:Format(gameMessage, 256, "\n%N has become Saxton Hale with %i Health", iCurrBoss.index, iCurrBoss.iHealth);
+		case Vagineer:Format(gameMessage, 256, "\n%N has become the Vagineer with %i Health", iCurrBoss.index, iCurrBoss.iHealth);
+		case CBS:Format(gameMessage, 256, "\n%N has become the Christian Brutal Sniper with %i Health", iCurrBoss.index, iCurrBoss.iHealth);
+		case HHHjr:Format(gameMessage, 256, "\n%N has become The Horseless Headless Horsemann Jr. with %i Health", iCurrBoss.index, iCurrBoss.iHealth);
+		case Bunny:Format(gameMessage, 256, "\n%N has become The Easter Bunny with %i Health", iCurrBoss.index, iCurrBoss.iHealth);
 	}
 	SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
 	for (i = MaxClients; i; --i) {
@@ -1956,7 +1962,7 @@ public void fwdOnDownloads()
 	AddHHHToDownloads();
 	AddBunnyToDownloads();
 }
-public void fwdOnRoundStartPlayer(const JBPlayer Player)
+public void fwdOnRoundStartPlayer(const JBPlayer Player, Event event)
 {
 	if (NOTVSH)
 		return;
@@ -2000,13 +2006,19 @@ public void fwdOnRoundStart()
 		iTeamBansCVar = 1;
 	}
 
-	if(hNoChargeCVar)
+	if (hTeamBansCVar && !hTeamBansCVar.BoolValue)
+	{
+		hTeamBansCVar.SetBool(true);
+		iTeamBansCVar = 1;
+	}
+
+	if (hNoChargeCVar)
 	{
 		iNoChargeCVar = hNoChargeCVar.IntValue;
 		hNoChargeCVar.SetInt(0);
 	}
 
-	if(hDroppedWeaponsCVar)
+	if (hDroppedWeaponsCVar)
 	{
 		iDroppedWeaponsCVar = hDroppedWeaponsCVar.IntValue;
 		hDroppedWeaponsCVar.SetInt(1);
@@ -2014,8 +2026,13 @@ public void fwdOnRoundStart()
 
 	if (hNoChargeCVar)
 		hNoChargeCVar.SetInt(0);
-	if(hDroppedWeaponsCVar)
-		hDroppedWeaponsCVar.SetInt(iDroppedWeaponsCVar);
+
+	if (JBVSH[HealthBar].BoolValue && FindEntityByClassname(-1, "monster_resource") == -1)
+	{
+		PrintToServer("not found");
+		if ((iHealthBar = CreateEntityByName("monster_resource")) != -1)
+			DispatchSpawn(iHealthBar);
+	}
 
 	JailBoss rand = JailBoss( GetRandomClient(true) );	// It's probably best to keep the second param true
 	if (rand.index <= 0)
@@ -2054,16 +2071,22 @@ public void fwdOnRoundEnd(Event event)
 	ShowPlayerScores();
 	SetPawnTimer(CalcScores, 3.0);
 
+	if (iHealthBar > MaxClients)
+		RemoveEntity(iHealthBar);
+
 	if (hTeamBansCVar && iTeamBansCVar)
 	{
 		hTeamBansCVar.SetBool(false);
 		iTeamBansCVar = 0;
 	}
 
-	if(hNoChargeCVar)
+	if (hNoChargeCVar)
 		hNoChargeCVar.SetInt(iNoChargeCVar);
 
-	ManageRoundEndBossInfo( (event.GetInt("team") == BLU) );
+	if (hDroppedWeaponsCVar)
+		hDroppedWeaponsCVar.SetInt(iDroppedWeaponsCVar);
+
+	ManageRoundEndBossInfo( event.GetInt("team") == BLU );
 }
 public void fwdOnRedThink(const JBPlayer Player)
 {
@@ -2328,7 +2351,7 @@ public void fwdOnRedThink(const JBPlayer Player)
 				SetEntProp(i, Prop_Send, "m_iRevengeCrits", 3);
 				TF2_AddCondition(i, TFCond_Kritzkrieged, 0.2);
 			}
-			else 
+			else
 			{
 				if (GetEntProp(i, Prop_Send, "m_iRevengeCrits"))
 					SetEntProp(i, Prop_Send, "m_iRevengeCrits", 0);
@@ -2346,6 +2369,8 @@ public void fwdOnBlueThink(const JBPlayer Player)
 	JailBoss base = JailBoss.Of(Player);
 	if (!base.bIsBoss)
 		return;
+
+	UpdateBossHealth();		// This way it only fires once within the think loop
 
 	switch (base.iType) 
 	{
@@ -2521,7 +2546,7 @@ public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 	if (GetClientTeam(spawn.index) != RED)
 		spawn.ForceTeamChange(RED);
 }
-public void fwdOnMenuAdd(const int index, int &max, char strName[32])
+public void fwdOnMenuAdd(const int index, int &max, char strName[64])
 {
 	if (index != TF2JailRedux_LRIndex())
 		return;
@@ -2561,7 +2586,7 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, Even
 	int weapon = event.GetInt("weaponid");
 	
 	JailBoss attacker = JailBoss.Of(Attacker);
-	if (damage > 0)		// How does the medic room heal the boss?
+	if (damage > 0)
 	{
 		switch (victim.iType) 
 		{
@@ -2651,11 +2676,10 @@ public Action fwdOnMusicPlay(char song[PLATFORM_MAX_PATH], float &time)
 	if (NOTVSH)
 		return Plugin_Continue;
 
-	JailBoss currBoss = FindBoss(false);
-	if (!currBoss)
+	if (IsClientValid(iCurrBoss.index))
 		return Plugin_Handled;
 
-	switch (currBoss.iType) 
+	switch (iCurrBoss.iType) 
 	{
 		case  - 1: { song = ""; time = -1.0; return Plugin_Handled; }
 		case CBS: 
@@ -2856,7 +2880,7 @@ public Action fwdOnCalcAttack(JBPlayer player, int weapon, char[] weaponname, bo
 			}
 		}
 	}
-	if (base.bIsBoss) 
+	if (base.bIsBoss)
 	{  // Fuck random crits
 		if (TF2_IsPlayerCritBuffed(base.index))
 			return Plugin_Continue;
@@ -2879,6 +2903,14 @@ public void TF2ItemsFix(const int client)
 
 	TF2_RemoveAllWeapons(client);
 	TF2_RegeneratePlayer(client);
+}
+
+public Action fwdOnSetWardenLock(const bool status)
+{
+	if (NOTVSH)
+		return Plugin_Continue;
+
+	return !status ? Plugin_Handled : Plugin_Continue;
 }
 
 public void LoadJBHooks()
@@ -2939,6 +2971,8 @@ public void LoadJBHooks()
 		LogError("Failed to load OnSoundHook forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnEntCreated, fwdOnEntCreated))
 		LogError("Failed to load OnEntCreated forwards for JB VSH Sub-Plugin!");
+	if (!JB_HookEx(OnSetWardenLock, fwdOnSetWardenLock))
+		LogError("Failed to load OnSetWardenLock forwards for JB VSH Sub-Plugin!");
 }
 
 stock bool OnlyScoutsLeft(const int team)
