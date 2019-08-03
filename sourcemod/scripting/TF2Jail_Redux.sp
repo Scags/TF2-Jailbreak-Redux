@@ -941,7 +941,7 @@ public Action Timer_PlayerThink(Handle timer)
 					JailFighter rebel = JailFighter(GetHealingTarget(i));
 					if (0 < rebel.index <= MaxClients && rebel.bIsRebel)
 					{
-						player.flHealTime += GetEntProp(GetPlayerWeaponSlot(i, TFWeaponSlot_Secondary), Prop_Send, "m_bChargeRelease") ? 0.2 : 0.1;
+						player.flHealTime += IsMedicUbering(i) ? 0.2 : 0.1;
 						if (player.flHealTime >= healtime)
 						{
 							player.RemoveFreeday();

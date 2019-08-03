@@ -1166,3 +1166,10 @@ stock void KillFlameManager(const int client)
 			RemoveEntity(flamemgr);
 	}
 }
+stock bool IsMedicUbering(const int medic)
+{
+	int medigun = GetPlayerWeaponSlot(medic, TFWeaponSlot_Secondary);
+	if (medigun > MaxClients && IsValidEntity(medigun))
+		return HasEntProp(medigun, Prop_Send, "m_bChargeRelease") ? !!GetEntProp(medigun, Prop_Send, "m_bChargeRelease") : false;
+	return false;
+}
