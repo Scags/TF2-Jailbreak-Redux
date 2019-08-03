@@ -16,7 +16,6 @@ Handle
 	hLegacyFwds[Old_OnRebelRemoved+1]
 ;
 
-
 void InitializeForwards()
 {
 	hPrivFwds[OnDownloads] 				= CreateForward(ET_Ignore);
@@ -38,7 +37,7 @@ void InitializeForwards()
 	hPrivFwds[OnPlayerJarated] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	hPrivFwds[OnUberDeployed] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	hPrivFwds[OnPlayerSpawned]			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
-	hPrivFwds[OnMenuAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_CellByRef, Param_String, Param_CellByRef);
+	hPrivFwds[OnMenuAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_CellByRef, Param_String);
 	hPrivFwds[OnPanelAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_String);
 	hPrivFwds[OnTimeLeft] 				= CreateForward(ET_Ignore, Param_CellByRef);
 	hPrivFwds[OnPlayerPrepped] 			= CreateForward(ET_Ignore, Param_Cell);
@@ -318,10 +317,12 @@ Action Call_OnTimeEnd()
 	Call_Finish(action);
 	return action;
 }
-void Call_OnLastGuard(Action &action)
+Action Call_OnLastGuard()
 {
+	Action action = Plugin_Continue;
 	Call_StartForward(hPrivFwds[OnLastGuard]);
 	Call_Finish(action);
+	return action;
 }
 Action Call_OnLastPrisoner()
 {

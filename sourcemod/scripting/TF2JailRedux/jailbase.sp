@@ -356,6 +356,17 @@ methodmap JailFighter
 		}
 	}
 
+	public any GetProperty(const char[] key)
+	{
+		any val; this.hMap.GetValue(key, val);
+		return val;
+	}
+
+	public void SetProperty(const char[] key, any val)
+	{
+		this.hMap.SetValue(key, val);
+	}
+
 	/**
 	 *	Creates and spawns a weapon to a player.
 	 *
@@ -695,15 +706,18 @@ methodmap JailFighter
 	 *	Initialize a player as the warden.
 	 *	@note 				This automatically gives the player the warden menu
 	 *
-	 *	@noreturn
+	 *	@return 			True on success, false otherwise.
 	*/
-	public void WardenSet()
+	public bool WardenSet()
 	{
 		if (Call_OnWardenGet(this) != Plugin_Continue)
-			return;
+			return false;
 
 		if (JBGameMode_GetProperty("bWardenExists"))
-			return;
+			return false;
+
+		if (JBGameMode_GetProperty("bIsWardenLocked"))
+			return false;
 
 		this.bIsWarden = true;	
 		this.UnmutePlayer();
@@ -752,19 +766,20 @@ methodmap JailFighter
 			SetEntityRenderColor(this.index, iWardenColors[0], iWardenColors[1], iWardenColors[2], iWardenColors[3]);
 
 		ManageWarden(this);
+		return true;
 	}
 	/**
 	 *	Terminate a player as the warden.
 	 *
-	 *	@noreturn
+	 *	@return 			True on success, false otherwise.
 	*/
-	public void WardenUnset()
+	public bool WardenUnset()
 	{
 		if (!IsClientValid(this.index))
-			return;
+			return false;
 
 		if (!this.bIsWarden)
-			return;
+			return false;
 
 		if (hTextNodes[2])
 			for (int i = MaxClients; i; --i)
@@ -797,6 +812,7 @@ methodmap JailFighter
 			SetEntityRenderColor(this.index);
 
 		Call_OnWardenRemoved(this);
+		return true;
 	}
 	/**
 	 *	Remove all weapons, disguises, and wearables from a client.
@@ -1029,7 +1045,7 @@ methodmap JailFighter
 	*/
 	public void MarkRebel()
 	{
-		if (this.bIsRebel)
+		if (this.bIsRebel || !IsPlayerAlive(this.index) || GetClientTeam(this.index) != RED)
 			return;
 
 		if (!cvarTF2Jail[Rebellers].BoolValue)

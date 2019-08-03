@@ -1524,7 +1524,7 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 			while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1)
 			{
 				if (GetOwner(ent) == client
-					&& damage >= float(GetClientHealth(client))
+					//&& damage >= float(GetClientHealth(client))
 					&& !TF2_IsPlayerInCondition(client, TFCond_Ubercharged)
 					&& !GetEntProp(ent, Prop_Send, "m_bDisguiseWearable")
 					&& weapon == GetPlayerWeaponSlot(attacker, 2))
@@ -1896,36 +1896,27 @@ public void ManageBossCheckHealth(const JailBoss base)
 		LastBossTotalHealth = base.iHealth;
 		return;
 	}
-	if (currtime >= flHealthTime) 
-	{  // If a non-boss is checking health, reveal all Boss' hp
-		iHealthChecks++;
-		JailBoss boss;
-		int totalHealth;
-		gameMessage[0] = '\0';
-		for (int i = MaxClients; i; --i) 
-		{
-			if (!IsValidClient(i) || !IsPlayerAlive(i)) // Exclude dead bosses for health check
-				continue;
-			boss = JailBoss(i);
-			if (!boss.bIsBoss)
-				continue;
-			
-			switch (boss.iType) 
+	if (IsClientValid(iCurrBoss.index))
+	{
+		if (currtime >= flHealthTime)
+		{  // If a non-boss is checking health, reveal all Boss' hp
+			iHealthChecks++;
+			gameMessage[0] = '\0';
+			switch (iCurrBoss.iType) 
 			{
-				case Vagineer:Format(gameMessage, 256, "%s\nThe Vagineer's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case HHHjr:Format(gameMessage, 256, "%s\nThe Horseless Headless Horsemann Jr's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case CBS:Format(gameMessage, 256, "%s\nThe Christian Brutal Sniper's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case Hale:Format(gameMessage, 256, "%s\nSaxton Hale's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
-				case Bunny:Format(gameMessage, 256, "%s\nThe Easter Bunny's current health is: %i of %i", gameMessage, boss.iHealth, boss.iMaxHealth);
+				case Vagineer:Format(gameMessage, 256, "%s\nThe Vagineer's current health is: %i of %i", gameMessage, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+				case HHHjr:Format(gameMessage, 256, "%s\nThe Horseless Headless Horsemann Jr's current health is: %i of %i", gameMessage, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+				case CBS:Format(gameMessage, 256, "%s\nThe Christian Brutal Sniper's current health is: %i of %i", gameMessage, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+				case Hale:Format(gameMessage, 256, "%s\nSaxton Hale's current health is: %i of %i", gameMessage, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
+				case Bunny:Format(gameMessage, 256, "%s\nThe Easter Bunny's current health is: %i of %i", gameMessage, iCurrBoss.iHealth, iCurrBoss.iMaxHealth);
 			}
-			totalHealth += boss.iHealth;
+			PrintCenterTextAll(gameMessage);
+			CPrintToChatAll("%t %s", "Plugin Tag", gameMessage);
+			LastBossTotalHealth = iCurrBoss.iHealth;
+			flHealthTime = currtime + (iHealthChecks < 3 ? 10.0 : 60.0);
 		}
-		PrintCenterTextAll(gameMessage);
-		CPrintToChatAll("%t %s", "Plugin Tag", gameMessage);
-		LastBossTotalHealth = totalHealth;
-		flHealthTime = currtime + (iHealthChecks < 3 ? 10.0 : 60.0);
+		else CPrintToChat(base.index, "%t You can see the Boss HP now (wait %i seconds). Last known total health was %i.", "Plugin Tag", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
 	}
-	else CPrintToChat(base.index, "%t You can see the Boss HP now (wait %i seconds). Last known total health was %i.", "Plugin Tag", RoundFloat(flHealthTime - currtime), LastBossTotalHealth);
 }
 
 public void ManageMessageIntro()

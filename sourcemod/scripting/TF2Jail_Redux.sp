@@ -112,6 +112,7 @@ enum	// Cvar name
 	WardenInvite,
 	WardenToggleMuting,
 	MedicLoseFreeday,
+	FreedayBeamLifetime,
 	Version
 };
 
@@ -196,7 +197,7 @@ public void OnPluginStart()
 	cvarTF2Jail[SeeHealth] 					= CreateConVar("sm_tf2jr_wardensee_health", "1", "Can the Warden see prisoner health?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[EnableMusic] 				= CreateConVar("sm_tf2jr_music_on", "1", "Enable background music that could possibly play with last requests?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[MusicVolume] 				= CreateConVar("sm_tf2jr_music_volume", ".5", "Volume in which background music plays. (If enabled)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	cvarTF2Jail[EurekaTimer] 				= CreateConVar("sm_tf2jr_eureka_teleport", "20", "How long must players wait until they are able to Eureka Effect Teleport again? (0 to disable cooldown)", FCVAR_NOTIFY, true, 0.0, true, 60.0);
+	cvarTF2Jail[EurekaTimer] 				= CreateConVar("sm_tf2jr_eureka_teleport", "20", "How long must players wait until they are able to Eureka Effect Teleport again? (0 to disable cooldown)", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[VIPFlag] 					= CreateConVar("sm_tf2jr_vip_flag", "a", "What admin flag do VIP players fall under? Leave blank to disable VIP perks.", FCVAR_NOTIFY);
 	cvarTF2Jail[AdmFlag] 					= CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under? Leave blank to disable Admin perks.", FCVAR_NOTIFY);
 	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -234,6 +235,7 @@ public void OnPluginStart()
 	cvarTF2Jail[WardenInvite] 				= CreateConVar("sm_tf2jr_warden_invite", "0", "Allow the Warden to invite players to the Guards' team?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WardenToggleMuting] 		= CreateConVar("sm_tf2jr_warden_mute", "0", "Allow the Warden to toggle plugin muting?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[MedicLoseFreeday] 			= CreateConVar("sm_tf2jr_medic_freeday", "2", "If a Medic with a freeday is healing rebels, should that medic lose freeday? If so, how long must they heal said rebels?", FCVAR_NOTIFY, true, 0.0);
+	cvarTF2Jail[FreedayBeamLifetime] 		= CreateConVar("sm_tf2jr_freeday_beamtime", "10", "Time in seconds for the Freeday beam's lifetime.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -676,7 +678,7 @@ public void OnLibraryAdded(const char[] name)
 	if (!strcmp(name, "voiceannounce_ex", false))
 		gamemode.bVA = true;
 #endif
-	if (!strcmp(name, "sourcecomms", false) || !strcmp(name, "sourcecomms++", false))
+	if (!StrContains(name, "sourcecomms", false))
 		gamemode.bSC = true;
 	if (!strcmp(name, "tf2attributes", false))
 		gamemode.bTF2Attribs = true;
@@ -854,7 +856,6 @@ public void OnClientDisconnect(int client)
 	{
 		player.WardenUnset();
 		PrintCenterTextAll("%t","Warden Disconnected");
-		gamemode.bWardenExists = false;
 	}
 	// If they're warden, they wouldn't vote... right?
 	else if (gamemode.iVotes >= gamemode.iVotesNeeded)
@@ -927,7 +928,7 @@ public Action Timer_PlayerThink(Handle timer)
 				continue;
 			/* Props to <eVa>Dog */
 			float vecOrigin[3]; GetClientAbsOrigin(i, vecOrigin);
-			TE_SetupBeamPoints(vecOld[i], vecOrigin, iLaserBeam, iHalo2, 0, 0, 10.0, 20.0, 10.0, 5, 0.0, {255, 25, 25, 255}, 30);
+			TE_SetupBeamPoints(vecOld[i], vecOrigin, iLaserBeam, iHalo2, 0, 0, cvarTF2Jail[FreedayBeamLifetime].FloatValue, 20.0, 10.0, 5, 0.0, {255, 25, 25, 255}, 30);
 			TE_SendToAll();
 
 			vecOld[i] = vecOrigin;
@@ -937,18 +938,14 @@ public Action Timer_PlayerThink(Handle timer)
 				float healtime = cvarTF2Jail[MedicLoseFreeday].FloatValue;
 				if (healtime != 0.0)
 				{
-					int wep = GetPlayerWeaponSlot(i, TFWeaponSlot_Secondary);
-					if (wep > MaxClients && GetEntProp(wep, Prop_Send, "m_bHealing"))
+					JailFighter rebel = JailFighter(GetHealingTarget(i));
+					if (0 < rebel.index <= MaxClients && rebel.bIsRebel)
 					{
-						JailFighter rebel = JailFighter(GetEntPropEnt(wep, Prop_Send, "m_hHealingTarget"));
-						if (0 < rebel.index <= MaxClients && rebel.bIsRebel)
+						player.flHealTime += GetEntProp(GetPlayerWeaponSlot(i, TFWeaponSlot_Secondary), Prop_Send, "m_bChargeRelease") ? 0.2 : 0.1;
+						if (player.flHealTime >= healtime)
 						{
-							player.flHealTime += 0.1;
-							if (player.flHealTime >= healtime)
-							{
-								player.RemoveFreeday();
-								PrintCenterTextAll("%t", "Medic Heal Rebel", i);
-							}
+							player.RemoveFreeday();
+							PrintCenterTextAll("%t", "Medic Heal Rebel", i);
 						}
 					}
 				}
@@ -1326,7 +1323,7 @@ public void ParseNodeConfig()
 		return;
 	}
 
-	int count = 0;
+	int count;
 	do
 	{
 		EnumTNPS[count][fCoord_X] = kv.GetFloat("Coord_X", -1.0);
@@ -1813,6 +1810,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBGameMode_ResetVotes", Native_JBGameMode_ResetVotes);
 	CreateNative("JBGameMode_GetTelePosition", Native_JBGameMode_GetTelePosition);
 	CreateNative("JBGameMode_SetWardenLock", Native_JBGameMode_SetWardenLock);
+	CreateNative("JBGameMode_AutobalanceTeams", Native_JBGameMode_AutobalanceTeams);
+	CreateNative("JBGameMode_EvenTeams", Native_JBGameMode_EvenTeams);
 		/* Gamemode StringMap */
 	CreateNative("JBGameMode_Instance", Native_JBGameMode_Instance);
 	CreateNative("JBGameMode_GetProperty", Native_JBGameMode_GetProperty);
@@ -1895,7 +1894,6 @@ public int Native_UnRegisterPlugin(Handle plugin, int numParams)
 	holder.Erase(idx);
 
 	gamemode.hLRS.Erase(idx - holder.Length + LRMAX + 1);
-
 	gamemode.iLRs--;
 
 	return true;
@@ -1932,8 +1930,8 @@ public int Native_UnRegisterLR(Handle plugin, int numParams)
 	if (holder.FindValue(plugin) == -1)
 		return false;
 
-	// TF2JailRedux_UnRegisterLR(TF2JailRedux_LRIndex() + num)
-	gamemode.hLRS.Erase(GetNativeCell(1) - holder.Length + LRMAX);
+	/* TF2JailRedux_UnRegisterLR(TF2JailRedux_LRIndex() + num) */
+	gamemode.hLRS.Erase(GetNativeCell(1) - holder.Length + LRMAX + 1);
 	gamemode.iLRs--;
 
 	return true;
@@ -2063,11 +2061,11 @@ public int Native_UnmutePlayer(Handle plugin, int numParams)
 }
 public int Native_WardenSet(Handle plugin, int numParams)
 {
-	JailFighter(GetNativeCell(1)).WardenSet();
+	return JailFighter(GetNativeCell(1)).WardenSet();
 }
 public int Native_WardenUnset(Handle plugin, int numParams)
 {
-	JailFighter(GetNativeCell(1)).WardenUnset();
+	return JailFighter(GetNativeCell(1)).WardenUnset();
 }
 public int Native_MakeHorsemann(Handle plugin, int numParams)
 {
@@ -2149,6 +2147,14 @@ public int Native_JBGameMode_GetTelePosition(Handle plugin, int numParams)
 public int Native_JBGameMode_SetWardenLock(Handle plugin, int numParams)
 {
 	return gamemode.SetWardenLock(GetNativeCell(1), GetNativeCell(2));
+}
+public int Native_JBGameMode_AutobalanceTeams(Handle plugin, int numParams)
+{
+	gamemode.AutobalanceTeams(GetNativeCell(1));
+}
+public int Native_JBGameMode_EvenTeams(Handle plugin, int numParams)
+{
+	gamemode.EvenTeams(GetNativeCell(1), GetNativeCell(2));
 }
 
 public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)

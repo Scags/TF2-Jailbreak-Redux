@@ -75,6 +75,7 @@ public void OnAllPluginsLoaded()
 	//JB_Hook(OnDoorsLock, 				fwdOnDoorsLock);
 	//JB_Hook(OnDoorsUnlock, 			fwdOnDoorsUnlock);
 	//JB_Hook(OnPlayMusic, 				fwdOnPlayMusic);
+	//JB_Hook(OnSetWardenLock, 			fwdOnSetWardenLock);
 }
 
 public void OnPluginEnd()

@@ -680,8 +680,7 @@ methodmap JailGameMode < StringMap
 			return view_as< JailFighter >(0);
 
 		JailFighter player = JailFighter(client);
-		player.WardenSet();
-		return player;
+		return player.WardenSet() ? player : view_as< JailFighter >(0);
 	}
 	/**
 	 *	Handle the cell doors.
@@ -967,5 +966,101 @@ methodmap JailGameMode < StringMap
 			this.iWarden.WardenUnset();
 		this.bIsWardenLocked = status;
 		return true;
+	}
+
+	/**
+	 *	Autobalance the teams in accordance with the cvars.
+	 *
+	 *	@param announce 		Tell the player that they've been autobalanced.
+	 *
+	 *	@noreturn
+	*/
+	public void AutobalanceTeams(bool announce = true)
+	{
+		if (this.iPlaying <= 2)
+			return;
+
+		if (Call_OnShouldAutobalance() != Plugin_Continue)
+			return;
+
+		int immunity = cvarTF2Jail[AutobalanceImmunity].IntValue;
+		float balance = cvarTF2Jail[BalanceRatio].FloatValue;
+		float lBlue = float( GetLivingPlayers(BLU) );
+		float lRed = float( GetLivingPlayers(RED) );
+		JailFighter player;
+
+		float ratio;
+		int tries;
+		do
+		{
+			ratio = lBlue / lRed;
+			if (ratio <= balance)
+				break;
+
+			player = JailFighter(GetRandomPlayer(BLU, true));
+			if (player.index == -1)		// Fake news
+				break;
+
+			if ((immunity == 2 && !player.bIsAdmin) || (immunity == 1 && !player.bIsVIP) || !immunity)
+			{
+				if (Call_OnShouldAutobalancePlayer(player) != Plugin_Continue)
+					continue;
+
+				KillFlameManager(player.index);
+				player.ForceTeamChange(RED);
+				if (announce)
+					CPrintToChat(player.index, "%t %t", "Plugin Tag", "Autobalanced");
+
+				--lBlue;	// Avoid loopception
+				++lRed;
+			}
+		} while ++tries < 50;	// Plenty
+	}
+
+	/**
+	 *	Autobalance the teams as evenly as possible.
+	 *	@note 					Guardbanned players are handled automatically.
+	 *
+	 *	@param announce			Tell the player that they've been autobalanced.
+	 *	@param followimmun 		If true, follow autobalance immunity rules.
+	 *
+	 *	@noreturn
+	*/
+	public void EvenTeams(bool announce = true, bool followimmun = true)
+	{
+		if (this.iPlaying <= 2)		// Shouldn't they already be even then...?
+			return;
+
+		int countred, countblu;
+		int immunity = cvarTF2Jail[AutobalanceImmunity].IntValue;
+		JailFighter player;
+
+		int tries, val;
+		do
+		{
+			val = RoundFloat(FloatAbs(float((countred = GetLivingPlayers(RED)) - (countblu = GetLivingPlayers(BLU)))) / 2);
+
+			if (val <= 1)
+				break;
+
+			if (tries > 50)
+				break;
+
+			player = JailFighter(GetRandomPlayer(countred > countblu ? RED : BLU, true));
+
+			if (player.index == -1)
+				break;
+
+			// Could possibly hit an infinite loop here
+			// Rare, however. Would take low player count and/or a lot of donors/admins
+			// Which is why 'tries' exists
+			if (followimmun && !((immunity == 2 && !player.bIsAdmin) || (immunity == 1 && !player.bIsVIP) || !immunity))
+				continue;
+
+			KillFlameManager(player.index);
+			player.ForceTeamChange(countred > countblu ? BLU : RED);
+			if (announce)
+				CPrintToChat(player.index, "%t %t", "Plugin Tag", "Autobalanced");
+		} while ++tries <= 50;
 	}
 };

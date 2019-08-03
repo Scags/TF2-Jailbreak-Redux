@@ -272,10 +272,10 @@ public void fwdOnPlayerSpawn(const JBPlayer Player, Event event)
 	if (!base.bIsGuardbanned)
 		return;
 
-	char BanMsg[64]; cvarJBANS[JoinMessage].GetString(BanMsg, sizeof(BanMsg));	
+	char BanMsg[128]; cvarJBANS[JoinMessage].GetString(BanMsg, sizeof(BanMsg));	
 	PrintCenterText(base.index, "%t", "Guardbanned Center");
 	CPrintToChat(base.index, "%t %s", "Plugin Tag Teambans", BanMsg);
-	base.ForceTeamChange(RED, running ? false : true);
+	base.ForceTeamChange(RED, !running);
 }
 
 public Action fwdOnWardenGet(const JBPlayer Player)
@@ -284,7 +284,7 @@ public Action fwdOnWardenGet(const JBPlayer Player)
 	if (!player.bIsWardenBanned)
 		return Plugin_Continue;
 
-	char BanMsg[64]; cvarJBANS[JoinMessage].GetString(BanMsg, sizeof(BanMsg));	
+	char BanMsg[128]; cvarJBANS[JoinMessage].GetString(BanMsg, sizeof(BanMsg));	
 	PrintCenterText(player.index, "%t", "Wardenbanned Center");
 	CPrintToChat(player.index, "%t %s", "Plugin Tag Teambans", BanMsg);
 	return Plugin_Handled;

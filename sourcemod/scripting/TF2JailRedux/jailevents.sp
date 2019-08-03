@@ -93,7 +93,6 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	else if (victim.bIsWarden)
 	{
 		victim.WardenUnset();
-		gamemode.bWardenExists = false;
 
 		if (gamemode.iRoundState == StateRunning)
 			if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue || !gamemode.bSilentWardenKills)
@@ -154,7 +153,7 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 				{
 					GetEntPropString(ent, Prop_Data, "m_iName", entname, sizeof(entname));
 					if (StrEqual(entname, strCellNames, false))	// Laziness, hook first cell door opening so open door timer catches and doesn't open on its own
-						HookSingleEntityOutput(i, "OnOpen", OnFirstCellOpening, true);
+						HookSingleEntityOutput(ent, "OnOpen", OnFirstCellOpening, true);
 				}
 			}
 		}
@@ -203,47 +202,8 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	SetPawnTimer(CheckLivingPlayers, 0.2);
 
-	if (cvarTF2Jail[Balance].BoolValue && gamemode.iPlaying > 2 && Call_OnShouldAutobalance() == Plugin_Continue)
-	{
-		int flamemanager;
-		int immunity = cvarTF2Jail[AutobalanceImmunity].IntValue;
-		float ratio;
-		float balance = cvarTF2Jail[BalanceRatio].FloatValue;
-		float lBlue = float( GetLivingPlayers(BLU) );
-		float lRed = float( GetLivingPlayers(RED) );
-
-		for (i = MaxClients; i; --i)	// 2 player loops so that autobalance doesn't fuck over ManageRoundStart()
-		{
-			if (!IsClientInGame(i))
-				continue;
-			if (!IsPlayerAlive(i))
-				continue;
-
-			ratio = lBlue / lRed;
-
-			if (ratio > balance)
-			{
-				player = JailFighter(GetRandomPlayer(BLU, true));
-				if (Call_OnShouldAutobalancePlayer(player) != Plugin_Continue)
-					continue;
-
-				if ((immunity == 2 && !player.bIsAdmin) || (immunity == 1 && !player.bIsVIP) || !immunity)
-				{
-					if (HasEntProp(player.index, Prop_Send, "m_hFlameManager"))
-					{
-						flamemanager = GetEntPropEnt(player.index, Prop_Send, "m_hFlameManager");	// Avoid teamkilling
-						if (flamemanager != -1)
-							RemoveEntity(flamemanager);
-					}
-					player.ForceTeamChange(RED);
-					CPrintToChat(player.index, "%t %t", "Plugin Tag", "Autobalanced");
-
-					--lBlue;	// Avoid loopception
-					++lRed;
-				}
-			}
-		}
-	}
+	if (cvarTF2Jail[Balance].BoolValue)
+		gamemode.AutobalanceTeams();
 
 	if (gamemode.b1stRoundFreeday)
 	{
@@ -362,7 +322,8 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 		if (GetClientMenu(i) != MenuSource_None)
 			CancelClientMenu(i, true);
 
-		StopSound(i, SNDCHAN_AUTO, strBackgroundSong);
+		if (strBackgroundSong[0] != '\0')
+			StopSound(i, SNDCHAN_AUTO, strBackgroundSong);
 
 		ManageRoundEnd(player, event);
 		player.UnmutePlayer();

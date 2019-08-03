@@ -355,7 +355,7 @@ public Action Command_GiveLastRequest(int client, int args)
 	int target_list[MAXPLAYERS];
 	bool tn_is_ml;
 
-	int target_count = ProcessTargetString(targetname, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+	int target_count = ProcessTargetString(targetname, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE|COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 	if (target_count != 1)
 		ReplyToTargetError(client, target_count);
@@ -393,7 +393,7 @@ public Action Command_RemoveLastRequest(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (gamemode.iLRPresetType < 0)
+	if (gamemode.iLRPresetType == -1)
 	{
 		CPrintToChat(client, "%t %t", "Plugin Tag", "No LR Next Round");
 		return Plugin_Handled;
@@ -440,7 +440,8 @@ public void ListLastRequestPanel(const int client)
 
 public int ListLRsPanel(Menu menu, MenuAction action, int client, int select)
 {
-	return;
+	if (action == MenuAction_End)
+		delete menu;
 }
 
 public Action Command_CurrentWarden(int client, int args)
@@ -648,7 +649,7 @@ public Action AdminForceWarden(int client, int args)
 		int target_list[MAXPLAYERS];
 		bool tn_is_ml;
 
-		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE|COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 		if (target_count != 1)
 			ReplyToTargetError(client, target_count);
@@ -659,8 +660,7 @@ public Action AdminForceWarden(int client, int args)
 			return Plugin_Handled;
 		}
 
-		if (gamemode.bWardenExists)
-			gamemode.iWarden.WardenUnset();
+		gamemode.iWarden.WardenUnset();
 
 		JailFighter(target_list[0]).WardenSet();
 		CPrintToChatAll("%t %t", "Admin Tag", "Admin Force Warden", target_list[0]);
@@ -668,8 +668,7 @@ public Action AdminForceWarden(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (gamemode.bWardenExists)
-		gamemode.iWarden.WardenUnset();
+	gamemode.iWarden.WardenUnset();
 
 	gamemode.FindRandomWarden();
 	CPrintToChatAll("%t %t", "Admin Tag", "Admin Force Random Warden");
@@ -695,7 +694,7 @@ public Action AdminForceLR(int client, int args)
 		int target_list[MAXPLAYERS];
 		bool tn_is_ml;
 
-		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE|COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 		if (target_count != 1)
 			ReplyToTargetError(client, target_count);
@@ -786,7 +785,7 @@ public Action AdminGiveFreeday(int client, int args)
 		int target_list[MAXPLAYERS];
 		bool tn_is_ml;
 
-		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, 0, clientName, sizeof(clientName), tn_is_ml);
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 		if (target_count != 1)
 			ReplyToTargetError(client, target_count);
@@ -862,7 +861,7 @@ public Action AdminRemoveFreeday(int client, int args)
 		int target_list[MAXPLAYERS];
 		bool tn_is_ml;
 
-		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+		int target_count = ProcessTargetString(arg, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE|COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 		if (target_count != 1)
 			ReplyToTargetError(client, target_count);
@@ -900,7 +899,7 @@ public void RemoveFreedaysMenu(int client)
 	{
 		if (!IsClientInGame(i))
 			continue;
-			
+
 		if (JailFighter(i).bIsFreeday)
 		{
 			IntToString(GetClientUserId(i), strID, sizeof(strID));
@@ -921,7 +920,7 @@ public int MenuHandle_RemoveFreedays(Menu menu, MenuAction action, int client, i
 			char player[32];
 			menu.GetItem(select, player, sizeof(player));
 			JailFighter targ = JailFighter.OfUserId(StringToInt(player));
-			
+
 			if (!IsClientInGame(targ.index))
 			{
 				CReplyToCommand(client, "%t %t", "Plugin Tag", "Player no longer available");
@@ -957,9 +956,8 @@ public Action AdminLockWarden(int client, int args)
 		CReplyToCommand(client, "%t %t", "Plugin Tag", "Warden Already Locked");
 		return Plugin_Handled;
 	}
-	if (gamemode.bWardenExists)
-		gamemode.iWarden.WardenUnset();
 
+	gamemode.iWarden.WardenUnset();
 	gamemode.bIsWardenLocked = true;
 	CPrintToChatAll("%t %t", "Admin Tag", "Admin Lock Warden");
 
@@ -1326,7 +1324,7 @@ public Action Command_WardenInvite(int client, int args)
 	int target_list[MAXPLAYERS];
 	bool tn_is_ml;
 
-	int target_count = ProcessTargetString(targetname, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, clientName, sizeof(clientName), tn_is_ml);
+	int target_count = ProcessTargetString(targetname, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE|COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 	if (target_count != 1)
 		ReplyToTargetError(client, target_count);
@@ -1459,7 +1457,7 @@ public void MakeMuteToggleMenu(const int client, const int type)
 
 	for (int i = 0; i < 7; ++i)
 	{
-		draw = (currtype == i ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+		draw = (i == currtype ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 		switch (i)
 		{
 			case 0:FormatEx(s, sizeof(s), "%t", "Mute No One");
@@ -1664,7 +1662,7 @@ public Action BaseProp(int client, int args)
 	int target_list[MAXPLAYERS];
 	bool tn_is_ml;
 
-	int target_count = ProcessTargetString(arg1, client, target_list, MAXPLAYERS, 0, clientName, sizeof(clientName), tn_is_ml);
+	int target_count = ProcessTargetString(arg1, client, target_list, MAXPLAYERS, COMMAND_FILTER_NO_IMMUNITY, clientName, sizeof(clientName), tn_is_ml);
 
 	if (target_count != 1)
 		ReplyToTargetError(client, target_count);

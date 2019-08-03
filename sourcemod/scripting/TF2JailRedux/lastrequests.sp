@@ -12,3 +12,4 @@ JailGameMode gamemode;
 */
 #include "TF2JailRedux/lastrequests/hhhday.sp"
 #include "TF2JailRedux/lastrequests/hotprisoner.sp"
+#include "TF2JailRedux/lastrequests/swa.sp"

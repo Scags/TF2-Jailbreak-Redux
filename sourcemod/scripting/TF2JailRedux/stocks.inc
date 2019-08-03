@@ -645,7 +645,7 @@ stock bool ValidateName(const char[] name)
 	// A name is, of course, only valid if it's 1 or more chars long, though longer is recommended
 	return (length > 0);
 }
-stock int GetRandomPlayer(int team, bool alive = false)  
+stock int GetRandomPlayer(int team = 0, bool alive = false)  
 {  
 	int[] clients = new int[MaxClients];  
 	int clientCount;  
@@ -653,7 +653,7 @@ stock int GetRandomPlayer(int team, bool alive = false)
 	{
 		if (!IsClientInGame(i))
 			continue;
-		if (GetClientTeam(i) != team) 
+		if (team && GetClientTeam(i) != team) 
 			continue;
 		if (alive && !IsPlayerAlive(i))
 			continue;
@@ -1156,4 +1156,13 @@ stock void EmptyPlayerWeaponSlots(const int client)
 	int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
 	if (wep > MaxClients && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
 		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
+}
+stock void KillFlameManager(const int client)
+{
+	if (HasEntProp(client, Prop_Send, "m_hFlameManager"))
+	{
+		int flamemgr = GetEntPropEnt(client, Prop_Send, "m_hFlameManager");
+		if (flamemgr != -1)
+			RemoveEntity(flamemgr);
+	}
 }

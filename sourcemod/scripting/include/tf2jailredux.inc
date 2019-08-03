@@ -470,7 +470,7 @@ native int JBGameMode_Playing();
 /**
  *	Find and Initialize a random player as the warden.
  *
- *	@noreturn
+ *	@return 				JBPlayer instance of the new Warden if they were valid.
 */
 native JBPlayer JBGameMode_FindRandomWarden();
 
@@ -586,6 +586,26 @@ native any JBGameMode_GetProperty(const char prop_name[64]);
  *	@noreturn
 */
 native void JBGameMode_SetProperty(const char prop_name[64], any value);
+
+/**
+ *	Autobalance the teams in accordance with the cvars.
+ *
+ *	@param announce 		Tell the player that they've been autobalanced.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_AutobalanceTeams(bool announce = true);
+
+/**
+ *	Autobalance the teams as evenly as possible.
+ *	@note 					Guardbanned players are handled automatically.
+ *
+ *	@param announce			Tell the player that they've been autobalanced.
+ *	@param followimmun 		If true, follow autobalance immunity rules.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_EvenTeams(bool announce = true, bool followimmun = true);
 
 /** Properties
  *	int iRoundState
@@ -1115,7 +1135,7 @@ methodmap JBGameMode < StringMap
 	/**
 	 *	Find and Initialize a random player as the warden.
 	 *
-	 *	@noreturn
+	 *	@return 				JBPlayer instance of the new Warden if they were valid.
 	*/
 	public JBPlayer FindRandomWarden()
 	{
@@ -1230,6 +1250,32 @@ methodmap JBGameMode < StringMap
 	public bool GetTelePosition( const int location, float[] array )
 	{
 		return JBGameMode_GetTelePosition(location, array);
+	}
+
+	/**
+	 *	Autobalance the teams in accordance with the cvars.
+	 *
+	 *	@param announce 		Tell the player that they've been autobalanced.
+	 *
+	 *	@noreturn
+	*/
+	public void AutobalanceTeams(bool announce = true)
+	{
+		JBGameMode_AutobalanceTeams(announce);
+	}
+
+	/**
+	 *	Autobalance the teams as evenly as possible.
+	 *	@note 					Guardbanned players are handled automatically.
+	 *
+	 *	@param announce			Tell the player that they've been autobalanced.
+	 *	@param followimmun 		If true, follow autobalance immunity rules.
+	 *
+	 *	@noreturn
+	*/
+	public void EvenTeams(bool announce = true, bool followimmun = true)
+	{
+		JBGameMode_EvenTeams(announce, followimmun);
 	}
 };
 

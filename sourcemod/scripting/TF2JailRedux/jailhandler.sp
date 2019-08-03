@@ -30,12 +30,11 @@ enum /** LRs **/
 /**
  *	When adding a new lr, increase the LRMAX to the proper/latest enum value
  *	Reminder that random lr grabs a random int from 2 to LRMAX
- *	Having breaks or skips within the enum will result in nothing happening the following round if that number is selected
- *	gamemode.hPlugins.Length increases by 1 every time you successfully 'TF2JailRedux_RegisterPlugin()' with a sub-plugin
+ *	gamemode.iLRs increases by 1 every time you successfully 'TF2JailRedux_RegisterPlugin()' with a sub-plugin
  *	and decreases by 1 everytime you successfully 'TF2JailRedux_UnRegisterPlugin()'
  *	Sub-Plugins are completely manageable on their own, with no need to touch this one
 */
-#define LRMAX		(ClassWars + gamemode.hPlugins.Length)
+#define LRMAX		(ClassWars + gamemode.iLRs)
 
 #include "TF2JailRedux/lastrequests.sp"
 
@@ -71,22 +70,14 @@ public void ManageDownloads()
 	PrecacheSound("vo/announcer_ends_30sec.mp3", true);
 	PrecacheSound("vo/announcer_ends_10sec.mp3", true);
 
-	PrecacheSound(")weapons/bumper_car_speed_boost_start.wav", true);
-	PrecacheSound(")weapons/bumper_car_speed_boost_stop.wav", true);
-	PrecacheSound(")weapons/bumper_car_jump.wav", true);
-	PrecacheSound(")weapons/bumper_car_jump_land.wav", true);
-
 	char s[PLATFORM_MAX_PATH];
-	for (int i = 1; i <= 8; i++)
+	for (int i = 1; i <= 5; i++)
 	{
 		if (i <= 5)
 		{
 			Format(s, PLATFORM_MAX_PATH, "vo/announcer_ends_%isec.mp3", i);
 			PrecacheSound(s, true);
 		}
-
-		Format(s, PLATFORM_MAX_PATH, "weapons/bumper_car_hit%i.wav", i);
-		PrecacheSound(s, true);
 	}
 
 	PrecacheSound(GravSound, true);
@@ -100,6 +91,7 @@ public void ManageDownloads()
 	iHalo = PrecacheModel("materials/sprites/glow01.vmt", true);
 	iHalo2 = PrecacheModel("materials/sprites/halo01.vmt", true);
 
+	CSWA.SetDownloads();
 	CHHHDay.SetDownloads();
 	CHotPrisoner.SetDownloads();
 
@@ -217,12 +209,7 @@ public void ManageRoundStart(Event event)
 			EmitSoundToAll(GravSound);
 			hEngineConVars[2].SetInt(100);
 		}
-		case SWA:
-		{
-			gamemode.ToggleMedic(false);
-			gamemode.bIsWarday = true;
-			gamemode.DoorHandler(OPEN);
-		}
+		case SWA:CSWA.Initialize();
 		case Warday:
 		{
 			CPrintToChatAll("%t %t", "Plugin Tag", "Warday Start");
@@ -276,11 +263,7 @@ public void ManageRoundStartPlayer(const JailFighter player, Event event)
 		}
 		case TinyRound:SetEntPropFloat(client, Prop_Send, "m_flModelScale", 0.3);
 		case Warday, ClassWars:SetPawnTimer(ResetPlayer, 0.2, client);
-		case SWA:
-		{
-			TF2_AddCondition(client, TFCond_HalloweenKart, -1.0);
-			player.iHealth = 300;
-		}
+		case SWA:CSWA.Activate(player);
 		case HHHDay:CHHHDay.Activate(player);
 		case HotPrisoner:CHotPrisoner.Activate(player);
 	}
@@ -311,6 +294,7 @@ public void ManageOnRoundEnd(Event event)
 		case Gravity:hEngineConVars[2].SetInt(800);
 		case HHHDay:CHHHDay.Terminate(event);
 		case HotPrisoner:CHotPrisoner.Terminate(event);
+		case SWA:CSWA.Terminate(event);
 	}
 	Call_OnRoundEnd(event);
 }
@@ -437,12 +421,7 @@ public void ManageRedThink(const JailFighter player)
 	switch (gamemode.iLRType)
 	{
 		case -1: {	}
-		case SWA:
-		{
-			SetEntityHealth(player.index, player.iHealth);
-			if (player.iHealth < 0)
-				SDKHooks_TakeDamage(player.index, 0, 0, 9001.0, DMG_DIRECT);
-		}
+		case SWA:CSWA.ManageThink(player);
 	}
 	Call_OnRedThink(player);
 }
@@ -454,12 +433,7 @@ public void ManageBlueThink(const JailFighter player)
 	switch (gamemode.iLRType)
 	{
 		case -1: {	}
-		case SWA:
-		{
-			SetEntityHealth(player.index, player.iHealth);
-			if (player.iHealth < 0)
-				SDKHooks_TakeDamage(player.index, 0, 0, 9001.0, DMG_DIRECT);
-		}
+		case SWA:CSWA.ManageThink(player);
 	}
 
 	if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 1)
@@ -467,17 +441,6 @@ public void ManageBlueThink(const JailFighter player)
 
 	Call_OnBlueThink(player);
 }
-/**
- *	Blue Team think. Does NOT include warden
-*/
-/*public void ManageBlueNotWardenThink(const JailFighter player)
-{
-	switch (gamemode.iLRType)
-	{
-		case -1: {	}
-	}
-	Call_OnBlueNotWardenThink(player);
-}*/
 /**
  *	Warden think only
 */
@@ -611,8 +574,7 @@ public void CheckLivingPlayers()
 			}
 			gamemode.bOneGuardLeft = true;
 
-			Action action = Plugin_Continue;
-			Call_OnLastGuard(action);
+			Action action = Call_OnLastGuard();
 
 			if (action == Plugin_Continue)
 				PrintCenterTextAll("%t", "One Guard Left");
@@ -707,42 +669,7 @@ public Action ManageTimeEnd()
 {
 	switch (gamemode.iLRType)
 	{
-		case SWA:
-		{
-			int players[2];
-			int i;
-			for (i = MaxClients; i; --i)
-				if (IsClientInGame(i) && IsPlayerAlive(i))
-					++players[GetClientTeam(i)-2];
-
-			if (players[0] > players[1])
-				ForceTeamWin(RED);
-			else if (players[1] > players[0])
-				ForceTeamWin(BLU);
-			else	// Draw, nobody wins
-			{
-				i = CreateEntityByName("game_round_win");
-				if (i != -1)
-				{
-					SetVariantInt(0);
-					AcceptEntityInput(i, "SetTeam");
-					AcceptEntityInput(i, "RoundWin");
-				}
-				else
-				{
-					for (i = MaxClients; i; --i)
-					{
-						if (!IsClientInGame(i) || !IsPlayerAlive(i))
-							continue;
-
-						TF2_RemoveCondition(i, TFCond_HalloweenKart);
-						ForcePlayerSuicide(i);
-					}
-				}
-			}
-
-			return Plugin_Handled;
-		}
+		case SWA:return CSWA.ManageTimeEnd();
 		default:return Call_OnTimeEnd();
 	}
 #if SOURCEMOD1_9
