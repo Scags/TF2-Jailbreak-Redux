@@ -1078,11 +1078,12 @@ public void OnEggBombSpawned(int entity)
 
 public void UpdateBossHealth()
 {
-	if (iHealthBar > MaxClients)
+	int hpbar = EntRefToEntIndex(iHealthBar);
+	if (hpbar > MaxClients && IsValidEntity(hpbar))
 	{
 		int pct = RoundToCeil( float(iCurrBoss.iHealth)/float(iCurrBoss.iMaxHealth)*255.0 );
 		Clamp(pct, 0, 255);
-		SetEntProp(iHealthBar, Prop_Send, "m_iBossHealthPercentageByte", pct);
+		SetEntProp(hpbar, Prop_Send, "m_iBossHealthPercentageByte", pct);
 	}
 }
 
@@ -2029,9 +2030,12 @@ public void fwdOnRoundStart()
 
 	if (JBVSH[HealthBar].BoolValue && FindEntityByClassname(-1, "monster_resource") == -1)
 	{
-		PrintToServer("not found");
+		//PrintToServer("not found");
 		if ((iHealthBar = CreateEntityByName("monster_resource")) != -1)
+		{
 			DispatchSpawn(iHealthBar);
+			iHealthBar = EntIndexToEntRef(iHealthBar);
+		}
 	}
 
 	JailBoss rand = JailBoss( GetRandomClient(true) );	// It's probably best to keep the second param true
@@ -2071,8 +2075,9 @@ public void fwdOnRoundEnd(Event event)
 	ShowPlayerScores();
 	SetPawnTimer(CalcScores, 3.0);
 
-	if (iHealthBar > MaxClients)
-		RemoveEntity(iHealthBar);
+	int hpbar = EntRefToEntIndex(iHealthBar);
+	if (hpbar > MaxClients && IsValidEntity(hpbar))
+		RemoveEntity(hpbar);
 
 	if (hTeamBansCVar && iTeamBansCVar)
 	{

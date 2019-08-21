@@ -1893,7 +1893,7 @@ public int Native_UnRegisterPlugin(Handle plugin, int numParams)
 	// Get rid of it
 	holder.Erase(idx);
 
-	gamemode.hLRS.Erase(idx - holder.Length + LRMAX + 1);
+	gamemode.hLRS.Erase(idx - holder.Length + LRMAX);
 	gamemode.iLRs--;
 
 	return true;
