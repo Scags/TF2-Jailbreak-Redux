@@ -1962,7 +1962,7 @@ public void fwdOnDownloads()
 	AddHHHToDownloads();
 	AddBunnyToDownloads();
 }
-public void fwdOnRoundStartPlayer(const JBPlayer Player)
+public void fwdOnRoundStartPlayer(const JBPlayer Player, Event event)
 {
 	if (NOTVSH)
 		return;
