@@ -723,10 +723,10 @@ public void OnMapStart()
 	ManageDownloads();	// Handler
 
 	// This code isn't mine, but idk who did this before
-	HookEntityOutput("item_ammopack_full", "OnPlayerTouch", OnEntTouch);
-	HookEntityOutput("item_ammopack_medium", "OnPlayerTouch", OnEntTouch);
-	HookEntityOutput("item_ammopack_small", "OnPlayerTouch", OnEntTouch);
-	HookEntityOutput("tf_ammo_pack", "OnPlayerTouch", OnEntTouch);
+	HookEntityOutput("item_ammopack_full", "OnCacheInteraction", OnEntTouch);
+	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnEntTouch);
+	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnEntTouch);
+	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnEntTouch);
 
 	int len = gamemode.hLRS.Length;
 	int i;
