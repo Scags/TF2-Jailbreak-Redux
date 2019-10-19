@@ -22,22 +22,22 @@ methodmap JailRepeater < JBPlayer
 	{
 		public get()
 		{
-			return this.GetValue("iRepeats");
+			return this.GetProp("iRepeats");
 		}
 		public set( const int i )
 		{
-			this.SetValue("iRepeats", i);
+			this.SetProp("iRepeats", i);
 		}
 	}
 	property float flRepeatTime
 	{
 		public get()
 		{
-			return this.GetValue("flRepeatTime");
+			return this.GetProp("flRepeatTime");
 		}
 		public set( const float i )
 		{
-			this.SetValue("flRepeatTime", i);
+			this.SetProp("flRepeatTime", i);
 		}
 	}
 };

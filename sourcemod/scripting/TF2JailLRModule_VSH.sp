@@ -51,43 +51,43 @@ methodmap JailBoss < JBPlayer
 
 	property int iUberTarget
 	{	// And then add new ones that we need
-		public get() 				{ return this.GetValue("iUberTarget"); }
-		public set( const int i ) 	{ this.SetValue("iUberTarget", i); }
+		public get() 				{ return this.GetProp("iUberTarget"); }
+		public set( const int i ) 	{ this.SetProp("iUberTarget", i); }
 	}
 	property int iHealth
 	{
-		public get() 				{ return this.GetValue("iHealth"); }
-		public set( const int i ) 	{ this.SetValue("iHealth", i); }
+		public get() 				{ return this.GetProp("iHealth"); }
+		public set( const int i ) 	{ this.SetProp("iHealth", i); }
 	}
 	property int iMaxHealth
 	{
-		public get() 				{ return this.GetValue("iMaxHealth"); }
-		public set( const int i ) 	{ this.SetValue("iMaxHealth", i); }
+		public get() 				{ return this.GetProp("iMaxHealth"); }
+		public set( const int i ) 	{ this.SetProp("iMaxHealth", i); }
 	}
 	property int iAirDamage
 	{
-		public get() 				{ return this.GetValue("iAirDamage"); }
-		public set( const int i ) 	{ this.SetValue("iAirDamage", i); }
+		public get() 				{ return this.GetProp("iAirDamage"); }
+		public set( const int i ) 	{ this.SetProp("iAirDamage", i); }
 	}
 	property int iType
 	{
-		public get() 				{ return this.GetValue("iType"); }
-		public set( const int i ) 	{ this.SetValue("iType", i); }
+		public get() 				{ return this.GetProp("iType"); }
+		public set( const int i ) 	{ this.SetProp("iType", i); }
 	}
 	property int iStabbed
 	{
-		public get() 				{ return this.GetValue("iStabbed"); }
-		public set( const int i ) 	{ this.SetValue("iStabbed", i); }
+		public get() 				{ return this.GetProp("iStabbed"); }
+		public set( const int i ) 	{ this.SetProp("iStabbed", i); }
 	}
 	property int iMarketted
 	{
-		public get() 				{ return this.GetValue("iMarketted"); }
-		public set( const int i ) 	{ this.SetValue("iMarketted", i); }
+		public get() 				{ return this.GetProp("iMarketted"); }
+		public set( const int i ) 	{ this.SetProp("iMarketted", i); }
 	}
 	property int iDamage
 	{
-		public get() 				{ return this.GetValue("iDamage"); }
-		public set( const int i ) 	{ this.SetValue("iDamage", i); }
+		public get() 				{ return this.GetProp("iDamage"); }
+		public set( const int i ) 	{ this.SetProp("iDamage", i); }
 	}
 	property int bGlow
 	{
@@ -100,55 +100,55 @@ methodmap JailBoss < JBPlayer
 	}
 	property int iKills
 	{
-		public get() 				{ return this.GetValue("iKills"); }
-		public set( const int i ) 	{ this.SetValue("iKills", i); }
+		public get() 				{ return this.GetProp("iKills"); }
+		public set( const int i ) 	{ this.SetProp("iKills", i); }
 	}
 	property int iClimbs
 	{
-		public get() 				{ return this.GetValue("iClimbs"); }
-		public set( const int i ) 	{ this.SetValue("iClimbs", i); }
+		public get() 				{ return this.GetProp("iClimbs"); }
+		public set( const int i ) 	{ this.SetProp("iClimbs", i); }
 	}
 
 	property bool bIsBoss
 	{
-		public get() 				{ return this.GetValue("bIsBoss"); }
-		public set( const bool i ) 	{ this.SetValue("bIsBoss", i); }
+		public get() 				{ return this.GetProp("bIsBoss"); }
+		public set( const bool i ) 	{ this.SetProp("bIsBoss", i); }
 	}
 	property bool bNeedsToGoBackToBlue
 	{
-		public get() 				{ return this.GetValue("bNeedsToGoBackToBlue"); }
-		public set( const bool i ) 	{ this.SetValue("bNeedsToGoBackToBlue", i); }
+		public get() 				{ return this.GetProp("bNeedsToGoBackToBlue"); }
+		public set( const bool i ) 	{ this.SetProp("bNeedsToGoBackToBlue", i); }
 	}
 
 	property float flRAGE
 	{
-		public get() 				{ return this.GetValue("flRAGE"); }
-		public set( const float i ) { this.SetValue("flRAGE", i); }
+		public get() 				{ return this.GetProp("flRAGE"); }
+		public set( const float i ) { this.SetProp("flRAGE", i); }
 	}
 	property float flWeighDown
 	{
-		public get() 				{ return this.GetValue("flWeighDown"); }
-		public set( const float i ) { this.SetValue("flWeighDown", i); }
+		public get() 				{ return this.GetProp("flWeighDown"); }
+		public set( const float i ) { this.SetProp("flWeighDown", i); }
 	}
 	property float flGlowtime
 	{
 		public get()
 		{
-			float i = this.GetValue("flGlowtime");
+			float i = this.GetProp("flGlowtime");
 			if (i < 0.0) i = 0.0;
 			return i;
 		}
-		public set( const float i )	{ this.SetValue("flGlowtime", i); }
+		public set( const float i )	{ this.SetProp("flGlowtime", i); }
 	}
 	property float flCharge
 	{
-		public get() 				{ return this.GetValue("flCharge"); }
-		public set( const float i ) { this.SetValue("flCharge", i); }
+		public get() 				{ return this.GetProp("flCharge"); }
+		public set( const float i ) { this.SetProp("flCharge", i); }
 	}
 	property float flKillSpree
 	{
-		public get() 				{ return this.GetValue("flKillSpree"); }
-		public set( const float i ) { this.SetValue("flKillSpree", i); }
+		public get() 				{ return this.GetProp("flKillSpree"); }
+		public set( const float i ) { this.SetProp("flKillSpree", i); }
 	}
 
 	public void ConvertToBoss( const int bossid )

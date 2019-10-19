@@ -94,24 +94,24 @@ methodmap JailPlayer < JBPlayer
 
 	property int iTimeLeft 
 	{
-		public get() 				{ return this.GetValue("iTimeLeft"); }
-		public set( const int i ) 	{ this.SetValue("iTimeLeft", i); }
+		public get() 				{ return this.GetProp("iTimeLeft"); }
+		public set( const int i ) 	{ this.SetProp("iTimeLeft", i); }
 	}
 	property int iWardenTimeLeft
 	{
-		public get() 				{ return this.GetValue("iWardenTimeLeft"); }
-		public set( const int i ) 	{ this.SetValue("iWardenTimeLeft", i); }
+		public get() 				{ return this.GetProp("iWardenTimeLeft"); }
+		public set( const int i ) 	{ this.SetProp("iWardenTimeLeft", i); }
 	}
 
 	property bool bIsGuardbanned
 	{
-		public get() 				{ return this.GetValue("bIsGuardbanned"); }
-		public set( const bool i ) 	{ this.SetValue("bIsGuardbanned", i); }
+		public get() 				{ return this.GetProp("bIsGuardbanned"); }
+		public set( const bool i ) 	{ this.SetProp("bIsGuardbanned", i); }
 	}
 	property bool bIsWardenBanned
 	{
-		public get() 				{ return this.GetValue("bIsWardenBanned"); }
-		public set( const bool i ) 	{ this.SetValue("bIsWardenBanned", i); }
+		public get() 				{ return this.GetProp("bIsWardenBanned"); }
+		public set( const bool i ) 	{ this.SetProp("bIsWardenBanned", i); }
 	}
 }
 

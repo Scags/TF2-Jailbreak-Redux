@@ -10,7 +10,6 @@ char
 ;
 
 int
-	EnumTNPS[4][eTextNodeParams],			// Hud params
 	iHalo,									// Particle
 	iLaserBeam,								// Particle
 	iHalo2,									// Particle
@@ -356,15 +355,46 @@ methodmap JailFighter
 		}
 	}
 
-	public any GetProperty(const char[] key)
+	public any GetProp(const char[] key)
 	{
 		any val; this.hMap.GetValue(key, val);
 		return val;
 	}
 
-	public void SetProperty(const char[] key, any val)
+	public void SetProp(const char[] key, any val)
 	{
 		this.hMap.SetValue(key, val);
+	}
+
+	public float GetPropFloat(const char[] key)
+	{
+		float val; this.hMap.GetValue(key, val);
+		return val;
+	}
+
+	public void SetPropFloat(const char[] key, float val)
+	{
+		this.hMap.SetValue(key, val);
+	}
+
+	public int GetPropString(const char[] key, char[] buffer, int maxlen)
+	{
+		return this.hMap.GetString(key, buffer, maxlen);
+	}
+
+	public void SetPropString(const char[] key, const char[] val)
+	{
+		this.hMap.SetString(key, val);
+	}
+
+	public void GetPropArray(const char[] key, any[] buffer, int maxlen)
+	{
+		this.hMap.GetArray(key, buffer, maxlen);
+	}
+
+	public void SetPropArray(const char[] key, any[] val, int maxlen)
+	{
+		this.hMap.SetArray(key, val, maxlen);
 	}
 
 	/**
@@ -725,7 +755,7 @@ methodmap JailFighter
 		char strWarden[64];
 		int client = this.index;
 		Format(strWarden, sizeof(strWarden), "%t", "New Warden Center", client);
-		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
+		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2].fCoord_X, EnumTNPS[2].fCoord_Y, EnumTNPS[2].fHoldTime, EnumTNPS[2].iRed, EnumTNPS[2].iGreen, EnumTNPS[2].iBlue, EnumTNPS[2].iAlpha, EnumTNPS[2].iEffect, EnumTNPS[2].fFXTime, EnumTNPS[2].fFadeIn, EnumTNPS[2].fFadeOut);
 		CPrintToChatAll("%t %t.", "Plugin Tag", "New Warden", client);
 
 		float annot = cvarTF2Jail[WardenAnnotation].FloatValue;

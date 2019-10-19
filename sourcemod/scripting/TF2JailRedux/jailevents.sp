@@ -83,7 +83,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		if (!gamemode.bDisableKillSpree)
 			FreeKillSystem(attacker);
 
-	SetPawnTimer(CheckLivingPlayers, 0.2);
+	SetPawnTimer(CheckLivingPlayers, 0.1);
 
 	if (victim.bIsFreeday)
 		victim.RemoveFreeday();
@@ -200,7 +200,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	CreateTimer(1.0, Timer_Round, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 
-	SetPawnTimer(CheckLivingPlayers, 0.2);
+	SetPawnTimer(CheckLivingPlayers, 0.1);
 
 	if (cvarTF2Jail[Balance].BoolValue)
 		gamemode.AutobalanceTeams();
@@ -211,7 +211,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 		char firstday[32];
 		FormatEx(firstday, sizeof(firstday), "%t", "First Day Freeday");
-		SetTextNode(hTextNodes[0], firstday, EnumTNPS[0][fCoord_X], EnumTNPS[0][fCoord_Y], EnumTNPS[0][fHoldTime], EnumTNPS[0][iRed], EnumTNPS[0][iGreen], EnumTNPS[0][iBlue], EnumTNPS[0][iAlpha], EnumTNPS[0][iEffect], EnumTNPS[0][fFXTime], EnumTNPS[0][fFadeIn], EnumTNPS[0][fFadeOut]);
+		SetTextNode(hTextNodes[0], firstday, EnumTNPS[0].fCoord_X, EnumTNPS[0].fCoord_Y, EnumTNPS[0].fHoldTime, EnumTNPS[0].iRed, EnumTNPS[0].iGreen, EnumTNPS[0].iBlue, EnumTNPS[0].iAlpha, EnumTNPS[0].iEffect, EnumTNPS[0].fFXTime, EnumTNPS[0].fFadeIn, EnumTNPS[0].fFadeOut);
 		PrintCenterTextAll(firstday);
 		
 		gamemode.iTimeLeft = cvarTF2Jail[RoundTime_Freeday].IntValue;

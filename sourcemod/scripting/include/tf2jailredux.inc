@@ -125,6 +125,7 @@ methodmap JBPlayer
 	}
 
 	/**
+	 *	@deprecated 		Use JBPlayer.GetProp or JBPlayer.GetPropFloat
 	 *	Gets the property of the internal JailFighter methodmap.
 	 *	@note 				If you are getting a float value, you MUST view_as< float >.
 	 *
@@ -133,9 +134,15 @@ methodmap JBPlayer
 	 *
 	 *	@return				Property value called if it was valid.
 	*/
-	public native any GetValue( const char key[64] );
+	#pragma deprecated Use JBPlayer.GetProp or JBPlayer.GetPropFloat
+	public any GetValue( const char key[64] )
+	{
+		any val; this.hMap.GetValue(key, val);
+		return val;
+	}
 
 	/**
+	 *	@deprecated 		Use JBPlayer.SetProp or JBPlayer.SetPropFloat
 	 *	Sets the property of the internal JB methodmap.
 	 *	NOTE: You can use this to create new properties which GetValue can access!
 	 *
@@ -144,104 +151,151 @@ methodmap JBPlayer
 	 *
 	 *	@noreturn
 	*/
-	public native void SetValue( const char key[64], any value );
+	#pragma deprecated Use JBPlayer.SetProp or JBPlayer.SetPropFloat
+	public void SetValue( const char key[64], any value )
+	{
+		this.hMap.SetValue(key, value);
+	}
+
+	/** PROPS
+	 *	Basic get/set to JailFighter properties.
+	 *	Properties are handled in the internal StringMap and can be accessed
+	 *	by any plugin that uses the proper native.
+	 *	You can also create keys that GetProp* can access!
+	**/
+
+	public any GetProp(const char[] key)
+	{
+		any val; this.hMap.GetValue(key, val);
+		return val;
+	}
+	public void SetProp(const char[] key, any val)
+	{
+		this.hMap.SetValue(key, val);
+	}
+	public float GetPropFloat(const char[] key)
+	{
+		float val; this.hMap.GetValue(key, val);
+		return val;
+	}
+	public void SetPropFloat(const char[] key, float val)
+	{
+		this.hMap.SetValue(key, val);
+	}
+	public int GetPropString(const char[] key, char[] buffer, int maxlen)
+	{
+		return this.hMap.GetString(key, buffer, maxlen);
+	}
+	public void SetPropString(const char[] key, const char[] val)
+	{
+		this.hMap.SetString(key, val);
+	}
+
+	public void GetPropArray(const char[] key, any[] buffer, int maxlen)
+	{
+		this.hMap.GetArray(key, buffer, maxlen);
+	}
+	public void SetPropArray(const char[] key, any[] val, int maxlen)
+	{
+		this.hMap.SetArray(key, val, maxlen);
+	}
 
 	property int iCustom
 	{
-		public get() 				{ return this.GetValue("iCustom"); }
-		public set( const int i )	{ this.SetValue("iCustom", i); }
+		public get() 				{ return this.GetProp("iCustom"); }
+		public set( const int i )	{ this.SetProp("iCustom", i); }
 	}
 	property int iKillCount
 	{
-		public get() 				{ return this.GetValue("iKillCount"); }
-		public set( const int i )	{ this.SetValue("iKillCount", i); }
+		public get() 				{ return this.GetProp("iKillCount"); }
+		public set( const int i )	{ this.SetProp("iKillCount", i); }
 	}
 	property int iRebelParticle
 	{
-		public get() 				{ return this.GetValue("iRebelParticle"); }
-		public set( const int i )	{ this.SetValue("iRebelParticle", i); }
+		public get() 				{ return this.GetProp("iRebelParticle"); }
+		public set( const int i )	{ this.SetProp("iRebelParticle", i); }
 	}
 	property int iWardenParticle
 	{
-		public get() 				{ return this.GetValue("iWardenParticle"); }
-		public set( const int i )	{ this.SetValue("iWardenParticle", i); }
+		public get() 				{ return this.GetProp("iWardenParticle"); }
+		public set( const int i )	{ this.SetProp("iWardenParticle", i); }
 	}
 	property int iFreedayParticle
 	{
-		public get() 				{ return this.GetValue("iFreedayParticle"); }
-		public set( const int i )	{ this.SetValue("iFreedayParticle", i); }
+		public get() 				{ return this.GetProp("iFreedayParticle"); }
+		public set( const int i )	{ this.SetProp("iFreedayParticle", i); }
 	}
 	property int iHealth
 	{
-		public get() 				{ return this.GetValue("iHealth"); }
-		public set( const int i )	{ this.SetValue("iHealth", i); }
+		public get() 				{ return this.GetProp("iHealth"); }
+		public set( const int i )	{ this.SetProp("iHealth", i); }
 	}
 
 	property bool bIsWarden
 	{
-		public get() 				{ return this.GetValue("bIsWarden"); }
-		public set( const bool i )	{ this.SetValue("bIsWarden", i); }
+		public get() 				{ return this.GetProp("bIsWarden"); }
+		public set( const bool i )	{ this.SetProp("bIsWarden", i); }
 	}
 	property bool bIsQueuedFreeday
 	{
-		public get() 				{ return this.GetValue("bIsQueuedFreeday"); }
-		public set( const bool i )	{ this.SetValue("bIsQueuedFreeday", i); }
+		public get() 				{ return this.GetProp("bIsQueuedFreeday"); }
+		public set( const bool i )	{ this.SetProp("bIsQueuedFreeday", i); }
 	}
 	property bool bIsFreeday
 	{
-		public get() 				{ return this.GetValue("bIsFreeday"); }
-		public set( const bool i )	{ this.SetValue("bIsFreeday", i); }
+		public get() 				{ return this.GetProp("bIsFreeday"); }
+		public set( const bool i )	{ this.SetProp("bIsFreeday", i); }
 	}
 	property bool bLockedFromWarden
 	{
-		public get() 				{ return this.GetValue("bLockedFromWarden"); }
-		public set( const bool i )	{ this.SetValue("bLockedFromWarden", i); }
+		public get() 				{ return this.GetProp("bLockedFromWarden"); }
+		public set( const bool i )	{ this.SetProp("bLockedFromWarden", i); }
 	}
 	property bool bIsHHH
 	{
-		public get() 				{ return this.GetValue("bIsHHH"); }
-		public set( const bool i )	{ this.SetValue("bIsHHH", i); }
+		public get() 				{ return this.GetProp("bIsHHH"); }
+		public set( const bool i )	{ this.SetProp("bIsHHH", i); }
 	}
 	property bool bInJump
 	{
-		public get() 				{ return this.GetValue("bInJump"); }
-		public set( const bool i )	{ this.SetValue("bInJump", i); }
+		public get() 				{ return this.GetProp("bInJump"); }
+		public set( const bool i )	{ this.SetProp("bInJump", i); }
 	}
 	property bool bUnableToTeleport
 	{
-		public get() 				{ return this.GetValue("bUnableToTeleport"); }
-		public set( const bool i )	{ this.SetValue("bUnableToTeleport", i); }
+		public get() 				{ return this.GetProp("bUnableToTeleport"); }
+		public set( const bool i )	{ this.SetProp("bUnableToTeleport", i); }
 	}
 	property bool bLasering
 	{
-		public get() 				{ return this.GetValue("bLasering"); }
-		public set( const bool i )	{ this.SetValue("bLasering", i); }
+		public get() 				{ return this.GetProp("bLasering"); }
+		public set( const bool i )	{ this.SetProp("bLasering", i); }
 	}
 	property bool bIsMuted
 	{
-		public get() 				{ return this.GetValue("bIsMuted"); }
-		public set( const bool i )	{ this.SetValue("bIsMuted", i); }
+		public get() 				{ return this.GetProp("bIsMuted"); }
+		public set( const bool i )	{ this.SetProp("bIsMuted", i); }
 	}
 	property bool bVoted
 	{
-		public get() 				{ return this.GetValue("bVoted"); }
-		public set( const bool i )	{ this.SetValue("bVoted", i); }
+		public get() 				{ return this.GetProp("bVoted"); }
+		public set( const bool i )	{ this.SetProp("bVoted", i); }
 	}
 	property bool bIsRebel
 	{
-		public get() 				{ return this.GetValue("bIsRebel"); }
-		public set( const bool i )	{ this.SetValue("bIsRebel", i); }
+		public get() 				{ return this.GetProp("bIsRebel"); }
+		public set( const bool i )	{ this.SetProp("bIsRebel", i); }
 	}
 
 	property float flSpeed
 	{
-		public get() 				{ return this.GetValue("flSpeed"); }
-		public set( const float i )	{ this.SetValue("flSpeed", i); }
+		public get() 				{ return this.GetPropFloat("flSpeed"); }
+		public set( const float i )	{ this.SetPropFloat("flSpeed", i); }
 	}
 	property float flKillingSpree
 	{
-		public get() 				{ return this.GetValue("flKillingSpree"); }
-		public set( const float i )	{ this.SetValue("flKillingSpree", i); }
+		public get() 				{ return this.GetPropFloat("flKillingSpree"); }
+		public set( const float i )	{ this.SetPropFloat("flKillingSpree", i); }
 	}
 
 	/**
@@ -1722,9 +1776,6 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JB_HookEx");
 	MarkNativeAsOptional("JB_Unhook");
 	MarkNativeAsOptional("JB_UnhookEx");
-
-	MarkNativeAsOptional("JBPlayer.GetValue");
-	MarkNativeAsOptional("JBPlayer.SetValue");
 
 	MarkNativeAsOptional("JBPlayer.bNoMusic.get");
 	MarkNativeAsOptional("JBPlayer.hMap.get");

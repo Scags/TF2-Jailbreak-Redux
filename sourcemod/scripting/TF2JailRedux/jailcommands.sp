@@ -1652,7 +1652,7 @@ public Action BaseProp(int client, int args)
 	if (args == 1)
 	{
 		player = JBPlayer(client);
-		val = player.GetValue(arg1);
+		val = player.GetProp(arg1);
 		CReplyToCommand(client, "%s value: %i", arg1, val);
 		return Plugin_Handled;
 	}
@@ -1669,7 +1669,7 @@ public Action BaseProp(int client, int args)
 
 	player = JBPlayer(target_list[0]);
 
-	val = player.GetValue(arg2);
+	val = player.GetProp(arg2);
 	CReplyToCommand(client, "%N's %s value: %i", player.index, arg2, val);
 	return Plugin_Handled;
 }
