@@ -135,11 +135,7 @@ methodmap JBPlayer
 	 *	@return				Property value called if it was valid.
 	*/
 	#pragma deprecated Use JBPlayer.GetProp or JBPlayer.GetPropFloat
-	public any GetValue( const char key[64] )
-	{
-		any val; this.hMap.GetValue(key, val);
-		return val;
-	}
+	public native any GetValue( const char key[64] );
 
 	/**
 	 *	@deprecated 		Use JBPlayer.SetProp or JBPlayer.SetPropFloat
@@ -152,10 +148,7 @@ methodmap JBPlayer
 	 *	@noreturn
 	*/
 	#pragma deprecated Use JBPlayer.SetProp or JBPlayer.SetPropFloat
-	public void SetValue( const char key[64], any value )
-	{
-		this.hMap.SetValue(key, value);
-	}
+	public native void SetValue( const char key[64], any value );
 
 	/** PROPS
 	 *	Basic get/set to JailFighter properties.

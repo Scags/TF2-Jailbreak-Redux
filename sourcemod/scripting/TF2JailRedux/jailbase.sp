@@ -692,34 +692,29 @@ methodmap JailFighter
 			return;
 
 		int weapon, clip;
-		static int offset;
-		if (offset <= 0)
-			offset = FindSendPropInfo("CTFPlayer", "m_iAmmo");
-
-		for (int i = 0; i < 2; ++i)
+		int offset = FindSendPropInfo("CTFPlayer", "m_hMyWeapons");	// Thx Mr. Panica
+		for (int i = 0; i <= 188; i += 4)
 		{
-			weapon = GetPlayerWeaponSlot(client, i);
+			weapon = GetEntDataEnt2(client, offset + i);
+			if (weapon != -1)
+			{
+				clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
+				if (clip != -1)
+					SetEntProp(weapon, Prop_Send, "m_iClip1", 0);
 
-			if (!IsValidEntity(weapon))
-				continue;
+				clip = GetEntProp(weapon, Prop_Data, "m_iClip2");
+				if (clip != -1)
+					SetEntProp(weapon, Prop_Send, "m_iClip2", 0);
 
-			clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
-			if (clip != -1)
-				SetEntProp(weapon, Prop_Send, "m_iClip1", 0);
-
-			clip = GetEntProp(weapon, Prop_Data, "m_iClip2");
-			if (clip != -1)
-				SetEntProp(weapon, Prop_Send, "m_iClip2", 0);
-
-			if (offset > 0)
-				SetEntData(client, GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4+offset, 0, 4, true);	// Mutually assured destruction
+				SetWeaponAmmo(weapon, 0);
+			}
 		}
 
 		SetEntProp(client, Prop_Send, "m_iAmmo", 0, 4, 3);
 
-		char sClassName[64];
+		char classname[64];
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
-		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
+		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, classname, sizeof(classname)))
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
 	}
 	/**	Props to VoIDed

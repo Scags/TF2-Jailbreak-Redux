@@ -408,6 +408,11 @@ public void OnPluginStart()
 
 	hJailFields[0] = new StringMap();
 	gamemode.hLRS = new ArrayList(1, LRMAX+1);	// Registering plugins pushes indexes to hLRS, we also start at 0 so +1
+
+	HookEntityOutput("item_ammopack_full", "OnCacheInteraction", OnEntTouch);
+	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnEntTouch);
+	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnEntTouch);
+	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnEntTouch);
 }
 
 public void OnAllPluginsLoaded()
@@ -484,10 +489,11 @@ public void OnMapStart()
 	ManageDownloads();	// Handler
 
 	// This code isn't mine, but idk who did this before
-	HookEntityOutput("item_ammopack_full", "OnCacheInteraction", OnEntTouch);
-	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnEntTouch);
-	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnEntTouch);
-	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnEntTouch);
+//	HookEntityOutput("item_ammopack_full", "OnCacheInteraction", OnEntTouch);
+//	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnEntTouch);
+//	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnEntTouch);
+//	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnEntTouch);
+//	https://github.com/alliedmodders/sourcemod/blob/master/extensions/sdktools/outputnatives.cpp#L141-L144 ;-;
 
 	int len = gamemode.hLRS.Length;
 	int i;
@@ -1489,8 +1495,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JB_Unhook", Native_Unhook);
 	CreateNative("JB_UnhookEx", Native_UnhookEx);
 		/* Player */
-//	CreateNative("JBPlayer.GetValue", Native_GetValue);
-//	CreateNative("JBPlayer.SetValue", Native_SetValue);
+	CreateNative("JBPlayer.GetValue", Native_GetValue);
+	CreateNative("JBPlayer.SetValue", Native_SetValue);
 	CreateNative("JBPlayer.bNoMusic.get", Native_NoMusic_Get);
 	CreateNative("JBPlayer.hMap.get", Native_StringMap_Get);
 	CreateNative("JBPlayer.SpawnWeapon", Native_SpawnWeapon);
@@ -1696,7 +1702,7 @@ public any Native_UnhookEx(Handle plugin, int numParams)
 	return 0;
 }
 
-/*public any Native_GetValue(Handle plugin, int numParams)
+public any Native_GetValue(Handle plugin, int numParams)
 {
 	char key[64]; GetNativeString(2, key, 64);
 	any item;
@@ -1708,7 +1714,7 @@ public any Native_SetValue(Handle plugin, int numParams)
 {
 	char key[64]; GetNativeString(2, key, 64);
 	return hJailFields[GetNativeCell(1)].SetValue(key, GetNativeCell(3));
-}*/
+}
 public any Native_NoMusic_Get(Handle plugin, int numParams)
 {
 	return JailFighter(GetNativeCell(1)).bNoMusic;
