@@ -348,7 +348,7 @@ int
 ;
 
 bool
-	bDisabled			// Handling core late-loading
+	bDisabled = true			// Handling core late-loading
 ;
 
 float 
@@ -411,7 +411,7 @@ public void OnPluginStart()
 	AddMultiTargetFilter("@!hale", HaleTargetFilter, "All non-Boss players", false);
 }
 
-public void OnAllPluginsLoaded()
+public void InitSubPlugin()
 {
 	TF2JailRedux_RegisterPlugin();
 	gamemode = new JBGameMode();
@@ -439,7 +439,7 @@ public void OnLibraryAdded(const char[] name)
 {
 	if (!strcmp(name, "TF2Jail_Redux", false) && bDisabled)
 	{
-		OnAllPluginsLoaded();
+		InitSubPlugin();
 		bDisabled = false;
 	}
 	else if (!strcmp(name, "TF2JailRedux_TeamBans", false))
@@ -448,7 +448,7 @@ public void OnLibraryAdded(const char[] name)
 
 #define NOTVSH 				( gamemode.iLRType != TF2JailRedux_LRIndex() )
 
-public bool HaleTargetFilter(const char[] pattern, Handle clients)
+public bool HaleTargetFilter(const char[] pattern, ArrayList clients)
 {
 	if (NOTVSH)
 		return false;	// What am I supposed  to return here?
@@ -456,15 +456,15 @@ public bool HaleTargetFilter(const char[] pattern, Handle clients)
 	bool non = StrContains(pattern, "!", false) != - 1;
 	for (int i = MaxClients; i; --i) 
 	{
-		if (IsClientInGame(i) && FindValueInArray(clients, i) == - 1)
+		if (IsClientInGame(i) && clients.FindValue(i) == - 1)
 		{
 			if (JailBoss(i).bIsBoss) 
 			{
 				if (!non)
-					PushArrayCell(clients, i);
+					clients.Push(i);
 			}
 			else if (non)
-				PushArrayCell(clients, i);
+				clients.Push(i);
 		}
 	}
 	return true;
@@ -1963,7 +1963,7 @@ public void fwdOnDownloads()
 	AddHHHToDownloads();
 	AddBunnyToDownloads();
 }
-public void fwdOnRoundStartPlayer(const JBPlayer Player, Event event)
+public void fwdOnRoundStartPlayer(const JBPlayer Player)
 {
 	if (NOTVSH)
 		return;
@@ -2043,8 +2043,7 @@ public void fwdOnRoundStart()
 		ForceTeamWin(RED);
 
 	int client = rand.index;
-	int BOSS = GetRandomInt(Hale, MAXBOSS);
-	rand.ConvertToBoss(BOSS);
+	rand.ConvertToBoss(GetRandomInt(Hale, MAXBOSS));
 	if (GetClientTeam(client) == RED)
 		rand.ForceTeamChange(BLU);
 
@@ -2922,9 +2921,9 @@ public void LoadJBHooks()
 {
 	if (!JB_HookEx(OnDownloads, fwdOnDownloads))
 		LogError("Failed to load OnDownloads forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundStartPlayer, fwdOnRoundStartPlayer))
+	if (!JB_HookEx(OnRoundStartPlayer2, fwdOnRoundStartPlayer))
 		LogError("Failed to load OnRoundStartPlayer forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundStart, fwdOnRoundStart))
+	if (!JB_HookEx(OnRoundStart2, fwdOnRoundStart))
 		LogError("Failed to load OnRoundStart forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnRoundEnd, fwdOnRoundEnd))
 		LogError("Failed to load OnRoundEnd forwards for JB VSH Sub-Plugin!");

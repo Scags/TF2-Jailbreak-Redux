@@ -231,7 +231,8 @@ public void ManageRoundStart(Event event)
 		case HHHDay:CHHHDay.Initialize();
 		case HotPrisoner:CHotPrisoner.Initialize();
 	}
-	Call_OnRoundStart(event);
+	Call_OnRoundStart(event);	// Why the fuck did I do this
+	Call_OnRoundStart2();		// Too late, need to keep bcompat
 }
 /**
  *	Calls on round start for each living player
@@ -268,6 +269,7 @@ public void ManageRoundStartPlayer(const JailFighter player, Event event)
 		case HotPrisoner:CHotPrisoner.Activate(player);
 	}
 	Call_OnRoundStartPlayer(player, event);
+	Call_OnRoundStartPlayer2(player);
 }
 /**
  *	Self explanatory, set the gamemode.iTimeLeft to whatever time (in seconds) you desire
@@ -308,6 +310,7 @@ public void ManageRoundEnd(const JailFighter base, Event event)
 		case TinyRound:SetPawnTimer(ResetModelProps, 1.0, base.index);
 		case HHHDay:CHHHDay.ManageEnd(base);
 		case HotPrisoner:CHotPrisoner.ManageEnd(base);
+		case SWA:CSWA.ManageEnd(base);
 	}
 	Call_OnRoundEndPlayer(base, event);
 }
@@ -421,7 +424,6 @@ public void ManageRedThink(const JailFighter player)
 	switch (gamemode.iLRType)
 	{
 		case -1: {	}
-		case SWA:CSWA.ManageThink(player);
 	}
 	Call_OnRedThink(player);
 }
@@ -433,7 +435,6 @@ public void ManageBlueThink(const JailFighter player)
 	switch (gamemode.iLRType)
 	{
 		case -1: {	}
-		case SWA:CSWA.ManageThink(player);
 	}
 
 	if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 1)
@@ -485,13 +486,12 @@ public void ManageOnPreThink(const JailFighter base)
 */
 public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victim, Event event)
 {
-	int damage = event.GetInt("damageamount");
+	// int damage = event.GetInt("damageamount");
 	// int custom = event.GetInt("custom");
 	// int weapon = event.GetInt("weaponid");
 	
 	switch (gamemode.iLRType)
 	{
-		case SWA:victim.iHealth -= damage;
 		case -1: {	}
 	}
 

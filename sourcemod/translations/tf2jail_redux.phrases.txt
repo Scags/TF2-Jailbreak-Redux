@@ -165,9 +165,9 @@
 	
 	"Needs Active Round"
 	{
-		"en" 			"Round Must Be Active"
-		"pl"			"Runda musi być aktywna"
-		"pt" 			"É necessário estar no Meio da Rodada"
+		"en" 			"Round Must Be Active."
+		"pl"			"Runda musi być aktywna."
+		"pt" 			"É necessário estar no Meio da Rodada."
 	}
 	
 	"Already Warden"
@@ -1179,5 +1179,21 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has been healing a rebel and has lost their freeday!"
 		"pl"		"{1} leczył zbuntowanego i stracił swój dzień wolny!"
+	}
+
+	"Jail Time Usage"
+	{
+		"en" 		"Usage: sm_jt <time>."
+	}
+	
+	"Requires Number"
+	{
+		"en" 		"Argument must be numeric."
+	}
+	
+	"Time Set"
+	{
+		"#format" 	"{1:d}"
+		"en" 		"Time set to {default}{1}{burlywood}."
 	}
 }

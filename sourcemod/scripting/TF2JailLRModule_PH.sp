@@ -234,7 +234,7 @@ enum
 bool
 	bFirstBlood,
 	bAbleToReroll,
-	bDisabled
+	bDisabled = true
 ;
 
 int
@@ -284,7 +284,7 @@ public void OnPluginStart()
 	g_ModelRotation = new ArrayList(ByteCountToCells(11));
 }
 
-public void OnAllPluginsLoaded()
+public void InitSubPlugin()
 {
 	TF2JailRedux_RegisterPlugin();
 	gamemode = new JBGameMode();
@@ -307,7 +307,7 @@ public void OnLibraryAdded(const char[] name)
 {
 	if (!strcmp(name, "TF2Jail_Redux", false) && bDisabled)
 	{
-		OnAllPluginsLoaded();
+		InitSubPlugin();
 		bDisabled = false;
 	}
 }
@@ -885,7 +885,7 @@ public void fwdOnPreThink(const JBPlayer Player)
 int NoSS[7]  = { 2, 3, 4, 5, 6, 7, 9 };
 int NoHvy[6] = { 2, 3, 4, 5, 6, 9 };
 int iHeavy;
-public void fwdOnRoundStartPlayer(const JBPlayer player, Event event)
+public void fwdOnRoundStartPlayer(const JBPlayer player)
 {
 	if (NOTPH)
 		return;
@@ -1207,9 +1207,9 @@ public Action fwdOnSetWardenLock(const bool status)
 
 public void CheckJBHooks()
 {
-	if (!JB_HookEx(OnRoundStartPlayer, fwdOnRoundStartPlayer))
+	if (!JB_HookEx(OnRoundStartPlayer2, fwdOnRoundStartPlayer))
 		LogError("Error Loading OnRoundStartPlayer Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundStart, fwdOnRoundStart))
+	if (!JB_HookEx(OnRoundStart2, fwdOnRoundStart))
 		LogError("Error Loading OnRoundStart, Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnRoundEnd, fwdOnRoundEnd))
 		LogError("Error Loading OnRoundEnd Forwards for JB PH Sub-Plugin!");

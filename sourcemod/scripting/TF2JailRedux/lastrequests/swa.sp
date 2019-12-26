@@ -14,7 +14,8 @@ methodmap CSWA < JailGameMode
 	public static void Activate( const JailFighter player )
 	{
 		TF2_AddCondition(player.index, TFCond_HalloweenKart, -1.0);
-		player.iHealth = 300;
+		SDKHook(player.index, SDKHook_GetMaxHealth, SWA_MaxHealth);
+		SetEntityHealth(player.index, 100);
 	}
 
 	public static void Terminate( Event event )
@@ -24,11 +25,9 @@ methodmap CSWA < JailGameMode
 		RemoveCommandListener(ForceSlay, "sm_slay");
 	}
 
-	public static void ManageThink( const JailFighter player )
+	public static void ManageEnd( const JailFighter player )
 	{
-		SetEntityHealth(player.index, player.iHealth);
-		if (player.iHealth < 0)
-			SDKHooks_TakeDamage(player.index, 0, 0, 9001.0, DMG_DIRECT);
+		SDKUnhook(player.index, SDKHook_GetMaxHealth, SWA_MaxHealth);
 	}
 
 	public static Action ManageTimeEnd()
@@ -92,6 +91,9 @@ public Action ForceSuicide(int client, const char[] command, int argc)
 
 public Action ForceSlay(int client, const char[] command, int argc)
 {
+	if (!GetCmdArgs())
+		return Plugin_Continue;
+
 	char arg[32]; GetCmdArg(1, arg, sizeof(arg));
 	char target_name[MAX_TARGET_LENGTH];
 	int target_list[MAXPLAYERS], target_count;
@@ -113,4 +115,10 @@ public Action ForceSlay(int client, const char[] command, int argc)
 	for (int i = 0; i < target_count; ++i)
 		TF2_RemoveCondition(target_list[i], TFCond_HalloweenKart);		// playercommands takes care of whatever else happens, probably
 	return Plugin_Continue;
+}
+
+public Action SWA_MaxHealth(int client, int &health)
+{
+	health = 100;
+	return Plugin_Changed;
 }

@@ -1622,6 +1622,40 @@ public Action AdminToggleMedic(int client, int args)
 	return Plugin_Handled;
 }
 
+// Thx Mr. Panica
+public Action AdminJailTime(int client, int args)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Handled;
+
+	if (!args)
+	{
+		CReplyToCommand(client, "%t %t", "Plugin Tag", "Jail Time Usage");
+		return Plugin_Handled;
+	}
+
+	if (gamemode.iRoundState != StateRunning)
+	{
+		CReplyToCommand(client, "%t %t", "Plugin Tag", "Needs Active Round");
+		return Plugin_Handled;
+	}
+
+	char arg[32]; GetCmdArg(1, arg, sizeof(arg));
+	if (!IsStringNumeric(arg))
+	{
+		CReplyToCommand(client, "%t %t", "Plugin Tag", "Requires Number");
+		return Plugin_Handled;
+	}
+
+	int time = StringToInt(arg);
+	if (time < 0)
+		time = 0;
+
+	gamemode.iTimeLeft = time;
+	CReplyToCommand(client, "%t %t", "Plugin Tag", "Time Set", time);
+	return Plugin_Handled;
+}
+
 public Action Preset(int client, int args)
 {
 	CReplyToCommand(client, "%i", gamemode.iLRPresetType);

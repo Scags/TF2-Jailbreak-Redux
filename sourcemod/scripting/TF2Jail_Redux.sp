@@ -27,7 +27,7 @@
 #endif
 
 #define PLUGIN_NAME 		"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION 		"1.4.1"
+#define PLUGIN_VERSION 		"1.4.2"
 #define PLUGIN_AUTHOR 		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION 	"Deluxe version of TF2Jail"
 
@@ -351,6 +351,8 @@ public void OnPluginStart()
 	RegAdminCmd("sm_tmedic", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
 	RegAdminCmd("sm_togglemedic", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
 	RegAdminCmd("sm_reloadjailcfg", AdminReloadCFG, ADMFLAG_GENERIC, "Reload TF2Jail Redux's config file.");
+	RegAdminCmd("sm_jtime", AdminJailTime, ADMFLAG_GENERIC, "Set the jail round time.");
+	RegAdminCmd("sm_jt", AdminJailTime, ADMFLAG_GENERIC, "Set the jail round time.");
 
 	RegAdminCmd("sm_setpreset", SetPreset, ADMFLAG_GENERIC, "Set gamemode.iLRPresetType. (DEBUGGING)");
 	RegAdminCmd("sm_itype", Type, ADMFLAG_GENERIC, "gamemode.iLRType. (DEBUGGING)");
@@ -1021,7 +1023,7 @@ public void ParseMapConfig()
 	}
 	else gamemode.bWardayTeleportSetRed = false;
 
-	ManageTargetFilters(kv);
+	ManageTargetFilters(kv);	// targetfilters.sp
 	delete kv;
 }
 
@@ -1312,7 +1314,8 @@ public void CreateMarker(const int client)
 		TE_SendToAll();
 		gamemode.bMarkerExists = true;
 		SetPawnTimer(ResetMarker, 1.0);
-		EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos); EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos);
+		EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos);
+		EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos);
 	}
 }
 

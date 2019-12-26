@@ -465,7 +465,7 @@ methodmap JailFighter
 		for (int i = 0; i < 5; i++) 
 		{
 			entity = GetPlayerWeaponSlot(this.index, i); 
-			if (IsValidEdict(entity) && IsValidEntity(entity))
+			if (IsValidEntity(entity))
 			{
 				if (transparent > 255)
 					transparent = 255;
@@ -714,7 +714,7 @@ methodmap JailFighter
 
 		char classname[64];
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
-		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, classname, sizeof(classname)))
+		if (wep > MaxClients && IsValidEntity(wep) && GetEdictClassname(wep, classname, sizeof(classname)))
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
 	}
 	/**	Props to VoIDed

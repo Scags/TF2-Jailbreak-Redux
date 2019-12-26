@@ -1201,7 +1201,7 @@ methodmap JBGameMode < StringMap
 		JBGameMode_ManageCells(status);
 	}
 
-	 /**
+	/**
 	 *	Find the current warden if one exists.
 	 *
 	 *	@return 			JBPlayer instance of the current warden.
@@ -1399,8 +1399,8 @@ native int TF2JailRedux_LRIndex();
 enum	// JB Hook Types
 {
 	OnDownloads = 0,
-	OnRoundStart,
-	OnRoundStartPlayer,
+	OnRoundStart,			// DEPRECATED
+	OnRoundStartPlayer,		// DEPRECATED
 	OnRoundEnd,
 	OnRoundEndPlayer,
 	OnPreThink,
@@ -1408,6 +1408,7 @@ enum	// JB Hook Types
 	OnBlueThink,
 	OnWardenGet,
 	OnClientTouch,
+	OnPlayerTouch = 9,
 	OnWardenThink,
 	OnPlayerSpawned,
 	OnPlayerDied,
@@ -1450,14 +1451,18 @@ enum	// JB Hook Types
 	OnShouldAutobalance,
 	OnShouldAutobalancePlayer,
 	OnSetWardenLock,
-	OnPlayMusic
+	OnPlayMusic,
+	OnRoundStart2,
+	OnRoundStartPlayer2,
+
+	JBFWD_LENGTH
 };
 
 /* SDKHook-Style Forwards */
 typeset JBHookCB
 {
 	/*
-		OnRoundStartPlayer
+		OnRoundStartPlayer2
 		OnRedThink
 		OnBlueThink
 		OnWardenThink
@@ -1474,6 +1479,7 @@ typeset JBHookCB
 
 	/*
 		OnPlayerSpawned
+		OnRoundStartPlayer 		DEPRECATED
 		OnRoundEndPlayer
 	*/
 	function void (const JBPlayer player, Event event);
@@ -1497,6 +1503,7 @@ typeset JBHookCB
 	/*
 		OnDownloads
 		OnCheckLivingPlayers
+		OnRoundStart2
 	*/
 	function void ();
 
@@ -1506,9 +1513,9 @@ typeset JBHookCB
 	//	OnPanelAdd
 	function void (const int index, char name[64]);
 
-	/*	
+	/*
 		OnRoundEnd
-		OnRoundStart
+		OnRoundStart		DEPRECATED
 	*/
 	function void (Event event);
 
