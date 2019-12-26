@@ -51,43 +51,43 @@ methodmap JailBoss < JBPlayer
 
 	property int iUberTarget
 	{	// And then add new ones that we need
-		public get() 				{ return this.GetValue("iUberTarget"); }
-		public set( const int i ) 	{ this.SetValue("iUberTarget", i); }
+		public get() 				{ return this.GetProp("iUberTarget"); }
+		public set( const int i ) 	{ this.SetProp("iUberTarget", i); }
 	}
 	property int iHealth
 	{
-		public get() 				{ return this.GetValue("iHealth"); }
-		public set( const int i ) 	{ this.SetValue("iHealth", i); }
+		public get() 				{ return this.GetProp("iHealth"); }
+		public set( const int i ) 	{ this.SetProp("iHealth", i); }
 	}
 	property int iMaxHealth
 	{
-		public get() 				{ return this.GetValue("iMaxHealth"); }
-		public set( const int i ) 	{ this.SetValue("iMaxHealth", i); }
+		public get() 				{ return this.GetProp("iMaxHealth"); }
+		public set( const int i ) 	{ this.SetProp("iMaxHealth", i); }
 	}
 	property int iAirDamage
 	{
-		public get() 				{ return this.GetValue("iAirDamage"); }
-		public set( const int i ) 	{ this.SetValue("iAirDamage", i); }
+		public get() 				{ return this.GetProp("iAirDamage"); }
+		public set( const int i ) 	{ this.SetProp("iAirDamage", i); }
 	}
 	property int iType
 	{
-		public get() 				{ return this.GetValue("iType"); }
-		public set( const int i ) 	{ this.SetValue("iType", i); }
+		public get() 				{ return this.GetProp("iType"); }
+		public set( const int i ) 	{ this.SetProp("iType", i); }
 	}
 	property int iStabbed
 	{
-		public get() 				{ return this.GetValue("iStabbed"); }
-		public set( const int i ) 	{ this.SetValue("iStabbed", i); }
+		public get() 				{ return this.GetProp("iStabbed"); }
+		public set( const int i ) 	{ this.SetProp("iStabbed", i); }
 	}
 	property int iMarketted
 	{
-		public get() 				{ return this.GetValue("iMarketted"); }
-		public set( const int i ) 	{ this.SetValue("iMarketted", i); }
+		public get() 				{ return this.GetProp("iMarketted"); }
+		public set( const int i ) 	{ this.SetProp("iMarketted", i); }
 	}
 	property int iDamage
 	{
-		public get() 				{ return this.GetValue("iDamage"); }
-		public set( const int i ) 	{ this.SetValue("iDamage", i); }
+		public get() 				{ return this.GetProp("iDamage"); }
+		public set( const int i ) 	{ this.SetProp("iDamage", i); }
 	}
 	property int bGlow
 	{
@@ -100,55 +100,55 @@ methodmap JailBoss < JBPlayer
 	}
 	property int iKills
 	{
-		public get() 				{ return this.GetValue("iKills"); }
-		public set( const int i ) 	{ this.SetValue("iKills", i); }
+		public get() 				{ return this.GetProp("iKills"); }
+		public set( const int i ) 	{ this.SetProp("iKills", i); }
 	}
 	property int iClimbs
 	{
-		public get() 				{ return this.GetValue("iClimbs"); }
-		public set( const int i ) 	{ this.SetValue("iClimbs", i); }
+		public get() 				{ return this.GetProp("iClimbs"); }
+		public set( const int i ) 	{ this.SetProp("iClimbs", i); }
 	}
 
 	property bool bIsBoss
 	{
-		public get() 				{ return this.GetValue("bIsBoss"); }
-		public set( const bool i ) 	{ this.SetValue("bIsBoss", i); }
+		public get() 				{ return this.GetProp("bIsBoss"); }
+		public set( const bool i ) 	{ this.SetProp("bIsBoss", i); }
 	}
 	property bool bNeedsToGoBackToBlue
 	{
-		public get() 				{ return this.GetValue("bNeedsToGoBackToBlue"); }
-		public set( const bool i ) 	{ this.SetValue("bNeedsToGoBackToBlue", i); }
+		public get() 				{ return this.GetProp("bNeedsToGoBackToBlue"); }
+		public set( const bool i ) 	{ this.SetProp("bNeedsToGoBackToBlue", i); }
 	}
 
 	property float flRAGE
 	{
-		public get() 				{ return this.GetValue("flRAGE"); }
-		public set( const float i ) { this.SetValue("flRAGE", i); }
+		public get() 				{ return this.GetProp("flRAGE"); }
+		public set( const float i ) { this.SetProp("flRAGE", i); }
 	}
 	property float flWeighDown
 	{
-		public get() 				{ return this.GetValue("flWeighDown"); }
-		public set( const float i ) { this.SetValue("flWeighDown", i); }
+		public get() 				{ return this.GetProp("flWeighDown"); }
+		public set( const float i ) { this.SetProp("flWeighDown", i); }
 	}
 	property float flGlowtime
 	{
 		public get()
 		{
-			float i = this.GetValue("flGlowtime");
+			float i = this.GetProp("flGlowtime");
 			if (i < 0.0) i = 0.0;
 			return i;
 		}
-		public set( const float i )	{ this.SetValue("flGlowtime", i); }
+		public set( const float i )	{ this.SetProp("flGlowtime", i); }
 	}
 	property float flCharge
 	{
-		public get() 				{ return this.GetValue("flCharge"); }
-		public set( const float i ) { this.SetValue("flCharge", i); }
+		public get() 				{ return this.GetProp("flCharge"); }
+		public set( const float i ) { this.SetProp("flCharge", i); }
 	}
 	property float flKillSpree
 	{
-		public get() 				{ return this.GetValue("flKillSpree"); }
-		public set( const float i ) { this.SetValue("flKillSpree", i); }
+		public get() 				{ return this.GetProp("flKillSpree"); }
+		public set( const float i ) { this.SetProp("flKillSpree", i); }
 	}
 
 	public void ConvertToBoss( const int bossid )
@@ -348,7 +348,7 @@ int
 ;
 
 bool
-	bDisabled			// Handling core late-loading
+	bDisabled = true			// Handling core late-loading
 ;
 
 float 
@@ -411,7 +411,7 @@ public void OnPluginStart()
 	AddMultiTargetFilter("@!hale", HaleTargetFilter, "All non-Boss players", false);
 }
 
-public void OnAllPluginsLoaded()
+public void InitSubPlugin()
 {
 	TF2JailRedux_RegisterPlugin();
 	gamemode = new JBGameMode();
@@ -439,7 +439,7 @@ public void OnLibraryAdded(const char[] name)
 {
 	if (!strcmp(name, "TF2Jail_Redux", false) && bDisabled)
 	{
-		OnAllPluginsLoaded();
+		InitSubPlugin();
 		bDisabled = false;
 	}
 	else if (!strcmp(name, "TF2JailRedux_TeamBans", false))
@@ -448,7 +448,7 @@ public void OnLibraryAdded(const char[] name)
 
 #define NOTVSH 				( gamemode.iLRType != TF2JailRedux_LRIndex() )
 
-public bool HaleTargetFilter(const char[] pattern, Handle clients)
+public bool HaleTargetFilter(const char[] pattern, ArrayList clients)
 {
 	if (NOTVSH)
 		return false;	// What am I supposed  to return here?
@@ -456,15 +456,15 @@ public bool HaleTargetFilter(const char[] pattern, Handle clients)
 	bool non = StrContains(pattern, "!", false) != - 1;
 	for (int i = MaxClients; i; --i) 
 	{
-		if (IsClientInGame(i) && FindValueInArray(clients, i) == - 1)
+		if (IsClientInGame(i) && clients.FindValue(i) == - 1)
 		{
 			if (JailBoss(i).bIsBoss) 
 			{
 				if (!non)
-					PushArrayCell(clients, i);
+					clients.Push(i);
 			}
 			else if (non)
-				PushArrayCell(clients, i);
+				clients.Push(i);
 		}
 	}
 	return true;
@@ -1963,7 +1963,7 @@ public void fwdOnDownloads()
 	AddHHHToDownloads();
 	AddBunnyToDownloads();
 }
-public void fwdOnRoundStartPlayer(const JBPlayer Player, Event event)
+public void fwdOnRoundStartPlayer(const JBPlayer Player)
 {
 	if (NOTVSH)
 		return;
@@ -2043,8 +2043,7 @@ public void fwdOnRoundStart()
 		ForceTeamWin(RED);
 
 	int client = rand.index;
-	int BOSS = GetRandomInt(Hale, MAXBOSS);
-	rand.ConvertToBoss(BOSS);
+	rand.ConvertToBoss(GetRandomInt(Hale, MAXBOSS));
 	if (GetClientTeam(client) == RED)
 		rand.ForceTeamChange(BLU);
 
@@ -2922,9 +2921,9 @@ public void LoadJBHooks()
 {
 	if (!JB_HookEx(OnDownloads, fwdOnDownloads))
 		LogError("Failed to load OnDownloads forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundStartPlayer, fwdOnRoundStartPlayer))
+	if (!JB_HookEx(OnRoundStartPlayer2, fwdOnRoundStartPlayer))
 		LogError("Failed to load OnRoundStartPlayer forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundStart, fwdOnRoundStart))
+	if (!JB_HookEx(OnRoundStart2, fwdOnRoundStart))
 		LogError("Failed to load OnRoundStart forwards for JB VSH Sub-Plugin!");
 	if (!JB_HookEx(OnRoundEnd, fwdOnRoundEnd))
 		LogError("Failed to load OnRoundEnd forwards for JB VSH Sub-Plugin!");

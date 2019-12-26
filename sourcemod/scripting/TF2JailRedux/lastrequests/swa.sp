@@ -4,6 +4,7 @@ methodmap CSWA < JailGameMode
 	{
 		gamemode.ToggleMedic(false);
 		gamemode.bIsWarday = true;
+		gamemode.bIsWardenLocked = true;
 		gamemode.DoorHandler(OPEN);
 		gamemode.EvenTeams();
 		AddCommandListener(ForceSuicide, "explode");
@@ -14,7 +15,9 @@ methodmap CSWA < JailGameMode
 	public static void Activate( const JailFighter player )
 	{
 		TF2_AddCondition(player.index, TFCond_HalloweenKart, -1.0);
-		player.iHealth = 300;
+		SDKHook(player.index, SDKHook_GetMaxHealth, SWA_MaxHealth);
+		SetEntityHealth(player.index, 100);
+		player.iHealth = 100;
 	}
 
 	public static void Terminate( Event event )
@@ -24,11 +27,9 @@ methodmap CSWA < JailGameMode
 		RemoveCommandListener(ForceSlay, "sm_slay");
 	}
 
-	public static void ManageThink( const JailFighter player )
+	public static void ManageEnd( const JailFighter player )
 	{
-		SetEntityHealth(player.index, player.iHealth);
-		if (player.iHealth < 0)
-			SDKHooks_TakeDamage(player.index, 0, 0, 9001.0, DMG_DIRECT);
+		SDKUnhook(player.index, SDKHook_GetMaxHealth, SWA_MaxHealth);
 	}
 
 	public static Action ManageTimeEnd()
@@ -74,12 +75,34 @@ methodmap CSWA < JailGameMode
 		PrecacheSound(")weapons/bumper_car_speed_boost_stop.wav", true);
 		PrecacheSound(")weapons/bumper_car_jump.wav", true);
 		PrecacheSound(")weapons/bumper_car_jump_land.wav", true);
+		PrecacheSound(")weapons/bumper_car_hit_hard.wav", true);
+		PrecacheSound(")weapons/bumper_car_hit_into_air.wav", true);
 
 		char s[PLATFORM_MAX_PATH];
 		for (int i = 1; i <= 8; i++)
 		{
 			Format(s, PLATFORM_MAX_PATH, "weapons/bumper_car_hit%i.wav", i);
 			PrecacheSound(s, true);
+		}
+	}
+
+	public static void ManageHurtPlayer(const JailFighter attacker, const JailFighter victim, Event event)
+	{
+		victim.iHealth -= event.GetInt("damageamount");
+		if (victim.iHealth < 0)
+		{
+//			SDKHooks_TakeDamage(victim.index, attacker.index, attacker.index, 100.0, DMG_VEHICLE);
+			victim.iHealth = 0;
+		}
+	}
+
+	public static void ManageThink(const JailFighter player)
+	{
+		if (IsPlayerAlive(player.index))
+		{
+			if (player.iHealth <= 0)
+				SDKHooks_TakeDamage(player.index, 0, 0, 9001.0, DMG_DIRECT);
+			else SetEntityHealth(player.index, player.iHealth);
 		}
 	}
 };
@@ -92,6 +115,9 @@ public Action ForceSuicide(int client, const char[] command, int argc)
 
 public Action ForceSlay(int client, const char[] command, int argc)
 {
+	if (!GetCmdArgs())
+		return Plugin_Continue;
+
 	char arg[32]; GetCmdArg(1, arg, sizeof(arg));
 	char target_name[MAX_TARGET_LENGTH];
 	int target_list[MAXPLAYERS], target_count;
@@ -113,4 +139,10 @@ public Action ForceSlay(int client, const char[] command, int argc)
 	for (int i = 0; i < target_count; ++i)
 		TF2_RemoveCondition(target_list[i], TFCond_HalloweenKart);		// playercommands takes care of whatever else happens, probably
 	return Plugin_Continue;
+}
+
+public Action SWA_MaxHealth(int client, int &health)
+{
+	health = 100;
+	return Plugin_Changed;
 }

@@ -22,22 +22,22 @@ methodmap JailRepeater < JBPlayer
 	{
 		public get()
 		{
-			return this.GetValue("iRepeats");
+			return this.GetProp("iRepeats");
 		}
 		public set( const int i )
 		{
-			this.SetValue("iRepeats", i);
+			this.SetProp("iRepeats", i);
 		}
 	}
 	property float flRepeatTime
 	{
 		public get()
 		{
-			return this.GetValue("flRepeatTime");
+			return this.GetPropFloat("flRepeatTime");
 		}
 		public set( const float i )
 		{
-			this.SetValue("flRepeatTime", i);
+			this.SetPropFloat("flRepeatTime", i);
 		}
 	}
 };
@@ -72,7 +72,7 @@ public void OnPluginStart()
 
 	LoadTranslations("tf2jail_redux.phrases");
 
-	JB_Hook(OnRoundStartPlayer, fwdOnRoundStartPlayer);
+	JB_Hook(OnRoundStartPlayer2, fwdOnRoundStartPlayer);
 	JB_Hook(OnClientInduction, fwdOnClientInduction);
 	RegConsoleCmd("sm_repeat", SayRepeat);
 }

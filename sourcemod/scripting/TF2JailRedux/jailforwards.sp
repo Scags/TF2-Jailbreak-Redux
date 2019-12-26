@@ -12,7 +12,7 @@ enum	// Legacy forwards
 };
 
 Handle
-	hPrivFwds[OnPlayMusic+1],
+	hPrivFwds[JBFWD_LENGTH],
 	hLegacyFwds[Old_OnRebelRemoved+1]
 ;
 
@@ -27,7 +27,7 @@ void InitializeForwards()
 	hPrivFwds[OnClientTouch]			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
 	hPrivFwds[OnRedThink] 				= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnBlueThink] 				= CreateForward(ET_Ignore, Param_Cell);
-	// hPrivFwds[OnBlueNotWardenThink] 	= CreateForward(ET_Ignore, Param_Cell);
+//	hPrivFwds[OnBlueNotWardenThink] 	= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnWardenThink] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnHudShow] 				= CreateForward(ET_Ignore, Param_String);
 	hPrivFwds[OnLRPicked] 				= CreateForward(ET_Hook,   Param_Cell, Param_Cell, Param_Cell);
@@ -72,6 +72,8 @@ void InitializeForwards()
 	hPrivFwds[OnShouldAutobalancePlayer]= CreateForward(ET_Hook,   Param_Cell);
 	hPrivFwds[OnSetWardenLock] 			= CreateForward(ET_Hook,   Param_Cell);
 	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
+	hPrivFwds[OnRoundStart2]			= CreateForward(ET_Ignore);
+	hPrivFwds[OnRoundStartPlayer2]		= CreateForward(ET_Ignore, Param_Cell);
 
 	hLegacyFwds[Old_OnWardenGiven] 			= CreateGlobalForward("TF2Jail_OnWardenGiven", ET_Ignore, Param_Cell);
 	hLegacyFwds[Old_OnWardenRemoved] 		= CreateGlobalForward("TF2Jail_OnWardenRemoved", ET_Ignore, Param_Cell);
@@ -512,4 +514,15 @@ Action Call_OnSetWardenLock(const bool statusto)
 	Call_PushCell(statusto);
 	Call_Finish(action);
 	return action;
+}
+void Call_OnRoundStart2()
+{
+	Call_StartForward(hPrivFwds[OnRoundStart2]);
+	Call_Finish();
+}
+void Call_OnRoundStartPlayer2(JailFighter player)
+{
+	Call_StartForward(hPrivFwds[OnRoundStartPlayer2]);
+	Call_PushCell(player);
+	Call_Finish();
 }

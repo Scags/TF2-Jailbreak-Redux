@@ -19,8 +19,15 @@
  **	VSH and PH are standalone subplugins, if there is an issue with them, simply delete them.	   **
  **/
 
+#file "TF2Jail_Redux"
+#line 23	// Dumb lol
+
+#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR == 9
+  #error This plugin requires SourceMod 1.10 and above
+#endif
+
 #define PLUGIN_NAME 		"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION 		"1.4.0"
+#define PLUGIN_VERSION 		"1.4.2"
 #define PLUGIN_AUTHOR 		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION 	"Deluxe version of TF2Jail"
 
@@ -51,7 +58,6 @@
 #define RED 				2
 #define BLU 				3
 #define MAX_TF_PLAYERS 		34	// 32 + replay + console
-#define SOURCEMOD1_9 		(SOURCEMOD_V_MINOR == 9 && SOURCEMOD_V_MAJOR == 1)
 
 enum	// Cvar name
 {
@@ -116,30 +122,32 @@ enum	// Cvar name
 	Version
 };
 
-enum eTextNodeParams
+enum struct TextNodeParam
 {	// Hud Text Paramaters
-	Float:fCoord_X,
-	Float:fCoord_Y,
-	Float:fHoldTime,
-	iRed,
-	iBlue,
-	iGreen,
-	iAlpha,
-	iEffect,
-	Float:fFXTime,
-	Float:fFadeIn,
-	Float:fFadeOut,
-};
+	float fCoord_X;
+	float fCoord_Y;
+	float fHoldTime;
+	int iRed;
+	int iBlue;
+	int iGreen;
+	int iAlpha;
+	int iEffect;
+	float fFXTime;
+	float fFadeIn;
+	float fFadeOut;
+}
 
-enum eTargetFilters
+TextNodeParam EnumTNPS[4];
+
+enum struct TargetFilter
 {	// Custom target filters allocated by config
-	Float:vecLoc[3],
-	Float:flDist,
-	bool:bML,
-	String:strDescriptN[64],
-	String:strDescriptA[64],
-	String:strName[32],	// If you have a filter > 32 chars then you got some serious problems
-};
+	float vecLoc[3];
+	float flDist;
+	bool bML;
+	char strDescriptN[64];
+	char strDescriptA[64];
+	char strName[32];	// If you have a filter > 32 chars then you got some serious problems
+}
 
 // If adding new cvars put them above Version in the enum
 ConVar
@@ -168,6 +176,7 @@ public Plugin myinfo =
 #include "TF2JailRedux/jailforwards.sp"
 #include "TF2JailRedux/jailevents.sp"
 #include "TF2JailRedux/jailcommands.sp"
+#include "TF2JailRedux/targetfilters.sp"
 
 public void OnPluginStart()
 {
@@ -342,6 +351,8 @@ public void OnPluginStart()
 	RegAdminCmd("sm_tmedic", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
 	RegAdminCmd("sm_togglemedic", AdminToggleMedic, ADMFLAG_GENERIC, "Toggle the medic room.");
 	RegAdminCmd("sm_reloadjailcfg", AdminReloadCFG, ADMFLAG_GENERIC, "Reload TF2Jail Redux's config file.");
+	RegAdminCmd("sm_jtime", AdminJailTime, ADMFLAG_GENERIC, "Set the jail round time.");
+	RegAdminCmd("sm_jt", AdminJailTime, ADMFLAG_GENERIC, "Set the jail round time.");
 
 	RegAdminCmd("sm_setpreset", SetPreset, ADMFLAG_GENERIC, "Set gamemode.iLRPresetType. (DEBUGGING)");
 	RegAdminCmd("sm_itype", Type, ADMFLAG_GENERIC, "gamemode.iLRType. (DEBUGGING)");
@@ -399,254 +410,11 @@ public void OnPluginStart()
 
 	hJailFields[0] = new StringMap();
 	gamemode.hLRS = new ArrayList(1, LRMAX+1);	// Registering plugins pushes indexes to hLRS, we also start at 0 so +1
-}
 
-public bool WardenGroup(const char[] pattern, Handle clients)
-{
-	if (bEnabled.BoolValue)
-	{
-		ArrayList cast = view_as< ArrayList >(clients);
-		bool non = pattern[1] == '!';
-
-		for (int i = MaxClients; i; --i) 
-		{
-			if (!IsClientInGame(i) || !IsPlayerAlive(i))
-				continue;
-
-			if (cast.FindValue(i) != -1)
-				continue;
-
-			if (!non && JailFighter(i).bIsWarden) 
-				cast.Push(i);
-			else if (non)
-				cast.Push(i);
-		}
-	}
-	return true;
-}
-
-public bool FreedaysGroup(const char[] pattern, Handle clients)
-{
-	if (bEnabled.BoolValue)
-	{
-		ArrayList cast = view_as< ArrayList >(clients);
-		bool non = pattern[1] == '!';
-
-		for (int i = MaxClients; i; --i) 
-		{
-			if (!IsClientInGame(i) || !IsPlayerAlive(i))
-				continue;
-
-			if (cast.FindValue(i) != -1)
-				continue;
-
-			if (!non && JailFighter(i).bIsFreeday) 
-				cast.Push(i);
-			else if (non)
-				cast.Push(i);
-		}
-	}
-	return true;
-}
-
-public bool RebelsGroup(const char[] pattern, Handle clients)
-{
-	if (bEnabled.BoolValue)
-	{
-		ArrayList cast = view_as< ArrayList >(clients);
-		bool non = pattern[1] == '!';
-
-		for (int i = MaxClients; i; --i) 
-		{
-			if (!IsClientInGame(i) || !IsPlayerAlive(i))
-				continue;
-
-			if (cast.FindValue(i) != -1)
-				continue;
-
-			if (!non && JailFighter(i).bIsRebel) 
-				cast.Push(i);
-			else if (non)
-				cast.Push(i);
-		}
-	}
-	return true;
-}
-
-public bool FreedayLocGroup(const char[] pattern, Handle clients)
-{
-	if (bEnabled.BoolValue)
-		return CalcLocGroup(FREEDAY, pattern[1] == '!', view_as< ArrayList >(clients));
-	return true;
-}
-
-public bool WardayRedLocGroup(const char[] pattern, Handle clients)
-{
-	if (bEnabled.BoolValue)
-		return CalcLocGroup(WRED, pattern[1] == '!', view_as< ArrayList >(clients));
-	return true;
-}
-
-public bool WardayBluLocGroup(const char[] pattern, Handle clients)
-{
-	if (bEnabled.BoolValue)
-		return CalcLocGroup(WBLU, pattern[1] == '!', view_as< ArrayList >(clients));
-	return true;
-}
-
-public bool WardayAnyLocGroup(const char[] pattern, Handle clients)
-{
-	if (bEnabled.BoolValue)
-	{
-		float vec[3], vec2[3], dist;
-		int i;
-		ArrayList cast = view_as< ArrayList >(clients);
-		bool non = pattern[1] == '!';
-
-		if (gamemode.GetTelePosition(WRED, vec))
-		{
-			for (i = MaxClients; i; --i)
-			{
-				if (!IsClientInGame(i) || !IsPlayerAlive(i))
-					continue;
-
-				if (cast.FindValue(i) != -1)
-					continue;
-
-				GetClientAbsOrigin(i, vec2);
-				dist = GetVectorDistance(vec, vec2);
-
-				if (!non && dist < cvarTF2Jail[LocDistance].FloatValue)
-					cast.Push(i);
-				else if (non)
-					cast.Push(i);
-			}
-		}
-
-		if (gamemode.GetTelePosition(WBLU, vec))
-		{
-			for (i = MaxClients; i; --i)
-			{
-				if (!IsClientInGame(i) || !IsPlayerAlive(i))
-					continue;
-
-				if (cast.FindValue(i) != -1)
-					continue;
-
-				GetClientAbsOrigin(i, vec2);
-				dist = GetVectorDistance(vec, vec2);
-
-				if (!non && dist < cvarTF2Jail[LocDistance].FloatValue)
-					cast.Push(i);
-				else if (non)
-					cast.Push(i);
-			}
-		}
-	}
-	return true;
-}
-
-public bool MedicLocGroup(const char[] pattern, Handle clients)
-{
-	if (bEnabled.BoolValue)
-	{
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "trigger_hurt")) != -1)
-		{
-			if (GetEntPropFloat(ent, Prop_Data, "m_flDamage") > 0)
-				continue;
-
-			float vec[3], vec2[3], dist;
-			bool non = pattern[1] == '!';
-			ArrayList cast = view_as< ArrayList >(clients);
-
-			GetEntPropVector(ent, Prop_Send, "m_vecOrigin", vec);
-
-			for (int i = MaxClients; i; --i)
-			{
-				if (!IsClientInGame(i) || !IsPlayerAlive(i))
-					continue;
-
-				if (cast.FindValue(i) != -1)
-					continue;
-
-				GetClientAbsOrigin(i, vec2);
-				dist = GetVectorDistance(vec, vec2);
-
-				if (!non && dist < cvarTF2Jail[LocDistance].FloatValue)
-					cast.Push(i);
-				else if (non)
-					cast.Push(i);
-			}
-			break;
-		}
-	}
-	return true;
-}
-
-public bool CalcLocGroup(const int type, const bool non, ArrayList &clients)
-{
-	float vec[3];
-	if (!gamemode.GetTelePosition(type, vec))
-		return false;
-
-	float vec2[3], dist;
-
-	for (int i = MaxClients; i; --i)
-	{
-		if (!IsClientInGame(i) || !IsPlayerAlive(i))
-			continue;
-
-		if (clients.FindValue(i) != -1)
-			continue;
-
-		GetClientAbsOrigin(i, vec2);
-		dist = GetVectorDistance(vec, vec2);
-
-		if (!non && dist < cvarTF2Jail[LocDistance].FloatValue)
-			clients.Push(i);
-		else if (non)
-			clients.Push(i);
-	}
-	return true;
-}
-
-public bool CustomFilterGroup(const char[] pattern, Handle clients)
-{
-	if (bEnabled.BoolValue)
-	{
-		eTargetFilters filter[eTargetFilters];
-		int offset = pattern[1] == '!' ? 2 : 1;
-
-		char buffer[32];
-		//Format(buffer, sizeof(buffer), "@%s", pattern[offset]);
-		strcopy(buffer, sizeof(buffer), pattern[offset]);
-
-		if (!gamemode.hTargetFilters.GetArray(buffer, filter[0], eTargetFilters))	// Shouldn't happen
-			return false;
-
-		int i;
-		float vec[3], dist;
-		ArrayList cast = view_as< ArrayList >(clients);
-
-		for (i = MaxClients; i; --i)
-		{
-			if (!IsClientInGame(i) || !IsPlayerAlive(i))
-				continue;
-
-			if (cast.FindValue(i) != -1)
-				continue;
-
-			GetClientAbsOrigin(i, vec);
-			dist = GetVectorDistance(filter[vecLoc], vec);
-
-			if (offset == 1 && dist < filter[flDist])
-				cast.Push(i);
-			else if (offset == 2)
-				cast.Push(i);
-		}
-	}
-	return true;
+	HookEntityOutput("item_ammopack_full", "OnCacheInteraction", OnEntTouch);
+	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnEntTouch);
+	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnEntTouch);
+	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnEntTouch);
 }
 
 public void OnAllPluginsLoaded()
@@ -723,10 +491,11 @@ public void OnMapStart()
 	ManageDownloads();	// Handler
 
 	// This code isn't mine, but idk who did this before
-	HookEntityOutput("item_ammopack_full", "OnCacheInteraction", OnEntTouch);
-	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnEntTouch);
-	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnEntTouch);
-	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnEntTouch);
+//	HookEntityOutput("item_ammopack_full", "OnCacheInteraction", OnEntTouch);
+//	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnEntTouch);
+//	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnEntTouch);
+//	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnEntTouch);
+//	https://github.com/alliedmodders/sourcemod/blob/master/extensions/sdktools/outputnatives.cpp#L141-L144 ;-;
 
 	int len = gamemode.hLRS.Length;
 	int i;
@@ -978,7 +747,7 @@ public Action Timer_Round(Handle timer)
 		Format(time2, 6, "%s:%i", time2, time % 60);
 	else Format(time2, 6, "%s:0%i", time2, time % 60);
 
-	SetTextNode(hTextNodes[3], time2, EnumTNPS[3][fCoord_X], EnumTNPS[3][fCoord_Y], EnumTNPS[3][fHoldTime], EnumTNPS[3][iRed], EnumTNPS[3][iGreen], EnumTNPS[3][iBlue], EnumTNPS[3][iAlpha], EnumTNPS[3][iEffect], EnumTNPS[3][fFXTime], EnumTNPS[3][fFadeIn], EnumTNPS[3][fFadeOut]);
+	SetTextNode(hTextNodes[3], time2, EnumTNPS[3].fCoord_X, EnumTNPS[3].fCoord_Y, EnumTNPS[3].fHoldTime, EnumTNPS[3].iRed, EnumTNPS[3].iGreen, EnumTNPS[3].iBlue, EnumTNPS[3].iAlpha, EnumTNPS[3].iEffect, EnumTNPS[3].fFXTime, EnumTNPS[3].fFadeIn, EnumTNPS[3].fFadeOut);
 
 	switch (time) 
 	{
@@ -1254,52 +1023,7 @@ public void ParseMapConfig()
 	}
 	else gamemode.bWardayTeleportSetRed = false;
 
-	StringMapSnapshot snap = gamemode.hTargetFilters.Snapshot();
-
-	if (snap)
-	{
-		char buffer[32];
-		for (int i = 0; i < snap.Length; ++i)
-		{
-			snap.GetKey(i, buffer, sizeof(buffer));
-			Format(buffer, sizeof(buffer), "@%s", buffer);
-			RemoveMultiTargetFilter(buffer, CustomFilterGroup);
-			Format(buffer, sizeof(buffer), "@!%s", buffer[1]);
-			RemoveMultiTargetFilter(buffer, CustomFilterGroup);
-		}
-		delete snap;
-	}
-	gamemode.hTargetFilters.Clear();
-
-	if (kv.JumpToKey("Target Filters") && kv.GotoFirstSubKey(false))
-	{
-		eTargetFilters filter[eTargetFilters];
-		do
-		{
-			kv.GetSectionName(filter[strName], sizeof(filter[strName]));
-			kv.GetString("Description_All", filter[strDescriptA], sizeof(filter[strDescriptA]));
-			kv.GetString("Description_None", filter[strDescriptN], sizeof(filter[strDescriptN]));
-
-			filter[bML] = !!kv.GetNum("Description_ML");
-			filter[vecLoc][0] = kv.GetFloat("Coordinate_X");
-			filter[vecLoc][1] = kv.GetFloat("Coordinate_Y");
-			filter[vecLoc][2] = kv.GetFloat("Coordinate_Z");
-			filter[flDist] = kv.GetFloat("Distance");
-			//Format(filter[strName], sizeof(filter[strName]), "@%s", filter[strName]);	// Push with the @ symbol
-
-			if (gamemode.hTargetFilters.SetArray(filter[strName], filter[0], eTargetFilters, false))
-			{
-				char buffer[32];
-				Format(buffer, sizeof(buffer), "@%s", filter[strName]);
-				AddMultiTargetFilter(buffer, CustomFilterGroup, filter[strDescriptA], filter[bML]);
-				//PrintToChatAll("%s", buffer);
-				Format(buffer, sizeof(filter[strName]), "@!%s", filter[strName]);
-				//PrintToChatAll("%s", buffer);
-				AddMultiTargetFilter(buffer, CustomFilterGroup, filter[strDescriptN], filter[bML]);
-			}
-		} while kv.GotoNextKey(false);
-	}
-
+	ManageTargetFilters(kv);	// targetfilters.sp
 	delete kv;
 }
 
@@ -1326,14 +1050,14 @@ public void ParseNodeConfig()
 	int count;
 	do
 	{
-		EnumTNPS[count][fCoord_X] = kv.GetFloat("Coord_X", -1.0);
-		EnumTNPS[count][fCoord_Y] = kv.GetFloat("Coord_Y", -1.0);
-		EnumTNPS[count][fHoldTime] = kv.GetFloat("HoldTime", 5.0);
-		kv.GetColor("Color", EnumTNPS[count][iRed], EnumTNPS[count][iGreen], EnumTNPS[count][iBlue], EnumTNPS[count][iAlpha]);
-		EnumTNPS[count][iEffect] = kv.GetNum("Effect", 0);
-		EnumTNPS[count][fFXTime] = kv.GetFloat("fxTime", 6.0);
-		EnumTNPS[count][fFadeIn] = kv.GetFloat("FadeIn", 0.1);
-		EnumTNPS[count][fFadeOut] = kv.GetFloat("FadeOut", 0.2);
+		EnumTNPS[count].fCoord_X = kv.GetFloat("Coord_X", -1.0);
+		EnumTNPS[count].fCoord_Y = kv.GetFloat("Coord_Y", -1.0);
+		EnumTNPS[count].fHoldTime = kv.GetFloat("HoldTime", 5.0);
+		kv.GetColor("Color", EnumTNPS[count].iRed, EnumTNPS[count].iGreen, EnumTNPS[count].iBlue, EnumTNPS[count].iAlpha);
+		EnumTNPS[count].iEffect = kv.GetNum("Effect", 0);
+		EnumTNPS[count].fFXTime = kv.GetFloat("fxTime", 6.0);
+		EnumTNPS[count].fFadeIn = kv.GetFloat("FadeIn", 0.1);
+		EnumTNPS[count].fFadeOut = kv.GetFloat("FadeOut", 0.2);
 
 		++count;
 	} while kv.GotoNextKey(false);
@@ -1434,8 +1158,12 @@ public void WelcomeMessage(const int userid)
 		CPrintToChat(client, "%t %t", "Plugin Tag", "Welcome Message");
 }
 
-public void KillThatBitch(const int client)
+public void PerformSuicide(const int userid)
 {
+	int client = GetClientOfUserId(userid);
+	if (!IsClientValid(client))
+		return;
+
 	EmitSoundToAll(SuicideSound);
 	ForcePlayerSuicide(client);
 	if (IsPlayerAlive(client))	// In case they're kartified or something idk
@@ -1586,7 +1314,8 @@ public void CreateMarker(const int client)
 		TE_SendToAll();
 		gamemode.bMarkerExists = true;
 		SetPawnTimer(ResetMarker, 1.0);
-		EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos); EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos);
+		EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos);
+		EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos);
 	}
 }
 
@@ -1701,7 +1430,7 @@ public void RemoveRebel(const int userid, const int roundcount)
 	player.ClearRebel();
 }
 
-public Action OnEntSpawn(int ent)
+public Action KillOnSpawn(int ent)
 {
 	if (IsValidEntity(ent))
 		RemoveEntity(ent);
@@ -1828,7 +1557,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	return APLRes_Success;
 }
 
-public int Native_RegisterPlugin(Handle plugin, int numParams)
+public any Native_RegisterPlugin(Handle plugin, int numParams)
 {
 	ArrayList holder = gamemode.hPlugins;
 	// Shouldn't ever happen if you're UnRegistering
@@ -1846,7 +1575,7 @@ public int Native_RegisterPlugin(Handle plugin, int numParams)
 
 	return LRMAX-1;
 }
-/*public int Native_RegisterLRPack(Handle plugin, int numParams)
+/*public any Native_RegisterLRPack(Handle plugin, int numParams)
 {
 	ArrayList holder = gamemode.hPacks;
 	// Shouldn't ever happen
@@ -1870,7 +1599,7 @@ public int Native_RegisterPlugin(Handle plugin, int numParams)
 	SetNativeArray(1, array, len);
 	return true;
 }*/
-public int Native_RegisterLR(Handle plugin, int numParams)
+public any Native_RegisterLR(Handle plugin, int numParams)
 {
 	// Have to register the a plugin first
 	if (gamemode.hPlugins.FindValue(plugin) == -1)
@@ -1882,7 +1611,7 @@ public int Native_RegisterLR(Handle plugin, int numParams)
 
 	return true;
 }
-public int Native_UnRegisterPlugin(Handle plugin, int numParams)
+public any Native_UnRegisterPlugin(Handle plugin, int numParams)
 {
 	ArrayList holder = gamemode.hPlugins;
 	int idx = holder.FindValue(plugin);
@@ -1899,7 +1628,7 @@ public int Native_UnRegisterPlugin(Handle plugin, int numParams)
 	return true;
 }
 // Indices are static, so trying to handle unloading would be redundant
-/*public int Native_UnRegisterLRPack(Handle plugin, int numParams)
+/*public any Native_UnRegisterLRPack(Handle plugin, int numParams)
 {
 	ArrayList holder = gamemode.hPacks;
 	int idx = holder.FindValue(plugin);
@@ -1924,7 +1653,7 @@ public int Native_UnRegisterPlugin(Handle plugin, int numParams)
 	holder.Erase(idx);
 	return true;
 }*/
-public int Native_UnRegisterLR(Handle plugin, int numParams)
+public any Native_UnRegisterLR(Handle plugin, int numParams)
 {
 	ArrayList holder = gamemode.hPlugins;
 	if (holder.FindValue(plugin) == -1)
@@ -1936,7 +1665,7 @@ public int Native_UnRegisterLR(Handle plugin, int numParams)
 
 	return true;
 }
-public int Native_LRIndex(Handle plugin, int numParams)
+public any Native_LRIndex(Handle plugin, int numParams)
 {
 	ArrayList holder = gamemode.hPlugins;
 	int idx = holder.FindValue(plugin);
@@ -1947,14 +1676,14 @@ public int Native_LRIndex(Handle plugin, int numParams)
 	return 0;
 }
 
-public int Native_Hook(Handle plugin, int numParams)
+public any Native_Hook(Handle plugin, int numParams)
 {
 	int hook = GetNativeCell(1);
 	Function func = GetNativeFunction(2);
 	if (hPrivFwds[hook])
 		AddToForward(hPrivFwds[hook], plugin, func);
 }
-public int Native_HookEx(Handle plugin, int numParams)
+public any Native_HookEx(Handle plugin, int numParams)
 {
 	int hook = GetNativeCell(1);
 	Function func = GetNativeFunction(2);
@@ -1962,13 +1691,13 @@ public int Native_HookEx(Handle plugin, int numParams)
 		return AddToForward(hPrivFwds[hook], plugin, func);
 	return 0;
 }
-public int Native_Unhook(Handle plugin, int numParams)
+public any Native_Unhook(Handle plugin, int numParams)
 {
 	int hook = GetNativeCell(1);
 	if (hPrivFwds[hook])
 		RemoveFromForward(hPrivFwds[hook], plugin, GetNativeFunction(2));
 }
-public int Native_UnhookEx(Handle plugin, int numParams)
+public any Native_UnhookEx(Handle plugin, int numParams)
 {
 	int hook = GetNativeCell(1);
 	if (hPrivFwds[hook])
@@ -1976,7 +1705,7 @@ public int Native_UnhookEx(Handle plugin, int numParams)
 	return 0;
 }
 
-public int Native_GetValue(Handle plugin, int numParams)
+public any Native_GetValue(Handle plugin, int numParams)
 {
 	char key[64]; GetNativeString(2, key, 64);
 	any item;
@@ -1984,180 +1713,180 @@ public int Native_GetValue(Handle plugin, int numParams)
 		return item;
 	return 0;
 }
-public int Native_SetValue(Handle plugin, int numParams)
+public any Native_SetValue(Handle plugin, int numParams)
 {
 	char key[64]; GetNativeString(2, key, 64);
 	return hJailFields[GetNativeCell(1)].SetValue(key, GetNativeCell(3));
 }
-public int Native_NoMusic_Get(Handle plugin, int numParams)
+public any Native_NoMusic_Get(Handle plugin, int numParams)
 {
 	return JailFighter(GetNativeCell(1)).bNoMusic;
 }
-public int Native_StringMap_Get(Handle plugin, int numParams)
+public any Native_StringMap_Get(Handle plugin, int numParams)
 {
-	return view_as< int >(JailFighter(GetNativeCell(1)).hMap);
+	return JailFighter(GetNativeCell(1)).hMap;
 }
-public int Native_SpawnWeapon(Handle plugin, int numParams)
+public any Native_SpawnWeapon(Handle plugin, int numParams)
 {
 	char classname[64]; GetNativeString(2, classname, 64);
 	char attributes[128]; GetNativeString(6, attributes, 128);
 	return JailFighter(GetNativeCell(1)).SpawnWeapon(classname, GetNativeCell(3), GetNativeCell(4), GetNativeCell(5), attributes);
 }
-public int Native_GetWeaponSlotIndex(Handle plugin, int numParams)
+public any Native_GetWeaponSlotIndex(Handle plugin, int numParams)
 {
 	return JailFighter(GetNativeCell(1)).GetWeaponSlotIndex(GetNativeCell(1));
 }
-public int Native_SetWepInvis(Handle plugin, int numParams)
+public any Native_SetWepInvis(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).SetWepInvis(GetNativeCell(1));
 }
-public int Native_ForceTeamChange(Handle plugin, int numParams)
+public any Native_ForceTeamChange(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).ForceTeamChange(GetNativeCell(2), GetNativeCell(3));
 }
-public int Native_TeleportToPosition(Handle plugin, int numParams)
+public any Native_TeleportToPosition(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).TeleportToPosition(GetNativeCell(2));
 }
-public int Native_ListLRS(Handle plugin, int numParams)
+public any Native_ListLRS(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).ListLRS();
 }
-public int Native_PreEquip(Handle plugin, int numParams)
+public any Native_PreEquip(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).PreEquip(GetNativeCell(2));
 }
-public int Native_TeleToSpawn(Handle plugin, int numParams)
+public any Native_TeleToSpawn(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).TeleToSpawn();
 }
-public int Native_SpawnSmallHealthPack(Handle plugin, int numParams)
+public any Native_SpawnSmallHealthPack(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).SpawnSmallHealthPack();
 }
-public int Native_MutePlayer(Handle plugin, int numParams)
+public any Native_MutePlayer(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).MutePlayer();
 }
-public int Native_GiveFreeday(Handle plugin, int numParams)
+public any Native_GiveFreeday(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).GiveFreeday();
 }
-public int Native_RemoveFreeday(Handle plugin, int numParams)
+public any Native_RemoveFreeday(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).RemoveFreeday();
 }
-public int Native_StripToMelee(Handle plugin, int numParams)
+public any Native_StripToMelee(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).StripToMelee();
 }
-public int Native_EmptyWeaponSlots(Handle plugin, int numParams)
+public any Native_EmptyWeaponSlots(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).EmptyWeaponSlots();
 }
-public int Native_UnmutePlayer(Handle plugin, int numParams)
+public any Native_UnmutePlayer(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).UnmutePlayer();
 }
-public int Native_WardenSet(Handle plugin, int numParams)
+public any Native_WardenSet(Handle plugin, int numParams)
 {
 	return JailFighter(GetNativeCell(1)).WardenSet();
 }
-public int Native_WardenUnset(Handle plugin, int numParams)
+public any Native_WardenUnset(Handle plugin, int numParams)
 {
 	return JailFighter(GetNativeCell(1)).WardenUnset();
 }
-public int Native_MakeHorsemann(Handle plugin, int numParams)
+public any Native_MakeHorsemann(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).MakeHorsemann();
 }
-public int Native_UnHorsemann(Handle plugin, int numParams)
+public any Native_UnHorsemann(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).UnHorsemann();
 }
-public int Native_WardenMenu(Handle plugin, int numParams)
+public any Native_WardenMenu(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).WardenMenu();
 }
-public int Native_ClimbWall(Handle plugin, int numParams)
+public any Native_ClimbWall(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).ClimbWall(GetNativeCell(2), GetNativeCell(3), GetNativeCell(4), GetNativeCell(5));
 }
-public int Native_AttemptFireWarden(Handle plugin, int numParams)
+public any Native_AttemptFireWarden(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).AttemptFireWarden();
 }
-public int Native_MarkRebel(Handle plugin, int numParams)
+public any Native_MarkRebel(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).MarkRebel();
 }
-public int Native_ClearRebel(Handle plugin, int numParams)
+public any Native_ClearRebel(Handle plugin, int numParams)
 {
 	JailFighter(GetNativeCell(1)).ClearRebel();
 }
 
-public int Native_JBGameMode_Playing(Handle plugin, int numParams)
+public any Native_JBGameMode_Playing(Handle plugin, int numParams)
 {
 	return gamemode.iPlaying;
 }
-public int Native_JBGameMode_FindRandomWarden(Handle plugin, int numParams)
+public any Native_JBGameMode_FindRandomWarden(Handle plugin, int numParams)
 {
-	return view_as< int >(gamemode.FindRandomWarden());
+	return gamemode.FindRandomWarden();
 }
-public int Native_JBGameMode_ManageCells(Handle plugin, int numParams)
+public any Native_JBGameMode_ManageCells(Handle plugin, int numParams)
 {
 	gamemode.DoorHandler(GetNativeCell(1));
 }
-public int Native_JBGameMode_Warden(Handle plugin, int numParams)
+public any Native_JBGameMode_Warden(Handle plugin, int numParams)
 {
 	return view_as< int >(gamemode.iWarden);
 }
-public int Native_JBGameMode_FireWarden(Handle plugin, int numParams)
+public any Native_JBGameMode_FireWarden(Handle plugin, int numParams)
 {
 	gamemode.FireWarden(GetNativeCell(1), GetNativeCell(2));
 }
-public int Native_JBGameMode_OpenAllDoors(Handle plugin, int numParams)
+public any Native_JBGameMode_OpenAllDoors(Handle plugin, int numParams)
 {
 	gamemode.OpenAllDoors();
 }
-public int Native_JBGameMode_ToggleMedic(Handle plugin, int numParams)
+public any Native_JBGameMode_ToggleMedic(Handle plugin, int numParams)
 {
 	gamemode.ToggleMedic(GetNativeCell(1));
 }
-/*public int Native_JBGameMode_ToggleMedicTeam(Handle plugin, int numParams)
+/*public any Native_JBGameMode_ToggleMedicTeam(Handle plugin, int numParams)
 {
 	int team = GetNativeCell(1);
 	gamemode.ToggleMedicTeam(team);
 }*/
-public int Native_JBGameMode_ToggleMuting(Handle plugin, int numParams)
+public any Native_JBGameMode_ToggleMuting(Handle plugin, int numParams)
 {
 	gamemode.ToggleMuting(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
 }
-public int Native_JBGameMode_ResetVotes(Handle plugin, int numParams)
+public any Native_JBGameMode_ResetVotes(Handle plugin, int numParams)
 {
 	gamemode.ResetVotes();
 }
-public int Native_JBGameMode_GetTelePosition(Handle plugin, int numParams)
+public any Native_JBGameMode_GetTelePosition(Handle plugin, int numParams)
 {
 	float vec[3];
 	bool ret = gamemode.GetTelePosition(GetNativeCell(1), vec);
 	SetNativeArray(2, vec, 3);
 	return ret;
 }
-public int Native_JBGameMode_SetWardenLock(Handle plugin, int numParams)
+public any Native_JBGameMode_SetWardenLock(Handle plugin, int numParams)
 {
 	return gamemode.SetWardenLock(GetNativeCell(1), GetNativeCell(2));
 }
-public int Native_JBGameMode_AutobalanceTeams(Handle plugin, int numParams)
+public any Native_JBGameMode_AutobalanceTeams(Handle plugin, int numParams)
 {
 	gamemode.AutobalanceTeams(GetNativeCell(1));
 }
-public int Native_JBGameMode_EvenTeams(Handle plugin, int numParams)
+public any Native_JBGameMode_EvenTeams(Handle plugin, int numParams)
 {
 	gamemode.EvenTeams(GetNativeCell(1), GetNativeCell(2));
 }
 
-public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)
+public any Native_JBGameMode_GetProperty(Handle plugin, int numParams)
 {
 	char key[64]; GetNativeString(1, key, 64);
 	any item;
@@ -2165,13 +1894,13 @@ public int Native_JBGameMode_GetProperty(Handle plugin, int numParams)
 		return item;
 	return 0;
 }
-public int Native_JBGameMode_SetProperty(Handle plugin, int numParams)
+public any Native_JBGameMode_SetProperty(Handle plugin, int numParams)
 {
 	char key[64]; GetNativeString(1, key, 64);
 	gamemode.SetValue(key, GetNativeCell(2));
 }
 
-public int Native_JBGameMode_Instance(Handle plugin, int numParams)
+public any Native_JBGameMode_Instance(Handle plugin, int numParams)
 {
-	return view_as< int >(gamemode);
+	return gamemode;
 }

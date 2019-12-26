@@ -120,7 +120,7 @@ public void ManageHUDText()
 	Call_OnHudShow(strHudName);
 
 	if (strHudName[0] != '\0')
-		SetTextNode(hTextNodes[1], strHudName, EnumTNPS[1][fCoord_X], EnumTNPS[1][fCoord_Y], EnumTNPS[1][fHoldTime], EnumTNPS[1][iRed], EnumTNPS[1][iGreen], EnumTNPS[1][iBlue], EnumTNPS[1][iAlpha], EnumTNPS[1][iEffect], EnumTNPS[1][fFXTime], EnumTNPS[1][fFadeIn], EnumTNPS[1][fFadeOut]);
+		SetTextNode(hTextNodes[1], strHudName, EnumTNPS[1].fCoord_X, EnumTNPS[1].fCoord_Y, EnumTNPS[1].fHoldTime, EnumTNPS[1].iRed, EnumTNPS[1].iGreen, EnumTNPS[1].iBlue, EnumTNPS[1].iAlpha, EnumTNPS[1].iEffect, EnumTNPS[1].fFXTime, EnumTNPS[1].fFadeIn, EnumTNPS[1].fFadeOut);
 }
 /**
  *	Called directly when a player spawns, be sure to note iRoundState(s) if being specific
@@ -231,7 +231,8 @@ public void ManageRoundStart(Event event)
 		case HHHDay:CHHHDay.Initialize();
 		case HotPrisoner:CHotPrisoner.Initialize();
 	}
-	Call_OnRoundStart(event);
+	Call_OnRoundStart(event);	// Why the fuck did I do this
+	Call_OnRoundStart2();		// Too late, need to keep bcompat
 }
 /**
  *	Calls on round start for each living player
@@ -268,6 +269,7 @@ public void ManageRoundStartPlayer(const JailFighter player, Event event)
 		case HotPrisoner:CHotPrisoner.Activate(player);
 	}
 	Call_OnRoundStartPlayer(player, event);
+	Call_OnRoundStartPlayer2(player);
 }
 /**
  *	Self explanatory, set the gamemode.iTimeLeft to whatever time (in seconds) you desire
@@ -308,6 +310,7 @@ public void ManageRoundEnd(const JailFighter base, Event event)
 		case TinyRound:SetPawnTimer(ResetModelProps, 1.0, base.index);
 		case HHHDay:CHHHDay.ManageEnd(base);
 		case HotPrisoner:CHotPrisoner.ManageEnd(base);
+		case SWA:CSWA.ManageEnd(base);
 	}
 	Call_OnRoundEndPlayer(base, event);
 }
@@ -420,8 +423,8 @@ public void ManageRedThink(const JailFighter player)
 {
 	switch (gamemode.iLRType)
 	{
-		case -1: {	}
 		case SWA:CSWA.ManageThink(player);
+		case -1: {	}
 	}
 	Call_OnRedThink(player);
 }
@@ -432,8 +435,8 @@ public void ManageBlueThink(const JailFighter player)
 {
 	switch (gamemode.iLRType)
 	{
-		case -1: {	}
 		case SWA:CSWA.ManageThink(player);
+		case -1: {	}
 	}
 
 	if (!gamemode.bDisableCriticals && cvarTF2Jail[CritType].IntValue == 1)
@@ -485,13 +488,13 @@ public void ManageOnPreThink(const JailFighter base)
 */
 public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victim, Event event)
 {
-	int damage = event.GetInt("damageamount");
+	// int damage = event.GetInt("damageamount");
 	// int custom = event.GetInt("custom");
 	// int weapon = event.GetInt("weaponid");
 	
 	switch (gamemode.iLRType)
 	{
-		case SWA:victim.iHealth -= damage;
+		case SWA:CSWA.ManageHurtPlayer(attacker, victim, event);
 		case -1: {	}
 	}
 
@@ -657,9 +660,6 @@ public Action ManageMusic(char song[PLATFORM_MAX_PATH], float & time)
 		}*/
 		default:return Call_OnPlayMusic(song, time);	// Defaults to Handled
 	}
-#if SOURCEMOD1_9
-	return Plugin_Handled;	// Dammit dvander
-#endif
 }
 /**
  *	Manage what happens when the round timer hits 0
@@ -672,9 +672,6 @@ public Action ManageTimeEnd()
 		case SWA:return CSWA.ManageTimeEnd();
 		default:return Call_OnTimeEnd();
 	}
-#if SOURCEMOD1_9
-	return Plugin_Continue;
-#endif
 }
 /**
  *	Determines if a player's attack is to be critical
@@ -797,7 +794,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 
 			if (Call_OnLRPicked(base, request, gamemode.hLRS) != Plugin_Continue)
 				return;
-	
+
 			int value;
 			if (request != -1)	// If the selection isn't random
 				value = gamemode.hLRS.Get(request);
@@ -823,7 +820,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				case Suicide:
 				{
 					CPrintToChatAll("%t %t", "Plugin Tag", "Suicide Select", client);
-					SetPawnTimer(KillThatBitch, GetRandomFloat(0.5, 7.0), client);	// Meme lol
+					SetPawnTimer(PerformSuicide, GetRandomFloat(0.5, 7.0), client);	// Meme lol
 					gamemode.hLRS.Set( request, value+1 );
 					return;
 				}
@@ -908,13 +905,13 @@ public void ManageEntityCreated(int ent, const char[] classname)
 		return;
 
 	if (StrContains(classname, "tf_ammo_pack", false) != -1)
-		SDKHook(ent, SDKHook_Spawn, OnEntSpawn);
+		SDKHook(ent, SDKHook_Spawn, KillOnSpawn);
 
 	if (cvarTF2Jail[KillPointServerCommand].BoolValue && StrContains(classname, "point_servercommand", false) != -1)
-		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
+		SDKHook(ent, SDKHook_Spawn, KillOnSpawn);
 	
 	if (cvarTF2Jail[DroppedWeapons].BoolValue && StrEqual(classname, "tf_dropped_weapon"))
-		RequestFrame(RemoveEnt, EntIndexToEntRef(ent));
+		SDKHook(ent, SDKHook_Spawn, KillOnSpawn);
 
 	if (StrEqual(classname, "func_breakable") && cvarTF2Jail[VentHit].BoolValue)
 		RequestFrame(HookVent, EntIndexToEntRef(ent));

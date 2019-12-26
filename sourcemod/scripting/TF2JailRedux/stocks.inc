@@ -1173,3 +1173,11 @@ stock bool IsMedicUbering(const int medic)
 		return HasEntProp(medigun, Prop_Send, "m_bChargeRelease") ? !!GetEntProp(medigun, Prop_Send, "m_bChargeRelease") : false;
 	return false;
 }
+stock bool IsStringNumeric(const char[] s)
+{
+	for (int i = 0; s[i] != '\0'; ++i)
+		if (!IsCharNumeric(s[i]))
+			return false;
+
+	return true;
+}

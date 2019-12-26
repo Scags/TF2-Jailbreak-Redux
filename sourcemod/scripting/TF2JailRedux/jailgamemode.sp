@@ -675,6 +675,8 @@ methodmap JailGameMode < StringMap
 	*/
 	public JailFighter FindRandomWarden()
 	{
+		if (this.bIsWardenLocked)
+			return view_as< JailFighter >(0);
 		int client = GetRandomPlayer(BLU, true);
 		if (client == -1)
 			return view_as< JailFighter >(0);

@@ -8,7 +8,7 @@
 #undef TAG
 #define TAG "{crimson}[TF2Jail] Teambans{burlywood} "
 
-#define PLUGIN_VERSION 		"1.0.3"
+#define PLUGIN_VERSION 		"1.0.4"
 #define RED 				2
 #define BLU 				3
 #define IsClientValid(%1) 	((0 < %1 <= MaxClients) && IsClientInGame(%1))
@@ -46,7 +46,7 @@ int			// Refresh RageTable every x mapchanges
 
 bool
 	bLate,
-	bDisabled	// Grrrr
+	bDisabled = true	// Grrrr
 ;
 
 ConVar
@@ -64,7 +64,7 @@ Database
 	hTheDB
 ;
 
-Handle
+GlobalForward
 	hOnBan,
 	hOnUnBan,
 	hOnOfflineBan,
@@ -94,24 +94,24 @@ methodmap JailPlayer < JBPlayer
 
 	property int iTimeLeft 
 	{
-		public get() 				{ return this.GetValue("iTimeLeft"); }
-		public set( const int i ) 	{ this.SetValue("iTimeLeft", i); }
+		public get() 				{ return this.GetProp("iTimeLeft"); }
+		public set( const int i ) 	{ this.SetProp("iTimeLeft", i); }
 	}
 	property int iWardenTimeLeft
 	{
-		public get() 				{ return this.GetValue("iWardenTimeLeft"); }
-		public set( const int i ) 	{ this.SetValue("iWardenTimeLeft", i); }
+		public get() 				{ return this.GetProp("iWardenTimeLeft"); }
+		public set( const int i ) 	{ this.SetProp("iWardenTimeLeft", i); }
 	}
 
 	property bool bIsGuardbanned
 	{
-		public get() 				{ return this.GetValue("bIsGuardbanned"); }
-		public set( const bool i ) 	{ this.SetValue("bIsGuardbanned", i); }
+		public get() 				{ return this.GetProp("bIsGuardbanned"); }
+		public set( const bool i ) 	{ this.SetProp("bIsGuardbanned", i); }
 	}
 	property bool bIsWardenBanned
 	{
-		public get() 				{ return this.GetValue("bIsWardenBanned"); }
-		public set( const bool i ) 	{ this.SetValue("bIsWardenBanned", i); }
+		public get() 				{ return this.GetProp("bIsWardenBanned"); }
+		public set( const bool i ) 	{ this.SetProp("bIsWardenBanned", i); }
 	}
 }
 
@@ -162,7 +162,7 @@ public void OnPluginStart()
 	iTableDelete = 0;
 }
 
-public void OnAllPluginsLoaded()
+public void InitSubPlugin()
 {
 	JB_Hook(OnPlayerSpawned, fwdOnPlayerSpawn);
 	JB_Hook(OnWardenGet, fwdOnWardenGet);
@@ -194,7 +194,7 @@ public void OnLibraryAdded(const char[] name)
 		if (bDisabled)
 		{
 			bEnabled.SetBool(true);
-			OnAllPluginsLoaded();
+			InitSubPlugin();
 		}
 	}
 }
@@ -1501,52 +1501,52 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	return APLRes_Success;
 }
 
-public int Native_GuardBan(Handle plugin, int numParams)
+public any Native_GuardBan(Handle plugin, int numParams)
 {
 	char reason[256]; GetNativeString(4, reason, 256);
 	GuardBan(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3), reason);
 }
-public int Native_UnGuardBan(Handle plugin, int numParams)
+public any Native_UnGuardBan(Handle plugin, int numParams)
 {
 	UnGuardBan(GetNativeCell(1), GetNativeCell(2));
 }
-public int Native_OfflineGuardBan(Handle plugin, int numParams)
+public any Native_OfflineGuardBan(Handle plugin, int numParams)
 {
 	char ID[32]; GetNativeString(1, ID, sizeof(ID));
 	OfflineBan(ID, GetNativeCell(2));
 }
-public int Native_OfflineUnGuardBan(Handle plugin, int numParams)
+public any Native_OfflineUnGuardBan(Handle plugin, int numParams)
 {
 	char ID[32]; GetNativeString(1, ID, sizeof(ID));
 	OfflineUnBan(ID, GetNativeCell(2));
 }
-public int Native_RageBanMenu(Handle plugin, int numParams)
+public any Native_RageBanMenu(Handle plugin, int numParams)
 {
 	RageBanMenu(GetNativeCell(1));
 }
-public int Native_DisplayBanMenu(Handle plugin, int numParams)
+public any Native_DisplayBanMenu(Handle plugin, int numParams)
 {
 	DisplayBannableMenu(GetNativeCell(1));
 }
-public int Native_DisplayUnbanMenu(Handle plugin, int numParams)
+public any Native_DisplayUnbanMenu(Handle plugin, int numParams)
 {
 	DisplayUnbannableMenu(GetNativeCell(1));
 }
 
-public int Native_WardenBan(Handle plugin, int numParams)
+public any Native_WardenBan(Handle plugin, int numParams)
 {
 	WardenBan(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
 }
-public int Native_UnWardenBan(Handle plugin, int numParams)
+public any Native_UnWardenBan(Handle plugin, int numParams)
 {
 	UnWardenBan(GetNativeCell(1), GetNativeCell(2));
 }
-public int Native_OfflineWardenBan(Handle plugin, int numParams)
+public any Native_OfflineWardenBan(Handle plugin, int numParams)
 {
 	char ID[32]; GetNativeString(1, ID, sizeof(ID));
 	OfflineWardenBan(ID, GetNativeCell(2));
 }
-public int Native_OfflineUnWardenBan(Handle plugin, int numParams)
+public any Native_OfflineUnWardenBan(Handle plugin, int numParams)
 {
 	char ID[32]; GetNativeString(1, ID, sizeof(ID));
 	OfflineUnWardenBan(ID, GetNativeCell(2));

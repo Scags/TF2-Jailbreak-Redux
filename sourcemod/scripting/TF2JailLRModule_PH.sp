@@ -27,12 +27,12 @@ StringMap
 	g_PropData
 ;
 
-enum PropData
+enum struct PropData
 {
-	String:PropData_Name[96],
-	String:PropData_Offset[32], // 3 digits, plus 2 spaces, plus a null terminator
-	String:PropData_Rotation[32] // 3 digits, plus 2 spaces, plus a null terminator
-};
+	char PropData_Name[96];
+	char PropData_Offset[32]; // 3 digits, plus 2 spaces, plus a null terminator
+	char PropData_Rotation[32]; // 3 digits, plus 2 spaces, plus a null terminator
+}
 
 methodmap JailHunter < JBPlayer
 {
@@ -51,61 +51,61 @@ methodmap JailHunter < JBPlayer
 
 	property int iRolls
 	{
-		public get() 				{ return this.GetValue("iRolls"); }
-		public set( const int i ) 	{ this.SetValue("iRolls", i); }
+		public get() 				{ return this.GetProp("iRolls"); }
+		public set( const int i ) 	{ this.SetProp("iRolls", i); }
 	}
 	property int iLastProp
 	{
-		public get() 				{ return this.GetValue("iLastProp"); }
-		public set( const int i ) 	{ this.SetValue("iLastProp", i); }
+		public get() 				{ return this.GetProp("iLastProp"); }
+		public set( const int i ) 	{ this.SetProp("iLastProp", i); }
 	}
 	property int iFlameCount
 	{
-		public get() 				{ return this.GetValue("iFlameCount"); }
-		public set( const int i ) 	{ this.SetValue("iFlameCount", i); }
+		public get() 				{ return this.GetProp("iFlameCount"); }
+		public set( const int i ) 	{ this.SetProp("iFlameCount", i); }
 	}
 
 	property bool bTouched
 	{
-		public get() 				{ return this.GetValue("bTouched"); }
-		public set( const bool i ) 	{ this.SetValue("bTouched", i); }
+		public get() 				{ return this.GetProp("bTouched"); }
+		public set( const bool i ) 	{ this.SetProp("bTouched", i); }
 	}
-	property bool bIsProp 
+	property bool bIsProp
 	{
-		public get() 				{ return this.GetValue("bIsProp"); }
-		public set( const bool i ) 	{ this.SetValue("bIsProp", i); }
+		public get() 				{ return this.GetProp("bIsProp"); }
+		public set( const bool i ) 	{ this.SetProp("bIsProp", i); }
 	}
-	property bool bFlaming 
+	property bool bFlaming
 	{
-		public get() 				{ return this.GetValue("bFlaming"); }
-		public set( const bool i ) 	{ this.SetValue("bFlaming", i); }
+		public get() 				{ return this.GetProp("bFlaming"); }
+		public set( const bool i ) 	{ this.SetProp("bFlaming", i); }
 	}
-	property bool bLocked 
+	property bool bLocked
 	{
-		public get() 				{ return this.GetValue("bLocked"); }
-		public set( const bool i ) 	{ this.SetValue("bLocked", i); }
+		public get() 				{ return this.GetProp("bLocked"); }
+		public set( const bool i ) 	{ this.SetProp("bLocked", i); }
 	}
-	property bool bHoldingLMB 
+	property bool bHoldingLMB
 	{
-		public get() 				{ return this.GetValue("bHoldingLMB"); }
-		public set( const bool i ) 	{ this.SetValue("bHoldingLMB", i); }
+		public get() 				{ return this.GetProp("bHoldingLMB"); }
+		public set( const bool i ) 	{ this.SetProp("bHoldingLMB", i); }
 	}
-	property bool bHoldingRMB 
+	property bool bHoldingRMB
 	{
-		public get() 				{ return this.GetValue("bHoldingRMB"); }
-		public set( const bool i ) 	{ this.SetValue("bHoldingRMB", i); }
+		public get() 				{ return this.GetProp("bHoldingRMB"); }
+		public set( const bool i ) 	{ this.SetProp("bHoldingRMB", i); }
 	}
-	property bool bFirstPerson 
+	property bool bFirstPerson
 	{
-		public get() 				{ return this.GetValue("bFirstPerson"); }
-		public set( const bool i ) 	{ this.SetValue("bFirstPerson", i); }
+		public get() 				{ return this.GetProp("bFirstPerson"); }
+		public set( const bool i ) 	{ this.SetProp("bFirstPerson", i); }
 	}
 
 	public void MakeProp( const bool announce, bool override = true, bool loseweps = true )
 	{
 		this.PreEquip(loseweps);
 		int client = this.index;
-		PropData propData[PropData];
+		PropData propData;
 		if (override)
 			this.iLastProp = -1;
 
@@ -138,11 +138,11 @@ methodmap JailHunter < JBPlayer
 
 		// This wackiness with [0] is required when dealing with enums containing strings
 		char modelName[96];
-		if (g_PropData.GetArray(model, propData[0], sizeof(propData)))
+		if (g_PropData.GetArray(model, propData, sizeof(propData)))
 		{
-			strcopy(modelName, sizeof(modelName), propData[PropData_Name]);
-			strcopy(offset, sizeof(offset), propData[PropData_Offset]);
-			strcopy(rotation, sizeof(rotation), propData[PropData_Rotation]);
+			strcopy(modelName, sizeof(modelName), propData.PropData_Name);
+			strcopy(offset, sizeof(offset), propData.PropData_Offset);
+			strcopy(rotation, sizeof(rotation), propData.PropData_Rotation);
 		}
 		
 		if (announce)
@@ -234,7 +234,7 @@ enum
 bool
 	bFirstBlood,
 	bAbleToReroll,
-	bDisabled
+	bDisabled = true
 ;
 
 int
@@ -284,7 +284,7 @@ public void OnPluginStart()
 	g_ModelRotation = new ArrayList(ByteCountToCells(11));
 }
 
-public void OnAllPluginsLoaded()
+public void InitSubPlugin()
 {
 	TF2JailRedux_RegisterPlugin();
 	gamemode = new JBGameMode();
@@ -307,7 +307,7 @@ public void OnLibraryAdded(const char[] name)
 {
 	if (!strcmp(name, "TF2Jail_Redux", false) && bDisabled)
 	{
-		OnAllPluginsLoaded();
+		InitSubPlugin();
 		bDisabled = false;
 	}
 }
@@ -392,24 +392,24 @@ public void ParsePropCFG()
 
 	int counter;
 	char modelPath[PLATFORM_MAX_PATH];
-	PropData propData[PropData];
+	PropData propData;
 	do
 	{
 		kv.GetSectionName(modelPath, PLATFORM_MAX_PATH);
-		kv.GetString("name", propData[PropData_Name], sizeof(propData[PropData_Name]), "");
+		kv.GetString("name", propData.PropData_Name, sizeof(propData.PropData_Name), "");
 
-		kv.GetString("offset", propData[PropData_Offset], sizeof(propData[PropData_Offset]), "0 0 0");
-		g_ModelOffset.PushString(propData[PropData_Offset]);
-		kv.GetString("rotation", propData[PropData_Rotation], sizeof(propData[PropData_Rotation]), "0 0 0");
-		g_ModelRotation.PushString(propData[PropData_Rotation]);
+		kv.GetString("offset", propData.PropData_Offset, sizeof(propData.PropData_Offset), "0 0 0");
+		g_ModelOffset.PushString(propData.PropData_Offset);
+		kv.GetString("rotation", propData.PropData_Rotation, sizeof(propData.PropData_Rotation), "0 0 0");
+		g_ModelRotation.PushString(propData.PropData_Rotation);
 
-		if (!strlen(propData[PropData_Name]))
+		if (!strlen(propData.PropData_Name))
 		{
 			// No "name" or "en" block means no prop name, but this isn't an error that prevents us from using the prop for offset and rotation
 			LogError("Error getting prop name for %s", modelPath);
 		}
 
-		if (!g_PropData.SetArray(modelPath, propData[0], sizeof(propData), false))
+		if (!g_PropData.SetArray(modelPath, propData, sizeof(propData), false))
 		{
 			LogError("Error saving prop data for %s", modelPath);
 			continue;
@@ -885,7 +885,7 @@ public void fwdOnPreThink(const JBPlayer Player)
 int NoSS[7]  = { 2, 3, 4, 5, 6, 7, 9 };
 int NoHvy[6] = { 2, 3, 4, 5, 6, 9 };
 int iHeavy;
-public void fwdOnRoundStartPlayer(const JBPlayer player, Event event)
+public void fwdOnRoundStartPlayer(const JBPlayer player)
 {
 	if (NOTPH)
 		return;
@@ -1207,9 +1207,9 @@ public Action fwdOnSetWardenLock(const bool status)
 
 public void CheckJBHooks()
 {
-	if (!JB_HookEx(OnRoundStartPlayer, fwdOnRoundStartPlayer))
+	if (!JB_HookEx(OnRoundStartPlayer2, fwdOnRoundStartPlayer))
 		LogError("Error Loading OnRoundStartPlayer Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundStart, fwdOnRoundStart))
+	if (!JB_HookEx(OnRoundStart2, fwdOnRoundStart))
 		LogError("Error Loading OnRoundStart, Forwards for JB PH Sub-Plugin!");
 	if (!JB_HookEx(OnRoundEnd, fwdOnRoundEnd))
 		LogError("Error Loading OnRoundEnd Forwards for JB PH Sub-Plugin!");

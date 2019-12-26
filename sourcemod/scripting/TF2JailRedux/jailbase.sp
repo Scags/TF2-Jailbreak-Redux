@@ -10,7 +10,6 @@ char
 ;
 
 int
-	EnumTNPS[4][eTextNodeParams],			// Hud params
 	iHalo,									// Particle
 	iLaserBeam,								// Particle
 	iHalo2,									// Particle
@@ -356,15 +355,46 @@ methodmap JailFighter
 		}
 	}
 
-	public any GetProperty(const char[] key)
+	public any GetProp(const char[] key)
 	{
 		any val; this.hMap.GetValue(key, val);
 		return val;
 	}
 
-	public void SetProperty(const char[] key, any val)
+	public void SetProp(const char[] key, any val)
 	{
 		this.hMap.SetValue(key, val);
+	}
+
+	public float GetPropFloat(const char[] key)
+	{
+		float val; this.hMap.GetValue(key, val);
+		return val;
+	}
+
+	public void SetPropFloat(const char[] key, float val)
+	{
+		this.hMap.SetValue(key, val);
+	}
+
+	public int GetPropString(const char[] key, char[] buffer, int maxlen)
+	{
+		return this.hMap.GetString(key, buffer, maxlen);
+	}
+
+	public void SetPropString(const char[] key, const char[] val)
+	{
+		this.hMap.SetString(key, val);
+	}
+
+	public void GetPropArray(const char[] key, any[] buffer, int maxlen)
+	{
+		this.hMap.GetArray(key, buffer, maxlen);
+	}
+
+	public void SetPropArray(const char[] key, any[] val, int maxlen)
+	{
+		this.hMap.SetArray(key, val, maxlen);
 	}
 
 	/**
@@ -435,7 +465,7 @@ methodmap JailFighter
 		for (int i = 0; i < 5; i++) 
 		{
 			entity = GetPlayerWeaponSlot(this.index, i); 
-			if (IsValidEdict(entity) && IsValidEntity(entity))
+			if (IsValidEntity(entity))
 			{
 				if (transparent > 255)
 					transparent = 255;
@@ -662,34 +692,29 @@ methodmap JailFighter
 			return;
 
 		int weapon, clip;
-		static int offset;
-		if (offset <= 0)
-			offset = FindSendPropInfo("CTFPlayer", "m_iAmmo");
-
-		for (int i = 0; i < 2; ++i)
+		int offset = FindSendPropInfo("CTFPlayer", "m_hMyWeapons");	// Thx Mr. Panica
+		for (int i = 0; i <= 188; i += 4)
 		{
-			weapon = GetPlayerWeaponSlot(client, i);
+			weapon = GetEntDataEnt2(client, offset + i);
+			if (weapon != -1)
+			{
+				clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
+				if (clip != -1)
+					SetEntProp(weapon, Prop_Send, "m_iClip1", 0);
 
-			if (!IsValidEntity(weapon))
-				continue;
+				clip = GetEntProp(weapon, Prop_Data, "m_iClip2");
+				if (clip != -1)
+					SetEntProp(weapon, Prop_Send, "m_iClip2", 0);
 
-			clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
-			if (clip != -1)
-				SetEntProp(weapon, Prop_Send, "m_iClip1", 0);
-
-			clip = GetEntProp(weapon, Prop_Data, "m_iClip2");
-			if (clip != -1)
-				SetEntProp(weapon, Prop_Send, "m_iClip2", 0);
-
-			if (offset > 0)
-				SetEntData(client, GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType", 1)*4+offset, 0, 4, true);	// Mutually assured destruction
+				SetWeaponAmmo(weapon, 0);
+			}
 		}
 
 		SetEntProp(client, Prop_Send, "m_iAmmo", 0, 4, 3);
 
-		char sClassName[64];
+		char classname[64];
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
-		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
+		if (wep > MaxClients && IsValidEntity(wep) && GetEdictClassname(wep, classname, sizeof(classname)))
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
 	}
 	/**	Props to VoIDed
@@ -725,7 +750,7 @@ methodmap JailFighter
 		char strWarden[64];
 		int client = this.index;
 		Format(strWarden, sizeof(strWarden), "%t", "New Warden Center", client);
-		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2][fCoord_X], EnumTNPS[2][fCoord_Y], EnumTNPS[2][fHoldTime], EnumTNPS[2][iRed], EnumTNPS[2][iGreen], EnumTNPS[2][iBlue], EnumTNPS[2][iAlpha], EnumTNPS[2][iEffect], EnumTNPS[2][fFXTime], EnumTNPS[2][fFadeIn], EnumTNPS[2][fFadeOut]);
+		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2].fCoord_X, EnumTNPS[2].fCoord_Y, EnumTNPS[2].fHoldTime, EnumTNPS[2].iRed, EnumTNPS[2].iGreen, EnumTNPS[2].iBlue, EnumTNPS[2].iAlpha, EnumTNPS[2].iEffect, EnumTNPS[2].fFXTime, EnumTNPS[2].fFadeIn, EnumTNPS[2].fFadeOut);
 		CPrintToChatAll("%t %t.", "Plugin Tag", "New Warden", client);
 
 		float annot = cvarTF2Jail[WardenAnnotation].FloatValue;
