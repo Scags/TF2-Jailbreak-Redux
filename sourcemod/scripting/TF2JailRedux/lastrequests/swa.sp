@@ -4,6 +4,7 @@ methodmap CSWA < JailGameMode
 	{
 		gamemode.ToggleMedic(false);
 		gamemode.bIsWarday = true;
+		gamemode.bIsWardenLocked = true;
 		gamemode.DoorHandler(OPEN);
 		gamemode.EvenTeams();
 		AddCommandListener(ForceSuicide, "explode");
@@ -16,6 +17,7 @@ methodmap CSWA < JailGameMode
 		TF2_AddCondition(player.index, TFCond_HalloweenKart, -1.0);
 		SDKHook(player.index, SDKHook_GetMaxHealth, SWA_MaxHealth);
 		SetEntityHealth(player.index, 100);
+		player.iHealth = 100;
 	}
 
 	public static void Terminate( Event event )
@@ -73,12 +75,34 @@ methodmap CSWA < JailGameMode
 		PrecacheSound(")weapons/bumper_car_speed_boost_stop.wav", true);
 		PrecacheSound(")weapons/bumper_car_jump.wav", true);
 		PrecacheSound(")weapons/bumper_car_jump_land.wav", true);
+		PrecacheSound(")weapons/bumper_car_hit_hard.wav", true);
+		PrecacheSound(")weapons/bumper_car_hit_into_air.wav", true);
 
 		char s[PLATFORM_MAX_PATH];
 		for (int i = 1; i <= 8; i++)
 		{
 			Format(s, PLATFORM_MAX_PATH, "weapons/bumper_car_hit%i.wav", i);
 			PrecacheSound(s, true);
+		}
+	}
+
+	public static void ManageHurtPlayer(const JailFighter attacker, const JailFighter victim, Event event)
+	{
+		victim.iHealth -= event.GetInt("damageamount");
+		if (victim.iHealth < 0)
+		{
+//			SDKHooks_TakeDamage(victim.index, attacker.index, attacker.index, 100.0, DMG_VEHICLE);
+			victim.iHealth = 0;
+		}
+	}
+
+	public static void ManageThink(const JailFighter player)
+	{
+		if (IsPlayerAlive(player.index))
+		{
+			if (player.iHealth <= 0)
+				SDKHooks_TakeDamage(player.index, 0, 0, 9001.0, DMG_DIRECT);
+			else SetEntityHealth(player.index, player.iHealth);
 		}
 	}
 };

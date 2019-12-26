@@ -423,6 +423,7 @@ public void ManageRedThink(const JailFighter player)
 {
 	switch (gamemode.iLRType)
 	{
+		case SWA:CSWA.ManageThink(player);
 		case -1: {	}
 	}
 	Call_OnRedThink(player);
@@ -434,6 +435,7 @@ public void ManageBlueThink(const JailFighter player)
 {
 	switch (gamemode.iLRType)
 	{
+		case SWA:CSWA.ManageThink(player);
 		case -1: {	}
 	}
 
@@ -492,6 +494,7 @@ public void ManageHurtPlayer(const JailFighter attacker, const JailFighter victi
 	
 	switch (gamemode.iLRType)
 	{
+		case SWA:CSWA.ManageHurtPlayer(attacker, victim, event);
 		case -1: {	}
 	}
 
