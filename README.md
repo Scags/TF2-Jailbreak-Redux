@@ -87,7 +87,7 @@ TF2JR uses an SDKHook-style format for its forwards, and plenty of natives expos
 
 ###### [TF2Attributes](https://forums.alliedmods.net/showthread.php?t=210221) (optional) ######
 
-###### SourceMod 1.9+ ######
+###### SourceMod 1.10+ ######
 
 ## Installation ##
 Detailed installation can be found in the [wiki](https://github.com/Scags/TF2-Jailbreak-Redux/wiki/Installation-Guide) along with config design.
