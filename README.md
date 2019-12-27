@@ -54,6 +54,8 @@ With the building from several other plugins, props to:
   **[WeaponBlocker](https://github.com/Scags/TF2JailRedux-WeaponBlocker)** - A weapon blocker that actually works with this plugin.
   
   **[Mechanized Mercenaries](https://github.com/Scags/TF2-LRModule-MechMercs)** - A last request where everyone turns into tanks!
+  
+  **[Search](https://forums.alliedmods.net/showthread.php?p=2677653#post2677653)** - Allows guards to search prisoners.
 
 ## File Structure ##
 The entire plugin is organized into files associated with what functionality is found within them:
