@@ -174,7 +174,7 @@ public void InitSubPlugin()
 */
 public void OnLibraryRemoved(const char[] name)
 {
-	if (!strcmp(name, "TF2Jail_Redux", false))
+	if (!strcmp(name, "TF2Jail_Redux", true))
 	{
 		bDisabled = bEnabled.BoolValue;
 		if (bDisabled)
@@ -189,7 +189,7 @@ public void OnLibraryRemoved(const char[] name)
 */
 public void OnLibraryAdded(const char[] name)
 {
-	if (!strcmp(name, "TF2Jail_Redux", false))
+	if (!strcmp(name, "TF2Jail_Redux", true))
 	{
 		if (bDisabled)
 		{
@@ -239,7 +239,7 @@ public void OnClientPostAdminCheck(int client)
 	}
 
 	char query[256];
-	Format(query, sizeof(query), 
+	FormatEx(query, sizeof(query), 
 			"SELECT ban_time "
 		...	"FROM %s "
 		...	"WHERE steamid = '%s';",
@@ -250,7 +250,7 @@ public void OnClientPostAdminCheck(int client)
 	if (cvarJBANS[Debug].BoolValue)
 		LogMessage("Querying client %N connection with query %s", client, query);
 
-	ReplaceString(query, sizeof(query), strCoreTable, strWardenTable);
+	ReplaceStringEx(query, sizeof(query), strCoreTable, strWardenTable);
 	hTheDB.Query(CCB_Induction_Warden, query, GetClientUserId(client));
 }
 
@@ -263,7 +263,7 @@ public void fwdOnPlayerSpawn(const JBPlayer Player, Event event)
 	if (GetClientTeam(Player.index) != BLU)
 		return;
 
-	bool running = JBGameMode_GetProperty("iRoundState") == StateRunning;
+	bool running = JBGameMode_GetProp("iRoundState") == StateRunning;
 	if (cvarJBANS[IgnoreMidRound].BoolValue && running)
 		return;
 
@@ -314,7 +314,7 @@ public void OnClientDisconnect(int client)
 	else
 	{
 		char query[256];
-		Format(query, sizeof(query), 
+		FormatEx(query, sizeof(query), 
 			"SELECT ban_time"
 		...	" FROM %s"
 		...	" WHERE steamid = '%s';",
@@ -333,7 +333,7 @@ public void OnClientDisconnect(int client)
 	if (player.bIsWardenBanned)
 	{
 		char query[256];
-		Format(query, sizeof(query), 
+		FormatEx(query, sizeof(query), 
 			"SELECT ban_time"
 		...	" FROM %s"
 		...	" WHERE steamid = '%s';",
@@ -828,7 +828,7 @@ void GuardBan(int victim, int admin, int time, char reason[256] = "")
 
 	if (GetClientTeam(victim) == BLU)
 	{
-		if (JBGameMode_GetProperty("iRoundState") >= StateRunning)
+		if (JBGameMode_GetProp("iRoundState") >= StateRunning)
 		{
 			ForcePlayerSuicide(victim);
 			ChangeClientTeam(victim, RED);
@@ -1233,7 +1233,7 @@ public int DBCB_Connect(Database db, const char[] error, any data)
 
 	Transaction txn = new Transaction();
 
-	Format(strCoreTable, sizeof(strCoreTable), "%stf2jr_guardbans", prefix);
+	FormatEx(strCoreTable, sizeof(strCoreTable), "%stf2jr_guardbans", prefix);
 
 	char query[512];
 	Format(query, sizeof(query), 
@@ -1245,16 +1245,16 @@ public int DBCB_Connect(Database db, const char[] error, any data)
 
 	txn.AddQuery(query);
 
-	Format(strWardenTable, sizeof(strWardenTable), "%stf2jr_wardenbans", prefix);
-	ReplaceString(query, sizeof(query), strCoreTable, strWardenTable);
+	FormatEx(strWardenTable, sizeof(strWardenTable), "%stf2jr_wardenbans", prefix);
+	ReplaceStringEx(query, sizeof(query), strCoreTable, strWardenTable);
 
 	txn.AddQuery(query);
 
 	// Let's keep webpanel compatibility shall we?
 	// Because I know one exists... somewhere...
-	Format(strLogTable, sizeof(strLogTable), "%stf2jr_guardbans_logs", prefix);
+	FormatEx(strLogTable, sizeof(strLogTable), "%stf2jr_guardbans_logs", prefix);
 
-	Format(query, sizeof(query), 
+	FormatEx(query, sizeof(query), 
 			"CREATE TABLE IF NOT EXISTS %s "
 		...	"(timestamp INT, "
 		...	"offender_steamid VARCHAR(22), "
@@ -1309,7 +1309,7 @@ public int CCB_Disconnect(Database db, DBResultSet results, const char[] error, 
 		{
 			char query[256];
 
-			Format(query, sizeof(query), 
+			FormatEx(query, sizeof(query), 
 					"UPDATE %s "
 				...	"SET ban_time = %d "
 				... "WHERE steamid = '%s';",
@@ -1317,7 +1317,7 @@ public int CCB_Disconnect(Database db, DBResultSet results, const char[] error, 
 
 			hTheDB.Query(DBCB_Disconnect, query);
 
-			Format(query, sizeof(query), 
+			FormatEx(query, sizeof(query), 
 				"UPDATE %s "
 			... "SET timeleft = %d "
 			... "WHERE offender_steamid = '%s' "
@@ -1343,7 +1343,7 @@ public int CCB_Disconnect_Warden(Database db, DBResultSet results, const char[] 
 		{
 			char query[256];
 
-			Format(query, sizeof(query), 
+			FormatEx(query, sizeof(query), 
 					"UPDATE %s "
 				...	"SET ban_time = %d "
 				... "WHERE steamid = '%s';",

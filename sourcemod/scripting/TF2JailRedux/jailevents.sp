@@ -13,9 +13,9 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	SetVariantString("");
 	AcceptEntityInput(client, "SetCustomModel");
 
-	if (player.bIsFreeday)	// They changed teams, sucks for them
-		player.RemoveFreeday();
-	else if (player.bIsQueuedFreeday)
+//	if (player.bIsFreeday)	// They changed teams, sucks for them
+//		player.RemoveFreeday();
+	if (player.bIsQueuedFreeday)
 	{
 		player.GiveFreeday();
 		player.TeleportToPosition(FREEDAY);
@@ -26,12 +26,12 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		if (AlreadyMuted(client) && cvarTF2Jail[DisableBlueMute].BoolValue && gamemode.iRoundState != StateRunning)
 		{
 			player.ForceTeamChange(RED);
-			EmitSoundToClient(client, NO);
+			EmitSoundToClient(client, "vo/heavy_no03.mp3");
 			CPrintToChat(client, "%t %t", "Plugin Tag", "Muted Can't Join");
 		}
 	}
 
-	if (gamemode.bTF2Attribs)
+	if (g_bTF2Attribs)
 	{
 		switch (TF2_GetPlayerClass(client))
 		{
@@ -52,7 +52,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	return Plugin_Continue;
 }
 
-public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
+public Action OnPlayerDamaged(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
@@ -76,7 +76,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	JailFighter victim = JailFighter.OfUserId( event.GetInt("userid") );	
 	JailFighter attacker = JailFighter.OfUserId( event.GetInt("attacker") );
 
-	if (gamemode.bTF2Attribs)
+	if (g_bTF2Attribs)
 		TF2Attrib_RemoveAll(victim.index);
 
 	if (IsClientValid(attacker.index))
@@ -100,11 +100,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	if (victim.iCustom)
-	{
-		if (gamemode.iLRPresetType == Custom)
-			gamemode.iLRPresetType = -1;
 		victim.iCustom = 0;
-	}
 
 	ManagePlayerDeath(attacker, victim, event);
 	gamemode.ToggleMuting(victim, true);	// IsPlayerAlive more like returns true on player_death >:c
@@ -117,7 +113,7 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 	if (!bEnabled.BoolValue)
 	{
 #if defined _SteamWorks_Included
-		if (gamemode.bSteam)
+		if (g_bSteam)
 			SteamWorks_SetGameDescription("Team Fortress");
 #endif
 		return Plugin_Continue;
@@ -165,13 +161,16 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 			continue;
 
 		player = JailFighter(i);
-		if (player.bIsQueuedFreeday && IsPlayerAlive(i))
-		{
-			player.GiveFreeday();
-			player.TeleportToPosition(FREEDAY);
-		}
+//		if (player.bIsQueuedFreeday && IsPlayerAlive(i))
+//		{
+//			player.GiveFreeday();
+//			player.TeleportToPosition(FREEDAY);
+//		}
 
 		ResetVariables(player, false);
+
+		if (strBackgroundSong[0] != '\0')
+			StopSound(i, SNDCHAN_AUTO, strBackgroundSong);
 	}
 
 	// gamemode.iLRType = -1;
@@ -223,15 +222,13 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	float time;
 	int wep;
 
+	gamemode.iTimeLeft = cvarTF2Jail[RoundTime].IntValue;
 	gamemode.iLRType = gamemode.iLRPresetType;
 	gamemode.iRoundState = StateRunning;
-	gamemode.bIsLRRound = gamemode.iLRType > -1;	// Possibility of someone changing/removing lrs 0-2, so != -1 works for everything
+	gamemode.bIsLRRound = gamemode.iLRType > -1;
 
-	ManageRoundStart(event);	// NOTE THE ORDER OF EXECUTION; *RoundStart BEFORE *RoundStartPlayer
-	ManageCells();
-	ManageFFTimer();
+	ManageRoundStart();	// NOTE THE ORDER OF EXECUTION; *RoundStart BEFORE *RoundStartPlayer
 	ManageHUDText();
-	ManageTimeLeft();
 
 	warday = gamemode.bIsWarday;
 
@@ -243,21 +240,21 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 			continue;
 
 		player = JailFighter(i);
-		ManageRoundStartPlayer(player, event);
+		ManageRoundStartPlayer(player);
 
 		if (warday)
 		{
 			player.TeleportToPosition(GetClientTeam(i));
 
 			wep = GetPlayerWeaponSlot(i, 2);
-			if (wep > MaxClients && IsValidEdict(wep) && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 589 && GetClientTeam(i) == BLU)	// Eureka Effect
+			if (wep > MaxClients && IsValidEntity(wep) && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 589 && GetClientTeam(i) == BLU)	// Eureka Effect
 			{
 				TF2_RemoveWeaponSlot(i, 2);
 				player.SpawnWeapon("tf_weapon_wrench", 7, 1, 0, "");
 			}
 
 			wep = GetPlayerWeaponSlot(i, 4);
-			if (wep > MaxClients && IsValidEdict(wep) && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 60)	// Cloak and Dagger
+			if (wep > MaxClients && IsValidEntity(wep) && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 60)	// Cloak and Dagger
 			{
 				TF2_RemoveWeaponSlot(i, 4);
 				player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "");
@@ -298,7 +295,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 
 	JailFighter player;
 	int i, x;
-	bool attrib = gamemode.bTF2Attribs;
+	bool attrib = g_bTF2Attribs;
 
 	for (i = MaxClients; i; --i)
 	{
@@ -340,6 +337,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 	gamemode.bOneGuardLeft = false;
 	gamemode.bOnePrisonerLeft = false;
 	gamemode.bAllowBuilding = false;
+	gamemode.bAllowWeapons = false;
 	gamemode.bSilentWardenKills = false;
 	gamemode.bDisableMuting = false;
 	gamemode.bDisableKillSpree = false;
@@ -353,6 +351,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 	return Plugin_Continue;
 }
 
+
 public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!bEnabled.BoolValue)
@@ -360,8 +359,13 @@ public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 
 	JailFighter player = JailFighter.OfUserId( event.GetInt("userid") );
 
-	if (IsClientValid(player.index) && gamemode.iRoundState != StateEnding)
+	if (IsClientValid(player.index) 
+	&& gamemode.iRoundState != StateEnding 
+	&& !player.bSkipPrep
+	&& !gamemode.bAllowWeapons)
 		SetPawnTimer(PrepPlayer, 0.2, player.userid);
+
+	player.bSkipPrep = false;
 
 	return Plugin_Continue;
 }
@@ -374,7 +378,7 @@ public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 	JailFighter player = JailFighter.OfUserId( event.GetInt("userid") );
 
 	if (IsClientValid(player.index))
-		SetPawnTimer(PrepPlayer, 0.2, player.userid);
+		SetPawnTimer(PrepPlayer, 0.1, player.userid);
 
 	return Plugin_Continue;
 }

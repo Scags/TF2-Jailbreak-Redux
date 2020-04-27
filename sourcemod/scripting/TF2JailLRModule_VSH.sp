@@ -16,7 +16,7 @@
 
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.2.0"
+#define PLUGIN_VERSION		"1.3.0"
 
 Handle
 	hHudText, 
@@ -310,36 +310,13 @@ public Plugin myinfo =
 	url = "https://github.com/Scags/TF2-Jailbreak-Redux"
 };
 
-enum/*CvarName*/
-{
-	DamagePoints,
-	MedigunReset,
-	StopTickleTime,
-	AirStrikeDamage,
-	AirblastRage,
-	JarateRage,
-	FanoWarRage,
-	EngieBuildings,
-	PermOverheal,
-	DemoShieldCrits,
-	Anchoring,
-	PickCount,
-	Ammo,
-	Health,
-	TimeLeft,
-	DisableMuting,
-	HealthBar,
-	Version
-};
-
-ConVar 
-	JBVSH[Version + 1],
+ConVar
 	hTeamBansCVar,
 	hNoChargeCVar,
 	hDroppedWeaponsCVar
 ;
 
-int 
+int
 	iHealthChecks,		// For !halehp
 	iTeamBansCVar,		// Mid-round detection in case a player is guardbanned
 	iNoChargeCVar,		// Allow for charging
@@ -348,10 +325,10 @@ int
 ;
 
 bool
-	bDisabled = true			// Handling core late-loading
+	bDisabled = true	// Handling core late-loading
 ;
 
-float 
+float
 	flHealthTime		// For !halehp
 ;
 
@@ -359,27 +336,12 @@ JailBoss
 	iCurrBoss			// The boss
 ;
 
+LastRequest
+	g_LR				// Me!
+;
+
 public void OnPluginStart()
 {
-	JBVSH[Version] 			= CreateConVar("jbvsh_version", PLUGIN_VERSION, "Versus Saxton Hale Version (Do not touch)", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
-	JBVSH[DamagePoints] 	= CreateConVar("sm_jbvsh_damage_points", "600", "Amount of damage needed to gain 1 point on the scoreboard.", FCVAR_NOTIFY, true, 1.0);
-	JBVSH[MedigunReset] 	= CreateConVar("sm_jbvsh_medigun_reset_amount", "0.31", "How much Uber percentage should Mediguns, after Uber, reset to?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	JBVSH[StopTickleTime] 	= CreateConVar("sm_jbvsh_stop_tickle_time", "3.0", "How long in seconds the tickle effect from the Holiday Punch lasts before being removed.", FCVAR_NOTIFY, true, 0.01);
-	JBVSH[AirStrikeDamage] 	= CreateConVar("sm_jbvsh_airstrike_damage", "200", "How much damage needed for the Airstrike to gain +1 clipsize.", FCVAR_NOTIFY);
-	JBVSH[AirblastRage] 	= CreateConVar("sm_jbvsh_airblast_rage", "8.0", "How much Rage should airblast give/remove? (negative number to remove rage)", FCVAR_NOTIFY, true, 0.0, true, 100.0);
-	JBVSH[JarateRage] 		= CreateConVar("sm_jbvsh_jarate_rage", "8.0", "How much rage should Jarate give/remove? (negative number to add rage)", FCVAR_NOTIFY, true, 0.0, true, 100.0);
-	JBVSH[FanoWarRage] 		= CreateConVar("sm_jbvsh_fanowar_rage", "5.0", "How much rage should the Fan o' War give/remove? (negative number to add rage)", FCVAR_NOTIFY);
-	JBVSH[EngieBuildings] 	= CreateConVar("sm_jbvsh_killbuilding_engiedeath", "1", "If 0, no building dies when engie dies. If 1, only sentry dies. If 2, all buildings die.", FCVAR_NOTIFY, true, 0.0, true, 2.0);
-	JBVSH[PermOverheal] 	= CreateConVar("sm_jbvsh_permanent_overheal", "0", "If enabled, Mediguns give permanent overheal.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	JBVSH[DemoShieldCrits] 	= CreateConVar("sm_jbvsh_demoman_shield_crits", "1", "Sets Demoman Shield crit behaviour. 0 - No crits, 1 - Mini-crits, 2 - Crits, 3 - Scale with Charge Meter (Losing the Shield results in no more (mini)crits.)", FCVAR_NOTIFY, true, 0.0, true, 3.0);
-	JBVSH[Anchoring] 		= CreateConVar("sm_jbvsh_allow_boss_anchor", "1", "When enabled, reduces all knockback bosses experience when crouching.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	JBVSH[PickCount] 		= CreateConVar("sm_jbvsh_lr_max", "5", "What is the maximum number of times this LR can be picked in a single map? 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
-	JBVSH[Ammo]				= CreateConVar("sm_jbvsh_ammo", "4", "Spawn random ammo at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0);
-	JBVSH[Health] 			= CreateConVar("sm_jbvsh_health", "4", "Spawn random health at red player spawns? If enabled, how many packs?", FCVAR_NOTIFY, true, 0.0);
-	JBVSH[TimeLeft] 		= CreateConVar("sm_jbvsh_round_time", "600", "Round time during a VSH round IF a time limit is enabled in core plugin.", FCVAR_NOTIFY, true, 0.0);
-	JBVSH[DisableMuting] 	= CreateConVar("sm_jbvsh_disable_muting", "0", "Disable plugin muting during this last request?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	JBVSH[HealthBar]		= CreateConVar("sm_jbvsh_health_bar", "1", "Should a boss health bar appear during the round? This is similar to a Halloween boss healthbar", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-
 	RegConsoleCmd("sm_hale_hp", Command_GetHPCmd);
 	RegConsoleCmd("sm_halehp", Command_GetHPCmd);
 	RegConsoleCmd("sm_boss_hp", Command_GetHPCmd);
@@ -387,8 +349,8 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_ff2_hp", Command_GetHPCmd);
 	RegConsoleCmd("sm_ff2hp", Command_GetHPCmd);
 
-	RegAdminCmd("sm_unregistervsh", Cmd_UnLoad, ADMFLAG_ROOT);
-	RegAdminCmd("sm_registervsh", Cmd_ReLoad, ADMFLAG_ROOT);
+//	RegAdminCmd("sm_unregistervsh", Cmd_UnLoad, ADMFLAG_ROOT);
+//	RegAdminCmd("sm_registervsh", Cmd_ReLoad, ADMFLAG_ROOT);
 
 	AddCommandListener(BlockSuicide, "explode");
 	AddCommandListener(BlockSuicide, "kill");
@@ -400,8 +362,6 @@ public void OnPluginStart()
 	hHudText = CreateHudSynchronizer();
 	// rageHUD = CreateHudSynchronizer();
 	jumpHUD = CreateHudSynchronizer();
-	
-	AutoExecConfig(true, "LRModuleVSH");
 
 	LoadTranslations("tf2jail_redux.phrases");
 
@@ -413,24 +373,78 @@ public void OnPluginStart()
 
 public void InitSubPlugin()
 {
-	TF2JailRedux_RegisterPlugin();
 	gamemode = new JBGameMode();
-	LoadJBHooks();
+
+	g_LR = LastRequest.CreateFromConfig("Versus Saxton Hale");
+
+	if (g_LR == null)		// If it's her first time, set the mood
+	{
+		g_LR = LastRequest.Create("Versus Saxton Hale");
+		g_LR.SetDescription("Play a nice round of VSH");
+		g_LR.SetAnnounceMessage("{default}{NAME}{burlywood} has selected {default}Versus Saxton Hale{burlywood} as their last request.");
+
+		g_LR.SetParameterNum("Disabled", 0);
+		g_LR.SetParameterNum("OpenCells", 1);
+		g_LR.SetParameterNum("TimerStatus", 1);
+		g_LR.SetParameterNum("TimerTime", 600);
+		g_LR.SetParameterNum("LockWarden", 1);
+		g_LR.SetParameterNum("UsesPerMap", 3);
+		g_LR.SetParameterNum("IsWarday", 1);
+		g_LR.SetParameterNum("NoMuting", 1);
+		g_LR.SetParameterNum("DisableMedic", 1);
+		g_LR.SetParameterNum("AllowBuilding", 1);
+		g_LR.SetParameterNum("RegenerateReds", 0);	// Changing this does nothing
+		g_LR.SetParameterNum("EnableCriticals", 0);
+		g_LR.SetParameterNum("IgnoreRebels", 1);
+		g_LR.SetParameterNum("VoidFreekills", 1);
+		g_LR.SetParameterNum("AllowWeapons", 1);
+
+		g_LR.SetPropertyNum("bOneGuardLeft", 1);
+
+		// Custom config
+		// It'd be cool if there was a way to add comments to kv cfg
+		g_LR.SetParameterNum("DamagePoints", 600);			// Damage for points on the scoreboard
+		g_LR.SetParameterFloat("MedigunReset", 0.31);		// Medigun reset %
+		g_LR.SetParameterFloat("StopTickleTime", 3.0);		// Time after landing a mitten smack to reset laugh taunt
+		g_LR.SetParameterNum("AirStrikeDamage", 200);		// Airstrike damage per kill gained
+		g_LR.SetParameterFloat("AirblastRage", 8.0);		// Rage given when Hale is airblasted
+		g_LR.SetParameterFloat("JarateRage", 8.0);			// Rage removed when Hale is jarated
+		g_LR.SetParameterFloat("FanoWarRage", 5.0);			// Rage removed when Hale is FanoWar'd
+		g_LR.SetParameterNum("EngieBuildings", 1);			// Engie building behavior on death, 0 = nothing; 1 = sentry dies; 2 = all buildings die
+		g_LR.SetParameterNum("PermOverheal", 0);			// Allow permanent overheal
+		g_LR.SetParameterNum("DemoShieldCrits", 1);			// Demo shield crit behavior, 0 = no crits; 1 = minicrits; 2 = full crits; 3 = scales with charge
+		g_LR.SetParameterNum("Anchoring", 1);				// Allow Hale anchoring
+		g_LR.SetParameterNum("AmmoSpawn", 4);				// Number of ammopacks to spawn on round start
+		g_LR.SetParameterNum("HealthSpawn", 4);				// Number of healthpacks to spawn on round start
+		g_LR.SetParameterNum("HealthBar", 1);				// Enable the boss health bar
+
+		g_LR.ExportToConfig(.create = true, .createonly = true);
+	}
 	hTeamBansCVar = FindConVar("sm_jbans_ignore_midround");
 	hNoChargeCVar = FindConVar("sm_tf2jr_demo_charge");
 	hDroppedWeaponsCVar = FindConVar("sm_tf2jr_dropped_weapons");
+
+	LoadJBHooks();
 }
 
 public void OnPluginEnd()
 {
 	if (LibraryExists("TF2Jail_Redux"))
-		TF2JailRedux_UnRegisterPlugin();
+		if (g_LR != null)
+		{
+			g_LR.Destroy();
+			g_LR = null;
+		}
 }
 
 public void OnLibraryRemoved(const char[] name)
 {
 	if (!strcmp(name, "TF2Jail_Redux", false))
+	{
 		bDisabled = true;
+		g_LR.Destroy();
+		g_LR = null;
+	}
 	else if (!strcmp(name, "TF2JailRedux_TeamBans", false))
 		hTeamBansCVar = null;
 }
@@ -446,7 +460,7 @@ public void OnLibraryAdded(const char[] name)
 		hTeamBansCVar = FindConVar("sm_jbans_ignore_midround");
 }
 
-#define NOTVSH 				( gamemode.iLRType != TF2JailRedux_LRIndex() )
+#define NOTVSH 				( g_LR == null || g_LR.GetID() != gamemode.iLRType )
 
 public bool HaleTargetFilter(const char[] pattern, ArrayList clients)
 {
@@ -470,7 +484,7 @@ public bool HaleTargetFilter(const char[] pattern, ArrayList clients)
 	return true;
 }
 
-public void fwdOnClientInduction(const JBPlayer Player)
+public void fwdOnClientInduction(LastRequest lr, const JBPlayer Player)
 {
 	JailBoss player = JailBoss.Of(Player);
 	player.bIsBoss = false;
@@ -646,7 +660,7 @@ stock void SpawnRandomAmmo()
 	int iEnt = MaxClients+1;
 	float vPos[3], vAng[3];
 	int spawned;
-	int limit = JBVSH[Ammo].IntValue;
+	int limit = g_LR.GetParameterNum("AmmoSpawn", 0);
 	if (!limit)
 		return;
 
@@ -668,7 +682,7 @@ stock void SpawnRandomHealth()
 	int iEnt = MaxClients+1;
 	float vPos[3], vAng[3];
 	int spawned;
-	int limit = JBVSH[Health].IntValue;
+	int limit = g_LR.GetParameterNum("HealthSpawn", 0);
 	if (!limit)
 		return;
 
@@ -692,77 +706,65 @@ public void ShowPlayerScores()
 	
 	JailBoss(0).iDamage = 0;
 	JailBoss player;
-	for (int i = MaxClients; i; --i) 
+
+	int fraction = g_LR.GetPropertyNum("DamagePoints", 1);
+	int i;
+	int totaldamage;
+	for (i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
 			continue;
+
+		if (GetClientTeam(i) < RED)
+			continue;
 		
 		player = JailBoss(i);
-		if (player.bIsBoss) 
+		if (player.bIsBoss)
 		{
 			player.iDamage = 0;
 			continue;
 		}
 		
-		if (player.iDamage >= hTop[0].iDamage) 
+		if (player.iDamage >= hTop[0].iDamage)
 		{
 			hTop[2] = hTop[1];
 			hTop[1] = hTop[0];
-			hTop[0] = JailBoss(i);
+			hTop[0] = player;
 		}
-		else if (player.iDamage >= hTop[1].iDamage) 
+		else if (player.iDamage >= hTop[1].iDamage)
 		{
 			hTop[2] = hTop[1];
-			hTop[1] = JailBoss(i);
+			hTop[1] = player;
 		}
 		else if (player.iDamage >= hTop[2].iDamage)
-			hTop[2] = JailBoss(i);
+			hTop[2] = player;
+
+		totaldamage += player.iDamage;
 	}
 	if (hTop[0].iDamage > 9000)
 		SetPawnTimer(OverNineThousand, 1.0);
-	
-	char score1[64], score2[64], score3[64];
-	if (IsValidClient(hTop[0].index) && (GetClientTeam(hTop[0].index) > 1))
-		GetClientName(hTop[0].index, score1, 64);
-	else 
-	{
-		Format(score1, 64, "---");
-		hTop[0] = view_as< JailBoss >(0);
-	}
-	
-	if (IsValidClient(hTop[1].index) && (GetClientTeam(hTop[1].index) > 1))
-		GetClientName(hTop[1].index, score2, 64);
-	else 
-	{
-		Format(score2, 64, "---");
-		hTop[1] = view_as< JailBoss >(0);
-	}
-	
-	if (IsValidClient(hTop[2].index) && (GetClientTeam(hTop[2].index) > 1))
-		GetClientName(hTop[2].index, score3, 64);
-	else 
-	{
-		Format(score3, 64, "---");
-		hTop[2] = view_as< JailBoss >(0);
-	}
-	SetHudTextParams(-1.0, 0.4, 10.0, 255, 255, 255, 255);
-	PrintCenterTextAll("");
 
-	for (int i = MaxClients; i; --i) 
+	SetHudTextParams(-1.0, 0.4, 10.0, 255, 255, 255, 255);
+	PrintCenterTextAll(""); // Should clear center text
+	char names[3][32];
+	for (i = 0; i < 3; ++i)
+		if (hTop[i].index && hTop[i].iDamage > 0)
+			GetClientName(hTop[i].index, names[i], 32);
+		else names[i] = "NaN";
+
+	for (i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i))
 			continue;
-		if (!(GetClientButtons(i) & IN_SCORE)) 
-		{
-			player = JailBoss(i);
-			ShowHudText(i, -1, "Most damage dealt by:\n1)%i - %s\n2)%i - %s\n3)%i - %s\n\nDamage Dealt: %i\nScore for this round: %i", hTop[0].iDamage, score1, hTop[1].iDamage, score2, hTop[2].iDamage, score3, player.iDamage, (player.iDamage / 600));
-		}
+
+		if (!(GetClientButtons(i) & IN_SCORE))
+			ShowHudText(i, -1, "Most damage dealt by:\n1)%i - %s\n2)%i - %s\n3)%i - %s\n\nDamage Dealt: %i\nScore for this round: %i", hTop[0].iDamage, names[0], hTop[1].iDamage, names[1], hTop[2].iDamage, names[2], player.iDamage, (player.iDamage / fraction));
 	}
 }
 
 public void CalcScores()
 {
-	int j, damage, amount = JBVSH[DamagePoints].IntValue;
+	int j, damage, amount = g_LR.GetParameterNum("DamagePoints", 0);
 	JailBoss player;
 	Event scoring;
 	for (int i = MaxClients; i; --i)
@@ -822,7 +824,7 @@ public void _ResetMediCharge(const int entid)
 {
 	int medigun = EntRefToEntIndex(entid);
 	if (medigun > MaxClients && IsValidEntity(medigun))
-		SetMediCharge(medigun, GetMediCharge(medigun) + JBVSH[MedigunReset].FloatValue);
+		SetMediCharge(medigun, GetMediCharge(medigun) + g_LR.GetParameterFloat("MedigunReset", 0.0));
 }
 
 public void _BossDeath(const int userid)
@@ -894,6 +896,7 @@ public Action Command_GetHPCmd(int client, int args)
 	return Plugin_Handled;
 }
 
+#if 0
 /**
  *	Purpose: Disable the plugin without unloading it.
  *	This is more for testing, but technical users can use this to their advantage.
@@ -901,8 +904,11 @@ public Action Command_GetHPCmd(int client, int args)
 */
 public Action Cmd_UnLoad(int client, int args)
 {
-	if (TF2JailRedux_UnRegisterPlugin())
+	if (g_LR != null)
+	{
+		OnLibraryRemoved("TF2Jail_Redux");
 		CReplyToCommand(client, "%t Versus Saxton Hale has been successfully unregistered.", "Admin Tag");
+	}
 	else CReplyToCommand(client, "%t Versus Saxton Hale was not unregistered. Was it registered to begin with?", "Admin Tag");
 
 	return Plugin_Handled;
@@ -910,16 +916,17 @@ public Action Cmd_UnLoad(int client, int args)
 
 public Action Cmd_ReLoad(int client, int args)
 {
-	if (TF2JailRedux_LRIndex())
+	if (g_LR != null)
 	{
 		CReplyToCommand(client, "%t Versus Saxton Hale is already registered.", "Admin Tag");
 		return Plugin_Handled;
 	}
 
-	TF2JailRedux_RegisterPlugin();
+	OnLibraryAdded("TF2Jail_Redux");
 	CReplyToCommand(client, "%t Versus Saxton Hale has been re-registered.", "Admin Tag");
 	return Plugin_Handled;
 }
+#endif
 
 /********************************************************************
 						FUNCTIONS
@@ -1051,7 +1058,7 @@ public void ManagePlayerJarated(const JailBoss attacker, const JailBoss victim)
 	{
 		case  - 1: {  }
 		case Hale, Vagineer, CBS, HHHjr, Bunny:
-		victim.flRAGE -= JBVSH[JarateRage].FloatValue;
+		victim.flRAGE -= g_LR.GetParameterFloat("JarateRage", 0.0);
 	}
 }
 
@@ -1230,7 +1237,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 					SetEntityHealth(attacker, newHealth);
 				}
 			}
-			if (JBVSH[Anchoring].BoolValue) 
+			if (g_LR.GetParameterNum("Anchoring", 0))
 			{
 				int iFlags = GetEntityFlags(victim.index);
 				// If Hale is ducking on the ground, it's harder to knock him back
@@ -1320,7 +1327,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 						victim.flRAGE -= (damage * 0.0);
 				}
 				case 132, 266, 482, 1082:IncrementHeadCount(attacker);
-				case 355:victim.flRAGE -= JBVSH[FanoWarRage].FloatValue;
+				case 355:victim.flRAGE -= g_LR.GetParameterFloat("FanoWarRage", 0.0);
 				case 317, 327:SpawnSmallHealthPackAt(attacker, GetClientTeam(attacker));
 				case 416, 609: // Chdata's Market Gardener backstab
 				{
@@ -1426,7 +1433,7 @@ public Action ManageOnBossTakeDamage(const JailBoss victim, int &attacker, int &
 				}
 				case 656:
 				{	// Holiday Punch
-					SetPawnTimer(_StopTickle, JBVSH[StopTickleTime].FloatValue, victim.userid);
+					SetPawnTimer(_StopTickle, g_LR.GetParameterFloat("StopTickleTime", 0.0), victim.userid);
 					if (TF2_IsPlayerInCondition(attacker, TFCond_Dazed))
 						TF2_RemoveCondition(attacker, TFCond_Dazed);
 				}
@@ -1487,16 +1494,16 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 			}
 			if (TF2_GetPlayerClass(client) == TFClass_Spy) // Eggs probably do melee damage to spies, then? That's not ideal, but eh.
 			{
+				float numerator;
+				float denominator;
 				if (GetEntProp(client, Prop_Send, "m_bFeignDeathReady") && !TF2_IsPlayerInCondition(client, TFCond_Cloaked))
 				{
 					static ConVar feigndmg;
 					if (!feigndmg)
 						feigndmg = FindConVar("tf_feign_death_activate_damage_scale");
 
-					if (damagetype & DMG_CRIT)
-						damagetype &= ~DMG_CRIT;
-					damage = 62.0/feigndmg.FloatValue;
-					return Plugin_Changed;
+					numerator = 62.0;
+					denominator = feigndmg.FloatValue;
 				}
 				if (TF2_IsPlayerInCondition(client, TFCond_DeadRingered))
 				{
@@ -1504,10 +1511,8 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 					if (!drdmg)
 						drdmg = FindConVar("tf_feign_death_damage_scale");
 
-					if (damagetype & DMG_CRIT)
-						damagetype &= ~DMG_CRIT;
-					damage = 62.0/drdmg.FloatValue;
-					return Plugin_Changed;
+					numerator = 62.0;
+					denominator = drdmg.FloatValue;
 				}
 				if (TF2_IsPlayerInCondition(client, TFCond_Cloaked))
 				{
@@ -1515,9 +1520,14 @@ public Action ManageOnBossDealDamage(const JailBoss victim, int & attacker, int 
 					if (!cloakdmg)
 						cloakdmg = FindConVar("tf_stealth_damage_reduction");
 
-					if (damagetype & DMG_CRIT)
-						damagetype &= ~DMG_CRIT;
-					damage = 69.0/cloakdmg.FloatValue;
+					numerator = 69.0;
+					damage = cloakdmg.FloatValue;
+				}
+
+				if (numerator != 0.0 && denominator != 0.0)
+				{
+					damage = numerator/denominator;
+					damagetype &= ~DMG_CRIT;
 					return Plugin_Changed;
 				}
 			}
@@ -1725,9 +1735,10 @@ public void ManageUberDeploy(const JailBoss medic, const JailBoss patient)
 	}
 }
 
-public void PrepPlayers(const int client)
+public void PrepPlayers(const int userid)
 {
-	JailBoss player = JailBoss(client);
+	JailBoss player = JailBoss.OfUserId(userid);
+	int client = player.index;
 
 	if (!IsValidClient(client))
 		return;
@@ -1737,10 +1748,10 @@ public void PrepPlayers(const int client)
 	if (GetClientTeam(client) != RED && GetClientTeam(client) > view_as< int >(TFTeam_Spectator))
 	{
 		player.ForceTeamChange(RED);
-		TF2_RegeneratePlayer(client);
 		return;
 	}
 
+	TF2_RegeneratePlayer(client);
 	TF2Attrib_RemoveAll(client);
 	SetEntityHealth(client, GetEntProp(client, Prop_Data, "m_iMaxHealth"));
 	
@@ -1867,7 +1878,7 @@ public void PrepPlayers(const int client)
 			int mediquality = GetItemQuality(weapon);
 			if (mediquality != 10) {
 				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-				if (JBVSH[PermOverheal].BoolValue)
+				if (g_LR.GetParameterNum("PermOverheal", 0))
 					weapon = player.SpawnWeapon("tf_weapon_medigun", 35, 5, 10, "14 ; 0.0 ; 18 ; 0.0 ; 10 ; 1.25 ; 178 ; 0.75");
 				else weapon = player.SpawnWeapon("tf_weapon_medigun", 35, 5, 10, "18 ; 0.0 ; 10 ; 1.25 ; 178 ; 0.75");
 				//200 ; 1 for area of effect healing, 178 ; 0.75 Faster switch-to, 14 ; 0.0 perm overheal, 11 ; 1.25 Higher overheal
@@ -1963,11 +1974,8 @@ public void fwdOnDownloads()
 	AddHHHToDownloads();
 	AddBunnyToDownloads();
 }
-public void fwdOnRoundStartPlayer(const JBPlayer Player)
+public void fwdOnRoundStartPlayer(LastRequest lr, const JBPlayer Player)
 {
-	if (NOTVSH)
-		return;
-
 	JailBoss base = JailBoss.Of(Player);
 	base.iDamage = 0;
 	TF2_RemoveAllWeapons(base.index);	// Hacky bug patch: Remove weapons to force TF2Items_OnGiveNamedItem to fire for each
@@ -1977,60 +1985,44 @@ public void fwdOnRoundStartPlayer(const JBPlayer Player)
 		SetEntityMoveType(base.index, MOVETYPE_WALK);
 		base.ForceTeamChange(RED);
 		base.bNeedsToGoBackToBlue = true;
-		return;
 	}
-
-	TF2_RegeneratePlayer(base.index);	// Triggers PrepPlayer, which can be overridden. See OnPlayerPreppedPre
+	else SetPawnTimer(PrepPlayers, 0.2, base.userid);
 }
-public void fwdOnRoundStart()
+public void fwdOnRoundStart(LastRequest lr)
 {
-	if (NOTVSH)
-		return;
-
-	gamemode.bIsWardenLocked = true;
-	gamemode.bCellsOpened = true;
-	gamemode.bOneGuardLeft = true;
-	gamemode.bDisableCriticals = true;
-	gamemode.bIsWarday = true;
-	gamemode.bAllowBuilding = true;
-	gamemode.bDisableKillSpree = true;
-	gamemode.bIgnoreRebels = true;
-	if (JBVSH[DisableMuting].BoolValue)
-		gamemode.bDisableMuting = true;
-	gamemode.DoorHandler(OPEN);
 	SpawnRandomHealth();
 	SpawnRandomAmmo();
 
-	if (hTeamBansCVar && !hTeamBansCVar.BoolValue)
+	if (hTeamBansCVar != null && !hTeamBansCVar.BoolValue)
 	{
 		hTeamBansCVar.SetBool(true);
 		iTeamBansCVar = 1;
 	}
 
-	if (hTeamBansCVar && !hTeamBansCVar.BoolValue)
+	if (hTeamBansCVar != null && !hTeamBansCVar.BoolValue)
 	{
 		hTeamBansCVar.SetBool(true);
 		iTeamBansCVar = 1;
 	}
 
-	if (hNoChargeCVar)
+	if (hNoChargeCVar != null)
 	{
 		iNoChargeCVar = hNoChargeCVar.IntValue;
 		hNoChargeCVar.SetInt(0);
 	}
 
-	if (hDroppedWeaponsCVar)
+	if (hDroppedWeaponsCVar != null)
 	{
 		iDroppedWeaponsCVar = hDroppedWeaponsCVar.IntValue;
 		hDroppedWeaponsCVar.SetInt(1);
 	}
 
-	if (hNoChargeCVar)
+	if (hNoChargeCVar != null)
 		hNoChargeCVar.SetInt(0);
 
-	if (JBVSH[HealthBar].BoolValue && FindEntityByClassname(-1, "monster_resource") == -1)
+	// FIXME; why does this not work!?!
+	if (g_LR.GetParameterNum("HealthBar", 0) && FindEntityByClassname(-1, "monster_resource") == -1)
 	{
-		//PrintToServer("not found");
 		if ((iHealthBar = CreateEntityByName("monster_resource")) != -1)
 		{
 			DispatchSpawn(iHealthBar);
@@ -2065,11 +2057,8 @@ public void fwdOnRoundStart()
 	SetPawnTimer(ManagePlayBossIntro, 0.2, rand);
 	ManageMessageIntro();
 }
-public void fwdOnRoundEnd(Event event)
+public void fwdOnRoundEnd(LastRequest lr, Event event)
 {
-	if (NOTVSH)
-		return;
-
 	gamemode.DoorHandler(OPEN);
 	ShowPlayerScores();
 	SetPawnTimer(CalcScores, 3.0);
@@ -2078,25 +2067,22 @@ public void fwdOnRoundEnd(Event event)
 	if (hpbar > MaxClients && IsValidEntity(hpbar))
 		RemoveEntity(hpbar);
 
-	if (hTeamBansCVar && iTeamBansCVar)
+	if (hTeamBansCVar != null && iTeamBansCVar)
 	{
 		hTeamBansCVar.SetBool(false);
 		iTeamBansCVar = 0;
 	}
 
-	if (hNoChargeCVar)
+	if (hNoChargeCVar != null)
 		hNoChargeCVar.SetInt(iNoChargeCVar);
 
-	if (hDroppedWeaponsCVar)
+	if (hDroppedWeaponsCVar != null)
 		hDroppedWeaponsCVar.SetInt(iDroppedWeaponsCVar);
 
 	ManageRoundEndBossInfo( event.GetInt("team") == BLU );
 }
-public void fwdOnRedThink(const JBPlayer Player)
+public void fwdOnRedThink(LastRequest lr, const JBPlayer Player)
 {
-	if (NOTVSH)
-		return;
-
 	JailBoss fighter = JailBoss.Of(Player);
 	int i = fighter.index;
 	char wepclassname[64];
@@ -2172,11 +2158,11 @@ public void fwdOnRedThink(const JBPlayer Player)
 					ShowSyncHudText(i, jumpHUD, "Ubercharge: %i", charge);
 			}
 			
-			if (weapon == GetPlayerWeaponSlot(i, TFWeaponSlot_Secondary))
+			if (validwep && weapon == medigun)
 			{
-				int healtarget = GetHealingTarget(i);
-				if (IsValidClient(healtarget) && TF2_GetPlayerClass(healtarget) == TFClass_Scout)
-					TF2_AddCondition(i, TFCond_SpeedBuffAlly, 0.2);
+//				int healtarget = GetHealingTarget(i);
+//				if (IsValidClient(healtarget) && TF2_GetPlayerClass(healtarget) == TFClass_Scout)
+//					TF2_AddCondition(i, TFCond_SpeedBuffAlly, 0.2);
 				if (GetEntProp(medigun, Prop_Send, "m_bChargeRelease") && GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel") > 0.0)
 					TF2_AddCondition(i, TFCond_Ubercharged, 1.0); // Fixes Ubercharges ending prematurely on Medics.
 			}
@@ -2312,16 +2298,17 @@ public void fwdOnRedThink(const JBPlayer Player)
 	}
 	
 	// if ( TFClass == TFClass_DemoMan && !IsValidEntity(GetPlayerWeaponSlot(i, TFWeaponSlot_Secondary)) )
-	if (TFClass == TFClass_DemoMan && JBVSH[DemoShieldCrits].IntValue && validwep && weapon != GetPlayerWeaponSlot(i, TFWeaponSlot_Melee))
+	int democrits = g_LR.GetParameterNum("DemoShieldCrits", 0);
+	if (TFClass == TFClass_DemoMan && democrits && validwep && weapon != GetPlayerWeaponSlot(i, TFWeaponSlot_Melee))
 	{
 		float flShieldMeter = GetEntPropFloat(i, Prop_Send, "m_flChargeMeter");
 		
-		if (JBVSH[DemoShieldCrits].IntValue >= 1)
+		if (democrits >= 1)
 		{
 			addthecrit = true;
-			if (JBVSH[DemoShieldCrits].IntValue == 1 || (JBVSH[DemoShieldCrits].IntValue == 3 && flShieldMeter < 100.0))
+			if (democrits == 1 || (democrits == 3 && flShieldMeter < 100.0))
 				cond = TFCond_Buffed;
-			if (JBVSH[DemoShieldCrits].IntValue == 3 && (flShieldMeter < 35.0 || !GetEntProp(i, Prop_Send, "m_bShieldEquipped")))
+			if (democrits == 3 && (flShieldMeter < 35.0 || !GetEntProp(i, Prop_Send, "m_bShieldEquipped")))
 				addthecrit = false;
 		}
 	}
@@ -2365,11 +2352,8 @@ public void fwdOnRedThink(const JBPlayer Player)
 		}
 	}
 }
-public void fwdOnBlueThink(const JBPlayer Player)
+public void fwdOnBlueThink(LastRequest lr, const JBPlayer Player)
 {
-	if (NOTVSH)
-		return;
-
 	JailBoss base = JailBoss.Of(Player);
 	if (!base.bIsBoss)
 		return;
@@ -2393,25 +2377,8 @@ public void fwdOnBlueThink(const JBPlayer Player)
 	/* Adding this so bosses can take minicrits if airborne */
 	TF2_AddCondition(base.index, TFCond_GrapplingHookSafeFall, 0.2);
 }
-public void fwdOnHudShow(char strHud[128])
+public void fwdOnPlayerDied(LastRequest lr, const JBPlayer Victim, const JBPlayer Attacker, Event event)
 {
-	if (NOTVSH)
-		return;
-
-	strcopy(strHud, 128, "Versus Saxton Hale");
-}
-public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
-{
-	if (selection == TF2JailRedux_LRIndex())
-		CPrintToChatAll("%t %N has decided to play a round of {default}Versus Saxton Hale{burlywood}.", "Plugin Tag", Player.index);
-
-	return Plugin_Continue;
-}
-public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Event event)
-{
-	if (NOTVSH)
-		return;
-
 	JailBoss victim = JailBoss.Of(Victim);
 	JailBoss attacker = JailBoss.Of(Attacker);
 
@@ -2439,33 +2406,30 @@ public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Even
 	
 	if ( (TF2_GetPlayerClass(victim.index) == TFClass_Engineer) && !(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) )
 	{
-		if (JBVSH[EngieBuildings].IntValue) 
+		switch (g_LR.GetParameterNum("EngieBuildings", 0)) 
 		{
-			switch (JBVSH[EngieBuildings].IntValue) 
+			case 1: 
 			{
-				case 1: 
+				int sentry = FindSentry(victim.index);
+				if (sentry != -1) 
 				{
-					int sentry = FindSentry(victim.index);
-					if (sentry != -1) 
-					{
-						SetVariantInt(GetEntProp(sentry, Prop_Send, "m_iMaxHealth")+8);
-						AcceptEntityInput(sentry, "RemoveHealth");
-					}
+					SetVariantInt(GetEntProp(sentry, Prop_Send, "m_iMaxHealth")+8);
+					AcceptEntityInput(sentry, "RemoveHealth");
 				}
-				case 2: 
+			}
+			case 2: 
+			{
+				for (int ent=MaxClients+1 ; ent<2048 ; ++ent) 
 				{
-					for (int ent=MaxClients+1 ; ent<2048 ; ++ent) 
-					{
-						if (!IsValidEdict(ent)) 
-							continue;
-						else if (!HasEntProp(ent, Prop_Send, "m_hBuilder"))
-							continue;
-						else if (GetBuilder(ent) != victim.index)
-							continue;
+					if (!IsValidEdict(ent)) 
+						continue;
+					else if (!HasEntProp(ent, Prop_Send, "m_hBuilder"))
+						continue;
+					else if (GetBuilder(ent) != victim.index)
+						continue;
 
-						SetVariantInt(GetEntProp(ent, Prop_Send, "m_iMaxHealth")+8);
-						AcceptEntityInput(ent, "RemoveHealth");
-					}
+					SetVariantInt(GetEntProp(ent, Prop_Send, "m_iMaxHealth")+8);
+					AcceptEntityInput(ent, "RemoveHealth");
 				}
 			}
 		}
@@ -2473,11 +2437,8 @@ public void fwdOnPlayerDied(const JBPlayer Victim, const JBPlayer Attacker, Even
 	if (!victim.bIsBoss)
 		TF2_RemoveWeaponSlot(victim.index, 3);		// Ugh
 }
-public void fwdOnBuildingDestroyed(const JBPlayer Attacker, const int building, Event event)
+public void fwdOnBuildingDestroyed(LastRequest lr, const JBPlayer Attacker, const int building, Event event)
 {
-	if (NOTVSH)
-		return;
-
 	JailBoss attacker = JailBoss.Of(Attacker);
 
 	switch (attacker.iType) 
@@ -2494,45 +2455,33 @@ public void fwdOnBuildingDestroyed(const JBPlayer Attacker, const int building, 
 		}
 	}
 }
-public void fwdOnObjectDeflected(const JBPlayer Victim, const JBPlayer Attacker, Event event)
+public void fwdOnObjectDeflected(LastRequest lr, const JBPlayer Victim, const JBPlayer Attacker, Event event)
 {
-	if (NOTVSH)
-		return;
-
 	//JailBoss airblaster = JailBoss.Of(Attacker);
 	JailBoss airblasted = JailBoss.Of(Victim);
 
 	switch (airblasted.iType) 
 	{
 		case  - 1: {  }
-		case Hale, CBS, HHHjr, Bunny:airblasted.flRAGE += JBVSH[AirblastRage].FloatValue;
+		case Hale, CBS, HHHjr, Bunny:airblasted.flRAGE += g_LR.GetParameterFloat("AirblastRage", 0.0);
 		case Vagineer:
 		{
 			if (TF2_IsPlayerInCondition(airblasted.index, TFCond_Ubercharged))
 				TF2_AddCondition(airblasted.index, TFCond_Ubercharged, 2.0);
-			else airblasted.flRAGE += JBVSH[AirblastRage].FloatValue;
+			else airblasted.flRAGE += g_LR.GetParameterFloat("AirblastRage", 0.0);
 		}
 	}
 }
-public void fwdOnPlayerJarated(const JBPlayer Attacker, const JBPlayer Victim)
+public void fwdOnPlayerJarated(LastRequest lr, const JBPlayer Attacker, const JBPlayer Victim)
 {
-	if (NOTVSH)
-		return;
-
 	ManagePlayerJarated(JailBoss.Of(Attacker), JailBoss.Of(Victim));
 }
-public void fwdOnUberDeployed(const JBPlayer Medic, const JBPlayer Patient)
+public void fwdOnUberDeployed(LastRequest lr, const JBPlayer Medic, const JBPlayer Patient)
 {
-	if (NOTVSH)
-		return;
-
 	ManageUberDeploy(JailBoss.Of(Medic), JailBoss.Of(Patient));
 }
-public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
+public void fwdOnPlayerSpawned(LastRequest lr, const JBPlayer Player, Event event)
 {
-	if (NOTVSH)
-		return;
-
 	JailBoss spawn = JailBoss.Of(Player);
 
 	if (spawn.bIsBoss)
@@ -2549,34 +2498,10 @@ public void fwdOnPlayerSpawned(const JBPlayer Player, Event event)
 	SetVariantString(""); AcceptEntityInput(spawn.index, "SetCustomModel");
 	if (GetClientTeam(spawn.index) != RED)
 		spawn.ForceTeamChange(RED);
+	else SetPawnTimer(PrepPlayers, 0.2, spawn.userid);
 }
-public void fwdOnMenuAdd(const int index, int &max, char strName[64])
+public void fwdOnHurtPlayer(LastRequest lr, const JBPlayer Victim, const JBPlayer Attacker, Event event)
 {
-	if (index != TF2JailRedux_LRIndex())
-		return;
-
-	max = JBVSH[PickCount].IntValue;	// Everything else is managed in core, even if max is 0
-	strcopy(strName, sizeof(strName), "Versus Saxton Hale");
-}
-public void fwdOnPanelAdd(const int index, char name[64])
-{
-	if (index != TF2JailRedux_LRIndex())
-		return;
-
-	strcopy(name, sizeof(name), "Versus Saxton Hale- A nice round of VSH");
-}
-public void fwdOnTimeLeft()
-{
-	if (NOTVSH)
-		return;
-
-	gamemode.iTimeLeft = JBVSH[TimeLeft].IntValue;
-}
-public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, Event event)
-{
-	if (NOTVSH)
-		return;
-
 	if (!IsClientValid(Victim.index) || !IsClientValid(Attacker.index) || Attacker.index == Victim.index)
 		return;
 
@@ -2614,8 +2539,9 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, Even
 		{
 			if (weapon == TF_WEAPON_ROCKETLAUNCHER)
 				attacker.iAirDamage += damage;
-			int div = JBVSH[AirStrikeDamage].IntValue;
-			SetEntProp(attacker.index, Prop_Send, "m_iDecapitations", attacker.iAirDamage / div);
+			int div = g_LR.GetParameterNum("AirStrikeDamage", 1);
+			if (div)
+				SetEntProp(attacker.index, Prop_Send, "m_iDecapitations", attacker.iAirDamage / div);
 		}
 	}
 	
@@ -2646,11 +2572,8 @@ public void fwdOnHurtPlayer(const JBPlayer Victim, const JBPlayer Attacker, Even
 		else medic.iDamage += damage / (healercount + 1);
 	}
 }
-public Action fwdOnTakeDamage(const JBPlayer Victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action fwdOnTakeDamage(LastRequest lr, const JBPlayer Victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (NOTVSH)
-		return Plugin_Continue;
-
 	JailBoss victim = JailBoss.Of(Victim);
 	int bFallDamage = (damagetype & DMG_FALL);
 	if (victim.bIsBoss && attacker <= 0 && bFallDamage)
@@ -2675,17 +2598,14 @@ public Action fwdOnTakeDamage(const JBPlayer Victim, int &attacker, int &inflict
 
 	return Plugin_Continue;
 }
-public Action fwdOnMusicPlay(char song[PLATFORM_MAX_PATH], float &time)
+public Action fwdOnMusicPlay(LastRequest lr, char song[PLATFORM_MAX_PATH], float &time)
 {
-	if (NOTVSH)
-		return Plugin_Continue;
-
 	if (IsClientValid(iCurrBoss.index))
 		return Plugin_Handled;
 
 	switch (iCurrBoss.iType) 
 	{
-		case  - 1: { song = ""; time = -1.0; return Plugin_Handled; }
+		case  - 1: { song[0] = '\0'; time = -1.0; return Plugin_Handled; }
 		case CBS: 
 		{
 			strcopy(song, sizeof(song), CBSTheme);
@@ -2699,7 +2619,7 @@ public Action fwdOnMusicPlay(char song[PLATFORM_MAX_PATH], float &time)
 	}
 	return Plugin_Continue;
 }
-public void fwdOnVariableReset(const JBPlayer Player)
+public void fwdOnVariableReset(LastRequest lr, const JBPlayer Player)
 {
 	JailBoss base = JailBoss.Of(Player);
 
@@ -2724,11 +2644,8 @@ public void fwdOnVariableReset(const JBPlayer Player)
 		ChangeClientTeam(base.index, BLU);
 	base.bNeedsToGoBackToBlue = false;
 }
-public void fwdOnCheckLivingPlayers()
+public void fwdOnCheckLivingPlayers(LastRequest lr)
 {
-	if (NOTVSH)
-		return;
-
 	JailBoss base;
 	for (int i = MaxClients; i; --i)
 	{
@@ -2774,20 +2691,8 @@ public Action OnPlayerRunCmd(int client, int & buttons, int & impulse, float vel
 	return Plugin_Continue;
 }
 
-public Action fwdOnPlayerPreppedPre(const JBPlayer player)
+public void fwdOnRoundEndPlayer(LastRequest lr, const JBPlayer player, Event event)
 {
-	if (NOTVSH)
-		return Plugin_Continue;
-
-	PrepPlayers(player.index);
-	return Plugin_Handled;
-}
-
-public void fwdOnRoundEndPlayer(const JBPlayer player, Event event)
-{
-	if (NOTVSH)
-		return;
-
 	JailBoss base = JailBoss.Of(player);
 	if (base.bIsBoss)
 		return;
@@ -2795,21 +2700,10 @@ public void fwdOnRoundEndPlayer(const JBPlayer player, Event event)
 	SetPawnTimer(TF2ItemsFix, _, base.index);
 }
 
-public Action fwdOnSoundHook(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], JBPlayer player, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
+public Action fwdOnSoundHook(LastRequest lr, int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], JBPlayer player, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
 {
-	if (NOTVSH)
-		return Plugin_Continue;
-		
-	//if (StrContains(sample, "fall_damage", false) != -1)	// This doesn't work
-	//	return Plugin_Handled;
-
 	switch (JailBoss.Of(player).iType) 
 	{
-		case -1: 
-		{
-			//if (StrEqual(sample, "player/pl_impact_stun.wav", false))	// Neither does this
-			//	return Plugin_Handled;
-		}
 		case Hale: 
 		{
 			if (!strncmp(sample, "vo", 2, false))
@@ -2865,11 +2759,8 @@ public Action fwdOnSoundHook(int clients[64], int &numClients, char sample[PLATF
 	return Plugin_Continue;
 }
 
-public Action fwdOnCalcAttack(JBPlayer player, int weapon, char[] weaponname, bool &result)
+public Action fwdOnCalcAttack(LastRequest lr, JBPlayer player, int weapon, char[] weaponname, bool &result)
 {
-	if (NOTVSH)
-		return Plugin_Continue;
-	
 	JailBoss base = JailBoss.Of(player);
 	switch (base.iType) 
 	{
@@ -2909,74 +2800,36 @@ public void TF2ItemsFix(const int client)
 	TF2_RegeneratePlayer(client);
 }
 
-public Action fwdOnSetWardenLock(const bool status)
+public Action fwdOnSetWardenLock(LastRequest lr, const bool status)
 {
-	if (NOTVSH)
-		return Plugin_Continue;
-
 	return !status ? Plugin_Handled : Plugin_Continue;
 }
 
 public void LoadJBHooks()
 {
-	if (!JB_HookEx(OnDownloads, fwdOnDownloads))
-		LogError("Failed to load OnDownloads forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundStartPlayer2, fwdOnRoundStartPlayer))
-		LogError("Failed to load OnRoundStartPlayer forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundStart2, fwdOnRoundStart))
-		LogError("Failed to load OnRoundStart forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundEnd, fwdOnRoundEnd))
-		LogError("Failed to load OnRoundEnd forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundEndPlayer, fwdOnRoundEndPlayer))
-		LogError("Failed to load OnRoundEndPlayer forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnRedThink, fwdOnRedThink))
-		LogError("Failed to load OnRedThink forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnBlueThink, fwdOnBlueThink))
-		LogError("Failed to load OnBlueThink forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnHudShow, fwdOnHudShow))
-		LogError("Failed to load OnHudShow forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnLRPicked, fwdOnLRPicked))
-		LogError("Failed to load OnLRPicked forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayerDied, fwdOnPlayerDied))
-		LogError("Failed to load OnPlayerDied forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnBuildingDestroyed, fwdOnBuildingDestroyed))
-		LogError("Failed to load OnBuildingDestroyed forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnObjectDeflected, fwdOnObjectDeflected))
-		LogError("Failed to load OnObjectDeflected forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayerJarated, fwdOnPlayerJarated))
-		LogError("Failed to load OnPlayerJarated forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnUberDeployed, fwdOnUberDeployed))
-		LogError("Failed to load OnUberDeployed forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayerSpawned, fwdOnPlayerSpawned))
-		LogError("Failed to load OnPlayerSpawned forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnMenuAdd, fwdOnMenuAdd))
-		LogError("Failed to load OnMenuAdd forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnPanelAdd, fwdOnPanelAdd))
-		LogError("Failed to load OnPanelAdd forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnTimeLeft, fwdOnTimeLeft))
-		LogError("Failed to load OnTimeLeft forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnHurtPlayer, fwdOnHurtPlayer))
-		LogError("Failed to load OnHurtPlayer forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnTakeDamage, fwdOnTakeDamage))
-		LogError("Failed to load OnTakeDamage forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnClientInduction, fwdOnClientInduction))
-		LogError("Failed to load OnClientInduction forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayMusic, fwdOnMusicPlay))
-		LogError("Failed to load OnMusicPlay forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnVariableReset, fwdOnVariableReset))
-		LogError("Failed to load OnVariableReset forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnLastPrisoner, fwdOnLastPrisoner))
-		LogError("Failed to load OnLastPrisoner forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
-		LogError("Failed to load OnCheckLivingPlayers forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayerPreppedPre, fwdOnPlayerPreppedPre))
-		LogError("Failed to load OnPlayerPreppedPre forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnSoundHook, fwdOnSoundHook))
-		LogError("Failed to load OnSoundHook forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnEntCreated, fwdOnEntCreated))
-		LogError("Failed to load OnEntCreated forwards for JB VSH Sub-Plugin!");
-	if (!JB_HookEx(OnSetWardenLock, fwdOnSetWardenLock))
-		LogError("Failed to load OnSetWardenLock forwards for JB VSH Sub-Plugin!");
+	g_LR.AddHook(OnLRActivate, fwdOnRoundStart);
+	g_LR.AddHook(OnLRActivatePlayer, fwdOnRoundStartPlayer);
+	g_LR.AddHook(OnRoundEnd, fwdOnRoundEnd);
+	g_LR.AddHook(OnRoundEndPlayer, fwdOnRoundEndPlayer);
+	g_LR.AddHook(OnRedThink, fwdOnRedThink);
+	g_LR.AddHook(OnBlueThink, fwdOnBlueThink);
+	g_LR.AddHook(OnPlayerDied, fwdOnPlayerDied);
+	g_LR.AddHook(OnBuildingDestroyed, fwdOnBuildingDestroyed);
+	g_LR.AddHook(OnObjectDeflected, fwdOnObjectDeflected);
+	g_LR.AddHook(OnPlayerJarated, fwdOnPlayerJarated);
+	g_LR.AddHook(OnUberDeployed, fwdOnUberDeployed);
+	g_LR.AddHook(OnPlayerSpawned, fwdOnPlayerSpawned);
+	g_LR.AddHook(OnTakeDamage, fwdOnTakeDamage);
+	g_LR.AddHook(OnClientInduction, fwdOnClientInduction);
+	g_LR.AddHook(OnPlayMusic, fwdOnMusicPlay);
+	g_LR.AddHook(OnVariableReset, fwdOnVariableReset);
+	g_LR.AddHook(OnLastPrisoner, fwdOnLastPrisoner);
+	g_LR.AddHook(OnCheckLivingPlayers, fwdOnCheckLivingPlayers);
+	g_LR.AddHook(OnSoundHook, fwdOnSoundHook);
+	g_LR.AddHook(OnEntCreated, fwdOnEntCreated);
+	g_LR.AddHook(OnSetWardenLock, fwdOnSetWardenLock);
+
+	JB_Hook(OnDownloads, fwdOnDownloads);
 }
 
 stock bool OnlyScoutsLeft(const int team)

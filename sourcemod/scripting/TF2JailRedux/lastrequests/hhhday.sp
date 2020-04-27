@@ -10,6 +10,7 @@
 #define LEFTFOOT 		"player/footsteps/giant1.wav"
 #define RIGHTFOOT 		"player/footsteps/giant2.wav"
 
+
 methodmap CHHHDay < JailGameMode
 {
 	public static void Initialize()

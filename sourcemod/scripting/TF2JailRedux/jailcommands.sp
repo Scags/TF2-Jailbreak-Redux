@@ -403,10 +403,12 @@ public Action Command_RemoveLastRequest(int client, int args)
 		if (IsClientInGame(i))
 			JailFighter(i).bIsQueuedFreeday = false;
 
-	gamemode.hLRS.Set( gamemode.iLRPresetType, gamemode.hLRS.Get(gamemode.iLRPresetType)-1 );
+	gamemode.hLRCount.Set( gamemode.iLRPresetType, gamemode.hLRCount.Get(gamemode.iLRPresetType)-1 );
 	gamemode.bIsLRInUse = false;
-	gamemode.iLRPresetType = -1;
 	CPrintToChatAll("%t %t", "Plugin Tag", "Warden Deny LR", client);
+
+	Call_OnLRDenied(LastRequest.At(gamemode.iLRPresetType));
+	gamemode.iLRPresetType = -1;
 
 	return Plugin_Handled;
 }
@@ -556,8 +558,10 @@ public Action AdminDenyLR(int client, int args)
 		}
 	}
 
+	Call_OnLRDenied(LastRequest.At(gamemode.iLRPresetType));
+
 	int type = gamemode.iLRPresetType;
-	gamemode.hLRS.Set( type, gamemode.hLRS.Get(type)-1 );
+	gamemode.hLRCount.Set( type, gamemode.hLRCount.Get(type)-1 );
 	gamemode.iLRPresetType = -1;
 	gamemode.bIsLRInUse = false;
 
@@ -680,11 +684,11 @@ public Action AdminForceLR(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	if (gamemode.iRoundState != StateRunning)
-	{
-		CReplyToCommand(client, "%t %t", "Plugin Tag", "Needs Active Round");
-		return Plugin_Handled;
-	}
+//	if (gamemode.iRoundState != StateRunning)
+//	{
+//		CReplyToCommand(client, "%t %t", "Plugin Tag", "Needs Active Round");
+//		return Plugin_Handled;
+//	}
 
 	if (args)
 	{
@@ -1032,8 +1036,21 @@ public void FreedayforClientsMenu(const int client)
 
 	Menu menu = new Menu(MenuHandle_FreedayForClients);
 	menu.SetTitle("%t", "Select For Freeday");
-	
-	AddClientsToMenu(menu, false, 0);
+
+	char name[32], strID[8];
+	for (int i = MaxClients; i; --i)
+	{
+		if (!IsClientInGame(i))
+			continue;
+
+		if (!JailFighter(i).bIsQueuedFreeday)
+		{
+			IntToString(GetClientUserId(i), strID, sizeof(strID));
+			GetClientName(i, name, sizeof(name));
+			menu.AddItem(strID, name);
+		}
+	}
+//	AddClientsToMenu(menu, false, 0);
 	menu.ExitButton = true;
 	menu.Display(client, 0);
 }
@@ -1440,7 +1457,7 @@ public int MuteStyleMenu(Menu menu, MenuAction action, int client, int select)
 			if (!IsClientValid(client) || !IsPlayerAlive(client))
 				return;
 
-			char s[2]; menu.GetItem(select, s, sizeof(s));
+			char s[4]; menu.GetItem(select, s, sizeof(s));
 			MakeMuteToggleMenu(client, StringToInt(s));
 		}
 		case MenuAction_End:delete menu;
@@ -1452,7 +1469,7 @@ public void MakeMuteToggleMenu(const int client, const int type)
 	Menu menu = new Menu(MuteToggleMenu);
 	menu.SetTitle("%t", "Mute Style Select");
 
-	char s[64], id[2];
+	char s[64], id[4];
 	int draw, currtype = (type ? gamemode.iMuteType : gamemode.iLivingMuteType);
 
 	for (int i = 0; i < 7; ++i)
@@ -1539,7 +1556,7 @@ public Action AdminWardayBlue(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	if (gamemode.iRoundState > StateRunning)
+	if (!(StateDisabled < gamemode.iRoundState <= StateRunning))
 	{
 		CReplyToCommand(client, "%t %t", "Plugin Tag", "Before Or During Round");
 		return Plugin_Handled;
@@ -1570,7 +1587,7 @@ public Action AdminFullWarday(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	if (gamemode.iRoundState > StateRunning)
+	if (!(StateDisabled < gamemode.iRoundState <= StateRunning))
 	{
 		CReplyToCommand(client, "%t %t", "Plugin Tag", "Before Or During Round");
 		return Plugin_Handled;
@@ -1672,7 +1689,7 @@ public Action SetPreset(int client, int args)
 public Action GameModeProp(int client, int args)
 {
 	char arg[64]; GetCmdArg(1, arg, 64);
-	any val = JBGameMode_GetProperty(arg);
+	any val = JBGameMode_GetProp(arg);
 	CReplyToCommand(client, "%s value: %i", arg, val);
 }
 public Action BaseProp(int client, int args)
@@ -1707,11 +1724,7 @@ public Action BaseProp(int client, int args)
 	CReplyToCommand(client, "%N's %s value: %i", player.index, arg2, val);
 	return Plugin_Handled;
 }
-public Action PluginLength(int client, int args)
-{
-	CReplyToCommand(client, "%d", gamemode.hPlugins.Length);
-}
 public Action hLRSLength(int client, int args)
 {
-	CReplyToCommand(client, "%d", gamemode.hLRS.Length);
+	CReplyToCommand(client, "%d", gamemode.hLRS.Size);
 }

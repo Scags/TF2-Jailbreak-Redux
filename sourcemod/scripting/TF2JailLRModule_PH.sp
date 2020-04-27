@@ -9,7 +9,7 @@
 #pragma newdecls required
 #include "TF2JailRedux/stocks.inc"
 
-#define PLUGIN_VERSION		"1.0.6"
+#define PLUGIN_VERSION		"1.1.0"
 
 #define RED 				2
 #define BLU 				3
@@ -136,7 +136,6 @@ methodmap JailHunter < JBPlayer
 			g_PlayerModel[client] = model;
 		}
 
-		// This wackiness with [0] is required when dealing with enums containing strings
 		char modelName[96];
 		if (g_PropData.GetArray(model, propData, sizeof(propData)))
 		{
@@ -190,7 +189,7 @@ methodmap JailHunter < JBPlayer
 			{
 				SetVariantString("ParticleEffectStop");
 				AcceptEntityInput(client, "DispatchEffect");
-				
+
 				SetVariantString("");
 				AcceptEntityInput(client, "SetCustomModel");
 
@@ -211,26 +210,6 @@ public Plugin myinfo =
 	url = "https://github.com/Scags/TF2-Jailbreak-Redux"
 };
 
-enum
-{
-	FallDamage = 0,
-	Airblast,
-	Reroll,
-	RerollCount,
-	RerollTime,
-	StaticPropInfo,
-	DamageBlocksPropChange,
-	PropNameOnGive,
-	ForceBluePyro,
-	FreezeTime,
-	Teleportation,
-	RoundTime,
-	PickCount,
-	MedicToggling,
-	Leech,
-	Version
-};
-
 bool
 	bFirstBlood,
 	bAbleToReroll,
@@ -241,8 +220,8 @@ int
 	iGameTime	// Pre-round-start global time
 ;
 
-ConVar
-	JBPH[Version + 1]
+LastRequest
+	g_LR
 ;
 
 JBGameMode
@@ -251,28 +230,9 @@ JBGameMode
 
 public void OnPluginStart()
 {
-	JBPH[Version] 				 = CreateConVar("jbph_version", PLUGIN_VERSION, "PropHunt Version (Do not touch)", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
-	JBPH[FallDamage]			 = CreateConVar("sm_jbph_fall_damage", "1", "Enabled/Disable fall damage? (3: RED only, 2: BLU only, 1: ALL, 0: NONE)", FCVAR_NOTIFY, true, 0.0, true, 3.0); 
-	JBPH[Airblast] 				 = CreateConVar("sm_jbph_airblast", "1", "Disable pyro's ability to airblast? (This doesn't matter if you've disabled it under the core TF2Jail plugin cfg)", FCVAR_NOTIFY, true, 0.0, true, 1.0); 
-	JBPH[Reroll] 				 = CreateConVar("sm_jbph_propreroll", "1", "Allow players to reroll their props?", FCVAR_NOTIFY, true, 0.0, true, 1.0); 
-	JBPH[RerollCount] 			 = CreateConVar("sm_jbph_propreroll_count", "1", "If enabled, how many times can players \"!propreroll\"?", FCVAR_NOTIFY, true, 0.0);
-	JBPH[RerollTime] 			 = CreateConVar("sm_jbph_propreroll_time", "15", "Time (in seconds) that RED team has to reroll their props (If enabled)", FCVAR_NOTIFY, true, 0.0);
-	JBPH[StaticPropInfo] 		 = CreateConVar("sm_jbph_prop_haxors", "1", "Kick players who have r_staticpropinfo set to 1? (Allows players to see prop path names within maps) ~~Keep in mind this is a Jailbreak server, and players are not joining specifically for Prophunt~~", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	JBPH[DamageBlocksPropChange] = CreateConVar("sm_jbph_damage_block", "1", "Are players able to reroll their props if they are on fire, bleeding, jarated, etc?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	JBPH[PropNameOnGive] 		 = CreateConVar("sm_jbph_prop_name", "1", "Upon receiving a prop, will players be given a message stating the name of their prop?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	JBPH[ForceBluePyro] 		 = CreateConVar("sm_jbph_forcepyro", "0", "Force BLU team as pyro?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	JBPH[FreezeTime] 			 = CreateConVar("sm_jbph_freeze_time", "30", "Freeze BLU team for 'x' seconds", FCVAR_NOTIFY, true, 0.0, true, 120.0);
-	JBPH[Teleportation] 		 = CreateConVar("sm_jbph_teleport", "1", "Teleport players to warday/freeday locations? (0: Disabed, 1: BLU to Warday, 2: BLU to Freeday, 3: RED to Warday, 4: RED to Freeday, 5: BOTH to Warday)", FCVAR_NOTIFY, true, 0.0, true, 5.0);	
-	JBPH[RoundTime] 			 = CreateConVar("sm_jbph_round_time", "300", "Round time in seconds. THIS ADDS TO YOUR \"sm_jbph_freeze_time\" CVAR.", FCVAR_NOTIFY, true, 0.0);
-	JBPH[PickCount] 			 = CreateConVar("sm_jbph_lr_max", "5", "How many times can Prophunt be picked in a single map? 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
-	JBPH[MedicToggling] 		 = CreateConVar("sm_jbph_medic_toggle", "1", "Disable the medic room?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	JBPH[Leech] 				 = CreateConVar("sm_jbph_leech", "0", "Allow Hunters to leech damage dealt to props? Damage dealt comes back as health.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-
 	RegConsoleCmd("sm_propreroll", Cmd_Reroll);
-	RegAdminCmd("sm_unregisterph", Cmd_UnLoad, ADMFLAG_ROOT);
-	RegAdminCmd("sm_registerph", Cmd_ReLoad, ADMFLAG_ROOT);
-
-	AutoExecConfig(true, "LRModulePH");
+//	RegAdminCmd("sm_unregisterph", Cmd_UnLoad, ADMFLAG_ROOT);
+//	RegAdminCmd("sm_registerph", Cmd_ReLoad, ADMFLAG_ROOT);
 
 	LoadTranslations("common.phrases");
 	LoadTranslations("tf2jail_redux.phrases");
@@ -286,33 +246,79 @@ public void OnPluginStart()
 
 public void InitSubPlugin()
 {
-	TF2JailRedux_RegisterPlugin();
 	gamemode = new JBGameMode();
-	CheckJBHooks();
+
+	g_LR = LastRequest.CreateFromConfig("PropHunt");
+
+	if (g_LR == null)	// If it's her first time, set the mood
+	{
+		g_LR = LastRequest.Create("PropHunt");
+		g_LR.SetDescription("Play a nice round of PropHunt");
+		g_LR.SetAnnounceMessage("{default}{NAME}{burlywood} has selected {default}PropHunt{burlywood} as their last request.");
+
+//		g_LR.SetActivationMessage("Hunters will be released in {default}{TIME}{burlywood} seconds.");	// We're overriding this
+
+		g_LR.SetParameterNum("Disabled", 0);
+		g_LR.SetParameterNum("OpenCells", 1);
+		g_LR.SetParameterNum("TimerStatus", 1);
+		g_LR.SetParameterNum("TimerTime", 330);
+		g_LR.SetParameterNum("LockWarden", 1);
+		g_LR.SetParameterNum("UsesPerMap", 3);
+//		g_LR.SetParameterNum("IsWarday", 1);
+		g_LR.SetParameterNum("NoMuting", 1);
+		g_LR.SetParameterNum("DisableMedic", 1);
+		g_LR.SetParameterNum("AllowBuilding", 1);
+//		g_LR.SetParameterNum("RegenerateReds", 0);
+		g_LR.SetParameterNum("EnableCriticals", 0);
+		g_LR.SetParameterNum("VoidFreekills", 1);
+		g_LR.SetParameterNum("IgnoreRebels", 1);
+
+		// Custom config
+		// It'd be cool if there was a way to add comments to kv cfg
+		g_LR.SetParameterNum("PropReroll", 1);				// Allow players to !propreroll. Number of times allowed
+		g_LR.SetParameterFloat("PropRerollTime", 15.0);		// Time after round starts to allow prop rerolling
+		g_LR.SetParameterNum("DamageBlocksReroll", 1);		// Damage and harmful effects prevent !propreroll
+		g_LR.SetParameterNum("StaticPropInfo", 1);			// If player's have r_staticpropinfo enabled, kick them
+		g_LR.SetParameterNum("PropNameOnGive", 1);			// Tell players what prop they are on give
+		g_LR.SetParameterNum("ForceBluePyro", 1);			// Force blue team as pyro
+		g_LR.SetParameterNum("FreezeTime", 30);				// Freeze time at start
+		g_LR.SetParameterNum("TeleportBehavior", 1);		// 0: Disabed, 1: BLU to Warday, 2: BLU to Freeday, 3: RED to Warday, 4: RED to Freeday, 5: BOTH to Warday
+		g_LR.SetParameterNum("LeechDamage", 1);				// Damage dealt to props comes back as health
+		g_LR.GetParameterNum("FallDamage", 0); 				// Disable fall damage. (0 = none, 1 = all players, 2 = blue only, 3 = red only)
+
+		g_LR.SetParameterString("ActivationMessage", "Hunters will be released in {default}{TIME}{burlywood} seconds.");
+		g_LR.SetParameterString("HuntersReleasedMessage", "Ready or not, here they come!");
+
+		g_LR.ExportToConfig(.create = true, .createonly = true);
+	}
+	LoadJBHooks();
 }
 
 public void OnPluginEnd()
 {
 	if (LibraryExists("TF2Jail_Redux"))
-		TF2JailRedux_UnRegisterPlugin();
+		g_LR.Destroy();
 }
 
 public void OnLibraryRemoved(const char[] name)
 {
-	if (!strcmp(name, "TF2Jail_Redux", false))
+	if (!strcmp(name, "TF2Jail_Redux", true))
+	{
+		g_LR = null;
 		bDisabled = true;
+	}
 }
 
 public void OnLibraryAdded(const char[] name)
 {
-	if (!strcmp(name, "TF2Jail_Redux", false) && bDisabled)
+	if (!strcmp(name, "TF2Jail_Redux", true) && bDisabled)
 	{
 		InitSubPlugin();
 		bDisabled = false;
 	}
 }
 
-#define NOTPH 				( gamemode.iLRType != TF2JailRedux_LRIndex() )
+#define NOTPH 				( g_LR == null || g_LR.GetID() != gamemode.iLRType )
 
 public void OnMapStart()
 {
@@ -343,17 +349,17 @@ public void fwdOnDownloads()
 	{
 		if (i <= 4)
 		{
-			Format(s, PLATFORM_MAX_PATH, "vo/announcer_am_roundstart0%i.mp3", i);
+			FormatEx(s, PLATFORM_MAX_PATH, "vo/announcer_am_roundstart0%i.mp3", i);
 			PrecacheSound(s, true);
 		}
 
-		Format(s, PLATFORM_MAX_PATH, "vo/announcer_dec_missionbegins60sec0%i.mp3", i);
+		FormatEx(s, PLATFORM_MAX_PATH, "vo/announcer_dec_missionbegins60sec0%i.mp3", i);
 		PrecacheSound(s, true);
 
-		Format(s, PLATFORM_MAX_PATH, "vo/announcer_dec_missionbegins30sec0%i.mp3", i);
+		FormatEx(s, PLATFORM_MAX_PATH, "vo/announcer_dec_missionbegins30sec0%i.mp3", i);
 		PrecacheSound(s, true);
 
-		Format(s, PLATFORM_MAX_PATH, "vo/announcer_am_firstblood0%i.mp3", i);
+		FormatEx(s, PLATFORM_MAX_PATH, "vo/announcer_am_firstblood0%i.mp3", i);
 		PrecacheSound(s, true);
 	}
 
@@ -419,7 +425,7 @@ public void ParsePropCFG()
 		g_PropPath.PushString(modelPath);
 
 		counter++;
-	} while kv.GotoNextKey(false);
+	}	while kv.GotoNextKey(false);
 
 	delete kv;
 }
@@ -453,12 +459,12 @@ public void KickCallBack(const QueryCookie cookie, const int client, const ConVa
 	KickClient(client, "Could not detect client ConVar r_staticpropinfo");
 }
 
-public void fwdOnCheckLivingPlayers()
+public void fwdOnCheckLivingPlayers(LastRequest lr)
 {
 	if (NOTPH)
 		return;
 
-	if (!JBPH[StaticPropInfo].BoolValue)
+	if (!g_LR.GetParameterNum("StaticPropInfo", 0))
 		return;
 
 	for (int i = MaxClients; i; --i)
@@ -472,11 +478,8 @@ public void fwdOnCheckLivingPlayers()
 	}
 }
 
-public Action fwdOnLastPrisoner()
+public Action fwdOnLastPrisoner(LastRequest lr)
 {
-	if (NOTPH)
-		return Plugin_Continue;
-
 	for (int i = MaxClients; i; --i)
 	{
 		if (!IsClientInGame(i) || !IsPlayerAlive(i))
@@ -488,7 +491,7 @@ public Action fwdOnLastPrisoner()
 			SetEntityHealth(i, GetEntProp(i, Prop_Data, "m_iMaxHealth"));
 
 			JailHunter player = JailHunter(i);
-			player.MakeProp(JBPH[PropNameOnGive].BoolValue, false, false);
+			player.MakeProp(!!g_LR.GetParameterNum("PropNameOnGive"), false, false);
 			player.SetWepInvis(0);
 		}
 		else TF2_AddCondition(i, TFCond_Jarated, 15.0);
@@ -506,10 +509,10 @@ public void DisallowRerolls(const int roundcount)
 
 public Action Cmd_Reroll(int client, int args)
 {
-	if (!IsClientValid(client) || NOTPH || !IsPlayerAlive(client))
+	if (!client || NOTPH || !IsPlayerAlive(client))
 		return Plugin_Handled;
 
-	if (!JBPH[Reroll].BoolValue)
+	if (!g_LR.GetParameterNum("Rerolling", 0))
 	{
 		CPrintToChat(client, "%t Rerolling has been disabled.", "Plugin Tag");
 		return Plugin_Handled;
@@ -530,29 +533,30 @@ public Action Cmd_Reroll(int client, int args)
 		CPrintToChat(client, "%t You are not allowed to reroll at this time.", "Plugin Tag");
 		return Plugin_Handled;
 	}
-	if (player.iRolls >= JBPH[RerollCount].IntValue)
+	if (player.iRolls >= g_LR.GetParameterNum("Rerolling", 0))
 	{
 		CPrintToChat(client, "%t You have rerolled the maximum amount of times this round.", "Plugin Tag");
 		return Plugin_Handled;
 	}
-	if ( JBPH[DamageBlocksPropChange].BoolValue 
+	if (g_LR.GetParameterNum("DamageBlocksReroll", 0) 
 	 && (TF2_IsPlayerInCondition(client, TFCond_Bleeding)
 	  || TF2_IsPlayerInCondition(client, TFCond_OnFire)
 	  || TF2_IsPlayerInCondition(client, TFCond_LostFooting)
 	  || TF2_IsPlayerInCondition(client, TFCond_Jarated) 
 	  || TF2_IsPlayerInCondition(client, TFCond_Milked)
-	  || TF2_IsPlayerInCondition(client, TFCond_Gas)) ) 
+	  || TF2_IsPlayerInCondition(client, TFCond_Gas)))
 	{
 		CPrintToChat(client, "%t You are under effects and can't change!", "Plugin Tag");
 		return Plugin_Handled;
 	}
 
-	player.MakeProp(JBPH[PropNameOnGive].BoolValue, true);
+	player.MakeProp(!!g_LR.GetParameterNum("PropNameOnGive"), true);
 	player.iRolls++;
 
 	return Plugin_Handled;
 }
 
+#if 0
 /**
  *	Purpose: Disable the plugin without unloading it.
  *	This is more for testing, but technical users can use this to their advantage.
@@ -560,8 +564,12 @@ public Action Cmd_Reroll(int client, int args)
 */
 public Action Cmd_UnLoad(int client, int args)
 {
-	if (TF2JailRedux_UnRegisterPlugin())
+	if (g_LR != null)
+	{
+		g_LR.Destroy();
+		g_LR = null;
 		CReplyToCommand(client, "%t Prophunt has been successfully unregistered.", "Admin Tag");
+	}
 	else CReplyToCommand(client, "%t Prophunt was not unregistered. Was it registered to begin with?", "Admin Tag");
 
 	return Plugin_Handled;
@@ -569,22 +577,20 @@ public Action Cmd_UnLoad(int client, int args)
 
 public Action Cmd_ReLoad(int client, int args)
 {
-	if (TF2JailRedux_LRIndex())
+	if (g_LR != null)
 	{
 		CReplyToCommand(client, "%t Prophunt is already registered.", "Admin Tag");
 		return Plugin_Handled;
 	}
 
-	TF2JailRedux_RegisterPlugin();
+	g_LR = new LastRequest("PropHunt");
 	CReplyToCommand(client, "%t Prophunt has been re-registered.", "Admin Tag");
 	return Plugin_Handled;
 }
+#endif
 
-public Action fwdOnCalcAttack(JBPlayer player, int weapon, char[] weaponname, bool &result)
+public Action fwdOnCalcAttack(LastRequest lr, JBPlayer player, int weapon, char[] weaponname, bool &result)
 {
-	if (NOTPH)
-		return Plugin_Continue;
-
 	int client = player.index;
 	if (GetClientTeam(client) == BLU && IsValidEntity(weapon))
 	{
@@ -605,11 +611,8 @@ public Action fwdOnCalcAttack(JBPlayer player, int weapon, char[] weaponname, bo
 	return Plugin_Continue;
 }
 
-public Action fwdOnTakeDamage(const JBPlayer player, int &attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action fwdOnTakeDamage(LastRequest lr, const JBPlayer player, int &attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (NOTPH)
-		return Plugin_Continue;
-
 	//JailHunter player = JailHunter(attacker);
 	JailHunter victim = JailHunter.Of(player);
 	bool validatkr = IsClientValid(attacker);
@@ -620,21 +623,9 @@ public Action fwdOnTakeDamage(const JBPlayer player, int &attacker, int& inflict
 		victim.bTouched = true;
 	}
 
-	if (JBPH[Leech].BoolValue && validatkr && victim.bIsProp)
-	{
-		int hp, maxhp;
-		hp = GetEntProp(attacker, Prop_Data, "m_iHealth");
-		maxhp = GetEntProp(attacker, Prop_Data, "m_iMaxHealth");
-		hp += RoundFloat(damage);
-		if (hp > maxhp)
-			hp = maxhp;
-
-		SetEntityHealth(attacker, hp);
-	}
-
 	if (damagetype & DMG_DROWN && victim.bIsProp && attacker <= 0)
 	{
-		damage *= 0.0;
+		damage = 0.0;
 		return Plugin_Changed;
 	}
 	if (damagetype & DMG_BLAST)
@@ -675,7 +666,12 @@ public Action Timer_Round(Handle timer)	// Same structure as the core plugin's t
 		char s[PLATFORM_MAX_PATH];
 		Format(s, sizeof(s), "vo/announcer_am_roundstart0%i.mp3", GetRandomInt(1, 4));
 		EmitSoundToAll(s);
-		CPrintToChatAll("{burlywood}Ready or not, here they come!");
+
+		char buffer[256];
+		g_LR.GetParameterString("HuntersReleasedMessage", buffer, sizeof(buffer));
+
+		if (buffer[0] != '\0')
+			CPrintToChatAll("%t %s", "Plugin Tag", buffer);
 
 		for (int i = MaxClients; i; --i)
 		{
@@ -695,11 +691,11 @@ public Action Timer_Round(Handle timer)	// Same structure as the core plugin's t
 
 stock bool GetModelNameForClient(const int client, const char[] modelName, char[] name, int maxlen)
 {
-	PropData propData[PropData];
+	PropData propData;
 
-	if (g_PropData.GetArray(modelName, propData[0], sizeof(propData)))
+	if (g_PropData.GetArray(modelName, propData, sizeof(propData)))
 	{
-		strcopy(name, maxlen, propData[PropData_Name]);
+		strcopy(name, maxlen, propData.PropData_Name);
 		return true;
 	}
 	else
@@ -816,11 +812,8 @@ stock void AddVelocity(const int client, const float speed)
 	TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 }
 
-public void fwdOnPreThink(const JBPlayer Player)
+public void fwdOnPreThink(LastRequest lr, const JBPlayer Player)
 {
-	if (NOTPH)
-		return;
-
 	int client = Player.index;
 	JailHunter player = JailHunter.Of(Player);
 	int buttons = GetClientButtons(client);
@@ -885,23 +878,17 @@ public void fwdOnPreThink(const JBPlayer Player)
 int NoSS[7]  = { 2, 3, 4, 5, 6, 7, 9 };
 int NoHvy[6] = { 2, 3, 4, 5, 6, 9 };
 int iHeavy;
-public void fwdOnRoundStartPlayer(const JBPlayer player)
+public void fwdOnRoundStartPlayer(LastRequest lr, const JBPlayer player)
 {
-	if (NOTPH)
-		return;
-
 	JailHunter base = JailHunter.Of(player);
 	int client = base.index;
 
-	if (gamemode.bTF2Attribs)
+	TF2Attrib_RemoveAll(client);
+	switch (g_LR.GetParameterNum("FallDamage", 0))
 	{
-		TF2Attrib_RemoveAll(client);
-		switch (JBPH[FallDamage].IntValue)
-		{
-			case 1:TF2Attrib_SetByDefIndex(client, 275, 1.0);
-			case 2:if (GetClientTeam(client) == BLU) TF2Attrib_SetByDefIndex(client, 275, 1.0);
-			case 3:if (GetClientTeam(client) == RED) TF2Attrib_SetByDefIndex(client, 275, 1.0);
-		}
+		case 1:TF2Attrib_SetByDefIndex(client, 275, 1.0);
+		case 2:if (GetClientTeam(client) == BLU) TF2Attrib_SetByDefIndex(client, 275, 1.0);
+		case 3:if (GetClientTeam(client) == RED) TF2Attrib_SetByDefIndex(client, 275, 1.0);
 	}
 	switch (TF2_GetClientTeam(client))
 	{
@@ -909,9 +896,9 @@ public void fwdOnRoundStartPlayer(const JBPlayer player)
 		{
 			TF2_SetPlayerClass(client, TFClass_Scout, _, false);
 			TF2_RegeneratePlayer(client);	// Fixes first-person viewmodels
-			base.MakeProp(JBPH[PropNameOnGive].BoolValue);
+			base.MakeProp(!!g_LR.GetParameterNum("PropNameOnGive", 0));
 
-			switch (JBPH[Teleportation].IntValue)
+			switch (g_LR.GetParameterNum("TeleportBehavior", 0))
 			{
 				case 3, 5:base.TeleportToPosition(WRED);
 				case 4:base.TeleportToPosition(FREEDAY);
@@ -922,7 +909,7 @@ public void fwdOnRoundStartPlayer(const JBPlayer player)
 		}
 		case TFTeam_Blue:
 		{
-			if (JBPH[ForceBluePyro].BoolValue)
+			if (g_LR.GetParameterNum("ForceBluePyro", 0))
 				TF2_SetPlayerClass(client, TFClass_Pyro, _, false);
 
 			TFClassType class = TF2_GetPlayerClass(client);
@@ -937,37 +924,23 @@ public void fwdOnRoundStartPlayer(const JBPlayer player)
 				TF2_SetPlayerClass(client, view_as< TFClassType >(NoHvy[GetRandomInt(0, 4)]), _, false);
 				CPrintToChat(client, "%t There are too many Heavies on Blue team.", "Plugin Tag");
 			}
-			else if (class == TFClass_Pyro && JBPH[Airblast].BoolValue && gamemode.bTF2Attribs)
+			else if (class == TFClass_Pyro && g_LR.GetParameterNum("Airblast", 0))
 				TF2Attrib_SetByDefIndex(client, 823, 1.0);
 			TF2_RegeneratePlayer(client);
 
-			switch (JBPH[Teleportation].IntValue)
+			switch (g_LR.GetParameterNum("TeleportBehavior", 0))
 			{
 				case 1, 5:base.TeleportToPosition(WBLU);
 				case 2:base.TeleportToPosition(FREEDAY);
 			}
 		}
 	}
-	if (JBPH[StaticPropInfo].BoolValue)
+	if (g_LR.GetParameterNum("StaticPropInfo", 0))
 		QueryClientConVar(client, "r_staticpropinfo", KickCallBack);
 }
-public void fwdOnRoundStart()
+public void fwdOnRoundStart(LastRequest lr)
 {
-	if (NOTPH)
-		return;
-
-	gamemode.bDisableCriticals = true;
-	gamemode.bIsWardenLocked = true;
-	gamemode.bFirstDoorOpening = true;
-	gamemode.bDisableKillSpree = true;
-	gamemode.bIgnoreRebels = true;
-	gamemode.DoorHandler(OPEN);
-	//gamemode.OpenAllDoors();
-
-	if (JBPH[MedicToggling].BoolValue)
-		gamemode.ToggleMedic(false);
-
-	float rerolltime = JBPH[RerollTime].FloatValue;
+	float rerolltime = g_LR.GetParameterFloat("RerollTime", 0.0);
 	if (rerolltime != 0.0)
 		SetPawnTimer(DisallowRerolls, rerolltime, gamemode.iRoundCount);
 
@@ -975,14 +948,19 @@ public void fwdOnRoundStart()
 	bFirstBlood = true;
 
 	FindConVar("sv_gravity").SetInt(500);
-	int freeze = JBPH[FreezeTime].IntValue;
+	int freeze = g_LR.GetParameterNum("FreezeTime", 0);
 	// ServerCommand("sm_freeze @blue %i", freeze);
 	if (!freeze)
 	{
 		char s[PLATFORM_MAX_PATH];
 		Format(s, sizeof(s), "vo/announcer_am_roundstart0%i.mp3", GetRandomInt(1, 4));
 		EmitSoundToAll(s);
-		CPrintToChatAll("{burlywood}Ready or not, here they come!");
+
+		char buffer[256];
+		g_LR.GetParameterString("HuntersReleasedMessage", buffer, sizeof(buffer));
+
+		if (buffer[0] != '\0')
+			CPrintToChatAll("%t %s", "Plugin Tag", buffer);
 		return;
 	}
 
@@ -1014,41 +992,36 @@ public void fwdOnRoundStart()
 
 	iGameTime = freeze;
 	CreateTimer(1.0, Timer_Round, _, TIMER_REPEAT);
-	CPrintToChatAll("{burlywood}Hunters will be released in %i seconds.", freeze);
+	char buffer[256];
+	g_LR.GetParameterString("ActivationMessage", buffer, sizeof(buffer));
+	if (buffer[0] != '\0')
+	{
+		char timestr[8]; IntToString(freeze, timestr, sizeof(timestr));
+		ReplaceString(buffer, sizeof(buffer), "{TIME}", timestr);
+		CPrintToChatAll("%t %s", "Plugin Tag", buffer);
+	}
 }
-public void fwdOnRoundEnd(Event event)
+public void fwdOnRoundEnd(LastRequest lr, Event event)
 {
-	if (NOTPH)
-		return;
-
 	iHeavy = 0;
 	FindConVar("sv_gravity").SetInt(800);
 	bAbleToReroll = false;
 }
-public void fwdOnBlueTouchRed(const JBPlayer player, const JBPlayer victim)
+public void fwdOnBlueTouchRed(LastRequest lr, const JBPlayer player, const JBPlayer victim)
 {
-	if (NOTPH)
-		return;
-
 	JailHunter base = JailHunter.Of(victim);
-	if (!base.bTouched)
+	if (!base.bTouched && base.bIsProp)
 	{
 		base.bTouched = true;
 		EmitSoundToAll("prophunt/found.mp3", base.index);
 	}
 }
-public void fwdOnRedThink(const JBPlayer player)
+public void fwdOnRedThink(LastRequest lr, const JBPlayer player)
 {
-	if (NOTPH)
-		return;
-
 	SetEntPropFloat(player.index, Prop_Send, "m_flMaxspeed", 400.0);
 }
-public void fwdOnBlueThink(const JBPlayer player)
+public void fwdOnBlueThink(LastRequest lr, const JBPlayer player)
 {
-	if (NOTPH)
-		return;
-
 	int client = player.index;
 	SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
 
@@ -1069,11 +1042,8 @@ public void fwdOnBlueThink(const JBPlayer player)
 		}
 	}
 }
-public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Event event)
+public void fwdOnPlayerDied(LastRequest lr, const JBPlayer victim, const JBPlayer attacker, Event event)
 {
-	if (NOTPH)
-		return;
-
 	JailHunter player = JailHunter.Of(victim);
 	player.Init_PH(true);
 
@@ -1098,50 +1068,12 @@ public void fwdOnPlayerDied(const JBPlayer victim, const JBPlayer attacker, Even
 		bFirstBlood = false;
 	}
 }
-public void fwdOnPlayerSpawned(const JBPlayer player)
+public void fwdOnPlayerSpawned(LastRequest lr, const JBPlayer player)
 {
-	if (NOTPH)
-		return;
-
 	if (GetClientTeam(player.index) == RED)
-		JailHunter.Of(player).MakeProp(JBPH[PropNameOnGive].BoolValue);
+		JailHunter.Of(player).MakeProp(!!g_LR.GetParameterNum("PropNameOnGive", 0));
 }
-public void fwdOnTimeLeft(int &time)
-{
-	if (NOTPH)
-		return;
-
-	time = JBPH[RoundTime].IntValue + JBPH[FreezeTime].IntValue;
-}
-public Action fwdOnLRPicked(const JBPlayer Player, const int selection, ArrayList arrLRS)
-{
-	if (selection == TF2JailRedux_LRIndex())
-		CPrintToChatAll("%t %N has decided to play a round of {default}Prophunt{burlywood}.", "Plugin Tag", Player.index);
-	return Plugin_Continue;
-}
-public void fwdOnHudShow(char strHud[128])
-{
-	if (NOTPH)
-		return;
-
-	strcopy(strHud, 128, "Prophunt");
-}
-public void fwdOnPanelAdd(const int index, char name[64])
-{
-	if (index != TF2JailRedux_LRIndex())
-		return;
-
-	strcopy(name, sizeof(name), "Prophunt- Find and kill all the cowardly props!");
-}
-public void fwdOnMenuAdd(const int index, int &max, char strName[64])
-{
-	if (index != TF2JailRedux_LRIndex())
-		return;
-
-	max = JBPH[PickCount].IntValue;
-	strcopy(strName, sizeof(strName), "Prophunt");
-}
-public void fwdOnResetVariables(const JBPlayer Player)
+public void fwdOnResetVariables(LastRequest lr, const JBPlayer Player)
 {
 	int client = Player.index;
 	JailHunter player = JailHunter.Of(Player);
@@ -1170,20 +1102,14 @@ public void fwdOnResetVariables(const JBPlayer Player)
 	}
 }
 
-public Action fwdOnTimeEnd()
+public Action fwdOnTimeEnd(LastRequest lr)
 {
-	if (NOTPH)
-		return Plugin_Continue;
-
 	ForceTeamWin(RED);
 	return Plugin_Handled;
 }
 
-public Action fwdOnPlayerPreppedPre(const JBPlayer Player)
+public Action fwdOnPlayerPreppedPre(LastRequest lr, const JBPlayer Player)
 {
-	if (NOTPH)
-		return Plugin_Continue;
-
 	if (GetClientTeam(Player.index) != RED)
 		return Plugin_Continue;
 
@@ -1192,65 +1118,53 @@ public Action fwdOnPlayerPreppedPre(const JBPlayer Player)
 
 	JailHunter player = JailHunter.Of(Player);
 	if (!player.bIsProp)
-		player.MakeProp(JBPH[PropNameOnGive].BoolValue);
+		player.MakeProp(!!g_LR.GetParameterNum("PropNameOnGive", 0));
 
 	return Plugin_Handled;
 }
 
-public Action fwdOnSetWardenLock(const bool status)
+public Action fwdOnSetWardenLock(LastRequest lr, const bool status)
 {
-	if (NOTPH)
-		return Plugin_Continue;
-
 	return !status ? Plugin_Handled : Plugin_Continue;
 }
 
-public void CheckJBHooks()
+public void fwdOnPlayerHurt(LastRequest lr, const JBPlayer victim, const JBPlayer attacker, Event event)
 {
-	if (!JB_HookEx(OnRoundStartPlayer2, fwdOnRoundStartPlayer))
-		LogError("Error Loading OnRoundStartPlayer Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundStart2, fwdOnRoundStart))
-		LogError("Error Loading OnRoundStart, Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnRoundEnd, fwdOnRoundEnd))
-		LogError("Error Loading OnRoundEnd Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnRedThink, fwdOnRedThink))
-		LogError("Error Loading OnRedThink Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnBlueThink, fwdOnBlueThink))
-		LogError("Error Loading OnBlueThink Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayerDied, fwdOnPlayerDied))
-		LogError("Error loading OnPlayerDied Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayerSpawned, fwdOnPlayerSpawned))
-		LogError("Error loading OnPlayerSpawned Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnTakeDamage, fwdOnTakeDamage))
-		LogError("Error loading OnTakeDamage Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnClientInduction, fwdOnClientInduction))
-		LogError("Error loading OnClientInduction Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnTimeLeft, fwdOnTimeLeft))
-		LogError("Error loading OnTimeLeft Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnLRPicked, fwdOnLRPicked))
-		LogError("Error loading OnLRPicked Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnHudShow, fwdOnHudShow))
-		LogError("Error loading OnHudShow Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnPanelAdd, fwdOnPanelAdd))
-		LogError("Error loading OnPanelAdd Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnMenuAdd, fwdOnMenuAdd))
-		LogError("Error loading OnMenuAdd Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnDownloads, fwdOnDownloads))
-		LogError("Error loading OnDownloads Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnVariableReset, fwdOnResetVariables))
-		LogError("Error loading OnVariableReset Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnTimeEnd, fwdOnTimeEnd))
-		LogError("Error loading OnTimeEnd Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnLastPrisoner, fwdOnLastPrisoner))
-		LogError("Error loading OnLastPrisoner Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnCheckLivingPlayers, fwdOnCheckLivingPlayers))
-		LogError("Error loading OnCheckLivingPlayers Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnPlayerPreppedPre, fwdOnPlayerPreppedPre))
-		LogError("Error loading OnPlayerPreppedPre Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnPreThink, fwdOnPreThink))
-		LogError("Error Loading OnPreThink Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnCalcAttack, fwdOnCalcAttack))
-		LogError("Error loading OnCalcAttack Forwards for JB PH Sub-Plugin!");
-	if (!JB_HookEx(OnSetWardenLock, fwdOnSetWardenLock))
-		LogError("Error loading OnSetWardenLock Forwards for JB PH Sub-Plugin!");
+	bool validatkr = IsClientValid(attacker.index);
+	if (validatkr && g_LR.GetParameterNum("LeechDamage", 0) && JailHunter.Of(victim).bIsProp)
+	{
+		int hp, maxhp;
+		hp = GetEntProp(attacker.index, Prop_Data, "m_iHealth");
+		maxhp = GetEntProp(attacker.index, Prop_Data, "m_iMaxHealth");
+		hp += event.GetInt("damageamount");
+		if (hp > maxhp)
+			hp = maxhp;
+
+		SetEntityHealth(attacker.index, hp);
+	}
+}
+
+public void LoadJBHooks()
+{
+	g_LR.AddHook(OnLRActivate, fwdOnRoundStart);
+	g_LR.AddHook(OnLRActivatePlayer, fwdOnRoundStartPlayer);
+	g_LR.AddHook(OnRoundEnd, fwdOnRoundEnd);
+	g_LR.AddHook(OnRedThink, fwdOnRedThink);
+	g_LR.AddHook(OnBlueThink, fwdOnBlueThink);
+	g_LR.AddHook(OnPlayerDied, fwdOnPlayerDied);
+	g_LR.AddHook(OnPlayerSpawned, fwdOnPlayerSpawned);
+	g_LR.AddHook(OnTakeDamage, fwdOnTakeDamage);
+	g_LR.AddHook(OnVariableReset, fwdOnResetVariables);
+	g_LR.AddHook(OnTimeEnd, fwdOnTimeEnd);
+	g_LR.AddHook(OnLastPrisoner, fwdOnLastPrisoner);
+	g_LR.AddHook(OnCheckLivingPlayers, fwdOnCheckLivingPlayers);
+	g_LR.AddHook(OnPlayerPrepped, fwdOnPlayerPreppedPre);
+	g_LR.AddHook(OnPreThink, fwdOnPreThink);
+	g_LR.AddHook(OnCalcAttack, fwdOnCalcAttack);
+	g_LR.AddHook(OnSetWardenLock, fwdOnSetWardenLock);
+	g_LR.AddHook(OnPlayerTouch, fwdOnBlueTouchRed);
+	g_LR.AddHook(OnPlayerHurt, fwdOnPlayerHurt);
+
+	JB_Hook(OnDownloads, fwdOnDownloads);
+	JB_Hook(OnClientInduction, fwdOnClientInduction);
 }

@@ -1,19 +1,18 @@
 char
-	strCustomLR[64],						// Used for formatting the player custom lr on say hook
 	strBackgroundSong[PLATFORM_MAX_PATH],	// Background song
 	strCellNames[32],						// Names of Cells
 	strCellOpener[32],						// Cell button
 	strFFButton[32],						// FF button
 	strRebelParticles[64],					// Rebel particles
 	strFreedayParticles[64],				// Freeday particles
-	strWardenParticles[64]					// Warden particles
+	strWardenParticles[64],					// Warden particles
+	strLRPath[64]							// Path to lastrequests.cfg
 ;
 
 int
 	iHalo,									// Particle
 	iLaserBeam,								// Particle
 	iHalo2,									// Particle
-	iHHHParticle[MAX_TF_PLAYERS][3],		// HHH particles
 	iRebelColors[4], 						// Rebel colors
 	iFreedayColors[4], 						// Freeday colors
 	iWardenColors[4] 						// Warden colors
@@ -30,14 +29,28 @@ float
 ;
 
 bool
-	bLate									// Late-loaded plugin
+	bLate,									// Late-loaded plugin
+#if defined _SteamWorks_Included
+	g_bSteam,								// SteamWorks enabled
+#endif
+#if defined _sourcebans_included || defined _sourcebanspp_included
+//	g_bSB,									// SourceBans enabled
+#endif
+#if defined _voiceannounce_ex_included
+//	g_bVA,									// VoiceAnnounce_Ex enabled
+#endif
+#if defined __tf_ontakedamage_included
+	g_bTFOTD,								// TFOnTakeDamage enabled
+#endif
+	g_bTF2Attribs,							// TF2Attributes enabled
+	g_bSC									// SourceComms enabled
 ;
 
 StringMap
 	hJailFields[MAX_TF_PLAYERS]				// Get/Set
 ;
 
-methodmap JailFighter
+methodmap JailFighter < JBPlayer
 {
 	public JailFighter( const int ind )
 	{
@@ -54,347 +67,31 @@ methodmap JailFighter
 		return view_as< JailFighter >(thing);
 	}
 
-	property int index
-	{
-		public get()				{ return view_as< int >(this); }
-	}
-	property int userid
-	{
-		public get()				{ return GetClientUserId(view_as< int >(this)); }
-	}
-
 	property StringMap hMap
 	{
 		public get()				{ return hJailFields[view_as< int >(this)]; }
 	}
 
-	property int iCustom
-	{
-		public get()
-		{
-			int i; hJailFields[this.index].GetValue("iCustom", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			hJailFields[this.index].SetValue("iCustom", i);
-		}
-	}
-	property int iKillCount
-	{
-		public get()
-		{
-			int i; hJailFields[this.index].GetValue("iKillCount", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			hJailFields[this.index].SetValue("iKillCount", i);
-		}
-	}
-	property int iRebelParticle
-	{
-		public get()
-		{
-			int i; hJailFields[this.index].GetValue("iRebelParticle", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			hJailFields[this.index].SetValue("iRebelParticle", i);
-		}
-	}
-	property int iFreedayParticle
-	{
-		public get()
-		{
-			int i; hJailFields[this.index].GetValue("iFreedayParticle", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			hJailFields[this.index].SetValue("iFreedayParticle", i);
-		}
-	}
-	property int iWardenParticle
-	{
-		public get()
-		{
-			int i; hJailFields[this.index].GetValue("iWardenParticle", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			hJailFields[this.index].SetValue("iWardenParticle", i);
-		}
-	}
-	property int iHealth
-	{
-		public get()
-		{
-			int i; hJailFields[this.index].GetValue("iHealth", i);
-			return i;
-		}
-		public set( const int i )
-		{
-			hJailFields[this.index].SetValue("iHealth", i);
-		}
-	}
-
-	property bool bIsWarden
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bIsWarden", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bIsWarden", i);
-		}
-	}
-	property bool bIsMuted
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bIsMuted", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bIsMuted", i);
-		}
-	}
-	property bool bIsQueuedFreeday
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bIsQueuedFreeday", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bIsQueuedFreeday", i);
-		}
-	}
-	property bool bIsFreeday
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bIsFreeday", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bIsFreeday", i);
-		}
-	}
-	property bool bLockedFromWarden
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bLockedFromWarden", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bLockedFromWarden", i);
-		}
-	}
-	property bool bIsVIP
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bIsVIP", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bIsVIP", i);
-		}
-	}
-	property bool bIsAdmin
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bIsAdmin", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bIsAdmin", i);
-		}
-	}
-	property bool bIsHHH
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bIsHHH", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bIsHHH", i);
-		}
-	}
-	property bool bInJump
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bInJump", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bInJump", i);
-		}
-	}
-	property bool bUnableToTeleport
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bUnableToTeleport", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bUnableToTeleport", i);
-		}
-	}
-	property bool bLasering
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bLasering", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bLasering", i);
-		}
-	}
-	property bool bVoted
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bVoted", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bVoted", i);
-		}
-	}
-	property bool bIsRebel
-	{
-		public get()
-		{
-			bool i; hJailFields[this.index].GetValue("bIsRebel", i);
-			return i;
-		}
-		public set( const bool i )
-		{
-			hJailFields[this.index].SetValue("bIsRebel", i);
-		}
-	}
 	property bool bNoMusic
 	{
 		public get()
 		{
 			if (!AreClientCookiesCached(this.index))
 				return false;
+
 			char strMusic[4];
-			GetClientCookie(this.index, MusicCookie, strMusic, sizeof(strMusic));
-			return (StringToInt(strMusic) == 1);
+			MusicCookie.Get(this.index, strMusic, sizeof(strMusic));
+			return !!StringToInt(strMusic);
 		}
 		public set( const bool i )
 		{
 			if (!AreClientCookiesCached(this.index))
 				return;
-			int value = (i ? 1 : 0);
+
 			char strMusic[4];
-			IntToString(value, strMusic, sizeof(strMusic));
-			SetClientCookie(this.index, MusicCookie, strMusic);
+			IntToString(i, strMusic, sizeof(strMusic));
+			MusicCookie.Set(this.index, strMusic);
 		}
-	}
-
-	property float flSpeed
-	{
-		public get()
-		{
-			float i; hJailFields[this.index].GetValue("flSpeed", i);
-			return i;
-		}
-		public set( const float i )
-		{
-			hJailFields[this.index].SetValue("flSpeed", i);
-		}
-	}
-	property float flKillingSpree
-	{
-		public get()
-		{
-			float i; hJailFields[this.index].GetValue("flKillingSpree", i);
-			return i;
-		}
-		public set( const float i )
-		{
-			hJailFields[this.index].SetValue("flKillingSpree", i);
-		}
-	}
-	property float flHealTime
-	{
-		public get()
-		{
-			float i; hJailFields[this.index].GetValue("flHealTime", i);
-			return i;
-		}
-		public set( const float i )
-		{
-			hJailFields[this.index].SetValue("flHealTime", i);
-		}
-	}
-
-	public any GetProp(const char[] key)
-	{
-		any val; this.hMap.GetValue(key, val);
-		return val;
-	}
-
-	public void SetProp(const char[] key, any val)
-	{
-		this.hMap.SetValue(key, val);
-	}
-
-	public float GetPropFloat(const char[] key)
-	{
-		float val; this.hMap.GetValue(key, val);
-		return val;
-	}
-
-	public void SetPropFloat(const char[] key, float val)
-	{
-		this.hMap.SetValue(key, val);
-	}
-
-	public int GetPropString(const char[] key, char[] buffer, int maxlen)
-	{
-		return this.hMap.GetString(key, buffer, maxlen);
-	}
-
-	public void SetPropString(const char[] key, const char[] val)
-	{
-		this.hMap.SetString(key, val);
-	}
-
-	public void GetPropArray(const char[] key, any[] buffer, int maxlen)
-	{
-		this.hMap.GetArray(key, buffer, maxlen);
-	}
-
-	public void SetPropArray(const char[] key, any[] val, int maxlen)
-	{
-		this.hMap.SetArray(key, val, maxlen);
 	}
 
 	/**
@@ -625,8 +322,8 @@ methodmap JailFighter
 			}
 
 			this.iFreedayParticle = AttachParticle(this.index, strFreedayParticles, _, flFreedayOffset);
-			if (cvarTF2Jail[HideParticles].BoolValue)
-				SDKHook(EntRefToEntIndex(this.iFreedayParticle), SDKHook_SetTransmit, OnParticleTransmit);
+//			if (cvarTF2Jail[HideParticles].BoolValue)
+//				SDKHook(EntRefToEntIndex(this.iFreedayParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
@@ -693,7 +390,8 @@ methodmap JailFighter
 
 		int weapon, clip;
 		int offset = FindSendPropInfo("CTFPlayer", "m_hMyWeapons");	// Thx Mr. Panica
-		for (int i = 0; i <= 188; i += 4)
+		int length = GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons");
+		for (int i = 0; i <= length; i += 4)
 		{
 			weapon = GetEntDataEnt2(client, offset + i);
 			if (weapon != -1)
@@ -738,10 +436,10 @@ methodmap JailFighter
 		if (Call_OnWardenGet(this) != Plugin_Continue)
 			return false;
 
-		if (JBGameMode_GetProperty("bWardenExists"))
+		if (JBGameMode_GetProp("bWardenExists"))
 			return false;
 
-		if (JBGameMode_GetProperty("bIsWardenLocked"))
+		if (JBGameMode_GetProp("bIsWardenLocked"))
 			return false;
 
 		this.bIsWarden = true;	
@@ -749,7 +447,7 @@ methodmap JailFighter
 
 		char strWarden[64];
 		int client = this.index;
-		Format(strWarden, sizeof(strWarden), "%t", "New Warden Center", client);
+		FormatEx(strWarden, sizeof(strWarden), "%t", "New Warden Center", client);
 		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2].fCoord_X, EnumTNPS[2].fCoord_Y, EnumTNPS[2].fHoldTime, EnumTNPS[2].iRed, EnumTNPS[2].iGreen, EnumTNPS[2].iBlue, EnumTNPS[2].iAlpha, EnumTNPS[2].iEffect, EnumTNPS[2].fFXTime, EnumTNPS[2].fFadeIn, EnumTNPS[2].fFadeOut);
 		CPrintToChatAll("%t %t.", "Plugin Tag", "New Warden", client);
 
@@ -783,8 +481,8 @@ methodmap JailFighter
 			}
 
 			this.iWardenParticle = AttachParticle(this.index, strWardenParticles, _, flWardenOffset);
-			if (cvarTF2Jail[HideParticles].BoolValue)
-				SDKHook(EntRefToEntIndex(this.iWardenParticle), SDKHook_SetTransmit, OnParticleTransmit);
+//			if (cvarTF2Jail[HideParticles].BoolValue)
+//				SDKHook(EntRefToEntIndex(this.iWardenParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
@@ -814,14 +512,14 @@ methodmap JailFighter
 		this.bIsWarden = false;
 		this.bLasering = false;
 		this.SetCustomModel("");
-		JBGameMode_SetProperty("iWarden", 0);
-		JBGameMode_SetProperty("bWardenExists", false);
+		JBGameMode_SetProp("iWarden", 0);
+		JBGameMode_SetProp("bWardenExists", false);
 
-		if (JBGameMode_GetProperty("iRoundState") == StateRunning)
+		if (JBGameMode_GetProp("iRoundState") == StateRunning)
 		{
 			float time = cvarTF2Jail[WardenTimer].FloatValue;
 			if (time != 0.0)
-				SetPawnTimer(DisableWarden, time, JBGameMode_GetProperty("iRoundCount"));
+				SetPawnTimer(DisableWarden, time, JBGameMode_GetProp("iRoundCount"));
 		}
 
 		if (this.iWardenParticle != -1)
@@ -835,6 +533,15 @@ methodmap JailFighter
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
 			SetEntityRenderColor(this.index);
+
+		LastRequest lr = JBGameMode_GetCurrentLR();
+		if (lr != null)
+		{
+			KeyValues kv = lr.GetKv();
+			if (kv && kv.JumpToKey("Parameters") && kv.JumpToKey("KillWeapons"))
+				if (kv.GetNum("Warden", 0))
+					TF2_RemoveCondition(this.index, TFCond_RestrictToMelee);
+		}
 
 		Call_OnWardenRemoved(this);
 		return true;
@@ -870,67 +577,6 @@ methodmap JailFighter
 			TF2_RemoveAllWeapons(client);
 	}
 	/**
-	 *	Convert a player into the Horseless Headless Horsemann.
-	 *
-	 *	@noreturn
-	*/
-	public void MakeHorsemann()
-	{
-		int client = this.index;
-
-		int ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
-		if (ragdoll > MaxClients && IsValidEntity(ragdoll)) 
-			AcceptEntityInput(ragdoll, "Kill");
-		char weaponname[32];
-		GetClientWeapon(client, weaponname, sizeof(weaponname));
-		if (!strcmp(weaponname, "tf_weapon_minigun", false)) 
-		{
-			SetEntProp(GetPlayerWeaponSlot(client, 0), Prop_Send, "m_iWeaponState", 0);
-			TF2_RemoveCondition(client, TFCond_Slowed);
-		}
-		//TF2_SwitchtoSlot(client, TFWeaponSlot_Melee);
-		this.PreEquip();
-		this.SpawnWeapon("tf_weapon_sword", 266, 100, 5, "264 ; 1.75 ; 263 ; 1.3 ; 15 ; 0 ; 2 ; 3.1 ; 107 ; 4.0 ; 109 ; 0.0 ; 68 ; -2 ; 53 ; 1.0 ; 27 ; 1.0");
-
-		char sClassName[64];
-		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
-		if (wep > MaxClients && IsValidEdict(wep) && GetEdictClassname(wep, sClassName, sizeof(sClassName)))
-			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
-
-		this.SetCustomModel("models/bots/headless_hatman.mdl");
-		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
-		SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.25);
-		SetEntProp(wep, Prop_Send, "m_iWorldModelIndex", PrecacheModel("models/weapons/c_models/c_bigaxe/c_bigaxe.mdl"));
-		SetEntProp(wep, Prop_Send, "m_nModelIndexOverrides", PrecacheModel("models/weapons/c_models/c_bigaxe/c_bigaxe.mdl"), _, 0);
-
-		SetVariantInt(1);
-		AcceptEntityInput(client, "SetForcedTauntCam");
-
-		SetEntProp(client, Prop_Send, "m_iHealth", 1500);
-		DoHorsemannParticles(client);
-		this.bIsHHH = true;
-	}
-	/**
-	 *	Terminate a player as the Horseless Headless Horsemann.
-	 *
-	 *	@noreturn
-	*/
-	public void UnHorsemann()
-	{
-		int client = this.index;
-
-		SetVariantString("");
-		AcceptEntityInput(client, "SetCustomModel");
-		SetEntPropFloat(client, Prop_Data, "m_flModelScale", 1.0);
-		SetVariantInt(0);
-		AcceptEntityInput(client, "SetForcedTauntCam");
-		ClearHorsemannParticles(client);
-
-		if (IsPlayerAlive(client))
-			ResetPlayer(client);
-		this.bIsHHH = false;
-	}
-	/**
 	 *	Teleport a player either to a freeday or warday location.
 	 *	@note 				If gamemode teleport properties are not true, player will not be teleported.
 	 *
@@ -942,9 +588,9 @@ methodmap JailFighter
 	{
 		switch (location)
 		{
-			case 1:if (JBGameMode_GetProperty("bFreedayTeleportSet")) { TeleportEntity(this.index, vecFreedayPosition, NULL_VECTOR, NULL_VECTOR); return true; }
-			case 2:if (JBGameMode_GetProperty("bWardayTeleportSetRed")) { TeleportEntity(this.index, vecWardayRed, NULL_VECTOR, NULL_VECTOR); return true; }
-			case 3:if (JBGameMode_GetProperty("bWardayTeleportSetBlue")) { TeleportEntity(this.index, vecWardayBlu, NULL_VECTOR, NULL_VECTOR); return true; }
+			case 1:if (JBGameMode_GetProp("bFreedayTeleportSet")) { TeleportEntity(this.index, vecFreedayPosition, NULL_VECTOR, NULL_VECTOR); return true; }
+			case 2:if (JBGameMode_GetProp("bWardayTeleportSetRed")) { TeleportEntity(this.index, vecWardayRed, NULL_VECTOR, NULL_VECTOR); return true; }
+			case 3:if (JBGameMode_GetProp("bWardayTeleportSetBlue")) { TeleportEntity(this.index, vecWardayBlu, NULL_VECTOR, NULL_VECTOR); return true; }
 		}
 		return false;
 	}
@@ -959,14 +605,13 @@ methodmap JailFighter
 			return;
 
 		Menu menu = new Menu(ListLRsMenu);
-		menu.AddItem("-1", "Random LR");
-		AddLRsToMenu(menu);
+		AddLRsToMenu(this, menu);
 		menu.Display(this.index, 0);
 
 		Call_OnLRGiven(this);
 		int time = cvarTF2Jail[LRTimer].IntValue;
-		if (time/* && JBGameMode_GetProperty("iTimeLeft") > time*/)
-			JBGameMode_SetProperty("iTimeLeft", time);
+		if (time/* && JBGameMode_GetProp("iTimeLeft") > time*/)
+			JBGameMode_SetProp("iTimeLeft", time);
 	}
 	/**
 	 *	Give a player the warden menu.
@@ -978,7 +623,7 @@ methodmap JailFighter
 		if (IsVoteInProgress())
 			return;
 
-		view_as< Menu >(JBGameMode_GetProperty("hWardenMenu")).Display(this.index, 0);		// Absolutely disgusting
+		view_as< Menu >(JBGameMode_GetProp("hWardenMenu")).Display(this.index, 0);		// Absolutely disgusting
 	}
 	/**
 	 *	Allow a player to climb walls upon hitting them.
@@ -1047,8 +692,8 @@ methodmap JailFighter
 	*/
 	public void AttemptFireWarden()
 	{
-		int votes = JBGameMode_GetProperty("iVotes");
-		int total = JBGameMode_GetProperty("iVotesNeeded");
+		int votes = JBGameMode_GetProp("iVotes");
+		int total = JBGameMode_GetProp("iVotesNeeded");
 		if (this.bVoted)
 		{
 			CPrintToChat(this.index, "%t %t", "Plugin Tag", "Fire Warden Already Voted", votes, total);
@@ -1057,7 +702,7 @@ methodmap JailFighter
 
 		this.bVoted = true;
 		++votes;
-		JBGameMode_SetProperty("iVotes", votes);
+		JBGameMode_SetProp("iVotes", votes);
 		CPrintToChatAll("%t %t", "Plugin Tag", "Fire Warden Requested", this.index, votes, total);
 
 		if (votes >= total)
@@ -1076,7 +721,7 @@ methodmap JailFighter
 		if (!cvarTF2Jail[Rebellers].BoolValue)
 			return;
 
-		if (JBGameMode_GetProperty("bIgnoreRebels"))
+		if (JBGameMode_GetProp("bIgnoreRebels"))
 			return;
 
 		if (Call_OnRebelGiven(this) != Plugin_Continue)
@@ -1093,8 +738,8 @@ methodmap JailFighter
 			}
 
 			this.iRebelParticle = AttachParticle(this.index, strRebelParticles, _, flRebelOffset);
-			if (cvarTF2Jail[HideParticles].BoolValue)
-				SDKHook(EntRefToEntIndex(this.iRebelParticle), SDKHook_SetTransmit, OnParticleTransmit);
+//			if (cvarTF2Jail[HideParticles].BoolValue)
+//				SDKHook(EntRefToEntIndex(this.iRebelParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
@@ -1106,7 +751,7 @@ methodmap JailFighter
 		if (time != 0.0)
 		{
 			CPrintToChat(this.index, "%t %t", "Plugin Tag", "Rebel Timer Start", RoundFloat(time));
-			SetPawnTimer(RemoveRebel, time, this.userid, JBGameMode_GetProperty("iRoundCount"));
+			SetPawnTimer(RemoveRebel, time, this.userid, JBGameMode_GetProp("iRoundCount"));
 		}
 	}
 	/**
@@ -1142,7 +787,7 @@ methodmap JailFighter
 		CPrintToChatAll("%t %t", "Plugin Tag", "Warden Invite Player", this.index, other.index);
 		Menu menu = new Menu(InviteReceiveMenu);
 		menu.SetTitle("%t", "Menu Title Invited");
-		char s[16];
+		char s[32];
 
 		FormatEx(s, sizeof(s), "%t", "Join");
 		menu.AddItem("0", s);

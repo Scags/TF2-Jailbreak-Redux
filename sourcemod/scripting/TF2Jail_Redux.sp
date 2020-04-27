@@ -4,30 +4,12 @@
 	   | |   |  _|    / __/  | |_| | | (_| | | | | |   |  _ <  |  __/ | (_| | | |_| |  >  < 
 	   |_|   |_|     |_____|  \___/   \__,_| |_| |_|   |_| \_\  \___|  \__,_|  \__,_| /_/\_\ */
 
-/**
- **	TF2Jail_Redux.sp: Contains the core functions of the plugin, along with natives. 			   **
- **	jailbase.sp: Player methodmap properties plus a few handy variables. 						   **
- **	jailgamemode.sp: Gamemode methodmap properties that control gameplay functionality.			   **
- **	jailevents.sp: Events of the plugin that are organized and managed by...					   **
- **	jailhandler.sp: Logic of gamemode behavior under any circumstance, functions called from core. **
- **	jailcommands.sp: Commands and some of the menus corresponding to commands. 					   **
- **	stocks.inc: Stock functions used or could possibly be used within plugin. 					   **
- **	jailforwards.sp: Contains external gamemode third-party functionality, leave it alone. 		   **
- **	tf2jailredux.inc: External gamemode third-party functionality, leave it alone. 				   **
- **	If you're here to give some more uniqueness to the plugin, check jailhandler. 	 			   **
- **	It's fixed with a variety of not only last request examples, but gameplay event management.	   **
- **	VSH and PH are standalone subplugins, if there is an issue with them, simply delete them.	   **
- **/
-
-#file "TF2Jail_Redux"
-#line 23	// Dumb lol
-
-#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR == 9
+#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR <= 9
   #error This plugin requires SourceMod 1.10 and above
 #endif
 
 #define PLUGIN_NAME 		"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION 		"1.4.2"
+#define PLUGIN_VERSION 		"2.0.0Beta"
 #define PLUGIN_AUTHOR 		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION 	"Deluxe version of TF2Jail"
 
@@ -50,6 +32,7 @@
 #endif
 #tryinclude <sourcecomms>
 #tryinclude <voiceannounce_ex>
+#tryinclude <tf_ontakedamage>
 #define REQUIRE_PLUGIN
 
 #pragma semicolon 			1
@@ -85,7 +68,7 @@ enum	// Cvar name
 	AdmFlag,
 	DisableBlueMute,
 	Markers,
-	CritType,
+	BlueCritType,
 	MuteType,
 	LivingMuteType,
 	Disguising,
@@ -123,7 +106,7 @@ enum	// Cvar name
 };
 
 enum struct TextNodeParam
-{	// Hud Text Paramaters
+{	// Hud Text Parameters
 	float fCoord_X;
 	float fCoord_Y;
 	float fHoldTime;
@@ -153,13 +136,16 @@ enum struct TargetFilter
 ConVar
 	cvarTF2Jail[Version + 1],
 	bEnabled,
-	hEngineConVars[3]
+	hEngineConVars[2]
 ;
 
 Handle
 	hTextNodes[4],
-	MusicCookie,
 	AimHud
+;
+
+Cookie
+	MusicCookie
 ;
 
 public Plugin myinfo =
@@ -172,11 +158,18 @@ public Plugin myinfo =
 };
 
 #include "TF2JailRedux/stocks.inc"
+#include "TF2JailRedux/jailbase.sp"
+#include "TF2JailRedux/jailgamemode.sp"
+
+JailGameMode gamemode;
+
 #include "TF2JailRedux/jailhandler.sp"
 #include "TF2JailRedux/jailforwards.sp"
 #include "TF2JailRedux/jailevents.sp"
 #include "TF2JailRedux/jailcommands.sp"
 #include "TF2JailRedux/targetfilters.sp"
+#include "TF2JailRedux/functable.sp"
+#include "TF2JailRedux/natives.sp"
 
 public void OnPluginStart()
 {
@@ -211,7 +204,7 @@ public void OnPluginStart()
 	cvarTF2Jail[AdmFlag] 					= CreateConVar("sm_tf2jr_admin_flag", "b", "What admin flag do admins fall under? Leave blank to disable Admin perks.", FCVAR_NOTIFY);
 	cvarTF2Jail[DisableBlueMute] 			= CreateConVar("sm_tf2jr_blue_mute", "1", "Disable joining blue team for muted players?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[Markers] 					= CreateConVar("sm_tf2jr_warden_markers", "3", "Warden markers lifetime in seconds? (0 to disable them entirely)", FCVAR_NOTIFY, true, 0.0, true, 30.0);
-	cvarTF2Jail[CritType] 					= CreateConVar("sm_tf2jr_criticals", "2", "What type of criticals should guards get? 0 = none; 1 = mini-crits; 2 = full crits", FCVAR_NOTIFY, true, 0.0, true, 2.0);
+	cvarTF2Jail[BlueCritType] 				= CreateConVar("sm_tf2jr_criticals", "2", "What type of criticals should guards get? 0 = none; 1 = mini-crits; 2 = full crits", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	cvarTF2Jail[MuteType] 					= CreateConVar("sm_tf2jr_muting", "6", "What type of dead player muting should occur? 0 = none; 1 = red players(except VIPs); 2 = blue players(except VIPs); 3 = all players(except VIPs); 4 = all red players; 5 = all blue players; 6 = everybody. ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
 	cvarTF2Jail[LivingMuteType] 			= CreateConVar("sm_tf2jr_live_muting", "1", "What type of living player muting should occur? 0 = none; 1 = red players(except VIPs); 2 = blue players(except VIPs and warden); 3 = all players(except VIPs and warden); 4 = all red players; 5 = all blue players(except warden); 6 = everybody(except warden). ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
 	cvarTF2Jail[Disguising] 				= CreateConVar("sm_tf2jr_disguising", "0", "What teams can disguise, if any? (Your Eternal Reward only) 0 = no disguising; 1 = only Red can disguise; 2 = Only blue can disguise; 3 = all players can disguise", FCVAR_NOTIFY, true, 0.0, true, 3.0);
@@ -251,7 +244,7 @@ public void OnPluginStart()
 		/* Used in core*/
 	HookEvent("player_spawn", OnPlayerSpawn);
 	HookEvent("player_death", OnPlayerDeath, EventHookMode_Pre);
-	HookEvent("player_hurt", OnPlayerHurt, EventHookMode_Pre);
+	HookEvent("player_hurt", OnPlayerDamaged, EventHookMode_Pre);
 	HookEvent("teamplay_round_start", OnPreRoundStart);
 	HookEvent("arena_round_start", OnArenaRoundStart);
 	HookEvent("teamplay_round_win", OnRoundEnded);
@@ -359,13 +352,11 @@ public void OnPluginStart()
 	RegAdminCmd("sm_ipreset", Preset, ADMFLAG_GENERIC, "gamemode.iLRPresetType. (DEBUGGING)");
 	RegAdminCmd("sm_getprop", GameModeProp, ADMFLAG_GENERIC, "Retrieve a gamemode property value. (DEBUGGING)");
 	RegAdminCmd("sm_getpprop", BaseProp, ADMFLAG_GENERIC, "Retrieve a base player property value. (DEBUGGING)");
-	RegAdminCmd("sm_len", PluginLength, ADMFLAG_GENERIC, "hPlugins.Length. (DEBUGGING)");
-	RegAdminCmd("sm_lrlen", hLRSLength, ADMFLAG_GENERIC, "gamemode.hLRS.Length. (DEBUGGING)");
+	RegAdminCmd("sm_lrlen", hLRSLength, ADMFLAG_GENERIC, "gamemode.hLRS.Size. (DEBUGGING)");
 	RegAdminCmd("sm_jailreset", AdminResetPlugin, ADMFLAG_ROOT, "Reset all plug-in global variables. (DEBUGGING)");
 
 	hEngineConVars[0] = FindConVar("mp_friendlyfire");
 	hEngineConVars[1] = FindConVar("tf_avoidteammates_pushaway");
-	hEngineConVars[2] = FindConVar("sv_gravity");
 
 	AimHud = CreateHudSynchronizer();
 
@@ -389,7 +380,7 @@ public void OnPluginStart()
 
 	AddNormalSoundHook(SoundHook);
 
-	MusicCookie = RegClientCookie("sm_tf2jr_music", "Determines if client wishes to listen to background music played by the plugin/LRs", CookieAccess_Protected);
+	MusicCookie = new Cookie("sm_tf2jr_music", "Determines if client wishes to listen to background music played by the plugin/LRs", CookieAccess_Protected);
 
 	int i;
 
@@ -409,73 +400,87 @@ public void OnPluginStart()
 		hTextNodes[i] = CreateHudSynchronizer();
 
 	hJailFields[0] = new StringMap();
-	gamemode.hLRS = new ArrayList(1, LRMAX+1);	// Registering plugins pushes indexes to hLRS, we also start at 0 so +1
 
-	HookEntityOutput("item_ammopack_full", "OnCacheInteraction", OnEntTouch);
-	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnEntTouch);
-	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnEntTouch);
-	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnEntTouch);
-}
+	HookEntityOutput("item_ammopack_full", "OnCacheInteraction", OnTakeAmmo);
+	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnTakeAmmo);
+	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnTakeAmmo);
+	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnTakeAmmo);
 
-public void OnAllPluginsLoaded()
-{
-#if defined _SteamWorks_Included
-	gamemode.bSteam = LibraryExists("SteamWorks");
-#endif
-#if defined _sourcebans_included || defined _sourcebanspp_included
-	gamemode.bSB = LibraryExists("sourcebans") || LibraryExists("sourcebans++");
-#endif
-#if defined _voiceannounce_ex_included
-	gamemode.bVA = LibraryExists("voiceannounce_ex");
-#endif
-	gamemode.bSC = LibraryExists("sourcecomms") || LibraryExists("sourcecomms++");	// Sourcecomms/sb++ uses conflicting filenames, does this work?
-	gamemode.bTF2Attribs = LibraryExists("tf2attributes");
+	ParseLRConfig();	// Only happens once
 }
 
 public void OnLibraryAdded(const char[] name)
 {
 #if defined _SteamWorks_Included
 	if (!strcmp(name, "SteamWorks", false))
-		gamemode.bSteam = true;
+		g_bSteam = true;
 #endif
 #if defined _sourcebans_included || defined _sourcebanspp_included
-	if (!strcmp(name, "sourcebans", false) || !strcmp(name, "sourcebans++", false))
-		gamemode.bSB = true;
+//	if (!StrContains(name, "sourcebans", false))
+//		g_bSB = true;
 #endif
 #if defined _voiceannounce_ex_included
-	if (!strcmp(name, "voiceannounce_ex", false))
-		gamemode.bVA = true;
+//	if (!strcmp(name, "voiceannounce_ex", false))
+//		g_bVA = true;
+#endif
+#if defined __tf_ontakedamage_included
+	if (!strcmp(name, "tf_ontakedamage", false))
+		g_bTFOTD = true;
 #endif
 	if (!StrContains(name, "sourcecomms", false))
-		gamemode.bSC = true;
+		g_bSC = true;
 	if (!strcmp(name, "tf2attributes", false))
-		gamemode.bTF2Attribs = true;
+		g_bTF2Attribs = true;
 }
 
 public void OnLibraryRemoved(const char[] name)
 {
 #if defined _SteamWorks_Included
 	if (!strcmp(name, "SteamWorks", false))
-		gamemode.bSteam = false;
+		g_bSteam = false;
 #endif
 #if defined _sourcebans_included || defined _sourcebanspp_included
-	if (!StrContains(name, "sourcebans"))
-		gamemode.bSB = false;
+//	if (!StrContains(name, "sourcebans"))
+//		g_bSB = false;
 #endif
 #if defined _voiceannounce_ex_included
-	if (!strcmp(name, "voiceannounce_ex", false))
-		gamemode.bVA = false;
+//	if (!strcmp(name, "voiceannounce_ex", false))
+//		g_bVA = false;
+#endif
+#if defined __tf_ontakedamage_included
+	if (!strcmp(name, "tf_ontakedamage", false))
+		g_bTFOTD = false;
 #endif
 	if (!StrContains(name, "sourcecomms", false))
-		gamemode.bSC = false;
+		g_bSC = false;
 	if (!strcmp(name, "tf2attributes", false))
-		gamemode.bTF2Attribs = false;
+		g_bTF2Attribs = false;
 }
 
 public void OnPluginEnd()
 {
-	// Execute all OnMapEnd functionality whenever the plugin ends.
-	OnMapEnd();
+	StopBackGroundMusic();
+
+	if (gamemode.iRoundState == StateRunning)
+	{
+//		OnRoundEnded(null, "", false);	// Ok sourcemod, you win
+		// OnLibraryRemoved for myself fires before OnPluginEnd,
+		// so that means that the current lr (if there was one)
+		// would/could have its handle freed, and then we can't fire 
+		// functions for it because it's null!
+
+		// SOOOO. DONT RELOAD THE PLUGIN DURING AN LR THAT SETS
+		// CONVARS AND SHIT YOU FUCKIGAHDFBSUHNJSF
+	}
+
+	ConvarsSet(false);
+
+	int i, u;
+	for (i = MaxClients; i; --i)
+		if (IsClientInGame(i))
+			for (u = 0; u < sizeof(hTextNodes); ++u)
+				if (hTextNodes[u] != null)
+					ClearSyncHud(i, hTextNodes[u]);
 }
 
 public void OnMapStart()
@@ -491,16 +496,16 @@ public void OnMapStart()
 	ManageDownloads();	// Handler
 
 	// This code isn't mine, but idk who did this before
-//	HookEntityOutput("item_ammopack_full", "OnCacheInteraction", OnEntTouch);
-//	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnEntTouch);
-//	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnEntTouch);
-//	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnEntTouch);
+//	HookEntityOutput("item_ammopack_full", "OnCacheInteraction", OnTakeAmmo);
+//	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnTakeAmmo);
+//	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnTakeAmmo);
+//	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnTakeAmmo);
 //	https://github.com/alliedmodders/sourcemod/blob/master/extensions/sdktools/outputnatives.cpp#L141-L144 ;-;
 
-	int len = gamemode.hLRS.Length;
+	int len = gamemode.hLRCount.Length;
 	int i;
 	for (i = 0; i < len; ++i)
-		gamemode.hLRS.Set( i, 0 );
+		gamemode.hLRCount.Set( i, 0 );
 
 	if (!bLate)
 	{
@@ -520,10 +525,10 @@ public void OnConfigsExecuted()
 	BuildMenu();
 
 #if defined _SteamWorks_Included
-	if (gamemode.bSteam)
+	if (g_bSteam)
 	{
 		char sDescription[32];
-		Format(sDescription, sizeof(sDescription), "TF2Jail Redux v%s", PLUGIN_VERSION);
+		FormatEx(sDescription, sizeof(sDescription), "TF2Jail Redux v%s", PLUGIN_VERSION);
 		SteamWorks_SetGameDescription(sDescription);
 	}
 #endif
@@ -534,10 +539,19 @@ public void OnMapEnd()
 	// gamemode.Init();		// Clears plugin/extension dependencies
 	StopBackGroundMusic();
 
-	hEngineConVars[2].SetInt(800);	// For admins like sans who force change the map during the low gravity LR
-	ConvarsSet(false);
+	if (gamemode.iRoundState == StateRunning)
+		OnRoundEnded(null, "", false);
 
 	gamemode.iLRPresetType = -1;
+
+	ConvarsSet(false);
+
+	int i, u;
+	for (i = MaxClients; i; --i)
+		if (IsClientInGame(i))
+			for (u = 0; u < sizeof(hTextNodes); ++u)
+				if (hTextNodes[u] != null)
+					ClearSyncHud(i, hTextNodes[u]);
 }
 
 public void OnClientConnected(int client)
@@ -576,11 +590,11 @@ public void OnClientPutInServer(int client)
 	player.bLockedFromWarden = false;
 	//player.bIsVIP = false;
 	//player.bIsAdmin = false;
-	player.bIsHHH = false;
 	player.bInJump = false;
 	player.bUnableToTeleport = false;
 	player.bLasering = false;
 	player.bIsRebel = false;
+	player.bSkipPrep = false;
 	player.flSpeed = 0.0;
 	player.flKillingSpree = 0.0;
 	player.flHealTime = 0.0;
@@ -591,23 +605,17 @@ public void OnClientPutInServer(int client)
 
 public void OnClientPostAdminCheck(int client)
 {
-	char strVIP[2]; cvarTF2Jail[VIPFlag].GetString(strVIP, sizeof(strVIP));
-	char strAdmin[2]; cvarTF2Jail[AdmFlag].GetString(strAdmin, sizeof(strAdmin));
+	char strVIP[16]; cvarTF2Jail[VIPFlag].GetString(strVIP, sizeof(strVIP));
+	char strAdmin[16]; cvarTF2Jail[AdmFlag].GetString(strAdmin, sizeof(strAdmin));
 
 	JailFighter player = JailFighter(client);
 
-	if (strVIP[0] != '\0' && IsValidAdmin(client, strVIP)) // Very useful stock ^^
-		player.bIsVIP = true;
-	else player.bIsVIP = false;
-
-	if (strAdmin[0] != '\0' && IsValidAdmin(client, strAdmin))
-		player.bIsAdmin = true;
-	else player.bIsAdmin = false;
+	player.bIsVIP = (strVIP[0] != '\0' && IsValidAdmin(client, strVIP)); // Very useful stock ^^
+	player.bIsAdmin = (strAdmin[0] != '\0' && IsValidAdmin(client, strAdmin));
 
 	if (!AlreadyMuted(client))
 		SetClientListeningFlags(client, VOICE_NORMAL);
 	// Brute force them to be unmuted, then let properties take over
-
 	gamemode.ToggleMuting(player);
 }
 
@@ -624,7 +632,7 @@ public void OnClientDisconnect(int client)
 	if (player.bIsWarden)
 	{
 		player.WardenUnset();
-		PrintCenterTextAll("%t","Warden Disconnected");
+		PrintCenterTextAll("%t", "Warden Disconnected");
 	}
 	// If they're warden, they wouldn't vote... right?
 	else if (gamemode.iVotes >= gamemode.iVotesNeeded)
@@ -639,8 +647,8 @@ public Action OnTouch(int toucher, int touchee)
 	if (!IsClientValid(toucher) || !IsClientValid(touchee))
 		return Plugin_Continue;
 
-	if (GetClientTeam(toucher) == RED && GetClientTeam(touchee) == BLU)
-		ManageRedTouchBlue(JailFighter(toucher), JailFighter(touchee));	// Handler
+	if (GetClientTeam(toucher) != GetClientTeam(touchee))
+		ManageTouch(JailFighter(toucher), JailFighter(touchee));	// Handler
 
 	return Plugin_Continue;
 }
@@ -732,7 +740,7 @@ public Action Timer_Announce(Handle timer)
 
 public Action Timer_Round(Handle timer)
 {
-	if (!bEnabled.BoolValue || gamemode.iRoundState == StateEnding)
+	if (!bEnabled.BoolValue || gamemode.iRoundState == StateEnding || gamemode.iTimeLeft < 0)
 		return Plugin_Stop;
 
 	int time = gamemode.iTimeLeft;
@@ -741,7 +749,7 @@ public Action Timer_Round(Handle timer)
 
 	if (time / 60 > 9)
 		IntToString(time / 60, time2, 6);
-	else Format(time2, 6, "0%i", time / 60);
+	else FormatEx(time2, 6, "0%i", time / 60);
 
 	if (time % 60 > 9)
 		Format(time2, 6, "%s:%i", time2, time % 60);
@@ -757,7 +765,7 @@ public Action Timer_Round(Handle timer)
 		case 1, 2, 3, 4, 5: 
 		{
 			char sound[PLATFORM_MAX_PATH];
-			Format(sound, PLATFORM_MAX_PATH, "vo/announcer_ends_%isec.mp3", time);
+			FormatEx(sound, PLATFORM_MAX_PATH, "vo/announcer_ends_%isec.mp3", time);
 			EmitSoundToAll(sound);
 		}
 		case 0:
@@ -808,7 +816,24 @@ public Action OnPlayerTakeDamage(int victim, int &attacker, int &inflictor, floa
 	return ManageOnTakeDamage(JailFighter(victim), attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 }
 
-public void OnEntTouch(const char[] output, int touchee, int toucher, float delay)
+#if defined __tf_ontakedamage_included
+public Action TF2_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom, CritType &critType)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Continue;
+
+	if (IsClientValid(attacker) && attacker != victim
+		&& weapon != -1 && critType < CritType_MiniCrit && GetClientTeam(attacker) == BLU
+		&& !gamemode.bDisableCriticals && cvarTF2Jail[BlueCritType].IntValue == 1)
+	{
+		critType = CritType_MiniCrit;
+		return Plugin_Changed;
+	}
+	return Plugin_Continue;
+}
+#endif
+
+public void OnTakeAmmo(const char[] output, int touchee, int toucher, float delay)
 {
 	if (!bEnabled.BoolValue)
 		return;
@@ -816,7 +841,7 @@ public void OnEntTouch(const char[] output, int touchee, int toucher, float dela
 	if (!IsClientValid(toucher))
 		return;
 
-	int action =  cvarTF2Jail[RebelAmmo].IntValue;
+	int action = cvarTF2Jail[RebelAmmo].IntValue;
 	if (!action)
 		return;
 
@@ -1060,7 +1085,7 @@ public void ParseNodeConfig()
 		EnumTNPS[count].fFadeOut = kv.GetFloat("FadeOut", 0.2);
 
 		++count;
-	} while kv.GotoNextKey(false);
+	}	while kv.GotoNextKey(false);
 
 	delete kv;
 }
@@ -1082,6 +1107,60 @@ public void ParseRoleRenderersConfig()
 	SetRoleRender(kv, "Warden", iWardenColors, strWardenParticles, sizeof(strWardenParticles), flWardenOffset);
 	SetRoleRender(kv, "Freedays", iFreedayColors, strFreedayParticles, sizeof(strFreedayParticles), flFreedayOffset);
 	SetRoleRender(kv, "Rebellers", iRebelColors, strRebelParticles, sizeof(strRebelParticles), flRebelOffset);
+
+	delete kv;
+}
+
+public void ParseLRConfig()
+{
+	if (strLRPath[0] == '\0')
+		BuildPath(Path_SM, strLRPath, sizeof(strLRPath), "configs/tf2jail/lastrequests.cfg");
+
+	KeyValues kv = new KeyValues("TF2Jail_LastRequests");
+	if (!FileExists(strLRPath) || !kv.ImportFromFile(strLRPath))
+	{
+		LogError("Last Request config not found '%s', are you sure you don't need it?", strLRPath);
+		delete kv;
+		return;
+	}
+
+	if (kv.GotoFirstSubKey())
+	{
+		LastRequest lr;
+		KeyValues imprt;
+		char name[MAX_LRNAME_LENGTH];
+		char id[4];		// HOW COULD YOU HAVE MORE THAN 1000 LAST REQUESTS?!
+
+		do
+		{
+			kv.GetSectionName(name, sizeof(name));
+			if (kv.JumpToKey("Parameters", false))
+			{
+				bool dis = !!kv.GetNum("Disabled", 0);	// Skip disabled
+				kv.GoBack();
+				if (dis)
+					continue;
+			}
+
+			lr = view_as< LastRequest >(new StringMap());
+
+//			kv.GetString("Name", name, sizeof(name));
+			gamemode.hLRS.SetValue(name, lr);
+
+			lr.SetValue("__LRID", gamemode.iLRs);
+			IntToString(gamemode.iLRs, id, sizeof(id));
+			gamemode.hLRS.SetValue(id, lr);		// Int-Map it so it can be grabbed both by name and index
+
+			imprt = new KeyValues(name);
+			imprt.Import(kv);		// Grab the subkeys
+			lr.SetValue("__KV", imprt);
+			lr.SetValue("__FUNCS", new FuncTable(JBFWD_LENGTH));
+
+			++gamemode.iLRs;
+			gamemode.hLRCount.Push(0);
+
+		}	while kv.GotoNextKey();
+	}
 
 	delete kv;
 }
@@ -1123,7 +1202,7 @@ public void BuildMenu()
 		kv.GetSectionName(id, sizeof(id));
 		kv.GetString(NULL_STRING, name, sizeof(name));
 		menu.AddItem(id, name);
-	} while kv.GotoNextKey(false);
+	} 	while kv.GotoNextKey(false);
 
 	delete kv;
 	ManageWardenMenu(menu);		// Handler
@@ -1132,7 +1211,7 @@ public void BuildMenu()
 
 public bool AlreadyMuted(const int client)
 {
-	switch (gamemode.bSC)
+	switch (g_bSC)
 	{
 #if defined _sourcecomms_included
 		case true:return SourceComms_GetClientMuteType(client) != bNot;
@@ -1158,32 +1237,6 @@ public void WelcomeMessage(const int userid)
 		CPrintToChat(client, "%t %t", "Plugin Tag", "Welcome Message");
 }
 
-public void PerformSuicide(const int userid)
-{
-	int client = GetClientOfUserId(userid);
-	if (!IsClientValid(client))
-		return;
-
-	EmitSoundToAll(SuicideSound);
-	ForcePlayerSuicide(client);
-	if (IsPlayerAlive(client))	// In case they're kartified or something idk
-		SDKHooks_TakeDamage(client, 0, 0, 9001.0, DMG_DIRECT);
-}
-
-public void UnHorsemannify(const JailFighter player)
-{
-	if (IsClientInGame(player.index))
-		player.UnHorsemann();
-}
-
-public void ResetModelProps(const int client)
-{
-	SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
-	SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
-	SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
-	SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
-}
-
 public void DisableWarden(const int roundcount)
 {
 	if (roundcount != gamemode.iRoundCount 
@@ -1192,9 +1245,9 @@ public void DisableWarden(const int roundcount)
 	 || gamemode.bIsWardenLocked)
 		return;
 
-	CPrintToChatAll("%t %t", "Plugin Tag", "Warden Locked Lack");
 	gamemode.DoorHandler(OPEN);
-	gamemode.SetWardenLock(true);
+	if (gamemode.SetWardenLock(true))
+		CPrintToChatAll("%t %t", "Plugin Tag", "Warden Locked Lack");
 
 	if (cvarTF2Jail[NoCritOnLock].BoolValue)
 		gamemode.bDisableCriticals = true;
@@ -1229,10 +1282,20 @@ public void MusicPlay()
 	char sound[PLATFORM_MAX_PATH];
 	float time = -1.0;
 
-	if (ManageMusic(sound, time) != Plugin_Continue)
+	LastRequest lr = gamemode.GetCurrentLR();
+	if (lr != null)
+	{
+		if (lr.GetMusicStatus())
+		{
+			lr.GetMusicFileName(sound, sizeof(sound));
+			time = lr.GetMusicTime();
+		}
+	}
+
+	if (ManageMusic(sound, time) > Plugin_Changed)
 		return;
 
-	if (sound[0] != EOS)
+	if (sound[0] != EOS && time != -1.0)
 	{
 		float vol = cvarTF2Jail[MusicVolume].FloatValue;
 		strcopy(strBackgroundSong, PLATFORM_MAX_PATH, sound);
@@ -1244,9 +1307,8 @@ public void MusicPlay()
 				continue;
 			EmitSoundToClient(i, sound, _, _, SNDLEVEL_NORMAL, SND_NOFLAGS, vol, 100, _, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 		}
-	}
-	if (time != -1.0)
 		gamemode.flMusicTime = GetGameTime() + time;
+	}
 }
 
 public void StopBackGroundMusic()
@@ -1312,39 +1374,18 @@ public void CreateMarker(const int client)
 	{
 		TE_SetupBeamRingPoint(vecPos, 300.0, 300.1, iLaserBeam, iHalo, 0, 10, time, 2.0, 0.0, {255, 255, 255, 255}, 10, 0);
 		TE_SendToAll();
+
+		EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos);
+		EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos);
+
 		gamemode.bMarkerExists = true;
 		SetPawnTimer(ResetMarker, 1.0);
-		EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos);
-		EmitAmbientSound("misc/rd_finale_beep01.wav", vecPos);
 	}
 }
 
 public void ResetMarker()
 {
 	gamemode.bMarkerExists = false;
-}
-
-public void DoHorsemannParticles(const int client)
-{
-	int lefteye = MakeParticle(client, "halloween_boss_eye_glow", "lefteye");
-	if (IsValidEntity(lefteye))
-		iHHHParticle[client][0] = EntIndexToEntRef(lefteye);
-
-	int righteye = MakeParticle(client, "halloween_boss_eye_glow", "righteye");
-	if (IsValidEntity(righteye))
-		iHHHParticle[client][1] = EntIndexToEntRef(righteye);
-}
-
-public void ClearHorsemannParticles(const int client)
-{
-	int ent;
-	for (int i = 0; i < 3; i++)
-	{
-		ent = EntRefToEntIndex(iHHHParticle[client][i]);
-		if (ent > MaxClients && IsValidEntity(ent))
-			RemoveEntity(ent);
-		iHHHParticle[client][i] = -1;
-	}
 }
 
 public void Open_Doors(const int roundcount)
@@ -1393,7 +1434,7 @@ public void FreeKillSystem(const JailFighter attacker)
 				if (JailFighter(i).bIsAdmin)
 					if (messagetype)
 						CPrintToChat(i, "%t **********\n%L\nIP:%s\n**********", "Plugin Tag", attacker.index, ip);
-					else PrintToConsole(i, "%t **********\n%L\nIP:%s\n**********", "Plugin Tag", attacker.index, ip);
+					else PrintToConsole(i, "**********\n%L\nIP:%s\n**********", attacker.index, ip);
 		attacker.iKillCount = 0;
 	}
 	else attacker.flKillingSpree = currtime + cvarTF2Jail[FreeKillTime].FloatValue;
@@ -1407,15 +1448,8 @@ public void EnableWarden(const int roundcount)
 	 || gamemode.bWardenExists)
 		return;
 
-	gamemode.SetWardenLock(false);
-	CPrintToChatAll("%t %t", "Plugin Tag", "Warden Enabled");
-}
-
-public void ResetPlayer(const int client)
-{
-	TF2_RegeneratePlayer(client);
-	SetEntityHealth(client, GetEntProp(client, Prop_Data, "m_iMaxHealth"));
-	SetEntProp(client, Prop_Send, "m_iHealth", GetEntProp(client, Prop_Data, "m_iMaxHealth"));
+	if (gamemode.SetWardenLock(false))
+		CPrintToChatAll("%t %t", "Plugin Tag", "Warden Enabled");
 }
 
 public void RemoveRebel(const int userid, const int roundcount)
@@ -1439,22 +1473,15 @@ public Action KillOnSpawn(int ent)
 
 public Action OnBuildingSpawn(int ent)
 {
-	int client = GetEntPropEnt(ent, Prop_Send, "m_hBuilder");
-	if (client != -1 && !gamemode.bAllowBuilding)
+	if (gamemode.bAllowBuilding)
+		return Plugin_Continue;
+
+	if (GetEntPropEnt(ent, Prop_Send, "m_hBuilder") != -1)
 	{
-		switch (cvarTF2Jail[EngieBuildings].IntValue)
-		{
-			case 0:{ RemoveEntity(ent); return Plugin_Handled; }
-			case 1:if (GetClientTeam(client) != RED) { RemoveEntity(ent); return Plugin_Handled; }
-			case 2:if (GetClientTeam(client) != BLU) { RemoveEntity(ent); return Plugin_Handled; }
-		}
+		RemoveEntity(ent);
+		return Plugin_Handled;
 	}
 	return Plugin_Continue;
-}
-
-public Action OnParticleTransmit(int ent, int client)
-{
-	return (TF2_IsPlayerInCondition(GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity"), TFCond_Cloaked)) ? Plugin_Handled : Plugin_Continue;
 }
 
 public int InviteReceiveMenu(Menu menu, MenuAction action, int client, int select)
@@ -1466,7 +1493,7 @@ public int InviteReceiveMenu(Menu menu, MenuAction action, int client, int selec
 			if (!IsPlayerAlive(client))
 				return;
 
-			char s[2]; menu.GetItem(select, s, sizeof(s));
+			char s[4]; menu.GetItem(select, s, sizeof(s));
 			switch (StringToInt(s))
 			{
 				case 0:
@@ -1477,430 +1504,221 @@ public int InviteReceiveMenu(Menu menu, MenuAction action, int client, int selec
 				case 1:CPrintToChatAll("%t %t", "Plugin Tag", "Player Invite Denied", client);
 			}
 		}
-		case MenuAction_Cancel:if (IsPlayerAlive(client) && select == MenuCancel_Exit) CPrintToChatAll("%t %t", "Plugin Tag", "Player Invite Denied", client);
+		case MenuAction_Cancel:if (IsPlayerAlive(client) && select == MenuCancel_Exit)
+									CPrintToChatAll("%t %t", "Plugin Tag", "Player Invite Denied", client);
 		case MenuAction_End:delete menu;
 	}
 }
 
-public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+public void ExecuteLR(LastRequest lr)
 {
-		/* Functional */
-	CreateNative("TF2JailRedux_RegisterPlugin", Native_RegisterPlugin);
-//	CreateNative("TF2JailRedux_RegisterLRPack", Native_RegisterLRPack);
-	CreateNative("TF2JailRedux_RegisterLR", Native_RegisterLR);
-	CreateNative("TF2JailRedux_UnRegisterPlugin", Native_UnRegisterPlugin);
-	CreateNative("TF2JailRedux_UnRegisterLR", Native_UnRegisterLR);
-//	CreateNative("TF2JailRedux_UnRegisterLRPack", Native_UnRegisterLRPack);
-	CreateNative("TF2JailRedux_LRIndex", Native_LRIndex);
-		/* Forwards */
-	CreateNative("JB_Hook", Native_Hook);
-	CreateNative("JB_HookEx", Native_HookEx);
-	CreateNative("JB_Unhook", Native_Unhook);
-	CreateNative("JB_UnhookEx", Native_UnhookEx);
-		/* Player */
-	CreateNative("JBPlayer.GetValue", Native_GetValue);
-	CreateNative("JBPlayer.SetValue", Native_SetValue);
-	CreateNative("JBPlayer.bNoMusic.get", Native_NoMusic_Get);
-	CreateNative("JBPlayer.hMap.get", Native_StringMap_Get);
-	CreateNative("JBPlayer.SpawnWeapon", Native_SpawnWeapon);
-	CreateNative("JBPlayer.GetWeaponSlotIndex", Native_GetWeaponSlotIndex);
-	CreateNative("JBPlayer.SetWepInvis", Native_SetWepInvis);
-	CreateNative("JBPlayer.ForceTeamChange", Native_ForceTeamChange);
-	CreateNative("JBPlayer.TeleportToPosition", Native_TeleportToPosition);
-	CreateNative("JBPlayer.ListLRS", Native_ListLRS);
-	CreateNative("JBPlayer.PreEquip", Native_PreEquip);
-	CreateNative("JBPlayer.TeleToSpawn", Native_TeleToSpawn);
-	CreateNative("JBPlayer.SpawnSmallHealthPack", Native_SpawnSmallHealthPack);
-	CreateNative("JBPlayer.MutePlayer", Native_MutePlayer);
-	CreateNative("JBPlayer.GiveFreeday", Native_GiveFreeday);
-	CreateNative("JBPlayer.RemoveFreeday", Native_RemoveFreeday);
-	CreateNative("JBPlayer.StripToMelee", Native_StripToMelee);
-	CreateNative("JBPlayer.EmptyWeaponSlots", Native_EmptyWeaponSlots);
-	CreateNative("JBPlayer.UnmutePlayer", Native_UnmutePlayer);
-	CreateNative("JBPlayer.WardenSet", Native_WardenSet);
-	CreateNative("JBPlayer.WardenUnset", Native_WardenUnset);
-	CreateNative("JBPlayer.MakeHorsemann", Native_MakeHorsemann);
-	CreateNative("JBPlayer.UnHorsemann", Native_UnHorsemann);
-	CreateNative("JBPlayer.WardenMenu", Native_WardenMenu);
-	CreateNative("JBPlayer.ClimbWall", Native_ClimbWall);
-	CreateNative("JBPlayer.AttemptFireWarden", Native_AttemptFireWarden);
-	CreateNative("JBPlayer.MarkRebel", Native_MarkRebel);
-	CreateNative("JBPlayer.ClearRebel", Native_ClearRebel);
-		/* Gamemode */
-	CreateNative("JBGameMode_Playing", Native_JBGameMode_Playing);
-	CreateNative("JBGameMode_ManageCells", Native_JBGameMode_ManageCells);
-	CreateNative("JBGameMode_FindRandomWarden", Native_JBGameMode_FindRandomWarden);
-	CreateNative("JBGameMode_Warden", Native_JBGameMode_Warden);
-	CreateNative("JBGameMode_FireWarden", Native_JBGameMode_FireWarden);
-	CreateNative("JBGameMode_OpenAllDoors", Native_JBGameMode_OpenAllDoors);
-	CreateNative("JBGameMode_ToggleMedic", Native_JBGameMode_ToggleMedic);
-//	CreateNative("JBGameMode_ToggleMedicTeam", Native_JBGameMode_ToggleMedicTeam);
-	CreateNative("JBGameMode_ToggleMuting", Native_JBGameMode_ToggleMuting);
-	CreateNative("JBGameMode_ResetVotes", Native_JBGameMode_ResetVotes);
-	CreateNative("JBGameMode_GetTelePosition", Native_JBGameMode_GetTelePosition);
-	CreateNative("JBGameMode_SetWardenLock", Native_JBGameMode_SetWardenLock);
-	CreateNative("JBGameMode_AutobalanceTeams", Native_JBGameMode_AutobalanceTeams);
-	CreateNative("JBGameMode_EvenTeams", Native_JBGameMode_EvenTeams);
-		/* Gamemode StringMap */
-	CreateNative("JBGameMode_Instance", Native_JBGameMode_Instance);
-	CreateNative("JBGameMode_GetProperty", Native_JBGameMode_GetProperty);
-	CreateNative("JBGameMode_SetProperty", Native_JBGameMode_SetProperty);
-		/* Gamemode Methodmap */
-	CreateNative("JBGameMode.JBGameMode", Native_JBGameMode_Instance);
+	KeyValues kv = lr.GetKv();
 
-	InitializeForwards();
+	if (kv == null)
+		return;
 
-	RegPluginLibrary("TF2Jail_Redux");
-
-	bLate = late;
-
-	return APLRes_Success;
-}
-
-public any Native_RegisterPlugin(Handle plugin, int numParams)
-{
-	ArrayList holder = gamemode.hPlugins;
-	// Shouldn't ever happen if you're UnRegistering
-	if (holder.FindValue(plugin) != -1) 
-		return 0;
-
-	// Handle last request count
-	gamemode.hLRS.Push(0);
-
-	// Handle the plugin itself
-	holder.Push(plugin);
-
-	// Increment sub-plugin LR count
-	gamemode.iLRs++;
-
-	return LRMAX-1;
-}
-/*public any Native_RegisterLRPack(Handle plugin, int numParams)
-{
-	ArrayList holder = gamemode.hPacks;
-	// Shouldn't ever happen
-	if (holder.FindValue(plugin) != -1)
+//	PrintToChatAll("Executing");
+	char command[256];
+	kv.GetString("Execute_Cmd", command, sizeof(command));
+	if (command[0] != '\0')
 	{
-		char name[64]; GetPluginFilename(plugin, name, sizeof(name));
-		return ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::RegisterLRPack **** Plugin '%s' Already Registered ****", name);
+		DataPack pack;
+		CreateDataTimer(0.5, ExecServerCmd, pack, TIMER_FLAG_NO_MAPCHANGE);
+		pack.WriteString(command);
 	}
-	// Create array to copy over
-	int len = GetNativeCell(2);
-	int[] array = new int[len];
-	// Loop through the size, store to array, and increase totals accordingly
-	for (int i = 0; i < len; i++)
+
+	bool freeday;
+	if (kv.JumpToKey("Parameters"))
 	{
-		gamemode.iLRs++;
-		array[i] = LRMAX;
-		gamemode.hLRS.Push(0);
+//		PrintToChatAll("params");
+		freeday = !!kv.GetNum("IsFreedayType", 0);
+
+		if (kv.GetNum("OpenCells", 0))
+			gamemode.DoorHandler(OPEN);
+
+		gamemode.bDisableKillSpree = !!kv.GetNum("VoidFreekills", 0);
+
+		int time = cvarTF2Jail[RoundTime].IntValue;
+		if (!kv.GetNum("TimerStatus", 1))
+			time = -1;	// TODO; make this better
+		else time = kv.GetNum("TimerTime", 0);
+
+		Call_OnTimeLeft(lr, time);
+
+		if (time)
+			gamemode.iTimeLeft = time;
+
+		gamemode.bIsWardenLocked = !!kv.GetNum("AdminLockWarden", 0) || !!kv.GetNum("LockWarden", 0);
+		gamemode.bDisableCriticals = !kv.GetNum("EnableCriticals", 1);
+
+		if (kv.GetNum("BalanceTeams", 0))
+			gamemode.EvenTeams();
+
+		gamemode.bIsWarday = !!kv.GetNum("IsWarday", 0);
+		gamemode.bDisableMuting = !!kv.GetNum("NoMuting", 0);
+		gamemode.bAllowBuilding = !!kv.GetNum("AllowBuilding", 0);
+		gamemode.ToggleMedic(!kv.GetNum("DisableMedic", 0));
+		gamemode.bAllowWeapons = !!kv.GetNum("AllowWeapons", 0);
+		gamemode.bIgnoreRebels = !!kv.GetNum("IgnoreRebels", 0);
+
+		if (kv.GetNum("RegenerateReds", 0))
+		{
+			for (int i = MaxClients; i; --i)
+			{
+				if (!IsClientInGame(i) || !IsPlayerAlive(i))
+					continue;
+
+				if (GetClientTeam(i) == RED)
+				{
+					JailFighter(i).bSkipPrep = true;
+					TF2_RegeneratePlayer(i);
+				}
+			}
+		}
+
+		if (kv.JumpToKey("KillWeapons"))
+		{
+			bool kill[4];
+			kill[0] = !!kv.GetNum("Red", 0);
+			kill[1] = !!kv.GetNum("Blue", 0);
+			kill[2] = !!kv.GetNum("Warden", 0);
+			kill[3] = !!kv.GetNum("Melee", 0);
+
+			JailFighter player;
+			for (int i = MaxClients; i; --i)
+			{
+				if (!IsClientInGame(i) || !IsPlayerAlive(i))
+					continue;
+
+				player = JailFighter(i);
+				switch (GetClientTeam(i))
+				{
+					case RED:
+						if (kill[0])
+							player.StripToMelee();
+					case BLU:
+						if (kill[1] || (kill[2] && player.bIsWarden))
+							player.StripToMelee();
+				}
+				if (kill[3])
+					TF2_RemoveAllWeapons(i);
+			}
+
+			kv.GoBack();
+		}
+
+		if (kv.JumpToKey("FriendlyFire"))
+		{
+			if (kv.GetNum("Status", 0))
+			{
+				float fftime = kv.GetFloat("Timer", 1.0);
+				if (fftime < 0.0)
+					fftime = 0.0;
+
+				Call_OnFFTimer(lr, fftime);
+				SetPawnTimer(EnableFFTimer, fftime, gamemode.iRoundCount);
+			}
+
+			kv.GoBack();
+		}
+
+		kv.GoBack();
 	}
-	// Store the plugin for future reference
-	holder.Push(plugin);
-	SetNativeArray(1, array, len);
-	return true;
-}*/
-public any Native_RegisterLR(Handle plugin, int numParams)
-{
-	// Have to register the a plugin first
-	if (gamemode.hPlugins.FindValue(plugin) == -1)
-		return false;
 
-	// Increment
-	gamemode.iLRs++;
-	gamemode.hLRS.Push(0);
-
-	return true;
-}
-public any Native_UnRegisterPlugin(Handle plugin, int numParams)
-{
-	ArrayList holder = gamemode.hPlugins;
-	int idx = holder.FindValue(plugin);
-	// Shouldn't ever happen
-	if (idx == -1)
-		return false;
-
-	// Get rid of it
-	holder.Erase(idx);
-
-	gamemode.hLRS.Erase(idx - holder.Length + LRMAX);
-	gamemode.iLRs--;
-
-	return true;
-}
-// Indices are static, so trying to handle unloading would be redundant
-/*public any Native_UnRegisterLRPack(Handle plugin, int numParams)
-{
-	ArrayList holder = gamemode.hPacks;
-	int idx = holder.FindValue(plugin);
-	// Shouldn't ever happen
-	if (idx == -1)
+	char buffer[256];
+	kv.GetString("Activated", buffer, sizeof(buffer));
+	if (buffer[0] != '\0')
 	{
-		char name[64]; GetPluginFilename(plugin, name, sizeof(name));
-		return ThrowNativeError(SP_ERROR_NATIVE, "TF2JailRedux::UnRegisterLRPack **** Plugin '%s' Not Registered ****", name);
+		if (freeday)
+		{
+			JailFighter player;
+
+			for (int i = MaxClients; i; --i)
+			{
+				if (!IsClientInGame(i))
+					continue;
+
+				player = JailFighter(i);
+				if (player.bIsFreeday)
+				{
+					kv.GetString("Activated", buffer, sizeof(buffer));	// Just do it again I guess
+					char name[32];
+					GetClientName(i, name, sizeof(name));
+
+					ReplaceString(buffer, sizeof(buffer), "{NAME}", name);
+					CPrintToChatAll("%t %s", "Plugin Tag", buffer);
+				}
+			}
+		}
+		else CPrintToChatAll("%t %s", "Plugin Tag", buffer);
 	}
-	// Collect array passed through
-	int len = GetNativeCell(2);
-	int[] array = new int[len];
-	GetNativeArray(1, array, len);
-	// SortIntegers(array, len, Sort_Descending);
-	// Erase backwards, else things break
-	do
+
+//	if (kv.JumpToKey("Music"))
+//	{
+//		if (kv.GetNum("Status", 0))
+//		{
+//			kv.GetString("File", strBackgroundSong, sizeof(strBackgroundSong));
+//			if (strBackgroundSong[0] != '\0')
+//				gamemode.flMusicDuration = kv.GetFloat("Time", 0.0);
+//		}
+//		kv.GoBack();
+//	}
+
+	if (kv.JumpToKey("Properties"))
 	{
-		gamemode.hLRS.Erase(array[--len]);
-		gamemode.iLRs--;
-	} while len;
+		if (kv.GotoFirstSubKey(false))
+		{
+			do
+			{
+				kv.GetSectionName(buffer, 64);
+				if (buffer[0] != '\0')
+				{
+					switch (kv.GetDataType(NULL_STRING))
+					{
+						case KvData_Int:gamemode.SetValue(buffer, kv.GetNum(NULL_STRING));
+						case KvData_Float:gamemode.SetValue(buffer, kv.GetFloat(NULL_STRING));
+						case KvData_String:
+						{
+							char buffer2[128]; kv.GetString(NULL_STRING, buffer2, sizeof(buffer2));
+							gamemode.SetString(buffer, buffer2);
+						}
+						case KvData_Color:
+						{
+							int color[4]; kv.GetColor4(NULL_STRING, color);
+							gamemode.SetArray(buffer, color, 4);
+						}
+					}
+				}
+			}	while kv.GotoNextKey(false);
+			kv.GoBack();
+		}
+		kv.GoBack();
+	}
+	Call_OnLRActivate(lr);
 
-	holder.Erase(idx);
-	return true;
-}*/
-public any Native_UnRegisterLR(Handle plugin, int numParams)
-{
-	ArrayList holder = gamemode.hPlugins;
-	if (holder.FindValue(plugin) == -1)
-		return false;
+	for (int i = MaxClients; i; --i)
+	{
+		if (!IsClientInGame(i) || !IsPlayerAlive(i))
+			continue;
 
-	/* TF2JailRedux_UnRegisterLR(TF2JailRedux_LRIndex() + num) */
-	gamemode.hLRS.Erase(GetNativeCell(1) - holder.Length + LRMAX + 1);
-	gamemode.iLRs--;
-
-	return true;
-}
-public any Native_LRIndex(Handle plugin, int numParams)
-{
-	ArrayList holder = gamemode.hPlugins;
-	int idx = holder.FindValue(plugin);
-	if (idx != -1)
-		return idx - holder.Length + LRMAX + 1;
-
-	// Returning -1 would be absolutely positively CATASTROPHIC!!!
-	return 0;
-}
-
-public any Native_Hook(Handle plugin, int numParams)
-{
-	int hook = GetNativeCell(1);
-	Function func = GetNativeFunction(2);
-	if (hPrivFwds[hook])
-		AddToForward(hPrivFwds[hook], plugin, func);
-}
-public any Native_HookEx(Handle plugin, int numParams)
-{
-	int hook = GetNativeCell(1);
-	Function func = GetNativeFunction(2);
-	if (hPrivFwds[hook])
-		return AddToForward(hPrivFwds[hook], plugin, func);
-	return 0;
-}
-public any Native_Unhook(Handle plugin, int numParams)
-{
-	int hook = GetNativeCell(1);
-	if (hPrivFwds[hook])
-		RemoveFromForward(hPrivFwds[hook], plugin, GetNativeFunction(2));
-}
-public any Native_UnhookEx(Handle plugin, int numParams)
-{
-	int hook = GetNativeCell(1);
-	if (hPrivFwds[hook])
-		return RemoveFromForward(hPrivFwds[hook], plugin, GetNativeFunction(2));
-	return 0;
+		Call_OnLRActivatePlayer(lr, JailFighter(i));
+	}
 }
 
-public any Native_GetValue(Handle plugin, int numParams)
+public Action ExecServerCmd(Handle timer, DataPack pack)
 {
-	char key[64]; GetNativeString(2, key, 64);
-	any item;
-	if (hJailFields[GetNativeCell(1)].GetValue(key, item))
-		return item;
-	return 0;
-}
-public any Native_SetValue(Handle plugin, int numParams)
-{
-	char key[64]; GetNativeString(2, key, 64);
-	return hJailFields[GetNativeCell(1)].SetValue(key, GetNativeCell(3));
-}
-public any Native_NoMusic_Get(Handle plugin, int numParams)
-{
-	return JailFighter(GetNativeCell(1)).bNoMusic;
-}
-public any Native_StringMap_Get(Handle plugin, int numParams)
-{
-	return JailFighter(GetNativeCell(1)).hMap;
-}
-public any Native_SpawnWeapon(Handle plugin, int numParams)
-{
-	char classname[64]; GetNativeString(2, classname, 64);
-	char attributes[128]; GetNativeString(6, attributes, 128);
-	return JailFighter(GetNativeCell(1)).SpawnWeapon(classname, GetNativeCell(3), GetNativeCell(4), GetNativeCell(5), attributes);
-}
-public any Native_GetWeaponSlotIndex(Handle plugin, int numParams)
-{
-	return JailFighter(GetNativeCell(1)).GetWeaponSlotIndex(GetNativeCell(1));
-}
-public any Native_SetWepInvis(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).SetWepInvis(GetNativeCell(1));
-}
-public any Native_ForceTeamChange(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).ForceTeamChange(GetNativeCell(2), GetNativeCell(3));
-}
-public any Native_TeleportToPosition(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).TeleportToPosition(GetNativeCell(2));
-}
-public any Native_ListLRS(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).ListLRS();
-}
-public any Native_PreEquip(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).PreEquip(GetNativeCell(2));
-}
-public any Native_TeleToSpawn(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).TeleToSpawn();
-}
-public any Native_SpawnSmallHealthPack(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).SpawnSmallHealthPack();
-}
-public any Native_MutePlayer(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).MutePlayer();
-}
-public any Native_GiveFreeday(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).GiveFreeday();
-}
-public any Native_RemoveFreeday(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).RemoveFreeday();
-}
-public any Native_StripToMelee(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).StripToMelee();
-}
-public any Native_EmptyWeaponSlots(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).EmptyWeaponSlots();
-}
-public any Native_UnmutePlayer(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).UnmutePlayer();
-}
-public any Native_WardenSet(Handle plugin, int numParams)
-{
-	return JailFighter(GetNativeCell(1)).WardenSet();
-}
-public any Native_WardenUnset(Handle plugin, int numParams)
-{
-	return JailFighter(GetNativeCell(1)).WardenUnset();
-}
-public any Native_MakeHorsemann(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).MakeHorsemann();
-}
-public any Native_UnHorsemann(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).UnHorsemann();
-}
-public any Native_WardenMenu(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).WardenMenu();
-}
-public any Native_ClimbWall(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).ClimbWall(GetNativeCell(2), GetNativeCell(3), GetNativeCell(4), GetNativeCell(5));
-}
-public any Native_AttemptFireWarden(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).AttemptFireWarden();
-}
-public any Native_MarkRebel(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).MarkRebel();
-}
-public any Native_ClearRebel(Handle plugin, int numParams)
-{
-	JailFighter(GetNativeCell(1)).ClearRebel();
+//	if (gamemode.iRoundState != StateRunning)
+//		return Plugin_Continue;
+
+	pack.Reset();
+	char buffer[256]; pack.ReadString(buffer, sizeof(buffer));
+	ServerCommand("%s", buffer);
+	return Plugin_Continue;
 }
 
-public any Native_JBGameMode_Playing(Handle plugin, int numParams)
+public bool TraceRayDontHitSelf(int ent, int mask, any data)
 {
-	return gamemode.iPlaying;
-}
-public any Native_JBGameMode_FindRandomWarden(Handle plugin, int numParams)
-{
-	return gamemode.FindRandomWarden();
-}
-public any Native_JBGameMode_ManageCells(Handle plugin, int numParams)
-{
-	gamemode.DoorHandler(GetNativeCell(1));
-}
-public any Native_JBGameMode_Warden(Handle plugin, int numParams)
-{
-	return view_as< int >(gamemode.iWarden);
-}
-public any Native_JBGameMode_FireWarden(Handle plugin, int numParams)
-{
-	gamemode.FireWarden(GetNativeCell(1), GetNativeCell(2));
-}
-public any Native_JBGameMode_OpenAllDoors(Handle plugin, int numParams)
-{
-	gamemode.OpenAllDoors();
-}
-public any Native_JBGameMode_ToggleMedic(Handle plugin, int numParams)
-{
-	gamemode.ToggleMedic(GetNativeCell(1));
-}
-/*public any Native_JBGameMode_ToggleMedicTeam(Handle plugin, int numParams)
-{
-	int team = GetNativeCell(1);
-	gamemode.ToggleMedicTeam(team);
-}*/
-public any Native_JBGameMode_ToggleMuting(Handle plugin, int numParams)
-{
-	gamemode.ToggleMuting(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
-}
-public any Native_JBGameMode_ResetVotes(Handle plugin, int numParams)
-{
-	gamemode.ResetVotes();
-}
-public any Native_JBGameMode_GetTelePosition(Handle plugin, int numParams)
-{
-	float vec[3];
-	bool ret = gamemode.GetTelePosition(GetNativeCell(1), vec);
-	SetNativeArray(2, vec, 3);
-	return ret;
-}
-public any Native_JBGameMode_SetWardenLock(Handle plugin, int numParams)
-{
-	return gamemode.SetWardenLock(GetNativeCell(1), GetNativeCell(2));
-}
-public any Native_JBGameMode_AutobalanceTeams(Handle plugin, int numParams)
-{
-	gamemode.AutobalanceTeams(GetNativeCell(1));
-}
-public any Native_JBGameMode_EvenTeams(Handle plugin, int numParams)
-{
-	gamemode.EvenTeams(GetNativeCell(1), GetNativeCell(2));
+	return ent != data;
 }
 
-public any Native_JBGameMode_GetProperty(Handle plugin, int numParams)
-{
-	char key[64]; GetNativeString(1, key, 64);
-	any item;
-	if (gamemode.GetValue(key, item))
-		return item;
-	return 0;
-}
-public any Native_JBGameMode_SetProperty(Handle plugin, int numParams)
-{
-	char key[64]; GetNativeString(1, key, 64);
-	gamemode.SetValue(key, GetNativeCell(2));
-}
-
-public any Native_JBGameMode_Instance(Handle plugin, int numParams)
-{
-	return gamemode;
-}
+#file "TF2Jail_Redux"

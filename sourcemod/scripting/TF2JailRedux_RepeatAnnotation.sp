@@ -72,14 +72,21 @@ public void OnPluginStart()
 
 	LoadTranslations("tf2jail_redux.phrases");
 
-	JB_Hook(OnRoundStartPlayer2, fwdOnRoundStartPlayer);
-	JB_Hook(OnClientInduction, fwdOnClientInduction);
 	RegConsoleCmd("sm_repeat", SayRepeat);
+}
+
+public void OnLibraryAdded(const char[] name)
+{
+	if (!strcmp(name, "TF2Jail_Redux", true))
+	{
+		JB_Hook(OnRoundStartPlayer, fwdOnRoundStartPlayer);
+		JB_Hook(OnClientInduction, fwdOnClientInduction);
+	}
 }
 
 public Action SayRepeat(int client, int args)
 {
-	if (JBGameMode_GetProperty("iRoundState") != StateRunning || !client || !IsPlayerAlive(client) || GetClientTeam(client) != 2)
+	if (JBGameMode_GetProp("iRoundState") != StateRunning || !client || !IsPlayerAlive(client) || GetClientTeam(client) != 2)
 		return Plugin_Handled;
 
 	JailRepeater player = JailRepeater(client);
@@ -130,7 +137,7 @@ public int FilterClients(const int client)
 {
 	int target = cvTargeting.IntValue;
 	if (target == 2)
-		if (JBGameMode_GetProperty("bWardenExists"))
+		if (JBGameMode_GetProp("bWardenExists"))
 			return (1 << JBGameMode_Warden().index);
 		else return 0;
 

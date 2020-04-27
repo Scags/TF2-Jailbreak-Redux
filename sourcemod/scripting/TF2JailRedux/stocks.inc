@@ -1,3 +1,8 @@
+#if defined _tf2jailstocks_included
+	#endinput
+#endif
+#define _tf2jailstocks_included
+
 stock char extensions[][] = { ".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd", ".phy" };
 stock char extensionsb[2][5] = { ".vtf", ".vmt" };
 
@@ -419,7 +424,7 @@ stock void SetPawnTimer(Function func, float thinktime = 0.1, any param1 = -999,
 	CreateTimer(thinktime, DoThink, thinkpack, TIMER_DATA_HNDL_CLOSE);
 }
 
-public Action DoThink(Handle hTimer, DataPack hndl)
+stock static Action DoThink(Handle hTimer, DataPack hndl)
 {
 	hndl.Reset();
 
@@ -818,7 +823,7 @@ stock void RemoveParachute(const int client)
 	if (TF2_IsPlayerInCondition(client, TFCond_Parachute))
 		TF2_RemoveCondition(client, TFCond_Parachute);
 }
-public bool TraceRayDontHitSelf(int entity, int mask, any data)
+stock static bool TraceRayDontHitSelf(int entity, int mask, any data)
 {
 	return (entity != data);
 }
@@ -1180,4 +1185,65 @@ stock bool IsStringNumeric(const char[] s)
 			return false;
 
 	return true;
+}
+stock int TF2_GetNumWeapons(int client)
+{
+	return GetEntData(client, FindSendPropInfo("CTFPlayer", "m_hActiveWeapon")-4);
+}
+// Credit to Sikari
+stock bool IsValidFunctionPointer(Function func)
+{
+    // Check for "!(func == nullfunc_t)" = non-null
+    // We cannot directly compare functions to null...
+    // NULL passes a function that is zero (0) initialized
+    // But will NOT pass ones that are passed as INVALID_FUNCTION
+    // As those resolve to -1 internally (for backwards compability reasons)
+    // This might change in future, but as of compiler 1.10.0.6460, this is the case.
+    return (!!func && func != INVALID_FUNCTION);
+}
+// From smlib
+stock int PrecacheParticleSystem(const char[] particleSystem)
+{
+    static int particleEffectNames = INVALID_STRING_TABLE;
+
+    if (particleEffectNames == INVALID_STRING_TABLE)
+    {
+        if ((particleEffectNames = FindStringTable("ParticleEffectNames")) == INVALID_STRING_TABLE)
+        {
+            return INVALID_STRING_INDEX;
+        }
+    }
+
+    int index = FindStringIndex2(particleEffectNames, particleSystem);
+    if (index == INVALID_STRING_INDEX)
+    {
+        int numStrings = GetStringTableNumStrings(particleEffectNames);
+        if (numStrings >= GetStringTableMaxStrings(particleEffectNames))
+        {
+            return INVALID_STRING_INDEX;
+        }
+
+        AddToStringTable(particleEffectNames, particleSystem);
+        index = numStrings;
+    }
+
+    return index;
+}
+// From smlib
+stock int FindStringIndex2(int tableidx, const char[] str)
+{
+    char buf[1024];
+
+    int numStrings = GetStringTableNumStrings(tableidx);
+    for (int i = 0; i < numStrings; ++i)
+    {
+        ReadStringTable(tableidx, i, buf, sizeof(buf));
+
+        if (!strcmp(buf, str))
+        {
+            return i;
+        }
+    }
+
+    return INVALID_STRING_INDEX;
 }
