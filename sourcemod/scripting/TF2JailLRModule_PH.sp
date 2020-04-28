@@ -284,7 +284,7 @@ public void InitSubPlugin()
 		g_LR.SetParameterNum("FreezeTime", 30);				// Freeze time at start
 		g_LR.SetParameterNum("TeleportBehavior", 1);		// 0: Disabed, 1: BLU to Warday, 2: BLU to Freeday, 3: RED to Warday, 4: RED to Freeday, 5: BOTH to Warday
 		g_LR.SetParameterNum("LeechDamage", 1);				// Damage dealt to props comes back as health
-		g_LR.GetParameterNum("FallDamage", 0); 				// Disable fall damage. (0 = none, 1 = all players, 2 = blue only, 3 = red only)
+		g_LR.SetParameterNum("FallDamage", 0); 				// Disable fall damage. (0 = none, 1 = all players, 2 = blue only, 3 = red only)
 
 		g_LR.SetParameterString("ActivationMessage", "Hunters will be released in {default}{TIME}{burlywood} seconds.");
 		g_LR.SetParameterString("HuntersReleasedMessage", "Ready or not, here they come!");

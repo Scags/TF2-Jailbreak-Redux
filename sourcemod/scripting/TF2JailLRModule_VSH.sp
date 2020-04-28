@@ -2828,6 +2828,7 @@ public void LoadJBHooks()
 	g_LR.AddHook(OnSoundHook, fwdOnSoundHook);
 	g_LR.AddHook(OnEntCreated, fwdOnEntCreated);
 	g_LR.AddHook(OnSetWardenLock, fwdOnSetWardenLock);
+	g_LR.AddHook(OnPlayerHurt, fwdOnHurtPlayer);
 
 	JB_Hook(OnDownloads, fwdOnDownloads);
 }

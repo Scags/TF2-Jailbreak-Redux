@@ -4,7 +4,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 		return Plugin_Continue;
 
 	int client = GetClientOfUserId( event.GetInt("userid") );
-	
+
 	if (!IsClientValid(client))
 		return Plugin_Continue;
 

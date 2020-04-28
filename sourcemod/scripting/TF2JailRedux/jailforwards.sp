@@ -97,6 +97,7 @@ void Call_OnDownloads()
 		lr = LastRequest.At(i);
 		if (lr != null)
 		{
+			f = INVALID_FUNCTION;
 			f = lr.GetFunction(OnDownloads);
 			if (f != INVALID_FUNCTION)
 			{
@@ -631,6 +632,24 @@ void Call_OnClientInduction(const JailFighter player)
 	Call_StartForward(hPrivFwds[OnClientInduction]);
 	Call_PushCell(player);
 	Call_Finish();
+
+	LastRequest lr;
+	Function f;
+	for (int i = 0; i < gamemode.iLRs; ++i)
+	{
+		lr = LastRequest.At(i);
+		if (lr != null)
+		{
+			f = INVALID_FUNCTION;
+			f = lr.GetFunction(OnClientInduction);
+			if (f != INVALID_FUNCTION)
+			{
+				Call_StartFunction(lr.GetOwnerPlugin(), f);
+				Call_PushCell(lr);
+				Call_Finish();
+			}
+		}
+	}
 }
 void Call_OnVariableReset(const JailFighter player)
 {
