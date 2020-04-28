@@ -55,15 +55,15 @@ public void OnLibraryAdded(const char[] name)
 
 			// The below are what is under "Parameters" in the config
 			// Most of these have wrapper getters and setters in lastrequests.inc
-			g_LR.SetPropertyNum("UsesPerMap", 5);
-			g_LR.SetPropertyNum("TimerTime", 300);
-			g_LR.SetPropertyNum("BalanceTeams", 1);
+			g_LR.SetParameterNum("UsesPerMap", 5);
+			g_LR.SetParameterNum("TimerTime", 300);
+			g_LR.SetParameterNum("BalanceTeams", 1);
 
 			// You can also set custom keys which can be retrieved later!
 			// This can be a replacement for cvars, which can let server owners
 			// an LR's data within a single file
 			// If you want to get a custom value later, use LastRequest.GetProperty*()
-			g_LR.SetPropertyNum("MyCustomKey", 100);
+			g_LR.SetParameterNum("MyCustomKey", 100);
 
 			// Done with all of the config data, now export it to the config file!
 			// .create means "yes, create an entry if it does not exist"
@@ -75,10 +75,9 @@ public void OnLibraryAdded(const char[] name)
 		// The cool thing is that you don't *have* to use config with LRs
 		// You can simply just LastRequest.Create and go to town
 
-		// Note that you can only hook one function per index per LR
-
 		// Now we should hook into functions that we want
 		// Just un-comment the ones that you need and make a callback for it!
+		// Note that you can only hook one function per index per LR
 
 		//g_LR.AddHook(OnDownloads, MyLR_OnDownloads);
 		//g_LR.AddHook(OnRoundStart, MyLR_OnRoundStart);
