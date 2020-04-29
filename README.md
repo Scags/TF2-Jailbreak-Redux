@@ -1,21 +1,19 @@
 # TF2Jail-Redux #
-Born out of my dislike with the unorganized and jumbled mess the original TF2Jail plugin was, I went out and did a complete rewrite of it, combining features of different plugins to create a more unique and pristine version that is very developer-friendly.
+Born out of my dislike with the unorganized and jumbled mess the original TF2Jail plugin was, I went out and did a complete rewrite of it, opening up Jailbreak gameplay into a useable API that is very developer-friendly. The entirety of the plugin is built with developers in mind with the goal of making Last Request creation and event management as streamlined as possible.
 
-The entirety of the plugin is built with developers in mind, which is why much of it (especially Last Requests) are hard coded within it rather than having a config file with limited control over gameplay. The plugin is essentially developer framework with enough cvars to allow server owners to adjust the plugin to their liking without having to dabble in the source code.
+Take a look at the [wiki](https://github.com/Scags/TF2-Jailbreak-Redux/wiki) for not only a complete guide on custom Last Request configuration, but detailed instructions and explanations for each aspect of the plugin.
 
-Take a look at the [wiki](https://github.com/Scags/TF2-Jailbreak-Redux/wiki) for a complete guide as to how to create and craft last requests. The plugin comes with it's own API found in the wiki as well.
+Special thanks to:
 
-With the building from several other plugins, props to:
-
-  Nergal/Assyrian with several aspects (plus the LR module) taken from [VSH2](https://forums.alliedmods.net/showthread.php?t=286701).
+- Nergal/Assyrian with several aspects (plus the LR module) taken from [VSH2](https://forums.alliedmods.net/showthread.php?t=286701).
   
-  Drixevel with the [original plugin](https://forums.alliedmods.net/showthread.php?p=2015905).
+- Drixevel with the [original plugin](https://forums.alliedmods.net/showthread.php?p=2015905).
   
-  FlaminSarge with the [Be the Horsemann](https://forums.alliedmods.net/showthread.php?t=166819) plugin.
+- FlaminSarge with the [Be the Horsemann](https://forums.alliedmods.net/showthread.php?t=166819) plugin.
   
-  -MCG-retsam & Antithasys with [Aim Names](https://forums.alliedmods.net/showthread.php?t=114586).
+- -MCG-retsam & Antithasys with [Aim Names](https://forums.alliedmods.net/showthread.php?t=114586).
   
-  And others.
+- And others.
  
 ## Features ##
 - 13 spanking, ready-to-go last requests to use in your server.
@@ -57,32 +55,6 @@ With the building from several other plugins, props to:
   
   **[Search](https://forums.alliedmods.net/showthread.php?p=2677653#post2677653)** - Allows guards to search prisoners.
 
-## File Structure ##
-The entire plugin is organized into files associated with what functionality is found within them:
-
-  **TF2Jail_Redux.sp**- Contains the core structure of the plugin, CVars, native engineering, and functions called to and from jailhandler.
-  
-  **jailhandler.sp**- Gameplay and backend structure. Just about everything gameplay oriented that happens within the plugin has some sort of function in here. Last requests are built and organized from here, being made almost as simple as possible.
-  
-  **jailevents.sp**- Event management.
-  
-  **jailcommands.sp**- Commands obviously. Menus associated with them are also held in here.
-  
-  **jailbase.sp**- Methodmap structure that contains player-based properties and methods.
-  
-  **jailgamemode.sp**- Gamemode methodmap with gameplay-based properties and methods.
-  
-  **stocks.inc**- Several stock functions used and some that could be used in the plugin.
-  
-  **jailforwards.sp**- Forwards that allow events and functions to be used from third party plugins such as the VSH and PH module. Note that these are all private forwards.
-  
-  **lastrequests,sp**- Organized file that includes last request .sp files. If you wish to take the methodmap road while crafting a last request, place the .sp file in the lastrequests/ folder and organize it by including it from here.
-  
-  **tf2jailredux.inc**- Complete native and forward-hooking structure that allows third party plugins to derive from the JBPlayer methodmap and be able get/set properties from the internal stringmap.
-  
-## Sub Plugins ##
-TF2JR uses an SDKHook-style format for its forwards, and plenty of natives exposed for developers to have a great grasp on gameplay. With sub-plugins that can be made such as Versus Saxton Hale and Prophunt, the sky's the limit for what can be done. 
-
 ## Requirements ##
 
 ###### [TF2Items](https://forums.alliedmods.net/showthread.php?p=1050170) ######
@@ -93,3 +65,35 @@ TF2JR uses an SDKHook-style format for its forwards, and plenty of natives expos
 
 ## Installation ##
 Detailed installation can be found in the [wiki](https://github.com/Scags/TF2-Jailbreak-Redux/wiki/Installation-Guide) along with config design.
+
+## File Structure ##
+The entire plugin is organized into files associated with what functionality is found within them:
+
+- **TF2Jail_Redux.sp**- Contains the core structure of the plugin, CVars, native engineering, and functions called to and from jailhandler.
+  
+- **jailhandler.sp**- Handles most major gameplay functions. Mostly calls into forwards
+  
+- **jailevents.sp**- Event management.
+  
+- **jailcommands.sp**- Commands obviously. Menus associated with them are also held in here.
+  
+- **jailbase.sp**- Methodmap structure for players that contains the logic for natives found in player.inc.
+  
+- **jailgamemode.sp**- Methodmap struction for the gamemode that contains the logic for natives found in gamemode.inc.
+  
+- **stocks.inc**- Several handy stock functions.
+  
+- **jailforwards.sp**- Private forward calls. This also executes Last Request function hooks.
+  
+- **functable.sp**- Holds the manager for Last Request function hooks.
+  
+- **natives.sp**- Manages all native calls.
+  
+- **targetfilters.sp**- Handles callbacks and creation of custom target filters.
+  
+- **tf2jailredux.inc**- The main plugin API, includes player.inc, gamemode.inc, hook.inc, and lastrequest.inc.
+
+- **TF2JR_BaseLRs.sp**- This is the included Last Request manager. Each included Last Request type pertains to its own file in the BaseLRs folder.
+  
+## Sub Plugins ##
+Although the base plugin is well organized, sub-plugins are still an effective way to manage gameplay. There's a slew of private forwards that can be hooked into, and a massive set of natives for managing players, gameplay, and Last Requests. Check out the [wiki](https://github.com/Scags/TF2-Jailbreak-Redux/wiki/API) for more information.
