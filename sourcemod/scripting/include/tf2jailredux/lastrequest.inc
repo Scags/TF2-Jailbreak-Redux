@@ -133,7 +133,7 @@ methodmap LastRequest < StringMap
 	 *
 	 *	@return 				Whatever this function would have returned from with it's natural call.
 	*/
-	public native Action ForceFireFunction(const int callbacktype, any ...);
+//	public native Action ForceFireFunction(const int callbacktype, any ...);
 
 	public native bool SetFunction(const int callbacktype, const JBHookCB func);
 
