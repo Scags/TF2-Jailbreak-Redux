@@ -73,6 +73,7 @@ void InitializeForwards()
 	hPrivFwds[OnLRActivate] 			= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnLRActivatePlayer] 		= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
 	hPrivFwds[OnLRDenied] 				= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnRoundReset] 			= CreateForward(ET_Ignore);
 
 	hLegacyFwds[Old_OnWardenGiven] 			= CreateGlobalForward("TF2Jail_OnWardenGiven", ET_Ignore, Param_Cell);
 	hLegacyFwds[Old_OnWardenRemoved] 		= CreateGlobalForward("TF2Jail_OnWardenRemoved", ET_Ignore, Param_Cell);
@@ -98,7 +99,7 @@ void Call_OnDownloads()
 		if (lr != null)
 		{
 			f = INVALID_FUNCTION;
-			f = lr.GetFunction(OnDownloads);
+			f = GetLRFunction(lr, OnDownloads);
 			if (f != INVALID_FUNCTION)
 			{
 				Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -116,7 +117,7 @@ void Call_OnRoundStart()
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnRoundStart);
+		Function f = GetLRFunction(lr, OnRoundStart);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -134,7 +135,7 @@ void Call_OnRoundStartPlayer(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnRoundStartPlayer);
+		Function f = GetLRFunction(lr, OnRoundStartPlayer);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -153,7 +154,7 @@ void Call_OnRoundEnd(Event event)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnRoundEnd);
+		Function f = GetLRFunction(lr, OnRoundEnd);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -173,7 +174,7 @@ void Call_OnRoundEndPlayer(const JailFighter player, Event event)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnRoundEndPlayer);
+		Function f = GetLRFunction(lr, OnRoundEndPlayer);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -198,7 +199,7 @@ Action Call_OnWardenGet(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnWardenGet);
+		Function f = GetLRFunction(lr, OnWardenGet);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -220,7 +221,7 @@ void Call_OnPlayerTouch(const JailFighter toucher, const JailFighter touchee)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnPlayerTouch);
+		Function f = GetLRFunction(lr, OnPlayerTouch);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -240,7 +241,7 @@ void Call_OnRedThink(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnRedThink);
+		Function f = GetLRFunction(lr, OnRedThink);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -259,7 +260,7 @@ void Call_OnBlueThink(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnBlueThink);
+		Function f = GetLRFunction(lr, OnBlueThink);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -278,7 +279,7 @@ void Call_OnWardenThink(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnWardenThink);
+		Function f = GetLRFunction(lr, OnWardenThink);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -298,7 +299,7 @@ void Call_OnShowHud(char[] hud, int len)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnShowHud);
+		Function f = GetLRFunction(lr, OnShowHud);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -317,7 +318,7 @@ Action Call_OnLRPicked(LastRequest lr, const JailFighter player)
 	Call_PushCell(player);
 	Call_Finish(action);
 
-	Function f = lr.GetFunction(OnLRPicked);
+	Function f = GetLRFunction(lr, OnLRPicked);
 	if (f != INVALID_FUNCTION)
 	{
 		Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -338,7 +339,7 @@ void Call_OnPlayerDied(const JailFighter player, const JailFighter attacker, Eve
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnPlayerDied);
+		Function f = GetLRFunction(lr, OnPlayerDied);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -361,7 +362,7 @@ void Call_OnObjectDeflected(const JailFighter airblasted, const JailFighter airb
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnObjectDeflected);
+		Function f = GetLRFunction(lr, OnObjectDeflected);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -384,7 +385,7 @@ void Call_OnBuildingDestroyed(const JailFighter destroyer, const int building, E
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnBuildingDestroyed);
+		Function f = GetLRFunction(lr, OnBuildingDestroyed);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -407,7 +408,7 @@ void Call_OnPlayerJarated(const JailFighter jarateer, const JailFighter jarateed
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnPlayerJarated);
+		Function f = GetLRFunction(lr, OnPlayerJarated);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -430,7 +431,7 @@ void Call_OnUberDeployed(const JailFighter patient, const JailFighter medic, Eve
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnUberDeployed);
+		Function f = GetLRFunction(lr, OnUberDeployed);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -452,7 +453,7 @@ void Call_OnPlayerSpawned(const JailFighter player, Event event)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnPlayerSpawned);
+		Function f = GetLRFunction(lr, OnPlayerSpawned);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -471,7 +472,7 @@ void Call_OnMenuAdd(const JailFighter player, LastRequest lr, int &flags)
 	Call_PushCellRef(flags);
 	Call_Finish();
 
-	Function f = lr.GetFunction(OnMenuAdd);
+	Function f = GetLRFunction(lr, OnMenuAdd);
 	if (f != INVALID_FUNCTION)
 	{
 		Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -487,7 +488,7 @@ void Call_OnTimeLeft(LastRequest lr, int &time)
 	Call_PushCellRef(time);
 	Call_Finish();
 
-	Function f = lr.GetFunction(OnTimeLeft);
+	Function f = GetLRFunction(lr, OnTimeLeft);
 	if (f != INVALID_FUNCTION)
 	{
 		Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -505,7 +506,7 @@ void Call_OnPlayerPreppedPost(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnPlayerPreppedPost);
+		Function f = GetLRFunction(lr, OnPlayerPreppedPost);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -526,7 +527,7 @@ void Call_OnPlayerHurt(const JailFighter victim, const JailFighter attacker, Eve
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnPlayerHurt);
+		Function f = GetLRFunction(lr, OnPlayerHurt);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -556,7 +557,7 @@ Action Call_OnTakeDamage(const JailFighter victim, int &attacker, int &inflictor
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnTakeDamage);
+		Function f = GetLRFunction(lr, OnTakeDamage);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -592,7 +593,7 @@ Action Call_OnWMenuSelect(const JailFighter player, const char[] index)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnWMenuSelect);
+		Function f = GetLRFunction(lr, OnWMenuSelect);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -615,7 +616,7 @@ Action Call_OnPlayMusic(char song[PLATFORM_MAX_PATH], float &time)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnPlayMusic);
+		Function f = GetLRFunction(lr, OnPlayMusic);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -641,11 +642,12 @@ void Call_OnClientInduction(const JailFighter player)
 		if (lr != null)
 		{
 			f = INVALID_FUNCTION;
-			f = lr.GetFunction(OnClientInduction);
+			f = GetLRFunction(lr, OnClientInduction);
 			if (f != INVALID_FUNCTION)
 			{
 				Call_StartFunction(lr.GetOwnerPlugin(), f);
 				Call_PushCell(lr);
+				Call_PushCell(player);
 				Call_Finish();
 			}
 		}
@@ -664,7 +666,7 @@ void Call_OnVariableReset(const JailFighter player)
 		lr = LastRequest.At(i);
 		if (lr != null)
 		{
-			f = lr.GetFunction(OnVariableReset);
+			f = GetLRFunction(lr, OnVariableReset);
 			if (f != INVALID_FUNCTION)
 			{
 				Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -684,7 +686,7 @@ Action Call_OnTimeEnd()
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnTimeEnd);
+		Function f = GetLRFunction(lr, OnTimeEnd);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -703,7 +705,7 @@ Action Call_OnLastGuard()
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnLastGuard);
+		Function f = GetLRFunction(lr, OnLastGuard);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -722,7 +724,7 @@ Action Call_OnLastPrisoner()
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnLastPrisoner);
+		Function f = GetLRFunction(lr, OnLastPrisoner);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -740,7 +742,7 @@ void Call_OnCheckLivingPlayers()
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnCheckLivingPlayers);
+		Function f = GetLRFunction(lr, OnCheckLivingPlayers);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -761,7 +763,7 @@ Action Call_OnWardenKilled(const JailFighter victim, const JailFighter attacker,
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnWardenKilled);
+		Function f = GetLRFunction(lr, OnWardenKilled);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -787,7 +789,7 @@ void Call_OnFreedayGiven(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnFreedayGiven);
+		Function f = GetLRFunction(lr, OnFreedayGiven);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -810,7 +812,7 @@ void Call_OnFreedayRemoved(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnFreedayRemoved);
+		Function f = GetLRFunction(lr, OnFreedayRemoved);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -829,7 +831,7 @@ void Call_OnPreThink(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnPreThink);
+		Function f = GetLRFunction(lr, OnPreThink);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -848,7 +850,7 @@ void Call_OnFFTimer(LastRequest lr, float &time)
 
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnFFTimer);
+		Function f = GetLRFunction(lr, OnFFTimer);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -867,7 +869,7 @@ Action Call_OnDoorsOpen()
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnDoorsOpen);
+		Function f = GetLRFunction(lr, OnDoorsOpen);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -886,7 +888,7 @@ Action Call_OnDoorsClose()
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnDoorsClose);
+		Function f = GetLRFunction(lr, OnDoorsClose);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -905,7 +907,7 @@ Action Call_OnDoorsLock()
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnDoorsLock);
+		Function f = GetLRFunction(lr, OnDoorsLock);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -924,7 +926,7 @@ Action Call_OnDoorsUnlock()
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnDoorsUnlock);
+		Function f = GetLRFunction(lr, OnDoorsUnlock);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -944,7 +946,7 @@ Action Call_OnPlayerPrepped(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnPlayerPrepped);
+		Function f = GetLRFunction(lr, OnPlayerPrepped);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -981,7 +983,7 @@ Action Call_OnSoundHook(int clients[64], int &numClients, char sample[PLATFORM_M
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnSoundHook);
+		Function f = GetLRFunction(lr, OnSoundHook);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -1013,7 +1015,7 @@ Action Call_OnEntCreated(int entity, const char[] name)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnEntCreated);
+		Function f = GetLRFunction(lr, OnEntCreated);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -1038,7 +1040,7 @@ Action Call_OnCalcAttack(JailFighter player, int weapon, char[] weaponname, bool
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnCalcAttack);
+		Function f = GetLRFunction(lr, OnCalcAttack);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -1066,7 +1068,7 @@ Action Call_OnRebelGiven(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnRebelGiven);
+		Function f = GetLRFunction(lr, OnRebelGiven);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -1090,7 +1092,7 @@ void Call_OnRebelRemoved(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnRebelRemoved);
+		Function f = GetLRFunction(lr, OnRebelRemoved);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -1113,7 +1115,7 @@ void Call_OnWardenRemoved(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnWardenRemoved);
+		Function f = GetLRFunction(lr, OnWardenRemoved);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -1132,7 +1134,7 @@ Action Call_OnShouldAutobalance()
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnShouldAutobalance);
+		Function f = GetLRFunction(lr, OnShouldAutobalance);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -1152,7 +1154,7 @@ Action Call_OnShouldAutobalancePlayer(const JailFighter player)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnShouldAutobalancePlayer);
+		Function f = GetLRFunction(lr, OnShouldAutobalancePlayer);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -1173,7 +1175,7 @@ Action Call_OnSetWardenLock(const bool statusto)
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
-		Function f = lr.GetFunction(OnSetWardenLock);
+		Function f = GetLRFunction(lr, OnSetWardenLock);
 		if (f != INVALID_FUNCTION)
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -1190,7 +1192,7 @@ void Call_OnLRActivate(LastRequest lr)
 	Call_PushCell(lr);
 	Call_Finish();
 
-	Function f = lr.GetFunction(OnLRActivate);
+	Function f = GetLRFunction(lr, OnLRActivate);
 	if (f != INVALID_FUNCTION)
 	{
 		Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -1205,7 +1207,7 @@ void Call_OnLRActivatePlayer(LastRequest lr, const JailFighter player)
 	Call_PushCell(player);
 	Call_Finish();
 
-	Function f = lr.GetFunction(OnLRActivatePlayer);
+	Function f = GetLRFunction(lr, OnLRActivatePlayer);
 	if (f != INVALID_FUNCTION)
 	{
 		Call_StartFunction(lr.GetOwnerPlugin(), f);
@@ -1220,11 +1222,33 @@ void Call_OnLRDenied(LastRequest lr)
 	Call_PushCell(lr);
 	Call_Finish();
 
-	Function f = lr.GetFunction(OnLRDenied);
+	Function f = GetLRFunction(lr, OnLRDenied);
 	if (f != INVALID_FUNCTION)
 	{
 		Call_StartFunction(lr.GetOwnerPlugin(), f);
 		Call_PushCell(lr);
 		Call_Finish();
+	}
+}
+void Call_OnRoundReset()
+{
+	Call_StartForward(hPrivFwds[OnRoundReset]);
+	Call_Finish();
+
+	LastRequest lr;
+	Function f;
+	for (int i = 0; i < gamemode.iLRs; ++i)
+	{
+		lr = LastRequest.At(i);
+		if (lr != null)
+		{
+			f = GetLRFunction(lr, OnRoundReset);
+			if (f != INVALID_FUNCTION)
+			{
+				Call_StartFunction(lr.GetOwnerPlugin(), f);
+				Call_PushCell(lr);
+				Call_Finish();
+			}
+		}
 	}
 }

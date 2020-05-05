@@ -2,7 +2,7 @@ static LastRequest g_LR;
 
 public void Random_Init()
 {
-	g_LR = LastRequest.CreateFromConfig("Random");
+	g_LR = LastRequest.CreateFromConfig("Random", false);
 	if (g_LR != null)
 		g_LR.AddHook(OnLRPicked, Random_OnLRPicked);
 }
@@ -37,16 +37,9 @@ public Action Random_OnLRPicked(LastRequest lr, const JBPlayer player)
 		LastRequest exceptions = LastRequest.ByName("Commit Suicide");
 		if (exceptions != null && exceptions.GetID() == id)
 		{
-//			exceptions.ForceFireFunction(OnLRPicked, Param_Cell, player, Param_Cell, exceptions);
-			Function func = exceptions.GetFunction(OnLRPicked);
-			if (func != INVALID_FUNCTION)
-			{
-				Call_StartFunction(exceptions.GetOwnerPlugin(), func);
-				Call_PushCell(exceptions);
-				Call_PushCell(player);
-				Call_Finish();
-			}
-			break;
+			continue;
+//			exceptions.ForceFireFunction(OnLRPicked, Param_Cell, player);
+//			break;
 		}
 
 		exceptions = LastRequest.ByName("Freeday for Others");

@@ -5,7 +5,7 @@ static LastRequest g_LR;
 
 public void Hot_Init()
 {
-	g_LR = LastRequest.CreateFromConfig("Hot Prisoner");
+	g_LR = LastRequest.CreateFromConfig("Hot Prisoner", false);
 	if (g_LR != null)
 	{
 		g_LR.AddHook(OnPlayerTouch, Hot_OnPlayerTouch);

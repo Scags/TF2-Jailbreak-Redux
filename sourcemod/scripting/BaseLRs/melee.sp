@@ -4,7 +4,7 @@ static LastRequest g_LR;
 
 public void Melee_Init()
 {
-	g_LR = LastRequest.CreateFromConfig("Guards Melee Only Round");
+	g_LR = LastRequest.CreateFromConfig("Guards Melee Only Round", false);
 	if (g_LR != null)
 	{
 		g_LR.AddHook(OnLRActivate, Melee_OnLRActivate);

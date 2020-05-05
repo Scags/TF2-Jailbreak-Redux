@@ -60,64 +60,61 @@ methodmap JailGameMode < JBGameMode
 	 *
 	 *	@param status 			Type of cell door usage found in the eDoorsMode enum.
 	 *	@param announce 		Announce message to all clients.
-	 *	@param fromwarden 		If true, current warden will be the client announced who activated cells. 
-	 *							If false, undisclosed admin is the announced activator.
-	 *							Do NOT set this param to true if there is no current Warden.
+	 *	@param fromwarden 		Unused
 	 *	@param overridefwds 	If true, forwards will not be called for the according action.
 	 *
 	 *	@noreturn
 	*/
-	public void DoorHandler( const eDoorsMode status, bool announce = false, bool fromwarden = true, bool overridefwds = false )
+	public bool DoorHandler( const eDoorsMode status, bool announce = false, bool fromwarden = true, bool overridefwds = false )
 	{
 		if (strCellNames[0] != '\0')
 		{
-			char name[32];
 			switch (status)
 			{
 				case OPEN:
 				{
 					if (!overridefwds)
 						if (Call_OnDoorsOpen() != Plugin_Continue) 
-							return;
-					FormatEx(name, sizeof(name), "%t", "Opened");
+							return false;
+//					FormatEx(name, sizeof(name), "%t", "Opened");
 					this.bCellsOpened = true;
-					if (!this.bFirstDoorOpening)
-						this.bFirstDoorOpening = true;
+					this.bFirstDoorOpening = true;
 				}
 				case CLOSE:
 				{
 					if (!overridefwds)
 						if (Call_OnDoorsClose() != Plugin_Continue) 
-							return;
-					FormatEx(name, sizeof(name), "%t", "Closed");
+							return false;
+//					FormatEx(name, sizeof(name), "%t", "Closed");
 					this.bCellsOpened = false;
 				}
 				case LOCK:
 				{
 					if (!overridefwds)
 						if (Call_OnDoorsLock() != Plugin_Continue) 
-							return;
-					FormatEx(name, sizeof(name), "%t", "Locked");
+							return false;
+//					FormatEx(name, sizeof(name), "%t", "Locked");
 				}
 				case UNLOCK:
 				{
 					if (!overridefwds)
 						if (Call_OnDoorsUnlock() != Plugin_Continue) 
-							return;
-					FormatEx(name, sizeof(name), "%t", "Unlocked");
+							return false;
+//					FormatEx(name, sizeof(name), "%t", "Unlocked");
 				}
 			}
 
-			if (announce)
-				if (fromwarden)
-					CPrintToChatAll("%t %t", "Plugin Tag", "Warden Work Cells", this.iWarden.index, name);
-				else CPrintToChatAll("%t %t", "Admin Tag", "Admin Work Cells", name);
+			char name[32];
+//			if (announce)
+//				if (fromwarden)
+//					CPrintToChatAll("%t %t", "Plugin Tag", "Warden Work Cells", this.iWarden.index, name);
+//				else CPrintToChatAll("%t %t", "Admin Tag", "Admin Work Cells", name);
 
 			int i, ent = -1;
 			for (i = 0; i < sizeof(strDoorsList); i++)
 			{
 				ent = -1;
-				while ((ent = FindEntityByClassnameSafe(ent, strDoorsList[i])) != -1)
+				while ((ent = FindEntityByClassname(ent, strDoorsList[i])) != -1)
 				{
 					GetEntPropString(ent, Prop_Data, "m_iName", name, sizeof(name));
 					if (StrEqual(name, strCellNames, false))
@@ -133,6 +130,7 @@ methodmap JailGameMode < JBGameMode
 				}
 			}
 		}
+		return true;
 	}
 	/**
 	 *	Reset the Warden-firing votes.
@@ -251,7 +249,7 @@ methodmap JailGameMode < JBGameMode
 		int team = teamchange ? teamchange : GetClientTeam(player.index);
 		bool ismute = player.bIsMuted;
 
-		if (!team)	// If player is in spec, assume red team rules of muting
+		if (team <= 1)	// If player is in spec, assume red team rules of muting
 			team = RED;
 
 		switch (type)
@@ -279,6 +277,13 @@ methodmap JailGameMode < JBGameMode
 
 		if (s[0] != '\0')
 			CPrintToChat(player.index, "%t %t", "Plugin Tag", s);
+	}
+
+	public void RecalcMuting()
+	{
+		for (int i = MaxClients; i; --i)
+			if (IsClientInGame(i))
+				this.ToggleMuting(JailFighter(i));
 	}
 
 	/**
@@ -415,9 +420,6 @@ methodmap JailGameMode < JBGameMode
 			if (val <= 1)
 				break;
 
-			if (tries > 50)
-				break;
-
 			player = JailFighter(GetRandomPlayer(countred > countblu ? RED : BLU, true));
 
 			if (player.index == -1)
@@ -434,5 +436,69 @@ methodmap JailGameMode < JBGameMode
 			if (announce)
 				CPrintToChat(player.index, "%t %t", "Plugin Tag", "Autobalanced");
 		}	while ++tries <= 50;
+	}
+
+	// I'd like for these to be cached, but there's just no point
+	public KeyValues GetKv(int cfgtype)
+	{
+		if (!(0 <= cfgtype < CFG_LENGTH) || strConfig[cfgtype][0] == '\0')
+			return null;
+
+		KeyValues kv = new KeyValues(strKVConfig[cfgtype]);
+		if (!kv.ImportFromFile(strConfig[cfgtype]))
+			delete kv;
+		return kv;
+	}
+
+	public KeyValues GetMapKv()
+	{
+		KeyValues kv = this.GetKv(CFG_MAP);
+		if (kv == null)
+			return null;
+
+		char map[64]; GetCurrentMap(map, sizeof(map));
+		if (!kv.JumpToKey(map))
+			delete kv;
+		return kv;
+	}
+
+	public KeyValues GetMapKvSection(const char[] name, bool create = false)
+	{
+		KeyValues kv = this.GetMapKv();
+		if (kv == null)
+			return null;
+
+		if (!kv.JumpToKey(name, create))
+			delete kv;
+		return kv;
+	}
+
+	public JailFighter FindRandomWarden()
+	{
+		JailFighter[] players = new JailFighter[MaxClients];
+		JailFighter player;
+		int count;
+		for (int i = MaxClients; i; --i)
+		{
+			if (!IsClientInGame(i) || !IsPlayerAlive(i))
+				continue;
+
+			if (GetClientTeam(i) != BLU)
+				continue;
+
+			player = JailFighter(i);
+			if (player.bLockedFromWarden)
+				continue;
+
+			players[count++] = player;
+		}
+		if (!count)
+			return view_as< JailFighter >(0);
+
+		player = players[GetRandomInt(0, count-1)];
+		if (!IsClientValid(player.index))
+			return view_as< JailFighter >(0);
+
+		return player.WardenSet() ? player : view_as< JailFighter >(0);
 	}
 };

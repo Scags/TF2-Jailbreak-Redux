@@ -2,14 +2,14 @@ static LastRequest g_Warday, g_ClassWars;
 
 public void Warday_Init()
 {
-	g_Warday = LastRequest.CreateFromConfig("Warday");
+	g_Warday = LastRequest.CreateFromConfig("Warday", false);
 	if (g_Warday != null)
 	{
 		g_Warday.AddHook(OnPlayerPrepped, Warday_OnPlayerPrepped);
 		g_Warday.AddHook(OnLRActivatePlayer, Warday_OnLRActivatePlayer)
 	}
 
-	g_ClassWars = LastRequest.CreateFromConfig("Class Warfare");
+	g_ClassWars = LastRequest.CreateFromConfig("Class Warfare", false);
 	if (g_ClassWars != null)
 	{
 		g_ClassWars.AddHook(OnPlayerPrepped, Warday_OnPlayerPrepped);

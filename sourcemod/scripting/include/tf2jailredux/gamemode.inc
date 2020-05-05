@@ -205,6 +205,41 @@ native void JBGameMode_AutobalanceTeams(bool announce = true);
 native void JBGameMode_EvenTeams(bool announce = true, bool followimmun = true);
 
 /**
+ *	Get a KV import from a TF2Jail config file.
+ *
+ *	@param cfgtype 			Type of config to import. See CFG_* values
+ *							for the type of config.
+ *
+ *	@return 				A new KeyValues Handle to the config, if it exists,
+ *							null otherwise. This must be closed or deleted when you
+ *							are finished with it.
+*/
+native KeyValues JBGameMode_GetKv(int cfgtype);
+
+/**
+ *	Get a KV import of the map's config entry.
+ *	@note 					This is the same as GetKv(CFG_MAP) and jumping to the current map.
+ *
+ *	@return 				A new KeyValues Handle to the config, if it exists,
+ *							null otherwise. This must be closed or deleted when you
+ *							are finished with it.
+*/
+native KeyValues JBGameMode_GetMapKv();
+
+/**
+ *	Get a KV section from a map's config entry.
+ *
+ *	@param name 			Name of the section to jump to.
+ *	@param create 			If true, this will create a new section of a given name
+ *							if it does not exist.
+ *
+ *	@return 				A new KeyValues Handle to the kv section, if it exists,
+ *							null otherwise. This must be closed or deleted when you
+ *							are finished with it.
+*/
+native KeyValues JBGameMode_GetMapKvSection(const char[] name, bool create = false);
+
+/**
  *	Retrieve a Handle to the gamemode's current last request.
  *	@note 					Last requests are only active when iRoundState is StateRunning.
  *
@@ -315,7 +350,7 @@ methodmap JBGameMode < StringMap
 	 *
 	 *	@return 			Value received from called key.
 	*/
-#pragma deprecated Use type-safe SetProp* functions instead
+#pragma deprecated Use type-safe GetProp* functions instead
 	public any GetProperty( const char[] key )
 	{
 		any i; this.GetValue(key, i);
@@ -1058,6 +1093,50 @@ methodmap JBGameMode < StringMap
 	public LastRequest GetCurrentLR()
 	{
 		return JBGameMode_GetCurrentLR();
+	}
+
+	/**
+	 *	Get a KV import from a TF2Jail config file.
+	 *
+	 *	@param cfgtype 			Type of config to import. See CFG_* values
+	 *							for the type of config.
+	 *
+	 *	@return 				A new KeyValues Handle to the config, if it exists,
+	 *							null otherwise. This must be closed or deleted when you
+	 *							are finished with it.
+	*/
+	public KeyValues GetKv(int cfgtype)
+	{
+		return JBGameMode_GetKv(cfgtype);
+	}
+
+	/**
+	 *	Get a KV import of the map's config entry.
+	 *	@note 					This is the same as GetKv(CFG_MAP) and jumping to the current map.
+	 *
+	 *	@return 				A new KeyValues Handle to the config, if it exists,
+	 *							null otherwise. This must be closed or deleted when you
+	 *							are finished with it.
+	*/
+	public KeyValues GetMapKv()
+	{
+		return JBGameMode_GetMapKv();
+	}
+
+	/**
+	 *	Get a KV section from a map's config entry.
+	 *
+	 *	@param name 			Name of the section to jump to.
+	 *	@param create 			If true, this will create a new section of a given name
+	 *							if it does not exist.
+	 *
+	 *	@return 				A new KeyValues Handle to the kv section, if it exists,
+	 *							null otherwise. This must be closed or deleted when you
+	 *							are finished with it.
+	*/
+	public KeyValues GetMapKvSection(const char[] name, bool create = false)
+	{
+		return JBGameMode_GetMapKvSection(name, create);
 	}
 };
 

@@ -27,7 +27,9 @@ methodmap LastRequest < StringMap
 	public static native LastRequest Create(const char[] name, bool &exists = false);
 
 	/**
-	 *	Create an instance of a new last request directly from the config. 
+	 *	Create an instance of a new last request directly from the config.
+	 *	If an LR already exists in memory, this will link up to it and 
+	 *	skip importing data from the config!
 	 *	If an LR of this name already exists in the config, then it will
 	 *	copy the data in that config. Otherwise, it will return null.
 	 *	Contrary to LastRequest(), this will only fail if the LR does
@@ -43,11 +45,15 @@ methodmap LastRequest < StringMap
 	 *
 	 *	@param name 			Name of the last request. This is the config SECTION
 	 * 							name and is case-insensitive!
+	 *	@param includedisabled	If true, this will return an lr handle regardless of 
+	 *							whether or not the LR is disabled in config. If false,
+	 *							then this will fail if the LR's config has "Disabled"
+	 *							set to 1.
 	 *
 	 *	@return 				New LR instance if it exists in config, null otherwise.
 	 *							If it exists, this will set the "Name" entry as name.
 	*/
-	public static native LastRequest CreateFromConfig(const char[] name);
+	public static native LastRequest CreateFromConfig(const char[] name, bool includedisabled = true);
 
 	/**
 	 *	Retrieve an LR at this index.
@@ -99,26 +105,37 @@ methodmap LastRequest < StringMap
 	*/
 	public native void RemoveHook(const int callbacktype);
 
-	public Function GetFunction(const int callbacktype)
-	{
-		if (!(0 <= callbacktype < JBFWD_LENGTH))
-			return INVALID_FUNCTION;
+	/**
+	 *	Force an lr's function to fire.
+	 *	@note 					DO NOT USE THIS UNLESS YOU KNOW WHAT YOU'RE DOING.
+	 *
+	 *	@param callbacktype 	Index of the callback (see hook.inc).
+	 *	@param ...				Method of calling. See below.
+	 *
+	 *	USAGE GOES (ParamType, data)
+	 *	USE Param_* ENUM IN functions.inc
+	 *
+	 *	FOR CELLS (Param_Cell, data)
+	 * 	FOR FLOATS (Param_Float, data)
+	 *	FOR STRINGS (Param_String, mystring)
+	 *	FOR ARRAYS (Param_Array, myarray, size_of_myarray)
+	 *
+	 *	REFERENCES, ARRAYS, AND STRINGS ARE ALWAYS PASSED AS CONST, DATA CHANGED 
+	 *	WILL NOT BE COPIED BACK.
+	 *
+	 *	EXAMPLE USAGE:
+	 *	lr.ForceFireFunction(OnLRActivate);
+	 *
+	 *	lr.ForceFireFunction(OnLRActivatePlayer, Param_Cell, player);
+	 *
+	 *	lr.ForceFireFunction(OnTakeDamage, Param_Cell, victim, Param_CellByRef, attacker, Param_CellByRef, inflictor, Param_FloatByRef, damage, Param_CellByRef, damagetype,
+	 *			Param_CellByRef, weapon, Param_Array, damageForce, 3, Param_Array, damagePosition, 3, Param_Cell, damagecustom);
+	 *
+	 *	@return 				Whatever this function would have returned from with it's natural call.
+	*/
+	public native Action ForceFireFunction(const int callbacktype, any ...);
 
-		DataPack p; this.GetValue("__FUNCS", p);
-		p.Position = view_as< DataPackPos >(callbacktype + 1);
-		return p.ReadFunction();
-	}
-
-	public bool SetFunction(const int callbacktype, const JBHookCB func)
-	{
-		if (!(0 <= callbacktype < JBFWD_LENGTH))
-			return false;
-
-		DataPack p; this.GetValue("__FUNCS", p);
-		p.Position = view_as< DataPackPos >(callbacktype + 1);
-		p.WriteFunction(func);
-		return true;
-	}
+	public native bool SetFunction(const int callbacktype, const JBHookCB func);
 
 	/**
 	 *	Execute a Last Request's activation logic. This is 

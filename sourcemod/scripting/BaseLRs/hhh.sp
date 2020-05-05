@@ -18,7 +18,7 @@ static LastRequest g_LR;
 
 public void HHH_Init()
 {
-	g_LR = LastRequest.CreateFromConfig("HHH Kill Round");
+	g_LR = LastRequest.CreateFromConfig("HHH Kill Round", false);
 	if (g_LR)
 	{
 		g_LR.AddHook(OnLRActivate, HHH_OnLRActivate);
@@ -57,7 +57,7 @@ public void HHH_OnDownloads()
 
 public void HHH_OnLRActivate(LastRequest lr)
 {
-	EmitSoundToAll(SPAWN);
+//	EmitSoundToAll(SPAWN);
 	EmitSoundToAll(SPAWNRUMBLE);
 }
 

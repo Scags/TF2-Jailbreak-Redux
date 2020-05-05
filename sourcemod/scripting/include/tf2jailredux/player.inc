@@ -192,6 +192,11 @@ methodmap JBPlayer
 		public get() 				{ return this.GetProp("iHealth"); }
 		public set( const int i )	{ this.SetProp("iHealth", i); }
 	}
+	property int nWardenStabbed
+	{
+		public get() 				{ return this.GetProp("nWardenStabbed"); }
+		public set( const int i )	{ this.SetProp("nWardenStabbed", i); }
+	}
 
 	property bool bIsWarden
 	{
@@ -258,6 +263,11 @@ methodmap JBPlayer
 		public get() 				{ return this.GetProp("bSkipPrep"); }
 		public set( const bool i )	{ this.SetProp("bSkipPrep", i); }
 	}
+	property bool bSelectingLR
+	{
+		public get() 				{ return this.GetProp("bSelectingLR"); }
+		public set( const bool i )	{ this.SetProp("bSelectingLR", i); }
+	}
 
 	property float flSpeed
 	{
@@ -273,6 +283,12 @@ methodmap JBPlayer
 	{
 		public get() 				{ return this.GetPropFloat("flHealTime"); }
 		public set( const float i )	{ this.SetPropFloat("flHealTime", i); }
+	}
+
+	property Handle hRebelTimer
+	{
+		public get() 				{ return this.GetProp("hRebelTimer"); }
+		public set( const Handle i ){ this.SetProp("hRebelTimer", i); }		
 	}
 
 	/**

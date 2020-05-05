@@ -4,9 +4,9 @@ static LastRequest g_FreedaySelf, g_FreedayOther, g_FreedayAll;
 
 public void Freedays_Init()
 {
-	g_FreedaySelf = LastRequest.CreateFromConfig("Freeday for Yourself");
-	g_FreedayOther = LastRequest.CreateFromConfig("Freeday for Others");
-	g_FreedayAll = LastRequest.CreateFromConfig("Freeday for All");
+	g_FreedaySelf = LastRequest.CreateFromConfig("Freeday for Yourself", false);
+	g_FreedayOther = LastRequest.CreateFromConfig("Freeday for Others", false);
+	g_FreedayAll = LastRequest.CreateFromConfig("Freeday for All", false);
 }
 
 public void Freedays_Destroy()

@@ -193,9 +193,9 @@
 	
 	"Admin Lock Warden"
 	{
-		"en" 			"Admin has locked warden."
-		"pl"			"Administrator zablokował pozycje naczelnika."
-		"pt" 			"Um Administrador travou a Direção."
+		"en" 			"has locked warden."
+		"pl"			"zablokował pozycje naczelnika."
+		"pt" 			"travou a Direção."
 	}
 	
 	"Warden Locked"
@@ -244,9 +244,9 @@
 	
 	"Admin Locked LR"
 	{
-		"en" 			"Admin has locked LR."
-		"pl"			"Administrator zablokował LR."
-		"pt" 			"Um Administrador travou o Último Pedido."
+		"en" 			"has locked LR."
+		"pl"			"zablokował LR."
+		"pt" 			"travou o Último Pedido."
 	}
 	
 	"LR Given"
@@ -330,9 +330,9 @@
 
 	"Admin Denied LR"
 	{
-		"en" 			"Admin has denied the current last request!"
-		"pl"			"Administrator odrzucił bieżące ostatnie życzenie!"
-		"pt" 			"Um Administrador negou o último pedido atual!"
+		"en" 			"has denied the current last request!"
+		"pl"			"odrzucił bieżące ostatnie życzenie!"
+		"pt" 			"negou o último pedido atual!"
 	}
 
 	"Target Need Blue Team"
@@ -346,32 +346,32 @@
 	"Admin Force Warden"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"Admin has forced {default}{1}{burlywood} as Warden."
-		"pl"			"Admin zmusił {default}{1}{burlywood} aby został Naczelnikiem."
-		"pt" 			"Um Administrador forçou {default}{1}{burlywood} à ser o Diretor."
+		"en" 			"has forced {default}{1}{burlywood} as Warden."
+		"pl"			"zmusił {default}{1}{burlywood} aby został Naczelnikiem."
+		"pt" 			"forçou {default}{1}{burlywood} à ser o Diretor."
 	}
 
 	"Admin Force Random Warden"
 	{
-		"en" 			"Admin has forced a random player as Warden."
-		"pl"			"Administrator wylosował gracza na Naczelnika."
-		"pt" 			"Um Administrador forçou um jogador aleatório à ser o Diretor."
+		"en" 			"has forced a random player as Warden."
+		"pl"			"wylosował gracza na Naczelnika."
+		"pt" 			"forçou um jogador aleatório à ser o Diretor."
 	}
 
 	// 1: Client name/index
 	"Admin Force LR"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"Admin has forced {default}{1}{burlywood} to receive a Last Request."
-		"pl"			"Administrator wymusił otrzymanie Ostatniego Życzenia na {default}{1}{burlywood}."
-		"pt" 			"Um Administrador forçou {default}{1}{burlywood} à receber um Último Pedido."
+		"en" 			"has forced {default}{1}{burlywood} to receive a Last Request."
+		"pl"			"wymusił otrzymanie Ostatniego Życzenia na {default}{1}{burlywood}."
+		"pt" 			"forçou {default}{1}{burlywood} à receber um Último Pedido."
 	}
 
 	"Admin Force LR Self"
 	{
-		"en" 			"Admin has forced a Last Request for themselves."
-		"pl"			"Administrator wymusił na sobie Ostatnie Życzenie"
-		"pt" 			"Um Administrador forçou um Último Pedido à si mesmo."
+		"en" 			"has forced a Last Request for themselves."
+		"pl"			"wymusił na sobie Ostatnie Życzenie"
+		"pt" 			"forçou um Último Pedido à si mesmo."
 	}
 
 	"Admin Reset Plugin"
@@ -420,9 +420,9 @@
 	"Admin Give Freeday"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"Admin has given {default}{1}{burlywood} a Freeday."
-		"pl"			"Administrator dał {default}{1}{burlywood} Dzień Wolny."
-		"pt" 			"Um Administrador deu Freeday à{default}{1}{burlywood}."
+		"en" 			"has given {default}{1}{burlywood} a Freeday."
+		"pl"			"dał {default}{1}{burlywood} Dzień Wolny."
+		"pt" 			"deu Freeday à{default}{1}{burlywood}."
 	}
 
 	"Select For Freeday"
@@ -435,9 +435,9 @@
 	"Admin Remove Freeday"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"Admin has removed freeday from {default}{1}."
-		"pl"			"Administrator zabrał Dzień Wolny od {default}{1}."
-		"pt" 			"Um Administrador removeu o Freeday de {default}{1}."
+		"en" 			"removed freeday from {default}{1}{burlywood}."
+		"pl"			"zabrał Dzień Wolny od {default}{1}{burlywood}."
+		"pt" 			"removeu o Freeday de {default}{1}{burlywood}."
 	}
 
 	"Player Not Freeday"
@@ -456,9 +456,9 @@
 
 	"Admin Lock Warden"
 	{
-		"en" 			"Admin has locked Warden!"
-		"pl"			"Admin zablokował pozycje Naczelnika!"
-		"pt" 			"Um Administrador travou a Direção!"
+		"en" 			"has locked Warden!"
+		"pl"			"zablokował pozycje Naczelnika!"
+		"pt" 			"travou a Direção!"
 	}
 
 	"Warden Not Locked"
@@ -470,9 +470,9 @@
 
 	"Admin Unlock Warden"
 	{
-		"en" 			"Admin has unlocked warden."
-		"pl"			"Admin odblokował Pozycje Naczelnika."
-		"pt" 			"Um Administrador destravou a Direção."
+		"en" 			"has unlocked Warden."
+		"pl"			"odblokował Pozycje Naczelnika."
+		"pt" 			"destravou a Direção."
 	}
 
 	// 1: Warden name/index
@@ -629,16 +629,16 @@
 
 	"Medic Room Enabled Admin"
 	{
-		"en" 			"Admin has toggled Medic {default}On{burlywood}!"
-		"pl"			"Admin przełączył status Medyka na {default}Włączony{burlywood}!"
-		"pt" 			"Um Administrador {default}ativou{burlywood} as Salas de Medic!"
+		"en" 			"has toggled Medic {default}On{burlywood}!"
+		"pl"			"przełączył status Medyka na {default}Włączony{burlywood}!"
+		"pt" 			"{default}ativou{burlywood} as Salas de Medic!"
 	}
 
 	"Medic Room Disabled Admin"
 	{
-		"en" 			"Admin has toggled Medic {default}Off{burlywood}!"
-		"pl"			"Admin przełączył status Medyka na {default}Wyłączony{burlywood}!"
-		"pt" 			"Um Administrador {default}desativou{burlywood} as Salas de Medic!"
+		"en" 			"has toggled Medic {default}Off{burlywood}!"
+		"pl"			"przełączył status Medyka na {default}Wyłączony{burlywood}!"
+		"pt" 			"{default}desativou{burlywood} as Salas de Medic!"
 	}
 
 	// 1: Client name/index
@@ -701,9 +701,9 @@
 	"Admin Work Cells"
 	{
 		"#format" 		"{1:s}"
-		"en" 			"Admin has {1} cells."
-		"pl"			"Admin {1} cele."
-		"pt" 			"Um Administrador {1} as celas."
+		"en" 			"{1} cells."
+		"pl"			"{1} cele."
+		"pt" 			"{1} as celas."
 	}
 
 	"Opened"
@@ -1195,5 +1195,28 @@
 	{
 		"#format" 	"{1:d}"
 		"en" 		"Time set to {default}{1}{burlywood}."
+	}
+	
+	"Admin Remove Warden"
+	{
+		"#format"	"{1:N}"
+		"en"		"has fired {1} from Warden."
+	}
+	
+	// Warden name annotation
+	"Warden"
+	{
+		"en" 		"Warden"
+	}
+	
+	"Warden Marker Annotation"
+	{
+		"en" 		"Here"
+	}
+	
+	"Warden Health Restore"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"Warden {default}{1}{burlywood} has restored the health of all prisoners."
 	}
 }

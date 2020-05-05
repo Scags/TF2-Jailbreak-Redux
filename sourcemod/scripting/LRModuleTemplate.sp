@@ -62,7 +62,7 @@ public void OnLibraryAdded(const char[] name)
 			// You can also set custom keys which can be retrieved later!
 			// This can be a replacement for cvars, which can let server owners
 			// an LR's data within a single file
-			// If you want to get a custom value later, use LastRequest.GetProperty*()
+			// If you want to get a custom value later, use LastRequest.GetParameter*()
 			g_LR.SetParameterNum("MyCustomKey", 100);
 
 			// Done with all of the config data, now export it to the config file!
@@ -71,6 +71,9 @@ public void OnLibraryAdded(const char[] name)
 			// We already know that the LR is not in the config, but it's good practice
 			g_LR.ExportToConfig(.create = true, .createonly = true);
 		}
+
+		if (g_LR.IsDisabled())
+			return;
 
 		// The cool thing is that you don't *have* to use config with LRs
 		// You can simply just LastRequest.Create and go to town

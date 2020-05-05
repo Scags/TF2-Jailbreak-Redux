@@ -8,6 +8,13 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	if (!IsClientValid(client))
 		return Plugin_Continue;
 
+	// BUG; players can spawn as spectators in midround... something to do with ForceTeamChange maybe?
+	if (!GetEntProp(client, Prop_Send, "m_iTeamNum"))
+	{
+		ForcePlayerSuicide(client);
+		return Plugin_Continue;
+	}
+
 	JailFighter player = JailFighter(client);
 	int team = GetClientTeam(client);
 	SetVariantString("");
@@ -45,9 +52,10 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 
 	gamemode.ToggleMuting(player);
 	ManageSpawn(player, event);
-	SetPawnTimer(PrepPlayer, 0.2, player.userid);
+	SetPawnTimer(PrepPlayer, 0.1, player.userid);
 
 	player.flHealTime = 0.0;
+	player.nWardenStabbed = 0;
 
 	return Plugin_Continue;
 }
@@ -99,8 +107,9 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 				PrintCenterTextAll("%t", "Warden Killed");
 	}
 
-	if (victim.iCustom)
-		victim.iCustom = 0;
+	victim.iCustom = 0;
+	victim.bSelectingLR = false;
+	victim.nWardenStabbed = 0;
 
 	ManagePlayerDeath(attacker, victim, event);
 	gamemode.ToggleMuting(victim, true);	// IsPlayerAlive more like returns true on player_death >:c
@@ -145,7 +154,7 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 			for (i = 0; i < sizeof(strDoorsList); i++)
 			{
 				ent = -1;
-				while ((ent = FindEntityByClassnameSafe(ent, strDoorsList[i])) != -1)
+				while ((ent = FindEntityByClassname(ent, strDoorsList[i])) != -1)
 				{
 					GetEntPropString(ent, Prop_Data, "m_iName", entname, sizeof(entname));
 					if (StrEqual(entname, strCellNames, false))	// Laziness, hook first cell door opening so open door timer catches and doesn't open on its own
@@ -172,6 +181,7 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 		if (strBackgroundSong[0] != '\0')
 			StopSound(i, SNDCHAN_AUTO, strBackgroundSong);
 	}
+	Call_OnRoundReset();
 
 	// gamemode.iLRType = -1;
 	gamemode.DoorHandler(CLOSE);
@@ -193,6 +203,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	gamemode.bFirstDoorOpening = false;
 	gamemode.iLivingMuteType = cvarTF2Jail[LivingMuteType].IntValue;
 	gamemode.iMuteType = cvarTF2Jail[MuteType].IntValue;
+	gamemode.iWarden = view_as< JailFighter >(0);
 
 	int i;
 	JailFighter player;
@@ -275,13 +286,13 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	time = cvarTF2Jail[WardenDelay].FloatValue;
 	if (time != 0.0)
 	{
+		gamemode.bIsWardenLocked = true;
 		if (time == -1.0)
-			gamemode.FindRandomWarden();
-		else
 		{
-			gamemode.bIsWardenLocked = true;
-			SetPawnTimer(EnableWarden, time, gamemode.iRoundCount);
+			SetPawnTimer(EnableWarden2, cvarTF2Jail[WardenDelay2].FloatValue, gamemode.iRoundCount);
+//			gamemode.FindRandomWarden();
 		}
+		else SetPawnTimer(EnableWarden, time, gamemode.iRoundCount);
 	}
 
 	gamemode.flMusicTime = GetGameTime() + 1.4;
@@ -324,6 +335,7 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 
 		ManageRoundEnd(player, event);
 		player.UnmutePlayer();
+		player.bSelectingLR = false;
 	}
 	ManageOnRoundEnd(event); // Making 1 with and without clients so things dont fire once for every client in the loop
 

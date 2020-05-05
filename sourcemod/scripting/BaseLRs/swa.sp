@@ -2,7 +2,7 @@ static LastRequest g_LR;
 
 public void SWA_Init()
 {
-	g_LR = LastRequest.CreateFromConfig("Stealy Wheely Automobiley");
+	g_LR = LastRequest.CreateFromConfig("Stealy Wheely Automobiley", false);
 	if (g_LR != null)
 	{
 		g_LR.AddHook(OnLRActivatePlayer, SWA_OnLRActivatePlayer);

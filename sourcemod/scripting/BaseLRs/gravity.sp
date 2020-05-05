@@ -5,7 +5,7 @@ static LastRequest g_LR;
 
 public void Gravity_Init()
 {
-	g_LR = LastRequest.CreateFromConfig("Low Gravity");
+	g_LR = LastRequest.CreateFromConfig("Low Gravity", false);
 	if (g_LR != null)
 	{
 		g_LR.AddHook(OnLRActivate, Gravity_OnLRActivate);

@@ -4,7 +4,7 @@ static LastRequest g_LR;
 
 public void Custom_Init()
 {
-	g_LR = LastRequest.CreateFromConfig("Custom Request");
+	g_LR = LastRequest.CreateFromConfig("Custom Request", false);
 	if (g_LR != null)
 	{
 		g_LR.AddHook(OnLRPicked, Custom_OnLRPicked);

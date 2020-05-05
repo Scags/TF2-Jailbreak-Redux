@@ -4,7 +4,8 @@ public Action Command_Help(int client, int args)
 		return Plugin_Handled;
 	
 	Panel panel = new Panel();
-	char buffer[32];
+	// TODO; make this better... don't know how just do it
+	char buffer[64];
 	FormatEx(buffer, sizeof(buffer), "%t", "Help Panel Welcome");
 	panel.SetTitle(buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "Help Panel Who's Warden");
@@ -13,6 +14,7 @@ public Action Command_Help(int client, int args)
 	panel.DrawItem(buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "Help Panel Turn Off Music");
 	panel.DrawItem(buffer);
+
 	panel.Send(client, Panel_Help, 9001);
 	delete panel;
 	
@@ -192,7 +194,12 @@ public Action Command_OpenCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(OPEN, true);
+	if (gamemode.DoorHandler(OPEN, true))
+	{
+		char method[32];
+		FormatEx(method, sizeof(method), "%t", "Opened");
+		CPrintToChatAll("%t %t", "Plugin Tag", "Warden Work Cells", client, method);
+	}
 
 	return Plugin_Handled;
 }
@@ -231,7 +238,12 @@ public Action Command_CloseCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(CLOSE, true);
+	if (gamemode.DoorHandler(CLOSE, true))
+	{
+		char method[32];
+		FormatEx(method, sizeof(method), "%t", "Closed");
+		CPrintToChatAll("%t %t", "Plugin Tag", "Warden Work Cells", client, method);
+	}
 
 	return Plugin_Handled;
 }
@@ -340,7 +352,7 @@ public Action Command_GiveLastRequest(int client, int args)
 		if (IsVoteInProgress())
 			return Plugin_Handled;
 
-		Menu menu = new Menu(MenuHandle_ForceLR);
+		Menu menu = new Menu(MenuHandle_GiveLR);
 		char buffer[16]; FormatEx(buffer, sizeof(buffer), "%t", "Choose Player");
 		menu.SetTitle(buffer);
 		AddClientsToMenu(menu, true);
@@ -359,7 +371,6 @@ public Action Command_GiveLastRequest(int client, int args)
 
 	if (target_count != 1)
 		ReplyToTargetError(client, target_count);
-
 
 	if (GetClientTeam(target_list[0]) != RED)
 	{
@@ -522,6 +533,11 @@ public Action AdminRemoveWarden(int client, int args)
 		CReplyToCommand(client, "%t %t", "Plugin Tag", "No Current Warden");
 		return Plugin_Handled;
 	}
+
+	char tag[64];
+	FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+	CShowActivityEx(client, tag, "%t", "Admin Remove Warden", gamemode.iWarden.index);
+	LogMessage("\"%L\" triggered \"%t\"", client, "Admin Remove Warden", gamemode.iWarden.index);
 	gamemode.FireWarden(false);
 	
 	return Plugin_Handled;
@@ -561,11 +577,15 @@ public Action AdminDenyLR(int client, int args)
 	Call_OnLRDenied(LastRequest.At(gamemode.iLRPresetType));
 
 	int type = gamemode.iLRPresetType;
-	gamemode.hLRCount.Set( type, gamemode.hLRCount.Get(type)-1 );
+	gamemode.hLRCount.Set(type, gamemode.hLRCount.Get(type)-1);
 	gamemode.iLRPresetType = -1;
 	gamemode.bIsLRInUse = false;
 
-	CPrintToChatAll("%t %t", "Admin Tag", "Admin Denied LR");
+	char tag[64];
+	FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+	CShowActivityEx(client, tag, "%t", "Admin Denied LR");
+	LogMessage("\"%L\" triggered \"%t\"", client, "Admin Denied LR");
+//	CPrintToChatAll("%t %t", "Admin Tag", "Admin Denied LR");
 
 	return Plugin_Handled;
 }
@@ -581,7 +601,15 @@ public Action AdminOpenCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(OPEN, true, false);
+	if (gamemode.DoorHandler(OPEN, true, false))
+	{
+		char tag[64];
+		char method[32];
+		FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+		FormatEx(method, sizeof(method), "%t", "Opened");
+		CShowActivityEx(client, tag, "%t", "Admin Work Cells", method);
+		LogMessage("\"%L\" triggered \"%t\"", client, "Admin Work Cells", method);
+	}
 
 	return Plugin_Handled;
 }
@@ -597,7 +625,15 @@ public Action AdminCloseCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(CLOSE, true, false);
+	if (gamemode.DoorHandler(CLOSE, true, false))
+	{
+		char tag[64];
+		char method[32];
+		FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+		FormatEx(method, sizeof(method), "%t", "Closed");
+		CShowActivityEx(client, tag, "%t", "Admin Work Cells", method);
+		LogMessage("\"%L\" triggered \"%t\"", client, "Admin Work Cells", method);
+	}
 
 	return Plugin_Handled;
 }
@@ -613,7 +649,14 @@ public Action AdminLockCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(LOCK, true, false);
+	if (gamemode.DoorHandler(LOCK, true, false))
+	{
+		char tag[64];
+		char method[32];
+		FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+		FormatEx(method, sizeof(method), "%t", "Locked");
+		LogMessage("\"%L\" triggered \"%t\"", client, "Admin Work Cells", method);
+	}
 
 	return Plugin_Handled;
 }
@@ -629,7 +672,14 @@ public Action AdminUnlockCells(int client, int args)
 		return Plugin_Handled;
 	}
 
-	gamemode.DoorHandler(UNLOCK, true, false);
+	if (gamemode.DoorHandler(UNLOCK, true, false))
+	{
+		char tag[64];
+		char method[32];
+		FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+		FormatEx(method, sizeof(method), "%t", "Unlocked");
+		LogMessage("\"%L\" triggered \"%t\"", client, "Admin Work Cells", method);
+	}
 
 	return Plugin_Handled;
 }
@@ -667,15 +717,23 @@ public Action AdminForceWarden(int client, int args)
 		gamemode.iWarden.WardenUnset();
 
 		JailFighter(target_list[0]).WardenSet();
-		CPrintToChatAll("%t %t", "Admin Tag", "Admin Force Warden", target_list[0]);
+		char tag[32];
+		FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+		CShowActivityEx(client, tag, "%t", "Admin Force Warden", target_list[0]);
+		LogMessage("\"%L\" triggered \"%t\"", client, "Admin Force Warden", target_list[0]);
+//		CPrintToChatAll("%t %t", "Admin Tag", "Admin Force Warden", target_list[0]);
 
 		return Plugin_Handled;
 	}
 
 	gamemode.iWarden.WardenUnset();
-
 	gamemode.FindRandomWarden();
-	CPrintToChatAll("%t %t", "Admin Tag", "Admin Force Random Warden");
+
+	char tag[32];
+	FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+	CShowActivityEx(client, tag, "%t", "Admin Force Random Warden");
+	LogMessage("\"%L\" triggered \"%t\"", client, "Admin Force Random Warden");
+
 	return Plugin_Handled;
 }
 
@@ -703,7 +761,11 @@ public Action AdminForceLR(int client, int args)
 		if (target_count != 1)
 			ReplyToTargetError(client, target_count);
 
-		CPrintToChatAll("%t %t", "Admin Tag", "Admin Force LR", target_list[0]);
+		char tag[32];
+		FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+		CShowActivityEx(client, tag, "%t", "Admin Force LR", target_list[0]);
+		LogMessage("\"%L\" triggered \"%t\"", client, "Admin Force LR", target_list[0]);
+//		CPrintToChatAll("%t %t", "Admin Tag", "Admin Force LR", target_list[0]);
 		JailFighter(target_list[0]).ListLRS();
 
 		return Plugin_Handled;
@@ -720,7 +782,11 @@ public Action AdminForceLR(int client, int args)
 		return Plugin_Handled;
 	}
 
-	CPrintToChatAll("%t %t", "Admin Tag", "Admin Force LR Self");
+	char tag[32];
+	FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+	CShowActivityEx(client, tag, "%t", "Admin Force LR Self");
+	LogMessage("\"%L\" triggered \"%t\"", client, "Admin Force LR Self");
+//	CPrintToChatAll("%t %t", "Admin Tag", "Admin Force LR Self");
 	JailFighter(client).ListLRS();
 
 	return Plugin_Handled;
@@ -802,7 +868,11 @@ public Action AdminGiveFreeday(int client, int args)
 			return Plugin_Handled;
 		}
 
-		CPrintToChatAll("%t %t", "Admin Tag", "Admin Give Freeday", target_list[0]);
+		char tag[32];
+		FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+		CShowActivityEx(client, tag, "%t", "Admin Give Freeday", target_list[0]);
+		LogMessage("\"%L\" triggered \"%t\"", client, "Admin Give Freeday", target_list[0]);
+//		CPrintToChatAll("%t %t", "Admin Tag", "Admin Give Freeday", target_list[0]);
 		targ.GiveFreeday();
 
 		return Plugin_Handled;
@@ -845,7 +915,11 @@ public int ForceFreedayMenu(Menu menu, MenuAction action, int client, int select
 			}
 
 			JailFighter(target).GiveFreeday();
-			CPrintToChatAll("%t %t", "Admin Tag", "Admin Give Freeday", target);
+			char tag[32];
+			FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+			CShowActivityEx(client, tag, "%t", "Admin Give Freeday", target);
+			LogMessage("\"%L\" triggered \"%t\"", client, "Admin Give Freeday", target);
+//			CPrintToChatAll("%t %t", "Admin Tag", "Admin Give Freeday", target);
 		}
 		case MenuAction_End:delete menu;
 	}
@@ -877,7 +951,11 @@ public Action AdminRemoveFreeday(int client, int args)
 			return Plugin_Handled;
 		}
 
-		CPrintToChatAll("%t %t", "Admin Tag", "Admin Remove Freeday", target_list[0]);
+		char tag[32];
+		FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+		CShowActivityEx(client, tag, "%t", "Admin Remove Freeday", target_list[0]);
+		LogMessage("\"%L\" triggered \"%t\"", client, "Admin Remove Freeday", target_list[0]);
+//		CPrintToChatAll("%t %t", "Admin Tag", "Admin Remove Freeday", target_list[0]);
 		targ.RemoveFreeday();
 
 		return Plugin_Handled;
@@ -939,6 +1017,10 @@ public int MenuHandle_RemoveFreedays(Menu menu, MenuAction action, int client, i
 			}
 
 			targ.RemoveFreeday();
+			char tag[32];
+			FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+			CShowActivityEx(client, tag, "%t", "Admin Remove Freeday", targ.index);
+			LogMessage("\"%L\" triggered \"%t\"", client, "Admin Remove Freeday", targ.index);
 			RemoveFreedaysMenu(client);
 		}
 		case MenuAction_End:delete menu;
@@ -963,7 +1045,11 @@ public Action AdminLockWarden(int client, int args)
 
 	gamemode.iWarden.WardenUnset();
 	gamemode.bIsWardenLocked = true;
-	CPrintToChatAll("%t %t", "Admin Tag", "Admin Lock Warden");
+	char tag[32];
+	FormatEx(tag, sizeof(tag), "%t",  "Admin Tag");
+	CShowActivityEx(client, tag, "%t", "Admin Lock Warden");
+	LogMessage("\"%L\" triggered \"%t\"", client, "Admin Lock Warden");
+//	CPrintToChatAll("%t %t", "Admin Tag", "Admin Lock Warden");
 
 	return Plugin_Handled;
 }
@@ -985,12 +1071,16 @@ public Action AdminUnlockWarden(int client, int args)
 	}
 
 	gamemode.bIsWardenLocked = false;
-	CPrintToChatAll("%t %t", "Admin Tag", "Admin Unlock Warden");
+	char tag[32];
+	FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+	CShowActivityEx(client, tag, "%t", "Admin Unlock Warden");
+	LogMessage("\"%L\" triggered \"%t\"", client, "Admin Unlock Warden");
+//	CPrintToChatAll("%t %t", "Admin Tag", "Admin Unlock Warden");
 
 	return Plugin_Handled;
 }
 
-public int MenuHandle_ForceLR(Menu menu, MenuAction action, int client, int select)
+public int MenuHandle_GiveLR(Menu menu, MenuAction action, int client, int select)
 {
 	switch (action)
 	{
@@ -1510,14 +1600,49 @@ public int MuteToggleMenu(Menu menu, MenuAction action, int client, int select)
 				gamemode.iMuteType = StringToInt(s);
 			else gamemode.iLivingMuteType = StringToInt(s);
 
-			for (int i = MaxClients; i; --i)
-				if (IsClientInGame(i))
-					gamemode.ToggleMuting(JailFighter(i));
-
+			gamemode.RecalcMuting();
 			CPrintToChatAll("%t %t", "Plugin Tag", "Warden Toggle Mute", client);
 		}
 		case MenuAction_End:delete menu;
 	}
+}
+
+public Action Command_WardenHP(int client, int args)
+{
+	if (!bEnabled.BoolValue)
+		return Plugin_Handled;
+	
+	if (!client)
+	{
+		CReplyToCommand(client, "%t %t", "Plugin Tag", "Command is in-game only");
+		return Plugin_Handled;
+	}
+
+	JailFighter player = JailFighter(client);
+	if (!player.bIsWarden)
+	{
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Not Warden");
+		return Plugin_Handled;
+	}
+	
+	if (!cvarTF2Jail[WardenSetHP].BoolValue)
+	{
+		CPrintToChat(client, "%t %t", "Plugin Tag", "Not Enabled");
+		return Plugin_Handled;
+	}
+
+	for (int i = MaxClients; i; --i)
+	{
+		if (!IsClientInGame(i) || !IsPlayerAlive(i))
+			continue;
+
+		if (GetClientTeam(i) != RED)
+			continue;
+
+		SetEntityHealth(i, GetEntProp(i, Prop_Data, "m_iMaxHealth"));
+	}
+	CPrintToChatAll("%t %t", "Plugin Tag", "Warden Health Restore", client);
+	return Plugin_Handled;
 }
 
 public Action AdminWardayRed(int client, int args)
@@ -1547,7 +1672,9 @@ public Action AdminWardayRed(int client, int args)
 		TeleportEntity(i, vecWardayRed, NULL_VECTOR, NULL_VECTOR);
 	}
 
-	CPrintToChatAll("%t %t", "Admin Tag", "Warday Red Active");
+	char tag[64]; FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+	CShowActivityEx(client, tag, "%t", "Warday Red Active");
+	LogMessage("\"%L\" triggered \"%t\"", client, "Warday Red Active");
 	return Plugin_Handled;
 }
 
@@ -1578,7 +1705,9 @@ public Action AdminWardayBlue(int client, int args)
 		TeleportEntity(i, vecWardayBlu, NULL_VECTOR, NULL_VECTOR);
 	}
 
-	CPrintToChatAll("%t %t", "Admin Tag", "Warday Blue Active");
+	char tag[64]; FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+	CShowActivityEx(client, tag, "%t", "Warday Blue Active");
+	LogMessage("\"%L\" triggered \"%t\"", client, "Warday Blue Active");
 	return Plugin_Handled;
 }
 
@@ -1596,21 +1725,23 @@ public Action AdminFullWarday(int client, int args)
 	bool allowred = gamemode.bWardayTeleportSetRed,
 		 allowblu = gamemode.bWardayTeleportSetBlue;
 
-	if (!allowred)
-		CReplyToCommand(client, "%t %t", "Plugin Tag", "Ignore Red Team Warday");
-	else if (!allowblu)
-		CReplyToCommand(client, "%t %t", "Plugin Tag", "Ignore Blue Team Warday");
-	else if (!allowblu && !allowred)
+	if (!allowblu && !allowred)
 	{
 		CReplyToCommand(client, "%t %t", "Plugin Tag", "No Warday Config");
 		return Plugin_Handled;
 	}
+	else if (!allowred)
+		CReplyToCommand(client, "%t %t", "Plugin Tag", "Ignore Red Team Warday");
+	else if (!allowblu)
+		CReplyToCommand(client, "%t %t", "Plugin Tag", "Ignore Blue Team Warday");
 
 	for (int i = MaxClients; i; --i)
 		if (IsClientInGame(i) && IsPlayerAlive(i))
 			JailFighter(i).TeleportToPosition(GetClientTeam(i));
 
-	CPrintToChatAll("%t %t", "Admin Tag", "Warday Activate");
+	char tag[64]; FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+	CShowActivityEx(client, tag, "%t", "Warday Activate");
+	LogMessage("\"%L\" triggered \"%t\"", client, "Warday Activate");
 	return Plugin_Handled;
 }
 
@@ -1631,9 +1762,15 @@ public Action AdminToggleMedic(int client, int args)
 		CReplyToCommand(client, "%t %t", "Plugin Tag", "Needs Active Round");
 		return Plugin_Handled;
 	}
+
+	char tag[64]; FormatEx(tag, sizeof(tag), "%t ", "Admin Tag");
+	char method[256];
 	if (gamemode.bMedicDisabled)
-		CPrintToChatAll("%t %t", "Admin Tag", "Medic Room Enabled Admin");
-	else CPrintToChatAll("%t %t", "Admin Tag", "Medic Room Disabled Admin");
+		FormatEx(method, sizeof(method), "%t", "Medic Room Enabled Admin");
+	else FormatEx(method, sizeof(method), "%t", "Medic Room Disabled Admin");
+
+	CShowActivityEx(client, tag, "%t", method);
+	LogMessage("\"%L\" triggered \"%t\"", client, method);
 
 	gamemode.ToggleMedic(gamemode.bMedicDisabled);
 	return Plugin_Handled;

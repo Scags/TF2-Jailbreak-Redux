@@ -512,7 +512,7 @@ public Action Cmd_Reroll(int client, int args)
 	if (!client || NOTPH || !IsPlayerAlive(client))
 		return Plugin_Handled;
 
-	if (!g_LR.GetParameterNum("Rerolling", 0))
+	if (!g_LR.GetParameterNum("PropReroll", 0))
 	{
 		CPrintToChat(client, "%t Rerolling has been disabled.", "Plugin Tag");
 		return Plugin_Handled;
@@ -533,7 +533,7 @@ public Action Cmd_Reroll(int client, int args)
 		CPrintToChat(client, "%t You are not allowed to reroll at this time.", "Plugin Tag");
 		return Plugin_Handled;
 	}
-	if (player.iRolls >= g_LR.GetParameterNum("Rerolling", 0))
+	if (player.iRolls >= g_LR.GetParameterNum("PropReroll", 0))
 	{
 		CPrintToChat(client, "%t You have rerolled the maximum amount of times this round.", "Plugin Tag");
 		return Plugin_Handled;
@@ -940,7 +940,7 @@ public void fwdOnRoundStartPlayer(LastRequest lr, const JBPlayer player)
 }
 public void fwdOnRoundStart(LastRequest lr)
 {
-	float rerolltime = g_LR.GetParameterFloat("RerollTime", 0.0);
+	float rerolltime = g_LR.GetParameterFloat("PropRerollTime", 0.0);
 	if (rerolltime != 0.0)
 		SetPawnTimer(DisallowRerolls, rerolltime, gamemode.iRoundCount);
 

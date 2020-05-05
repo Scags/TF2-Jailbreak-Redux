@@ -4,11 +4,12 @@
 #include <tf2jailredux_teambans>
 #include <tf2jailredux>
 #include <clientprefs>
+#include <sdktools>
 
 #undef TAG
 #define TAG "{crimson}[TF2Jail] Teambans{burlywood} "
 
-#define PLUGIN_VERSION 		"1.0.4"
+#define PLUGIN_VERSION 		"1.0.5"
 #define RED 				2
 #define BLU 				3
 #define IsClientValid(%1) 	((0 < %1 <= MaxClients) && IsClientInGame(%1))
@@ -240,18 +241,18 @@ public void OnClientPostAdminCheck(int client)
 
 	char query[256];
 	FormatEx(query, sizeof(query), 
-			"SELECT ban_time "
-		...	"FROM %s "
-		...	"WHERE steamid = '%s';",
-			strCoreTable, ID);
+			"SELECT b.ban_time, w.ban_time "
+		...	"FROM %s b, %s w "
+		...	"WHERE b.steamid = '%s';",
+			strCoreTable, strWardenTable, ID);
 
 	hTheDB.Query(CCB_Induction, query, GetClientUserId(client));
 
 	if (cvarJBANS[Debug].BoolValue)
 		LogMessage("Querying client %N connection with query %s", client, query);
 
-	ReplaceStringEx(query, sizeof(query), strCoreTable, strWardenTable);
-	hTheDB.Query(CCB_Induction_Warden, query, GetClientUserId(client));
+//	ReplaceStringEx(query, sizeof(query), strCoreTable, strWardenTable);
+//	hTheDB.Query(CCB_Induction_Warden, query, GetClientUserId(client));
 }
 
 public void fwdOnPlayerSpawn(const JBPlayer Player, Event event)
@@ -672,7 +673,7 @@ public void OfflineBan(const char[] ID, int admin)
 	Call_PushString(ID);
 	Call_PushCell(admin);
 	Call_Finish(action);
-	if (action == Plugin_Handled || action == Plugin_Stop)	// Allow returning Plugin_Changed
+	if (action >= Plugin_Handled)	// Allow returning Plugin_Changed
 		return;
 
 	char query[512];
@@ -716,14 +717,14 @@ public void OfflineUnBan(const char[] ID, int admin)
 		return;
 
 	char query[256];
-	Format(query, sizeof(query), 
+	FormatEx(query, sizeof(query), 
 			"DELETE FROM %s "
 		...	"WHERE steamid = '%s';",
 			strCoreTable, ID);
 
 	hTheDB.Query(CCB_OfflineUnGuardBan, query);
 
-	Format(query, sizeof(query), 
+	FormatEx(query, sizeof(query), 
 			"UPDATE %s "
 		... "SET timeleft = -1 "
 		... "WHERE offender_steamid = '%s' "
@@ -765,7 +766,7 @@ public void UnGuardBan(int target, int admin)
 		CPrintToChatAll("%t Console: %t", "Plugin Tag Teambans", "Unguardban", target);
 	else CShowActivity2(admin, idk, " %t", "Unguardban", target);
 
-	Format(query, sizeof(query), 
+	FormatEx(query, sizeof(query), 
 			"DELETE FROM %s "
 		...	"WHERE steamid = '%s';",
 			strCoreTable, ID);
@@ -774,7 +775,7 @@ public void UnGuardBan(int target, int admin)
 		LogMessage("UnGuardBanning client %N. Query: %s", target, query);
 	hTheDB.Query(CCB_UnGuardBan, query);
 
-	Format(query, sizeof(query), 
+	FormatEx(query, sizeof(query), 
 			"UPDATE %s "
 		... "SET timeleft = -1 "
 		... "WHERE offender_steamid = '%s' "
@@ -801,7 +802,7 @@ void GuardBan(int victim, int admin, int time, char reason[256] = "")
 	Call_PushCellRef(time);
 	Call_PushStringEx(reason, sizeof(reason), 0, SM_PARAM_COPYBACK);
 	Call_Finish(action);
-	if (action == Plugin_Handled || action == Plugin_Stop)
+	if (action >= Plugin_Handled)
 		return;
 
 	char ID[32], idk[64];
@@ -828,12 +829,13 @@ void GuardBan(int victim, int admin, int time, char reason[256] = "")
 
 	if (GetClientTeam(victim) == BLU)
 	{
-		if (JBGameMode_GetProp("iRoundState") >= StateRunning)
+		if (JBGameMode_GetProp("iRoundState") == StateStarting)
+			player.ForceTeamChange(RED);
+		else
 		{
 			ForcePlayerSuicide(victim);
 			ChangeClientTeam(victim, RED);
 		}
-		else player.ForceTeamChange(RED);
 	}
 
 	if (cvarJBANS[Debug].BoolValue)
@@ -868,7 +870,7 @@ public void UnWardenBan(int target, int admin)
 	Call_PushCell(target);
 	Call_PushCell(admin);
 	Call_Finish(action);
-	if (action == Plugin_Handled || action == Plugin_Stop)
+	if (action >= Plugin_Handled)
 		return;
 
 	player.bIsWardenBanned = false;
@@ -908,7 +910,7 @@ public void WardenBan(int victim, int admin, int time)
 	Call_PushCell(admin);
 	Call_PushCellRef(time);
 	Call_Finish(action);
-	if (action == Plugin_Handled || action == Plugin_Stop)
+	if (action >= Plugin_Handled)
 		return;
 
 	char ID[32], idk[64];
@@ -1373,45 +1375,29 @@ public int CCB_Induction(Database db, DBResultSet results, const char[] error, a
 		{
 			results.FetchRow();
 
-			int time = results.FetchInt(0);
-			if (cvarJBANS[Debug].BoolValue)
-				LogMessage("[JBANS]: %N joined with %i time remaining on ban.", client, time);
+			int time;
+			if (!results.IsFieldNull(0))	// Regular bans
+			{
+				time = results.FetchInt(0);
+				if (cvarJBANS[Debug].BoolValue)
+					LogMessage("[JBANS]: %N joined with %i time remaining on ban.", client, time);
 
-			player.iTimeLeft = time;
-			player.bIsGuardbanned = true;
+				player.iTimeLeft = time;
+				player.bIsGuardbanned = true;
+			}
+
+			if (!results.IsFieldNull(1))	// Warden bans
+			{
+				time = results.FetchInt(1);
+				if (cvarJBANS[Debug].BoolValue)
+					LogMessage("[JBANS]: %N joined with %i time remaining on warden ban.", client, time);
+
+				player.iWardenTimeLeft = time;
+				player.bIsWardenBanned = true;				
+			}
 		}
-		else player.bIsGuardbanned = false;
 	}
 	else LogError("[JBANS] Database error on client (%N) induction: %s", client, error);
-}
-
-public int CCB_Induction_Warden(Database db, DBResultSet results, const char[] error, any data)
-{
-	int client = GetClientOfUserId(data);
-	if (!client || !IsClientInGame(client))
-		return;
-
-	if (results)
-	{
-		int rows = results.RowCount;
-		if (cvarJBANS[Debug].BoolValue)
-			LogMessage("[JBANS] Found client (%N) warden induction rowcount %d.", client, rows);
-
-		JailPlayer player = JailPlayer(client);
-		if (rows)
-		{
-			results.FetchRow();
-
-			int time = results.FetchInt(0);
-			if (cvarJBANS[Debug].BoolValue)
-				LogMessage("[JBANS]: %N joined with %i time remaining on wardenban.", client, time);
-
-			player.iWardenTimeLeft = time;
-			player.bIsWardenBanned = true;
-		}
-		else player.bIsWardenBanned = false;
-	}
-	else LogError("[JBANS] Database error on client (%N) warden induction: %s", client, error);
 }
 
 public int DBCB_Disconnect(Database db, DBResultSet results, const char[] error, any data)

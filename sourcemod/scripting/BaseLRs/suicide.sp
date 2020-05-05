@@ -4,7 +4,7 @@ static LastRequest g_LR;
 
 public void Suicide_Init()
 {
-	g_LR = LastRequest.CreateFromConfig("Commit Suicide");
+	g_LR = LastRequest.CreateFromConfig("Commit Suicide", false);
 	if (g_LR != null)
 	{
 		g_LR.AddHook(OnLRPicked, Suicide_OnLRPicked);

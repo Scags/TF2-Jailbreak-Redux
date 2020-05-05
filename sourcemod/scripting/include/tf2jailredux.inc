@@ -7,9 +7,7 @@
 #include <tf2jailredux/lastrequest>
 #include <tf2jailredux/gamemode>
 
-#include <tf2_stocks>
-#include <tf2items>
-
+// Tag from translations for legacy reasons
 #define TAG 				"{crimson}[TF2Jail]{burlywood} "
 #define ADMTAG 				"{orange}[TF2Jail]{burlywood} "
 
@@ -28,13 +26,24 @@ enum
 	WBLU = 3
 };
 
+enum
+{	// Config file indices
+	CFG_LR,
+	CFG_MAP,
+	CFG_ROLES,
+	CFG_TEXT,
+	CFG_WMENU,
+	
+	CFG_LENGTH
+};
+
 stock char strDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear", "prop_door_rotating" };
 
 /**
  *	@section TF2Jail compatibility forwards and functions
 */
 
-#pragma deprecated Use JBGameMode_GetProperty("bWardenExists")
+#pragma deprecated Use JBGameMode_GetProp("bWardenExists")
 stock bool TF2Jail_WardenActive()
 {
 	return JBGameMode_GetProperty("bWardenExists");
@@ -91,25 +100,25 @@ stock void TF2Jail_MarkRebel(int client)
 //stock bool TF2Jail_IsFreekiller(int client)
 //stock void TF2Jail_MarkFreekiller(int client)
 
-#pragma deprecated Use JBPlayer(client).EmptyWeaponSlots()
+#pragma deprecated Use JBPlayer.EmptyWeaponSlots()
 stock void TF2Jail_StripToMelee(int client)
 {
 	JBPlayer(client).EmptyWeaponSlots();
 }
 
-#pragma deprecated Use JBPlayer(client).StripToMelee()
+#pragma deprecated Use JBPlayer.StripToMelee()
 stock void TF2Jail_StripAllWeapons(int client)
 {
 	JBPlayer(client).StripToMelee();
 }
 
-#pragma deprecated Use JBGameMode_SetProperty("bIsWardenLocked", true)
+#pragma deprecated Use JBGameMode_SetProp("bIsWardenLocked", true)
 stock void TF2Jail_LockWarden()
 {
 	JBGameMode_SetProperty("bIsWardenLocked", true);
 }
 
-#pragma deprecated Use JBGameMode_SetProperty("bIsWardenLocked", false)
+#pragma deprecated Use JBGameMode_SetProp("bIsWardenLocked", false)
 stock void TF2Jail_UnlockWarden()
 {
 	JBGameMode_SetProperty("bIsWardenLocked", false);
@@ -117,7 +126,7 @@ stock void TF2Jail_UnlockWarden()
 
 //stock void TF2Jail_Log(const char[] log, any ...);
 
-#pragma deprecated Use JBGameMode_GetProperty("bIsLRRound")
+#pragma deprecated Use JBGameMode_GetProp("bIsLRRound")
 stock bool TF2Jail_IsLRRound()
 {
 	return JBGameMode_GetProperty("bIsLRRound");

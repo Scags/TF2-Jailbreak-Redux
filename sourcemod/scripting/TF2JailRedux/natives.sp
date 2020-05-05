@@ -59,6 +59,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBGameMode_SetPropString", Native_JBGameMode_SetPropString);
 	CreateNative("JBGameMode_GetPropArray", Native_JBGameMode_GetPropArray);
 	CreateNative("JBGameMode_SetPropArray", Native_JBGameMode_SetPropArray);
+	CreateNative("JBGameMode_GetKv", Native_JBGameMode_GetKv);
+	CreateNative("JBGameMode_GetMapKv", Native_JBGameMode_GetMapKv);
+	CreateNative("JBGameMode_GetMapKvSection", Native_JBGameMode_GetMapKvSection);
 		/* Gamemode Methodmap */
 	CreateNative("JBGameMode.JBGameMode", Native_JBGameMode_Instance);
 
@@ -70,8 +73,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("LastRequest.ByName", Native_LastRequest_ByName);
 	CreateNative("LastRequest.AddHook", Native_LastRequest_AddHook);
 	CreateNative("LastRequest.RemoveHook", Native_LastRequest_RemoveHook);
-//	CreateNative("LastRequest.GetFunction", Native_LastRequest_GetFunction);
-//	CreateNative("LastRequest.SetFunction", Native_LastRequest_SetFunction);
 	CreateNative("LastRequest.Execute", Native_LastRequest_Execute);
 	CreateNative("LastRequest.Destroy", Native_LastRequest_Destroy);
 	CreateNative("LastRequest.IsInConfig", Native_LastRequest_IsInConfig);
@@ -79,6 +80,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("LastRequest.ExportToConfig", Native_LastRequest_ExportToConfig);
 	CreateNative("LastRequest.DeleteFromConfig", Native_LastRequest_DeleteFromConfig);
 	CreateNative("LastRequest.Refresh", Native_LastRequest_Refresh);
+	CreateNative("LastRequest.SetFunction", Native_LastRequest_SetFunction);
+//	CreateNative("LastRequest.ForceFireFunction", Native_LastRequest_ForceFireFunction);
 
 	InitializeForwards();
 
@@ -344,6 +347,22 @@ public any Native_JBGameMode_SetPropArray(Handle plugin, int numParams)
 	GetNativeArray(2, buffer, len);
 	gamemode.SetArray(key, buffer, len);
 }
+public any Native_JBGameMode_GetKv(Handle plugin, int numParams)
+{
+	return gamemode.GetKv(GetNativeCell(1));
+}
+public any Native_JBGameMode_GetMapKv(Handle plugin, int numParams)
+{
+	return gamemode.GetMapKv();
+}
+public any Native_JBGameMode_GetMapKvSection(Handle plugin, int numParams)
+{
+	int len; GetNativeStringLength(1, len);
+	++len;
+	char[] buffer = new char[len];
+	GetNativeString(1, buffer, len);
+	return gamemode.GetMapKvSection(buffer, GetNativeCell(2));
+}
 
 public any Native_JBGameMode_Instance(Handle plugin, int numParams)
 {
@@ -390,24 +409,35 @@ public any Native_LastRequest_CreateFromConfig(Handle plugin, int numParams)
 {
 	char buffer[MAX_LRNAME_LENGTH];
 	GetNativeString(1, buffer, sizeof(buffer));
+	bool includedisabled = numParams >= 2 && GetNativeCell(2);
 
 	if (buffer[0] == '\0')	// Why
 		return 0;
 
 	LastRequest lr;
 
-	KeyValues kv = new KeyValues("TF2Jail_LastRequests");
-	if (!FileExists(strLRPath) || !kv.ImportFromFile(strLRPath))
+	KeyValues kv = new KeyValues(strKVConfig[CFG_LR]);
+	if (!FileExists(strConfig[CFG_LR]) || !kv.ImportFromFile(strConfig[CFG_LR]))
 	{
 		delete kv;
 		return 0;
 	}
 
-
 	if (!kv.JumpToKey(buffer))
 	{
 		delete kv;
 		return 0;
+	}
+
+	if (!includedisabled && kv.JumpToKey("Parameters"))
+	{
+		// Disabled? Give up and die
+		if (kv.GetNum("Disabled", 0))
+		{
+			delete kv;
+			return 0;
+		}
+		kv.GoBack();
 	}
 
 	// Check this last so that if it's not in config, we aren't just killing an LR
@@ -436,7 +466,7 @@ public any Native_LastRequest_FromIndex(Handle plugin, int numParams)
 	if (index == -1)	// Fail silently if its a regular round
 		return 0;
 
-	if (!(0 <= index < gamemode.hLRS.Size))	// Scream and shout if its a stupid index
+	if (!(0 <= index < gamemode.iLRs))	// Scream and shout if its a stupid index
 		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid index (%d) specified for LR!", index);
 
 	char buffer[4]; IntToString(index, buffer, sizeof(buffer));
@@ -455,7 +485,7 @@ public any Native_LastRequest_AddHook(Handle plugin, int numParams)
 		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid index (%d) specified for hook!", index);
 
 	Function func = GetNativeFunction(3);
-	lr.SetFunction(index, view_as< JBHookCB>(func));
+	lr.SetFunction(index, view_as< JBHookCB >(func));
 	return true;
 }
 public any Native_LastRequest_RemoveHook(Handle plugin, int numParams)
@@ -463,7 +493,7 @@ public any Native_LastRequest_RemoveHook(Handle plugin, int numParams)
 	LastRequest lr = GetNativeCell(1);
 	int index = GetNativeCell(2);
 	if (index < 0 || index >= JBFWD_LENGTH)	// >:(
-		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid index (%d) specified for hook!");
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid index (%d) specified for hook!", index);
 
 	lr.SetFunction(index, INVALID_FUNCTION);
 	return true;
@@ -520,8 +550,8 @@ public any Native_LastRequest_IsInConfig(Handle plugin, int numParams)
 	if (buffer[0] == '\0')
 		lr.GetName(buffer, sizeof(buffer));
 
-	KeyValues kv = new KeyValues("TF2Jail_LastRequests");
-	if (!kv.ImportFromFile(strLRPath))
+	KeyValues kv = new KeyValues(strKVConfig[CFG_LR]);
+	if (!FileExists(strConfig[CFG_LR]) || !kv.ImportFromFile(strConfig[CFG_LR]))
 	{
 		delete kv;
 		return false;
@@ -540,8 +570,8 @@ public any Native_LastRequest_ImportFromConfig(Handle plugin, int numParams)
 	if (buffer[0] == '\0')
 		lr.GetName(buffer, sizeof(buffer));
 
-	KeyValues kv = new KeyValues("TF2Jail_LastRequests");
-	if (!kv.ImportFromFile(strLRPath))
+	KeyValues kv = new KeyValues(strKVConfig[CFG_LR]);
+	if (!FileExists(strConfig[CFG_LR]) || !kv.ImportFromFile(strConfig[CFG_LR]))
 	{
 		delete kv;
 		return false;
@@ -572,8 +602,8 @@ public any Native_LastRequest_ExportToConfig(Handle plugin, int numParams)
 	bool createonly = GetNativeCell(4);
 	bool append = GetNativeCell(5);
 
-	KeyValues kv = new KeyValues("TF2Jail_LastRequests");
-	if (!kv.ImportFromFile(strLRPath))
+	KeyValues kv = new KeyValues(strKVConfig[CFG_LR]);
+	if (!FileExists(strConfig[CFG_LR]) || !kv.ImportFromFile(strConfig[CFG_LR]))
 	{
 		delete kv;
 		return false;
@@ -590,7 +620,6 @@ public any Native_LastRequest_ExportToConfig(Handle plugin, int numParams)
 		kv.Rewind();
 	}
 
-
 	if (kv.JumpToKey(buffer, create))
 	{
 		if (!append)
@@ -606,7 +635,7 @@ public any Native_LastRequest_ExportToConfig(Handle plugin, int numParams)
 
 		kv.Import(lrkv);
 		kv.Rewind();
-		success = kv.ExportToFile(strLRPath);
+		success = kv.ExportToFile(strConfig[CFG_LR]);
 	}
 	delete kv;
 	return success;
@@ -619,8 +648,8 @@ public any Native_LastRequest_DeleteFromConfig(Handle plugin, int numParams)
 	if (buffer[0] == '\0')
 		lr.GetName(buffer, sizeof(buffer));
 
-	KeyValues kv = new KeyValues("TF2Jail_LastRequests");
-	if (!kv.ImportFromFile(strLRPath))
+	KeyValues kv = new KeyValues(strKVConfig[CFG_LR]);
+	if (!FileExists(strConfig[CFG_LR]) || !kv.ImportFromFile(strConfig[CFG_LR]))
 	{
 		delete kv;
 		return false;
@@ -643,8 +672,8 @@ public any Native_LastRequest_Refresh(Handle plugin, int numParams)
 	if (buffer[0] == '\0')
 		lr.GetName(buffer, sizeof(buffer));
 
-	KeyValues kv = new KeyValues("TF2Jail_LastRequests");
-	if (!kv.ImportFromFile(strLRPath) || !kv.JumpToKey(buffer))
+	KeyValues kv = new KeyValues(strKVConfig[CFG_LR]);
+	if (!FileExists(strConfig[CFG_LR]) || !kv.ImportFromFile(strConfig[CFG_LR]))
 	{
 		delete kv;
 		return;
@@ -656,4 +685,81 @@ public any Native_LastRequest_Refresh(Handle plugin, int numParams)
 	lr.SetValue("__KV", me);
 
 	delete kv;
+}
+public any Native_LastRequest_SetFunction(Handle plugin, int numParams)
+{
+	LastRequest lr = GetNativeCell(1);
+	int idx = GetNativeCell(2);
+	if (!(0 <= idx < JBFWD_LENGTH))
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid index (%d) specified for hook!", idx);
+
+	Function f = GetNativeFunction(3);
+	DataPack pack; lr.GetValue("__FUNCS", pack);
+	pack.Position = view_as< DataPackPos >(idx + 1);
+	pack.WriteFunction(f);
+	return 1;
+}
+public any Native_LastRequest_ForceFireFunction(Handle plugin, int numParams)
+{
+	LastRequest lr = GetNativeCell(1);
+	int idx = GetNativeCell(2);
+	if (!(0 <= idx < JBFWD_LENGTH))
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid index (%d) specified for hook!", idx);
+
+	// Look away while you still can
+	FuncTable functable; lr.GetValue("__FUNCS", functable);
+	Action action;
+	if (functable.StartFunction(lr.GetOwnerPlugin(), idx))
+	{
+		Call_PushCell(lr);
+		int add;
+		for (int i = 3; i <= numParams; ++i)
+		{
+			add = 1;
+			PrintToServer("%d", GetNativeCell(i));
+			switch (view_as< ParamType >(GetNativeCell(i)))
+			{
+				case Param_Any, Param_Cell:
+				{
+					Call_PushCell(GetNativeCell(i+1));
+					PrintToServer("%N", GetNativeCell(i+1));
+				}
+				case Param_Float:Call_PushFloat(GetNativeCell(i+1));
+				case Param_String:
+				{
+					int len; GetNativeStringLength(i+1, len);
+					++len;
+					char[] buffer = new char[len];
+					GetNativeString(i+1, buffer, len);
+					Call_PushString(buffer);
+				}
+				case Param_Array:
+				{
+					int len = GetNativeCell(i+2);
+					any[] array = new any[len];
+					GetNativeArray(i+1, array, len);
+					Call_PushArray(array, len);
+					add = 2;
+				}
+				case Param_VarArgs:
+				{
+					Call_Cancel();
+					return 0;
+				}
+				case Param_FloatByRef:
+				{
+					float val = GetNativeCellRef(i+1);
+					Call_PushCellRef(val);
+				}
+				case Param_CellByRef:
+				{
+					any val = GetNativeCellRef(i+1);
+					Call_PushCellRef(val);					
+				}
+			}
+			i += add;
+		}
+	}
+	Call_Finish(action);
+	return action;
 }

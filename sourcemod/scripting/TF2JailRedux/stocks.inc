@@ -509,58 +509,48 @@ stock void RemovePlayerBack(int client, int[] indices, int len)
 {
 	if (len <= 0)
 		return;
-	int edict = MaxClients+1, idx;
-	char netclass[32];
-	while ((edict = FindEntityByClassname(edict, "tf_wearable*")) != -1)
+
+	int numwearables = TF2_GetNumWearables(client);
+	for (int i = numwearables-1; i >= 0; --i)
 	{
-		idx = GetItemIndex(edict);
-		if (GetOwner(edict) == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			for (int i = 0; i < len; i++)
-				if (idx == indices[i])
-					TF2_RemoveWearable(client, edict);
-					//AcceptEntityInput(edict, "Kill");
-	}
-	edict = MaxClients+1;
-	while ((edict = FindEntityByClassname(edict, "tf_powerup_bottle")) != -1)
-	{
-		idx = GetItemIndex(edict);
-		if (GetOwner(edict) == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			for (int i = 0; i < len; i++)
-				if (idx == indices[i])
-					TF2_RemoveWearable(client, edict);
+		int wearable = TF2_GetWearable(client, i);
+
+		if (wearable != -1 && !GetEntProp(wearable, Prop_Send, "m_bDisguiseWearable"))
+		{
+			int idx = GetItemIndex(wearable);
+			for(int u; u < len; u++)
+			{
+				if (idx == indices[u])
+				{
+					TF2_RemoveWearable(client, wearable);
+					break;
+				}
+			}
+		}
 	}
 }
 stock int FindPlayerBack(int client, int[] indices, int len)
 {
 	if (len <= 0)
 		return -1;
-	int edict = MaxClients+1, idx;
-	while ((edict = FindEntityByClassname(edict, "tf_wearable*")) != -1)
+	
+	int numwearables = TF2_GetNumWearables(client);
+	for (int i = numwearables-1; i >= 0; --i)
 	{
-		idx = GetItemIndex(edict);
-		if (GetOwner(edict) == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			for (int i = 0; i < len; i++)
-				if (idx == indices[i])
-					return edict;
-	}
-	edict = MaxClients+1;
-	while ((edict = FindEntityByClassname(edict, "tf_powerup_bottle")) != -1)
-	{
-		idx = GetItemIndex(edict);
-		if (GetOwner(edict) == client && !GetEntProp(edict, Prop_Send, "m_bDisguiseWearable"))
-			for (int i = 0; i < len; i++)
-				if (idx == indices[i])
-					return edict;
+		int wearable = TF2_GetWearable(client, i);
+		if (wearable != -1 && !GetEntProp(wearable, Prop_Send, "m_bDisguiseWearable"))
+		{
+			int idx = GetItemIndex(wearable);
+			for (int u; u < len; u++)
+				if( idx == indices[u])
+					return wearable;
+		}
 	}
 	return -1;
 }
 stock int FindSentry(const int client)
 {
-	int i = -1;
-	while ((i = FindEntityByClassname(i, "obj_sentrygun")) != -1)
-		if (GetEntPropEnt(i, Prop_Send, "m_hBuilder") == client)
-			return i;
-	return -1;
+	return TF2_GetObjectOfType(client, TFObject_Sentry);
 }
 stock bool TF2_IsPlayerCritBuffed(const int client)
 {
@@ -599,14 +589,9 @@ stock bool IsValidAdmin(const int client, const char[] flags)
 {
 	if (!IsClientInGame(client))
 		return false;
-	int ibFlags = ReadFlagString(flags);
-	if (!StrEqual(flags, ""))
-		if ((GetUserFlagBits(client) & ibFlags) == ibFlags)
-			return true;
 
-	if (GetUserFlagBits(client) & ADMFLAG_ROOT)
-		return true;
-	return false;
+	int ibFlags = ReadFlagString(flags);
+	return CheckCommandAccess(client, "", ibFlags, true);
 }
 stock int AttachProjectileModel(const int entity, const char[] strModel, char[] strAnim = "")
 {
@@ -688,7 +673,7 @@ stock void SetControlPoint(const bool enable)
 	int CPm = -1;
 	while ((CPm = FindEntityByClassname(CPm, "team_control_point")) != -1)
 	{
-		if (CPm > MaxClients) 
+		if (CPm > MaxClients)
 		{
 			AcceptEntityInput(CPm, (enable ? "ShowModel" : "HideModel"));
 			SetVariantInt(enable ? 0 : 1);
@@ -1246,4 +1231,114 @@ stock int FindStringIndex2(int tableidx, const char[] str)
     }
 
     return INVALID_STRING_INDEX;
+}
+stock void HealPlayer(const int client, const int health, bool on_hud=false)
+{
+	int hp = GetEntProp(client, Prop_Data, "m_iHealth");
+	int maxhp = GetEntProp(client, Prop_Data, "m_iMaxHealth");
+	int to_set = health;
+
+	int max_overheal = RoundFloat(FindConVar("tf_max_health_boost").FloatValue * maxhp);
+	if (to_set > max_overheal - hp)
+		to_set = max_overheal - hp;
+
+	if (to_set > 0)
+	{
+		SetEntityHealth(client, hp + to_set);
+		if(on_hud)
+		{
+			Event event = CreateEvent("player_healonhit");
+			if (event)
+			{
+				event.SetInt("amount", to_set);
+				event.SetInt("entindex", client);
+				event.FireToClient(client);
+				delete event;
+			}
+		}
+	}
+}
+stock int TF2_GetNumWearables(int client)
+{
+	/// 3552 linux
+	/// 3532 windows
+	int offset = FindSendPropInfo("CTFPlayer", "m_flMaxspeed") - 20 + 12;
+	return GetEntData(client, offset);
+}
+stock int TF2_GetWearable(int client, int wearableidx)
+{
+	/// 3540 linux
+	/// 3520 windows
+	int offset = FindSendPropInfo("CTFPlayer", "m_flMaxspeed") - 20;
+	Address m_hMyWearables = view_as< Address >(LoadFromAddress(GetEntityAddress(client) + view_as< Address >(offset), NumberType_Int32));
+	int wearable = LoadFromAddress(m_hMyWearables + view_as< Address >(4 * wearableidx), NumberType_Int32) & 0xFFF;
+
+	return (!wearable || wearable == 0xFFF) ? -1 : wearable;
+}
+#define BUILDING_MODE_ANY view_as< TFObjectMode >(-1)
+// CTFPlayer::GetObjectCount()
+stock int TF2_GetObjectCount(int client)
+{
+	// CUtlVector<CBaseObject*, CUtlMemory<CBaseObject*, int>>
+	return GetEntData(client, FindSendPropInfo("CTFPlayer", "m_flMvMLastDamageTime") + 48 + 12);
+}
+// CTFPlayer::GetObject(int)
+stock int TF2_GetObject(int client, int objidx)
+{
+	//8568 linux
+	//8560 windows
+	int offset = FindSendPropInfo("CTFPlayer", "m_flMvMLastDamageTime") + 48;
+	Address m_aObjects = view_as< Address >(LoadFromAddress(GetEntityAddress(client) + view_as< Address >(offset), NumberType_Int32));
+	int obj = LoadFromAddress(m_aObjects + view_as< Address >(4 * objidx), NumberType_Int32) & 0xFFF;
+	return (!obj || obj == 0xFFF) ? -1 : obj;
+}
+// CTFPlayer::GetObjectOfType(int, int)
+stock int TF2_GetObjectOfType(int client, TFObjectType objtype, TFObjectMode objmode = TFObjectMode_None, bool incdisposables = false)
+{
+	int numobjs = TF2_GetObjectCount(client);
+	for (int i = 0; i < numobjs; ++i)
+	{
+		int obj = TF2_GetObject(client, i);
+		if (obj == -1)
+			continue;
+
+		if (TF2_GetObjectType(obj) != objtype)
+			continue;
+
+		if (TF2_GetObjectMode(obj) != objmode)
+			continue;
+
+		if (!incdisposables && GetEntProp(obj, Prop_Send, "m_bDisposableBuilding"))
+			continue;
+
+		return obj;
+	}
+	return -1;
+}
+// CTFPlayer::GetNumObjects(int, int)
+stock int TF2_GetNumObjects(int client, TFObjectType objtype, TFObjectMode objmode, bool incdisposables = false)
+{
+	int count;
+	int objcount = TF2_GetObjectCount(client);
+	for (int i = 0; i < objcount; ++i)
+	{
+		int obj = TF2_GetObject(client, i);
+		if (obj == -1)
+			continue;
+
+		if (!incdisposables && GetEntProp(obj, Prop_Send, "m_bDisposableBuilding"))
+			continue;
+
+		if (TF2_GetObjectType(obj) == objtype && (objmode == BUILDING_MODE_ANY || TF2_GetObjectMode(objmode) == objmode))
+			++count;
+	}
+	return count;
+}
+stock void KillTimerSafe(Handle &timer)
+{
+	if (timer != null)
+	{
+		KillTimer(timer);
+		delete timer;
+	}
 }

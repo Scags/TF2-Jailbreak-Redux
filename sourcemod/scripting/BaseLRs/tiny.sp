@@ -4,7 +4,7 @@ static LastRequest g_LR;
 
 public void Tiny_Init()
 {
-	g_LR = LastRequest.CreateFromConfig("Tiny Round");
+	g_LR = LastRequest.CreateFromConfig("Tiny Round", false);
 	if (g_LR != null)
 	{
 		g_LR.AddHook(OnLRActivate, Tiny_OnLRActivate);

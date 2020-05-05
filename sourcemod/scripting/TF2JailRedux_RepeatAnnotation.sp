@@ -1,6 +1,10 @@
 #include <sourcemod>
 #include <morecolors>
+#include <sdktools>
+#include <tf2_stocks>
 #include <tf2jailredux>
+
+#include "TF2JailRedux/stocks.inc"
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -63,9 +67,9 @@ public void OnPluginStart()
 {
 	CreateConVar("jbrp_version", PLUGIN_VERSION, "TF2Jail Repeat Sprite Version (Do not touch)", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	cvRepeatMax = CreateConVar("sm_jbrp_max", "10", "Maximum amount of repeats annotations each player gets per round.", FCVAR_NOTIFY, true, 0.0);
-	cvMessage = CreateConVar("sm_jbrp_message", "{NAME} has asked for a repeat", "Message to display via annotation, \"{NAME}\" is replaced with client name.", FCVAR_NOTIFY);
-	cvTargeting = CreateConVar("sm_jbrp_targeting", "0", "Display annotation to certain clients? 0 for everyone; 1 for Blue team only; 2 for Warden only", FCVAR_NOTIFY, true, 0.0, true, 2.0);
-	cvRange = CreateConVar("sm_jbrp_range", "1000", "Range in hammer units for clients to see the annotation.", FCVAR_NOTIFY, true, 0.0);
+	cvMessage = CreateConVar("sm_jbrp_message", "{NAME} has asked for a repeat", "Message to display via annotation, \"{NAME}\" is replaced with player name.", FCVAR_NOTIFY);
+	cvTargeting = CreateConVar("sm_jbrp_targeting", "0", "Display annotation to certain players? 0 for everyone; 1 for Blue team only; 2 for Warden only", FCVAR_NOTIFY, true, 0.0, true, 2.0);
+	cvRange = CreateConVar("sm_jbrp_range", "1000", "Range in hammer units for players to see the annotation.", FCVAR_NOTIFY, true, 0.0);
 	cvLifeTime = CreateConVar("sm_jbrp_lifetime", "7", "Lifetime for annotations in seconds.", FCVAR_NOTIFY, true, 0.0);
 
 	AutoExecConfig(true, "TF2Jail_Repeat");
@@ -79,8 +83,8 @@ public void OnLibraryAdded(const char[] name)
 {
 	if (!strcmp(name, "TF2Jail_Redux", true))
 	{
-		JB_Hook(OnRoundStartPlayer, fwdOnRoundStartPlayer);
-		JB_Hook(OnClientInduction, fwdOnClientInduction);
+		JB_Hook(OnRoundStartPlayer, OnNeedReset);
+		JB_Hook(OnClientInduction, OnNeedReset);
 	}
 }
 
@@ -126,7 +130,16 @@ public Action SayRepeat(int client, int args)
 	char name[32]; GetClientName(client, name, sizeof(name));
 	ReplaceString(s, sizeof(s), "{NAME}", name, false);
 	event.SetString("text", s);
+
+	int ent = CreateEntityByName("training_annotation");
+	DispatchKeyValueFloat(ent, "lifetime", time);
+	float origin[3]; GetClientAbsOrigin(client, origin);
+	DispatchKeyValueVector(ent, "origin", origin);
+	DispatchSpawn(ent);
+
+	event.SetInt("index", view_as< int >(GetEntityAddress(ent)));
 	event.Fire();
+	SetPawnTimer(RemoveEnt, time, EntIndexToEntRef(ent));
 
 	player.iRepeats++;
 	player.flRepeatTime = currtime + time;
@@ -162,16 +175,16 @@ public int FilterClients(const int client)
 	return bits;
 }
 
-public void fwdOnRoundStartPlayer(const JBPlayer Player)
+public void OnNeedReset(const JBPlayer Player)
 {
 	JailRepeater player = JailRepeater.Of(Player);
 	player.iRepeats = 0;
 	player.flRepeatTime = 0.0;
 }
 
-public void fwdOnClientInduction(const JBPlayer Player)
+public void RemoveEnt(any entref)
 {
-	JailRepeater player = JailRepeater.Of(Player);
-	player.iRepeats = 0;
-	player.flRepeatTime = 0.0;
+	int ent = EntRefToEntIndex(entref);
+	if (IsValidEntity(ent))
+		RemoveEntity(ent);
 }

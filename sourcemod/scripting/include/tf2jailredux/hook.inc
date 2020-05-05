@@ -13,61 +13,62 @@ enum LastRequest{}
 
 enum	// Hook Types
 {
-	OnDownloads = 0,
-	OnRoundStart,
-	OnRoundStartPlayer,
-	OnRoundEnd,
-	OnRoundEndPlayer,
-	OnPreThink,
-	OnRedThink,
-	OnBlueThink,
-	OnFreedayGiven,
-	OnFreedayRemoved,
-	OnWardenGet,
-	OnWardenThink,
-	OnWardenKilled,
-	OnPlayerTouch,
-	OnPlayerSpawned,
-	OnPlayerDied,
-	OnPlayerPrepped,
-	OnPlayerPreppedPost,
-	OnLastGuard,
-	OnLastPrisoner,
-	OnCheckLivingPlayers,
-	OnTakeDamage,
-	OnBuildingDestroyed,
-	OnPlayerHurt,
-	OnObjectDeflected,
-	OnPlayerJarated,
-	OnUberDeployed,
-	OnClientInduction,
-	OnVariableReset,
-	OnTimeLeft,
-	OnMenuAdd,
-	OnShowHud,
-	OnLRPicked,
-	OnLRGiven,
-	OnWMenuAdd,
-	OnWMenuSelect,
-	OnTimeEnd,
-	OnFFTimer,
-	OnDoorsOpen,
-	OnDoorsClose,
-	OnDoorsLock,
-	OnDoorsUnlock,
-	OnSoundHook,
-	OnEntCreated,
-	OnCalcAttack,
-	OnRebelGiven,
-	OnRebelRemoved,
-	OnWardenRemoved,
-	OnShouldAutobalance,
-	OnShouldAutobalancePlayer,
-	OnSetWardenLock,
-	OnPlayMusic,
-	OnLRDenied,
-	OnLRActivate,
-	OnLRActivatePlayer,
+	OnDownloads = 0,			// After OnMapStart
+	OnRoundStart,				// When the round activates, players can move
+	OnRoundStartPlayer,			// When the round activates, per player
+	OnRoundEnd,					// When the round ends
+	OnRoundEndPlayer,			// When the round ends, per player
+	OnPreThink,					// After SDKHook_PreThink
+	OnRedThink,					// Think, for red team
+	OnBlueThink,				// Think, for blue team
+	OnFreedayGiven,				// When a player is given a freeday
+	OnFreedayRemoved,			// When a player's freeday is removed
+	OnWardenGet,				// Right before a player receives warden status
+	OnWardenThink,				// Think, for the warden
+	OnWardenKilled,				// When the warden is killed
+	OnPlayerTouch,				// When 2 players touch (SDKHook_Touch)
+	OnPlayerSpawned,			// After a player spawns
+	OnPlayerDied,				// When a player dies
+	OnPlayerPrepped,			// Right before a player is about to have their weapons managed
+	OnPlayerPreppedPost,		// After a player's weapons have been managed
+	OnLastGuard,				// When there is only 1 guard remaining
+	OnLastPrisoner,				// When there is only 1 prisoner remaining
+	OnCheckLivingPlayers,		// After a player dies, or right after the round starts
+	OnTakeDamage,				// SDKHook_OnTakeDamage
+	OnBuildingDestroyed,		// When a building is destroyed
+	OnPlayerHurt,				// A player_hurt event
+	OnObjectDeflected,			// When a player is airblasted
+	OnPlayerJarated,			// When a player is jarated
+	OnUberDeployed,				// When a player deploys an ubercharge
+	OnClientInduction,			// After a players internal StringMap is created (OnClientPutInServer)
+	OnVariableReset,			// When the round resets, for every player
+	OnTimeLeft,					// When the round time is about to be set
+	OnMenuAdd,					// When an LR is added to the menu
+	OnShowHud,					// When the LR hud is about to be shown
+	OnLRPicked,					// When an LR is picked from the menu
+	OnLRGiven,					// When a player receives the LR menu
+	OnWMenuAdd,					// To add to the warden menu (It's easier to simply use hWardenMenu in gamemode.inc)
+	OnWMenuSelect,				// When the warden selects an item in the warden menu
+	OnTimeEnd,					// When the round time expires
+	OnFFTimer,					// When the Friendly-Fire timer is about to be set
+	OnDoorsOpen,				// Right before the cell doors open
+	OnDoorsClose,				// Right before the cell doors close
+	OnDoorsLock,				// Right before the cell doors lock
+	OnDoorsUnlock,				// Right before the cell doors unlock
+	OnSoundHook,				// When a player is the entity in an AddNormalSoundHook() callback
+	OnEntCreated,				// OnEntityCreated, before TF2JR can do anything with it
+	OnCalcAttack,				// TF2_CalcIsAttackCritical
+	OnRebelGiven,				// When a player receives rebel status
+	OnRebelRemoved,				// When a player's rebel status is removed
+	OnWardenRemoved,			// When a player loses warden status
+	OnShouldAutobalance,		// Right before players are about to be autobalanced by the plugin
+	OnShouldAutobalancePlayer,	// Right before a player is autobalanced by the plugin
+	OnSetWardenLock,			// When the warden lock status is about to be set
+	OnPlayMusic,				// When background music is about to be played
+	OnLRDenied,					// When the next LR is denied
+	OnLRActivate,				// When an LR activates
+	OnLRActivatePlayer,			// When an LR activates, per player
+	OnRoundReset, 				// teamplay_round_start, same as OnVariableReset but excludes players
 
 	JBFWD_LENGTH
 };

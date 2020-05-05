@@ -6,8 +6,17 @@ char
 	strRebelParticles[64],					// Rebel particles
 	strFreedayParticles[64],				// Freeday particles
 	strWardenParticles[64],					// Warden particles
-	strLRPath[64]							// Path to lastrequests.cfg
+	strConfig[CFG_LENGTH][256]				// Path to config files
 ;
+
+// KeyValues name for config
+char strKVConfig[CFG_LENGTH][64] = {
+	"TF2Jail_LastRequests",
+	"TF2Jail_MapConfig",
+	"TF2Jail_RoleRenders",
+	"TF2Jail_Nodes",
+	"WardenMenu"
+};
 
 int
 	iHalo,									// Particle
@@ -200,6 +209,9 @@ methodmap JailFighter < JBPlayer
 		ArrayList hArray = new ArrayList();
 		while ((iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1)
 		{
+			if (GetEntProp(iEnt, Prop_Data, "m_bDisabled"))
+				continue;
+
 			if (team <= 1)
 				hArray.Push(iEnt);
 			else if (GetEntProp(iEnt, Prop_Send, "m_iTeamNum") == team)
@@ -451,15 +463,26 @@ methodmap JailFighter < JBPlayer
 		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2].fCoord_X, EnumTNPS[2].fCoord_Y, EnumTNPS[2].fHoldTime, EnumTNPS[2].iRed, EnumTNPS[2].iGreen, EnumTNPS[2].iBlue, EnumTNPS[2].iAlpha, EnumTNPS[2].iEffect, EnumTNPS[2].fFXTime, EnumTNPS[2].fFadeIn, EnumTNPS[2].fFadeOut);
 		CPrintToChatAll("%t %t.", "Plugin Tag", "New Warden", client);
 
-		float annot = cvarTF2Jail[WardenAnnotation].FloatValue;
-		if (annot != 0.0)
+		float annottime = cvarTF2Jail[WardenAnnotation].FloatValue;
+		if (annottime != 0.0)
 		{
 			Event event = CreateEvent("show_annotation");
 			if (event)
 			{
+				int annot = CreateEntityByName("training_annotation");
+
+				DispatchKeyValueFloat(annot, "lifetime", annottime);
+				float origin[3]; GetClientAbsOrigin(client, origin);
+				DispatchKeyValueVector(annot, "origin", origin);
+				DispatchSpawn(annot);
+				event.SetInt("index", view_as< int >(GetEntityAddress(annot)));
+				SetPawnTimer(RemoveEnt, annottime, EntIndexToEntRef(annot));		// It's lifetime should kill it but w/e
+
 				event.SetInt("follow_entindex", client);
-				event.SetFloat("lifetime", annot);
-				event.SetString("text", "Warden");
+				event.SetFloat("lifetime", annottime);
+
+				FormatEx(strWarden, sizeof(strWarden), "%t", "Warden");
+				event.SetString("text", strWarden);
 
 				int bits, i;
 				for (i = MaxClients; i; --i)
@@ -555,24 +578,15 @@ methodmap JailFighter < JBPlayer
 	{
 		int client = this.index;
 		TF2_RemovePlayerDisguise(client);
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable*")) != -1)
+		int wearable;
+
+		for (int i = TF2_GetNumWearables(client)-1; i >= 0; --i)
 		{
-			if (GetOwner(ent) == client)
-			{
-				TF2_RemoveWearable(client, ent);
-				AcceptEntityInput(ent, "Kill");
-			}
+			wearable = TF2_GetWearable(client, i);
+			if (wearable != -1)
+				TF2_RemoveWearable(client, wearable);
 		}
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_powerup_bottle")) != -1)
-		{
-			if (GetOwner(ent) == client)
-			{
-				TF2_RemoveWearable(client, ent);
-				AcceptEntityInput(ent, "Kill");
-			}
-		}
+
 		if (weps)
 			TF2_RemoveAllWeapons(client);
 	}
@@ -604,7 +618,7 @@ methodmap JailFighter < JBPlayer
 		if (IsVoteInProgress())
 			return;
 
-		Menu menu = new Menu(ListLRsMenu);
+		Menu menu = new Menu(ListLRsMenu, MENU_ACTIONS_DEFAULT|MenuAction_Display);
 		AddLRsToMenu(this, menu);
 		menu.Display(this.index, 0);
 
@@ -715,8 +729,20 @@ methodmap JailFighter < JBPlayer
 	*/
 	public void MarkRebel()
 	{
-		if (this.bIsRebel || !IsPlayerAlive(this.index) || GetClientTeam(this.index) != RED)
+		if (!IsPlayerAlive(this.index) || GetClientTeam(this.index) != RED)
 			return;
+
+		if (this.bIsRebel)
+		{
+			float time = cvarTF2Jail[RebelTime].FloatValue;
+			if (time != 0.0)
+			{
+				Handle h = this.hRebelTimer;
+				KillTimerSafe(h);	// What the fuck
+				this.hRebelTimer = CreateTimer(time, Timer_ClearRebel, this.userid, TIMER_FLAG_NO_MAPCHANGE);
+			}
+			return;
+		}
 
 		if (!cvarTF2Jail[Rebellers].BoolValue)
 			return;
@@ -777,8 +803,12 @@ methodmap JailFighter < JBPlayer
 		if (cvarTF2Jail[RendererColor].BoolValue)
 			SetEntityRenderColor(this.index);
 
-		CPrintToChat(this.index, "%t %t", "Plugin Tag", "Rebel Timer Remove");
+		// What the fuck
+		Handle h = this.hRebelTimer;
+		KillTimerSafe(h);
+		this.hRebelTimer = h;
 
+		CPrintToChat(this.index, "%t %t", "Plugin Tag", "Rebel Timer Remove");
 		Call_OnRebelRemoved(this);
 	}
 

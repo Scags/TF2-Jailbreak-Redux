@@ -24,7 +24,7 @@ public void ManageDownloads()
 	iHalo2 = PrecacheModel("materials/sprites/halo01.vmt", true);
 
 	// If a last request supports music, precache and prepare the sound file
-	int len = gamemode.hLRS.Size;
+	int len = gamemode.iLRs;
 	LastRequest lr;
 	for (int i = 0; i < len; ++i)
 	{
@@ -302,7 +302,19 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 
 		if (victim.bIsFreeday && !base.bIsWarden)
 		{
-			damage *= 0.0;
+			damage = 0.0;
+			action = Plugin_Changed;
+		}
+
+		if (victim.bSelectingLR && cvarTF2Jail[ImmunityDuringLRSelect].BoolValue)
+		{
+			damage = 0.0;
+			action = Plugin_Changed;
+		}
+
+		if (GetClientTeam(victim.index) == BLU && GetClientTeam(attacker) == BLU && hEngineConVars[0].BoolValue && cvarTF2Jail[FFType].IntValue == 1)
+		{
+			damage = 0.0;
 			action = Plugin_Changed;
 		}
 
@@ -412,9 +424,10 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
  	return Call_OnCalcAttack(base, weapon, weaponname, result);
 }
 
+// TODO; make this a one-time function, and use the menu callback to adjust for count and vip status
 public void AddLRsToMenu(JailFighter player, Menu menu)
 {
-	int i, max, value, flags, len = gamemode.hLRS.Size;
+	int i, max, value, flags, len = gamemode.iLRs;
 	char buffer[MAX_LRNAME_LENGTH*2], strID[4], strValue[16];
 	LastRequest lr;
 
@@ -423,7 +436,7 @@ public void AddLRsToMenu(JailFighter player, Menu menu)
 	for (i = 0; i < len; i++)
 	{
 		lr = LastRequest.At(i);
-		if (lr == null)		// ._.
+		if (lr == null || lr.IsDisabled())
 			continue;
 
 		max = lr.UsesPerMap();
@@ -454,7 +467,7 @@ public void AddLRsToMenu(JailFighter player, Menu menu)
 public void AddLRToPanel(Menu &panel)
 {
 	char name[MAX_LRNAME_LENGTH*2], buffer[MAX_LRNAME_LENGTH], id[4];
-	int i, len = gamemode.hLRS.Size;
+	int i, len = gamemode.iLRs;
 	LastRequest lr;
 
 	for (i = 0; i < len; i++)
@@ -476,6 +489,14 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 {
 	switch (action)
 	{
+		case MenuAction_DrawItem:
+		{
+
+		}
+		case MenuAction_Display:
+		{
+			JailFighter(client).bSelectingLR = true;
+		}
 		case MenuAction_Select:
 		{
 			if (!IsPlayerAlive(client))
@@ -507,6 +528,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 				CPrintToChatAll("%t %t", "Plugin Tag", "LR Chosen");
 			}
 			base = JailFighter(client);
+			base.bSelectingLR = false;
 
 			if (Call_OnLRPicked(lr, base) != Plugin_Continue)
 				return;
@@ -556,7 +578,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 		}
 		case MenuAction_Cancel:
 		{
-
+			JailFighter(client).bSelectingLR = false;
 		}
 		case MenuAction_End:delete menu;
 	}
@@ -608,7 +630,7 @@ public void ManageEntityCreated(int ent, const char[] classname)
 		SDKHook(ent, SDKHook_Spawn, KillOnSpawn);
 
 	if (!strcmp(classname, "func_breakable") && cvarTF2Jail[VentHit].BoolValue)
-		RequestFrame(HookVent, EntIndexToEntRef(ent));
+		SDKHook(ent, SDKHook_SpawnPost, HookVent);
 
 	if (!strcmp(classname, "obj_dispenser") || !strcmp(classname, "obj_sentrygun") || !strcmp(classname, "obj_teleporter"))
 		SDKHook(ent, SDKHook_Spawn, gamemode.bAllowBuilding ? OnBuildingSpawn : KillOnSpawn);
