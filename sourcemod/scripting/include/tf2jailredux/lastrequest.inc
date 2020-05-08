@@ -241,6 +241,19 @@ methodmap LastRequest < StringMap
 	*/
 	public native void Refresh(const char[] name = "");
 
+	/**
+	 *	Add an LR to the LR menu.
+	 *	@note 					This happens automatically if the LR is in config
+	 *							and is enabled.
+	*/
+//	public native void AddToMenu();
+
+	/**
+	 *	Detect if an LR is in the LR menu.
+	 *
+	 *	@return 				True if it is, false otherwise.
+	*/
+//	public native bool IsInMenu();
 
 	/**
 	 *	** ** INTERNAL PROPERTIES ** **

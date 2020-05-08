@@ -37,7 +37,7 @@ enum
 	CFG_LENGTH
 };
 
-stock char strDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear", "prop_door_rotating" };
+stock char strDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear"/*, "prop_door_rotating"*/ };
 
 /**
  *	@section TF2Jail compatibility forwards and functions

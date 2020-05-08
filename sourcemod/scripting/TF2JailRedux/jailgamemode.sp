@@ -1,3 +1,11 @@
+enum// TOGGLE_STATE
+{
+	TS_AT_TOP,
+	TS_AT_BOTTOM,
+	TS_GOING_UP,
+	TS_GOING_DOWN
+};
+
 methodmap JailGameMode < JBGameMode
 {
 	public JailGameMode()
@@ -67,70 +75,107 @@ methodmap JailGameMode < JBGameMode
 	*/
 	public bool DoorHandler( const eDoorsMode status, bool announce = false, bool fromwarden = true, bool overridefwds = false )
 	{
-		if (strCellNames[0] != '\0')
-		{
-			switch (status)
-			{
-				case OPEN:
-				{
-					if (!overridefwds)
-						if (Call_OnDoorsOpen() != Plugin_Continue) 
-							return false;
-//					FormatEx(name, sizeof(name), "%t", "Opened");
-					this.bCellsOpened = true;
-					this.bFirstDoorOpening = true;
-				}
-				case CLOSE:
-				{
-					if (!overridefwds)
-						if (Call_OnDoorsClose() != Plugin_Continue) 
-							return false;
-//					FormatEx(name, sizeof(name), "%t", "Closed");
-					this.bCellsOpened = false;
-				}
-				case LOCK:
-				{
-					if (!overridefwds)
-						if (Call_OnDoorsLock() != Plugin_Continue) 
-							return false;
-//					FormatEx(name, sizeof(name), "%t", "Locked");
-				}
-				case UNLOCK:
-				{
-					if (!overridefwds)
-						if (Call_OnDoorsUnlock() != Plugin_Continue) 
-							return false;
-//					FormatEx(name, sizeof(name), "%t", "Unlocked");
-				}
-			}
+		if (strCellNames[0] == '\0')
+			return false;
 
-			char name[32];
+		switch (status)
+		{
+			case OPEN:
+			{
+				if (!overridefwds)
+					if (Call_OnDoorsOpen() != Plugin_Continue) 
+						return false;
+//					FormatEx(name, sizeof(name), "%t", "Opened");
+			}
+			case CLOSE:
+			{
+				if (!overridefwds)
+					if (Call_OnDoorsClose() != Plugin_Continue) 
+						return false;
+//					FormatEx(name, sizeof(name), "%t", "Closed");
+			}
+			case LOCK:
+			{
+				if (!overridefwds)
+					if (Call_OnDoorsLock() != Plugin_Continue) 
+						return false;
+//					FormatEx(name, sizeof(name), "%t", "Locked");
+			}
+			case UNLOCK:
+			{
+				if (!overridefwds)
+					if (Call_OnDoorsUnlock() != Plugin_Continue) 
+						return false;
+//					FormatEx(name, sizeof(name), "%t", "Unlocked");
+			}
+		}
+
+		char name[32];
 //			if (announce)
 //				if (fromwarden)
 //					CPrintToChatAll("%t %t", "Plugin Tag", "Warden Work Cells", this.iWarden.index, name);
 //				else CPrintToChatAll("%t %t", "Admin Tag", "Admin Work Cells", name);
 
-			int i, ent = -1;
-			for (i = 0; i < sizeof(strDoorsList); i++)
+		int i, ent = -1;
+		bool success;
+		for (i = 0; i < sizeof(strDoorsList); i++)
+		{
+			ent = -1;
+			while ((ent = FindEntityByClassname(ent, strDoorsList[i])) != -1)
 			{
-				ent = -1;
-				while ((ent = FindEntityByClassname(ent, strDoorsList[i])) != -1)
+				GetEntPropString(ent, Prop_Data, "m_iName", name, sizeof(name));
+				if (!strcmp(name, strCellNames, false))
 				{
-					GetEntPropString(ent, Prop_Data, "m_iName", name, sizeof(name));
-					if (StrEqual(name, strCellNames, false))
+					int m_toggle_state = GetEntProp(ent, Prop_Data, "m_toggle_state");
+					switch (status)
 					{
-						switch (status)
+						case OPEN:
 						{
-							case OPEN:AcceptEntityInput(ent, "Open");
-							case CLOSE:AcceptEntityInput(ent, "Close");
-							case LOCK:AcceptEntityInput(ent, "Lock");
-							case UNLOCK:AcceptEntityInput(ent, "Unlock");
+							if (m_toggle_state != TS_AT_TOP && m_toggle_state != TS_GOING_UP)
+							{
+								if (!GetEntProp(ent, Prop_Data, "m_bLocked"))
+								{
+									AcceptEntityInput(ent, "Open");
+									success = true;
+									this.bCellsOpened = true;
+									this.bFirstDoorOpening = true;
+								}
+							}
+						}
+						case CLOSE:
+						{
+							if (m_toggle_state != TS_AT_BOTTOM)
+							{
+								AcceptEntityInput(ent, "Close");
+								success = true;
+								this.bCellsOpened = false;
+							}
+						}
+						case LOCK:
+						{
+							// func_movelinears do not have a lock ability, easiest way to check is to HasEntProp
+							if (HasEntProp(ent, Prop_Data, "m_bLocked") && !GetEntProp(ent, Prop_Data, "m_bLocked"))
+							{
+								AcceptEntityInput(ent, "Lock");
+								success = true;
+							}
+						}
+						case UNLOCK:
+						{
+							if (HasEntProp(ent, Prop_Data, "m_bLocked") && GetEntProp(ent, Prop_Data, "m_bLocked"))
+							{
+								AcceptEntityInput(ent, "Unlock");
+								success = true;
+							}
 						}
 					}
 				}
 			}
 		}
-		return true;
+
+		if (success)
+			Call_OnCellsManaged(status);
+		return success;
 	}
 	/**
 	 *	Reset the Warden-firing votes.
@@ -186,11 +231,8 @@ methodmap JailGameMode < JBGameMode
 			ent = -1;
 			while ((ent = FindEntityByClassname(ent, strDoorsList[i])) != -1)
 			{
-				if (IsValidEntity(ent))
-				{
-					AcceptEntityInput(ent, "Unlock");
-					AcceptEntityInput(ent, "Open");
-				}
+				AcceptEntityInput(ent, "Unlock");
+				AcceptEntityInput(ent, "Open");
 			}
 		}
 	}
@@ -206,7 +248,7 @@ methodmap JailGameMode < JBGameMode
 	{
 		int ent = -1;
 		while ((ent = FindEntityByClassname(ent, "trigger_hurt")) != -1)
-				if (GetEntPropFloat(ent, Prop_Data, "m_flDamage") < 0)
+			if (GetEntPropFloat(ent, Prop_Data, "m_flDamage") < 0)
 				AcceptEntityInput(ent, status ? "Enable" : "Disable");
 
 		this.bMedicDisabled = !status;

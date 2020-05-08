@@ -58,7 +58,7 @@ public Action Command_BecomeWarden(int client, int args)
 	JailFighter player = JailFighter(client);
 	if (player.bIsWarden)
 	{
-		CPrintToChat(client, "%t %t", "Plugin Tag", "Already Warden");
+		player.WardenMenu();
 		return Plugin_Handled;
 	}
 
@@ -200,6 +200,8 @@ public Action Command_OpenCells(int client, int args)
 		FormatEx(method, sizeof(method), "%t", "Opened");
 		CPrintToChatAll("%t %t", "Plugin Tag", "Warden Work Cells", client, method);
 	}
+	// Only happens if cells are in limbo aka partially opened/closed
+//	else CReplyToCommand(client, "%t %t", "Plugin Tag", "Cells Already Open");
 
 	return Plugin_Handled;
 }
@@ -1213,6 +1215,7 @@ public Action Command_WardenFF(int client, int args)
 	{
 		hEngineConVars[0].SetBool(true);
 		CPrintToChatAll("%t %t", "Plugin Tag", "FF On Warden", client);
+		gamemode.bWardenToggledFF = true;
 	}
 	else
 	{

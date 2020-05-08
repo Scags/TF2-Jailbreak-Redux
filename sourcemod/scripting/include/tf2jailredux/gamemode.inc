@@ -628,6 +628,18 @@ methodmap JBGameMode < StringMap
 			this.SetValue("bIsWardenLocked", i);
 		}
 	}
+	property bool bWardenStartLocked
+	{
+		public get()
+		{
+			bool i; this.GetValue("bWardenStartLocked", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bWardenStartLocked", i);
+		}
+	}
 	property bool bOneGuardLeft
 	{
 		public get()
@@ -856,6 +868,18 @@ methodmap JBGameMode < StringMap
 			this.SetValue("bMarkerExists", i);
 		}
 	}
+	property bool bWardenToggledFF
+	{
+		public get()
+		{
+			bool i; this.GetValue("bWardenToggledFF", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bWardenToggledFF", i);
+		}
+	}
 
 	property float flMusicTime
 	{
@@ -936,7 +960,6 @@ methodmap JBGameMode < StringMap
 			this.SetValue("hLRCount", i);
 		}
 	}
-
 
 	/**
 	 *	Find and Initialize a random player as the warden.

@@ -8,7 +8,7 @@
 enum LastRequest{}
 
 /**
- *	@section Forwards and Forward-oriented natives
+ *	@section Forward Hook types
 */
 
 enum	// Hook Types
@@ -69,9 +69,20 @@ enum	// Hook Types
 	OnLRActivate,				// When an LR activates
 	OnLRActivatePlayer,			// When an LR activates, per player
 	OnRoundReset, 				// teamplay_round_start, same as OnVariableReset but excludes players
+	OnCellsManaged, 			// After the cells have been worked on either by Warden or by plugin
+	OnWardenGetPost, 			// After a player has been initialized as Warden
+	OnRebelGivenPost, 			// After a player has been marked as a Rebel
+	OnLRPickedPost, 			// After a player selects an LR from the LR menu, after all properties are set
+	OnWMenuSelectPost,			// After the warden selects an item in the warden menu and executes the command
+	OnCellsFullyOpened,			// When the cell doors finish their opening action
+	OnCellsFullyClosed,			// When the cell doors finish their closing action
 
 	JBFWD_LENGTH
 };
+
+/**
+ *	@endsection
+*/
 
 /**
  *	Each callback function has a counterpart to it's LR hook
@@ -79,150 +90,313 @@ enum	// Hook Types
  *	LR hooked functions (LastRequest.AddHook) correspond the the second callback signature and will only fire if that LR is/was involved or is active
 */
 
+/**
+ *	@section Hook typeset
+*/
+
 /* SDKHook-Style Forwards */
 typeset JBHookCB
 {
-	/*
-		OnRoundStartPlayer2
-		OnRedThink
-		OnBlueThink
-		OnWardenThink
-		OnPlayerPrepped
-		OnClientInduction
-		OnVariableReset
-		OnFreedayGiven
-		OnFreedayRemoved
-		OnLRGiven
-		OnPreThink
-		OnRebelRemoved
+	/**	Thinks
+	 *	OnRedThink
+	 *	OnBlueThink
+	 *	OnWardenThink
+	 *	OnPreThink
 	*/
 	function void (const JBPlayer player);
 	function void (LastRequest lr, const JBPlayer player);
 
-	/*
-		OnPlayerSpawned
-		OnRoundEndPlayer
-	*/
-	function void (const JBPlayer player, Event event);
-	function void (LastRequest lr, const JBPlayer player, Event event);
-
-	/*
-		OnPlayerTouch
-		OnPlayerJarated
-		OnUberDeployed			Medic is player, Patient is victim
-	*/
-	function void (const JBPlayer player, const JBPlayer victim);
-	function void (LastRequest lr, const JBPlayer player, const JBPlayer victim);
-
-	//	OnBuildingDestroyed
-	function void (const JBPlayer attacker, const int building, Event event);
-	function void (LastRequest lr, const JBPlayer player, const int building, Event event);
-
-	/*
-		OnPlayerDied
-		OnPlayerAirblasted
-	*/
-	function void (const JBPlayer victim, const JBPlayer attacker, Event event);
-	function void (LastRequest lr, const JBPlayer player, const JBPlayer attacker, Event event);
-
-	/*
-		OnDownloads
-		OnCheckLivingPlayers
-		OnRoundStart2
-		OnLRActivate
-	*/
-	function void ();
-	function void (LastRequest lr);
-
-	//	OnLRActivatePlayer		Both JB_Hook and LastRequest.AddHook use the same callback signature
-	function void (LastRequest lr, const JBPlayer player);
-	
-	//	OnRoundEnd
-	function void (Event event);
-	function void (LastRequest lr, Event event);
-
-	// 	OnShowHud
-	function void (char[] hud, int len);
-	function void (LastRequest lr, char[] hud, int len);
-
-	// 	OnHurtPlayer
-	function void (const JBPlayer victim, const JBPlayer attacker, Event event);
-	function void (LastRequest lr, const JBPlayer victim, const JBPlayer attacker, Event event);
-
-	// 	OnTakeDamage
-	function Action (const JBPlayer victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom);
-	function Action (LastRequest lr, const JBPlayer victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom);
-
-	//	OnPlayMusic
-	function Action (char song[PLATFORM_MAX_PATH], float &time);
-	function Action (LastRequest lr, char song[PLATFORM_MAX_PATH], float &time);
-
-	/*
-		OnTimeEnd				Return > Continue to override forcing Blue team to win
-		OnLastGuard				Return Handled to stop "One Guard Left" message. Return Stop to not fire OnCheckLivingPlayers
-		OnLastPrisoner			Return Stop to not fire OnCheckLivingPlayers
-		OnDoorsOpen 			Return > Continue to not fire
-		OnDoorsClose 			Return > Continue to not fire
-		OnDoorsLock 			Return > Continue to not fire
-		OnDoorsUnlock 			Return > Continue to not fire
-		OnShouldAutobalance 	Does not have LR counterpart
-	*/
-	function Action ();
-	function Action (LastRequest lr);
-
-	//	OnWardenKilled			Return > Continue to stop "Warden has been killed" message
-	function Action (const JBPlayer victim, const JBPlayer attacker, Event event);
-	function Action (LastRequest lr, const JBPlayer victim, const JBPlayer attacker, Event event);
-
-	//	OnFFTimer
-	function void (float &time);
-	function void (LastRequest lr, float &time);
-
-	//	OnTimeLeft
-	function void (int &time);
-	function void (LastRequest lr, int &time);
-
-	/*
-		OnWardenGet
-		OnPlayerPreppedPre
-		OnRebelGiven
-		OnShouldAutobalancePlayer		LastRequest passed is the iPresetType
+	/**	Weapon management
+	 *	OnPlayerPrepped			>> Return > Plugin_Continue to deny weapon management
 	*/
 	function Action (const JBPlayer player);
 	function Action (LastRequest lr, const JBPlayer player);
 
-	//	OnSoundHook
-	function Action (int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], JBPlayer player, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed);
-	function Action (LastRequest lr, int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], JBPlayer player, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed);
+	/** After weapon management
+	 *	OnPlayerPreppedPost
+	*/
+	function void (const JBPlayer player);
+	function void (LastRequest lr, const JBPlayer player);
 
-	//	OnEntCreated
-	function Action (int ent, const char[] classname);
-	function Action (LastRequest lr, int ent, const char[] classname);
+	/** Variable/property management
+	 *	OnClientInduction
+	 *	OnVariableReset			>> Every LR that is hooked will fire its function
+	*/
+	function void (const JBPlayer player);
+	function void (LastRequest lr, const JBPlayer player);
 
-	//	OnCalcAttack
-	function Action (JBPlayer player, int weapon, char[] weaponname, bool &result);
-	function Action (LastRequest lr, JBPlayer player, int weapon, char[] weaponname, bool &result);
+	/** When a role is given to a player
+	 *	OnWardenGet				>> Return > Plugin_Continue to prevent player from becoming Warden
+	 *	OnRebelGiven			>> Return > Plugin_Continue to prevent player from becoming a Rebel
+	*/
+	function Action (const JBPlayer player);
+	function Action (LastRequest lr, const JBPlayer player);
 
-	//	OnSetWardenLock			Return > Continue to not fire
-	function Action (const bool status);
-	function Action (LastRequest lr, const bool status);
+	/** When a role is given to a player, post
+	 *	OnWardenGetPost
+	 *	OnRebelGivenPost
+	 *	OnFreedayGiven
+	*/
+	function void (const JBPlayer player);
+	function void (LastRequest lr, const JBPlayer player);
 
-	//	OnWMenuSelect
-	function Action (const JBPlayer player, const char[] index);
-	function Action (LastRequest lr, const JBPlayer player, const char[] index);
+	/** When a role is removed from a player
+	 *	OnWardenRemoved
+	 *	OnRebelRemoved
+	 *	OnFreedayRemoved
+	*/
+	function void (const JBPlayer player);
+	function void (LastRequest lr, const JBPlayer player);
 
-	//	OnMenuAdd				Both JB_Hook and LastRequest.AddHook use the same callback signature
-	function void (const JBPlayer player, LastRequest lr, int &menuflags);
+	/** Touch
+	 *	OnPlayerTouch
+	*/
+	function void (const JBPlayer player, const JBPlayer other);
+	function void (LastRequest lr, const JBPlayer player, const JBPlayer other);
 
-	/*
-	 	OnLRPicked				Return > Continue to prevent setting the next iLRPresetType to index
-	 							Both JB_Hook and LastRequest.AddHook use the same callback signature
+	/**	player_spawn
+	 *	OnPlayerSpawned
+	*/
+	function void (const JBPlayer player, Event event);
+	function void (LastRequest lr, const JBPlayer player, Event event);
+
+	/** Attack events
+	 *	OnPlayerHurt
+	 *	OnPlayerDied
+	*/
+	function void (const JBPlayer victim, const JBPlayer attacker, Event event);
+	function void (LastRequest lr, const JBPlayer victim, const JBPlayer attacker, Event event);
+
+	/** TakeDamage hook
+	 * 	OnTakeDamage
+	*/
+	function Action (const JBPlayer victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom);
+	function Action (LastRequest lr, const JBPlayer victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom);
+
+	/**	Warden killed
+	 *	OnWardenKilled			>> Return > Continue to stop "Warden has been killed" message
+	*/
+	function Action (const JBPlayer warden, const JBPlayer attacker, Event event);
+	function Action (LastRequest lr, const JBPlayer warden, const JBPlayer attacker, Event event);
+
+	/** Jarate attack
+	 *	OnPlayerJarated
+	*/
+	function void (const JBPlayer jarateer, const JBPlayer jarateed);
+	function void (LastRequest lr, const JBPlayer jarateer, const JBPlayer jarateed);
+
+	/** Uber deployment
+	 *	OnUberDeployed
+	*/
+	function void (const JBPlayer medic, const JBPlayer patient);
+	function void (LastRequest lr, const JBPlayer medic, const JBPlayer patient);
+
+	/** When a player is airblasted
+	 *	OnPlayerAirblasted
+	*/
+	function void (const JBPlayer victim, const JBPlayer attacker, Event event);
+	function void (LastRequest lr, const JBPlayer victim, const JBPlayer attacker, Event event);
+
+	/** Building destruction
+	 *	OnBuildingDestroyed
+	*/
+	function void (const JBPlayer attacker, const int building, Event event);
+	function void (LastRequest lr, const JBPlayer attacker, const int building, Event event);
+
+	/** Round reset
+	 *	OnRoundReset			>> Every LR that is hooked will fire its function
+	*/
+	function void ();
+	function void (LastRequest lr);
+
+	/** Round start
+	 *	OnRoundStart
+	*/
+	function void ();
+	function void (LastRequest lr);
+
+	/** Round start, per player
+	 *	OnRoundStartPlayer
+	*/
+	function void (const JBPlayer player);
+	function void (LastRequest lr, const JBPlayer player);
+
+	/** Round end
+	 *	OnRoundEnd
+	*/
+	function void (Event event);
+	function void (LastRequest lr, Event event);
+
+	/** Round end, per player
+	 *	OnRoundEndPlayer
+	*/
+	function void (const JBPlayer player, Event event);
+	function void (LastRequest lr, const JBPlayer player, Event event);
+
+	/** LR denial
+	 *	OnLRDenied				>> Both LastRequest.AddHook and JB_Hook have the same callback signature
+	*/
+	function void (LastRequest lr);
+
+	/** LR activation
+	 *	OnLRActivate			>> Both LastRequest.AddHook and JB_Hook have the same callback signature
+	*/
+	function void (LastRequest lr);
+
+	/** LR activation, per player
+	 *	OnLRActivatePlayer		>> Both LastRequest.AddHook and JB_Hook have the same callback signature
+	*/
+	function void (LastRequest lr, const JBPlayer player);
+
+	/** Player receives the LR menu
+	 *	OnLRGiven
+	*/
+	function void (const JBPlayer player);
+	function void (LastRequest lr, const JBPlayer player);
+
+	/** Player picks from the LR menu
+	 *	OnLRPicked				>> Both LastRequest.AddHook and JB_Hook have the same callback signature
+	 *							   Return > Plugin_Continue to prevent this LR from becoming the iPresetType and have it's count increment
 	*/
 	function Action (LastRequest lr, const JBPlayer player);
 
-	//	OnWMenuAdd
+	/** Downloads
+	 *	OnDownloads
+	*/
+	function void ();
+	function void (LastRequest lr);
+
+	/** Living player checks
+	 *	OnCheckLivingPlayers
+	*/
+	function void ();
+	function void (LastRequest lr);
+
+	/** Last guard/prisoner
+	 *	OnLastGuard				>> Return Handled to stop "One Guard Left" message. Return Stop to not fire OnCheckLivingPlayers
+	 *	OnLastPrisoner			>> Return Stop to not fire OnCheckLivingPlayers
+	*/
+	function Action ();
+	function Action (LastRequest lr);
+
+	/** Cell door management
+	 *	OnDoorsOpen				>> Return > Continue to prevent cell opening
+	 *	OnDoorsClose			>> Return > Continue to prevent cell closing
+	 *	OnDoorsLock				>> Return > Continue to prevent cell locking
+	 *	OnDoorsUnlock			>> Return > Continue to prevent cell unlocking
+	*/
+	function Action ();
+	function Action (LastRequest lr);
+
+	/** Cell door management, post
+	 *	OnCellsManaged
+	*/
+	function void (eDoorsMode status);
+	function void (LastRequest lr, eDoorsMode status);
+
+	/** Cell door management, complete
+	 *	OnCellsFullyOpened
+	 *	OnCellsFullyClosed
+	*/
+	function Action ();
+	function Action (LastRequest lr);
+
+	/** Round timer initialized
+	 *	OnTimeLeft
+	*/
+	function void (int &time);
+	function void (LastRequest lr, int &time);
+
+	/** Round time ends
+	 *	OnTimeEnd				>> Return > Continue to override forcing Blue team to win
+	*/
+	function Action ();
+	function Action (LastRequest lr);
+
+	/** Friendly Fire timer initialized
+	 *	OnFFTimer
+	*/
+	function void (float &time);
+	function void (LastRequest lr, float &time);
+
+	/** LR HUD
+	 *	OnShowHud				>> Mostly redundant due to the LR "HudName" entry
+	*/
+	function void (char[] hud, int len);
+	function void (LastRequest lr, char[] hud, int len);
+
+	/** Sound hook
+	 *	OnSoundHook
+	*/
+	function Action (int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], JBPlayer player, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed);
+	function Action (LastRequest lr, int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], JBPlayer player, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed);
+
+	/** Music
+	 *	OnPlayMusic
+	*/
+	function Action (char song[PLATFORM_MAX_PATH], float &time);
+	function Action (LastRequest lr, char song[PLATFORM_MAX_PATH], float &time);
+
+	/** OnEntityCreated, before TF2JR does anything
+	 *	OnEntCreated
+	*/
+	function Action (int ent, const char[] classname);
+	function Action (LastRequest lr, int ent, const char[] classname);
+
+	/** TF2_CalcIsAttackCritical
+	 *	OnCalcAttack
+	*/
+	function Action (JBPlayer player, int weapon, char[] weaponname, bool &result);
+	function Action (LastRequest lr, JBPlayer player, int weapon, char[] weaponname, bool &result);
+
+	/** When warden is about to be locked or unlock
+	 *	OnSetWardenLock			>> Return > Continue to prevent bIsWardenLocked from being set to status
+	*/
+	function Action (const bool status);
+	function Action (LastRequest lr, const bool status);
+
+	/** Warden menu selection
+	 *	OnWMenuSelect			>> Return > Continue to prevent command from being executed
+	*/
+	function Action (const JBPlayer player, const char[] command);
+	function Action (LastRequest lr, const JBPlayer player, const char[] command);
+
+	/** Warden menu selection, post
+	 *	OnWMenuSelectPost
+	*/
+	function void (const JBPlayer player, const char[] command);
+	function void (LastRequest lr, const JBPlayer player, const char[] command);
+
+	// The below do not have LR Hooks!
+
+	/** On perform autobalance
+		OnShouldAutobalance
+	*/
+	function Action ();
+
+	/** On perform autobalance, on a player to be autobalanced
+	 *	OnShouldAutobalancePlayer
+	*/
+	function Action (const JBPlayer player);
+
+	/**	Adding to the LR menu
+	 *	OnMenuAdd				>> This is @deprecated, LRs are added and managed by the JBGameMode.hLRMenu automatically
+	*/
+	function void (const JBPlayer player, LastRequest lr, int &menuflags);
+
+	/**	Adding to the warden menu
+	 *	OnWMenuAdd				>> It's advised to use the JBGameMode.hWardenMenu to add to the warden menu
+	*/
 	function void (Menu &menu);
 };
+
+/**
+ *	@endsection
+*/
+
+/**
+ *	@section Hook natives
+*/
 
 /**
  *	Hook a function from the core plugin and use them within another plugin.

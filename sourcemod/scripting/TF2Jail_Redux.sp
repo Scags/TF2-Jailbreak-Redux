@@ -9,7 +9,7 @@
 #endif
 
 #define PLUGIN_NAME 		"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION 		"2.0.1Beta"
+#define PLUGIN_VERSION 		"2.0.2Beta"
 #define PLUGIN_AUTHOR 		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION 	"Deluxe version of TF2Jail"
 
@@ -374,6 +374,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_jailreset", AdminResetPlugin, ADMFLAG_ROOT, "Reset all plug-in global variables. (DEBUGGING)");
 
 	hEngineConVars[0] = FindConVar("mp_friendlyfire");
+	hEngineConVars[0].AddChangeHook(OnFFToggled);
 	hEngineConVars[1] = FindConVar("tf_avoidteammates_pushaway");
 
 	AimHud = CreateHudSynchronizer();
@@ -423,6 +424,18 @@ public void OnPluginStart()
 	HookEntityOutput("item_ammopack_medium", "OnCacheInteraction", OnTakeAmmo);
 	HookEntityOutput("item_ammopack_small", "OnCacheInteraction", OnTakeAmmo);
 	HookEntityOutput("tf_ammo_pack", "OnCacheInteraction", OnTakeAmmo);
+
+//	for (int i = 0; i < sizeof(strDoorsList); ++i)
+//	{
+//		// These have an input, but not an output o_0
+//		if (strcmp(strDoorsList[i], "func_movelinear", false))
+//		{
+//			HookEntityOutput(strDoorsList[i], "OnOpen", OnCellsOpened);
+//			HookEntityOutput(strDoorsList[i], "OnClose", OnCellsClosed);
+//		}
+//		HookEntityOutput(strDoorsList[i], "OnFullyOpen", OnCellsFullyOpen);
+//		HookEntityOutput(strDoorsList[i], "OnFullyClosed", OnCellsFullyClosed);
+//	}
 
 	ParseLRConfig();	// Only happens once
 }
@@ -550,6 +563,12 @@ public void OnConfigsExecuted()
 		SteamWorks_SetGameDescription(sDescription);
 	}
 #endif
+}
+
+public void OnFFToggled(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	if (!StringToInt(newValue))
+		gamemode.bWardenToggledFF = false;
 }
 
 public void OnMapEnd()
@@ -882,32 +901,42 @@ public Action TF2_OnTakeDamage(int victim, int &attacker, int &inflictor, float 
 }
 #endif
 
-public void OnTakeAmmo(const char[] output, int touchee, int toucher, float delay)
+public void OnTakeAmmo(const char[] output, int caller, int activator, float delay)
 {
 	if (!bEnabled.BoolValue)
 		return;
 
-	if (!IsClientValid(toucher))
+	if (!IsClientValid(activator))
 		return;
 
 	int action = cvarTF2Jail[RebelAmmo].IntValue;
 	if (!action)
 		return;
 
-	JailFighter player = JailFighter(toucher);
+	JailFighter player = JailFighter(activator);
 	if (player.bIsFreeday && action >= 1)
 	{
 		player.RemoveFreeday();
-		PrintCenterTextAll("%t", "Taken Ammo", toucher);
+		PrintCenterTextAll("%t", "Taken Ammo", activator);
 	}
 	if (action == 2)
 		player.MarkRebel();
 }
 
-public void OnFirstCellOpening(const char[] output, int touchee, int toucher, float delay)
+public void OnCellsOpened(const char[] output, int caller, int activator, float delay)
 {
-	gamemode.bFirstDoorOpening = true;
-	gamemode.bCellsOpened = true;	// Some maps have a cell timer, so this lets the warden reclose the cells with 1 tap
+	gamemode.bFirstDoorOpening = true;	// Prevents automatic door open timers from doing their shit
+	gamemode.bCellsOpened = true;	// Some maps have their own cell timer, so this catches those openings too 
+}
+
+public void OnCellsFullyOpen(const char[] output, int caller, int activator, float delay)
+{
+	Call_OnCellsFullyOpened();
+}
+
+public void OnCellsFullyClose(const char[] output, int caller, int activator, float delay)
+{
+	Call_OnCellsFullyClosed();
 }
 
 public Action OnVentTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -1456,7 +1485,8 @@ public void EnableWarden(const int roundcount)
 	if (roundcount != gamemode.iRoundCount 
 	 || gamemode.iRoundState != StateRunning 
 	 || !gamemode.bIsWardenLocked 
-	 || gamemode.bWardenExists)
+	 || gamemode.bWardenExists
+	 || gamemode.bWardenStartLocked)
 		return;
 
 	if (gamemode.SetWardenLock(false))
@@ -1467,10 +1497,12 @@ public void EnableWarden2(const int roundcount)
 {
 	if (roundcount != gamemode.iRoundCount
 	 || gamemode.iRoundState != StateRunning
-	 || gamemode.bWardenExists)
+	 || gamemode.bWardenExists
+	 || gamemode.bWardenStartLocked)
 		return;
 
-	gamemode.FindRandomWarden();
+	if (gamemode.SetWardenLock(false))
+		gamemode.FindRandomWarden();
 }
 
 public void RemoveRebel(const int userid, const int roundcount)
@@ -1570,6 +1602,7 @@ public void ExecuteLR(LastRequest lr)
 			gamemode.iTimeLeft = time;
 
 		gamemode.bIsWardenLocked = !!kv.GetNum("AdminLockWarden", 0) || !!kv.GetNum("LockWarden", 0);
+		gamemode.bWardenStartLocked = gamemode.bIsWardenLocked;
 		gamemode.bDisableCriticals = !kv.GetNum("EnableCriticals", 1);
 
 		if (kv.GetNum("BalanceTeams", 0))

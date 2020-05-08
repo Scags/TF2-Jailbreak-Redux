@@ -103,8 +103,10 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		victim.WardenUnset();
 
 		if (gamemode.iRoundState == StateRunning)
+		{
 			if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue || !gamemode.bSilentWardenKills)
 				PrintCenterTextAll("%t", "Warden Killed");
+		}
 	}
 
 	victim.iCustom = 0;
@@ -151,14 +153,29 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 		{
 			int ent;
 			char entname[32];
+			bool hooked;
 			for (i = 0; i < sizeof(strDoorsList); i++)
 			{
 				ent = -1;
 				while ((ent = FindEntityByClassname(ent, strDoorsList[i])) != -1)
 				{
 					GetEntPropString(ent, Prop_Data, "m_iName", entname, sizeof(entname));
-					if (StrEqual(entname, strCellNames, false))	// Laziness, hook first cell door opening so open door timer catches and doesn't open on its own
-						HookSingleEntityOutput(ent, "OnOpen", OnFirstCellOpening, true);
+					if (StrEqual(entname, strCellNames, false))
+					{
+						if (!hooked)
+						{
+							// This is the keystone door. What happens to it (should) happen to the rest of the doors
+							// Hook it's outputs so forwards only fire once per output
+							if (strcmp(strDoorsList[i], "func_movelinear", false))	// func_movelinears don't have an OnOpen output, but have the input, weird
+								HookSingleEntityOutput(ent, "OnOpen", OnCellsOpened);
+
+							// Hooks for full actions, only when the cell(s) finish their open/close action
+							HookSingleEntityOutput(ent, "OnFullyOpen", OnCellsFullyOpen);
+							HookSingleEntityOutput(ent, "OnFullyClosed", OnCellsFullyClose);
+
+							hooked = true;
+						}
+					}
 				}
 			}
 		}
@@ -192,6 +209,7 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 	return Plugin_Continue;
 }
 
+// TODO; optimize me! We're taking on average 20~25ms to get through here! Too slow!!!
 public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!bEnabled.BoolValue)
@@ -200,6 +218,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	gamemode.bCellsOpened = false;
 	gamemode.bWardenExists = false;
 	gamemode.bIsWardenLocked = false;
+	gamemode.bWardenStartLocked = false;
 	gamemode.bFirstDoorOpening = false;
 	gamemode.iLivingMuteType = cvarTF2Jail[LivingMuteType].IntValue;
 	gamemode.iMuteType = cvarTF2Jail[MuteType].IntValue;
@@ -287,12 +306,16 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	if (time != 0.0)
 	{
 		gamemode.bIsWardenLocked = true;
-		if (time == -1.0)
+		// If an LR disables warden, don't use the delayed enablers
+		if (!gamemode.bWardenStartLocked)
 		{
-			SetPawnTimer(EnableWarden2, cvarTF2Jail[WardenDelay2].FloatValue, gamemode.iRoundCount);
-//			gamemode.FindRandomWarden();
+			if (time == -1.0)
+			{
+				SetPawnTimer(EnableWarden2, cvarTF2Jail[WardenDelay2].FloatValue, gamemode.iRoundCount);
+//				gamemode.FindRandomWarden();
+			}
+			else SetPawnTimer(EnableWarden, time, gamemode.iRoundCount);
 		}
-		else SetPawnTimer(EnableWarden, time, gamemode.iRoundCount);
 	}
 
 	gamemode.flMusicTime = GetGameTime() + 1.4;

@@ -445,13 +445,16 @@ methodmap JailFighter < JBPlayer
 	*/
 	public bool WardenSet()
 	{
-		if (Call_OnWardenGet(this) != Plugin_Continue)
-			return false;
-
 		if (JBGameMode_GetProp("bWardenExists"))
 			return false;
 
 		if (JBGameMode_GetProp("bIsWardenLocked"))
+			return false;
+
+		if (GetClientTeam(this.index) != BLU)
+			return false;
+
+		if (Call_OnWardenGet(this) != Plugin_Continue)
 			return false;
 
 		this.bIsWarden = true;	
@@ -512,6 +515,7 @@ methodmap JailFighter < JBPlayer
 			SetEntityRenderColor(this.index, iWardenColors[0], iWardenColors[1], iWardenColors[2], iWardenColors[3]);
 
 		ManageWarden(this);
+		Call_OnWardenGetPost(this);
 		return true;
 	}
 	/**
@@ -618,7 +622,7 @@ methodmap JailFighter < JBPlayer
 		if (IsVoteInProgress())
 			return;
 
-		Menu menu = new Menu(ListLRsMenu, MENU_ACTIONS_DEFAULT|MenuAction_Display);
+		Menu menu = new Menu(LRMenuHandler, MENU_ACTIONS_DEFAULT|MenuAction_Display);
 		AddLRsToMenu(this, menu);
 		menu.Display(this.index, 0);
 
@@ -779,6 +783,7 @@ methodmap JailFighter < JBPlayer
 			CPrintToChat(this.index, "%t %t", "Plugin Tag", "Rebel Timer Start", RoundFloat(time));
 			SetPawnTimer(RemoveRebel, time, this.userid, JBGameMode_GetProp("iRoundCount"));
 		}
+		Call_OnRebelGivenPost(this);
 	}
 	/**
 	 *	Clear a player's rebel status.

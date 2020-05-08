@@ -312,7 +312,9 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 			action = Plugin_Changed;
 		}
 
-		if (GetClientTeam(victim.index) == BLU && GetClientTeam(attacker) == BLU && hEngineConVars[0].BoolValue && cvarTF2Jail[FFType].IntValue == 1)
+		if (hEngineConVars[0].BoolValue && gamemode.bWardenToggledFF
+			&& GetClientTeam(victim.index) == BLU && GetClientTeam(attacker) == BLU
+			&& cvarTF2Jail[FFType].IntValue == 1)
 		{
 			damage = 0.0;
 			action = Plugin_Changed;
@@ -423,12 +425,11 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
  	JailFighter base = JailFighter(client);
  	return Call_OnCalcAttack(base, weapon, weaponname, result);
 }
-
-// TODO; make this a one-time function, and use the menu callback to adjust for count and vip status
+// TODONT; get gud and find a way to clean this up
 public void AddLRsToMenu(JailFighter player, Menu menu)
 {
 	int i, max, value, flags, len = gamemode.iLRs;
-	char buffer[MAX_LRNAME_LENGTH*2], strID[4], strValue[16];
+	char buffer[MAX_LRNAME_LENGTH*2], id[4], valuestr[16];
 	LastRequest lr;
 
 	bool vip = player.bIsVIP;
@@ -441,7 +442,7 @@ public void AddLRsToMenu(JailFighter player, Menu menu)
 
 		max = lr.UsesPerMap();
 		flags = ITEMDRAW_DEFAULT;
-		strValue[0] = '\0';
+		valuestr[0] = '\0';
 
 		Call_OnMenuAdd(player, lr, flags);
 
@@ -451,18 +452,19 @@ public void AddLRsToMenu(JailFighter player, Menu menu)
 		if (max > 0)
 		{
 			value = gamemode.hLRCount.Get(i);
-			FormatEx(strValue, sizeof(strValue), " (%i/%i)", value, max);
+			FormatEx(valuestr, sizeof(valuestr), " (%i/%i)", value, max);
 			if (value >= max)
 				flags |= ITEMDRAW_DISABLED;	// Disables the LR selection if the max is too high
 		}
 
 		lr.GetName(buffer, MAX_LRNAME_LENGTH);
-		StrCat(buffer, sizeof(buffer), strValue);
+		StrCat(buffer, sizeof(buffer), valuestr);
 
-		IntToString(i, strID, sizeof(strID));
-		menu.AddItem(strID, buffer, flags);
+		IntToString(i, id, sizeof(id));
+		menu.AddItem(id, buffer, flags);
 	}
 }
+
 
 public void AddLRToPanel(Menu &panel)
 {
@@ -485,13 +487,19 @@ public void AddLRToPanel(Menu &panel)
 	}
 }
 
-public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
+public int LRMenuHandler(Menu menu, MenuAction action, int client, int select)
 {
 	switch (action)
 	{
 		case MenuAction_DrawItem:
 		{
-
+			LastRequest lr = LastRequest.At(select);
+			if (lr == null)
+				return ITEMDRAW_DEFAULT;
+			if (lr.IsVIPOnly() && !JailFighter(client).bIsVIP)
+				return ITEMDRAW_DISABLED;
+			if (gamemode.hLRCount.Get(select) >= lr.UsesPerMap())
+				return ITEMDRAW_DISABLED;
 		}
 		case MenuAction_Display:
 		{
@@ -500,17 +508,17 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 		case MenuAction_Select:
 		{
 			if (!IsPlayerAlive(client))
-				return;
+				return 0;
 
 			char strIndex[4]; menu.GetItem(select, strIndex, sizeof(strIndex));
 			int request = StringToInt(strIndex);
 
 			if (!(0 <= request < gamemode.iLRs))	// The fakest of news
-				return;
+				return 0;
 
 			LastRequest lr = LastRequest.At(request);
 			if (lr == null)
-				return;
+				return 0;
 
 			JailFighter base;
 			if (cvarTF2Jail[RemoveFreedayOnLR].BoolValue)
@@ -531,7 +539,7 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			base.bSelectingLR = false;
 
 			if (Call_OnLRPicked(lr, base) != Plugin_Continue)
-				return;
+				return 0;
 
 			char buffer[256];
 			lr.GetKv().GetString("Queue_Announce", buffer, sizeof(buffer));
@@ -559,6 +567,8 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 			int value = gamemode.hLRCount.Get(request);
 			gamemode.hLRCount.Set(request, value+1);
 
+			Call_OnLRPickedPost(lr, base);
+
 			if (lr.ActiveRound())
 			{
 				gamemode.iLRPresetType = -1;
@@ -580,8 +590,9 @@ public int ListLRsMenu(Menu menu, MenuAction action, int client, int select)
 		{
 			JailFighter(client).bSelectingLR = false;
 		}
-		case MenuAction_End:delete menu;
+//		case MenuAction_End:delete menu;
 	}
+	return 0;
 }
 
 public void ManageClientStartVariables(const JailFighter base)
@@ -660,6 +671,7 @@ public void ManageWardenMenu(Menu &menu)
 
 			FakeClientCommandEx(client, info);
 			menu.DisplayAt(client, GetMenuSelectionPosition(), 0);
+			Call_OnWMenuSelectPost(player, info);
 		}
 	}
 }

@@ -513,31 +513,27 @@ public any Native_LastRequest_Destroy(Handle plugin, int numParams)
 		lr.GetName(name, sizeof(name));
 
 	int index = lr.GetID();
-	if (0 <= index < gamemode.iLRs)
+	char buffer[4], buffer2[4];
+	int i;
+	for (i = index; i < gamemode.iLRs - 1; ++i)
 	{
-		char buffer[4], buffer2[4];
-		int i;
-		for (i = index; i < gamemode.iLRs - 1; ++i)
-		{
-			IntToString(i, buffer, sizeof(buffer));
-			IntToString(i+1, buffer2, sizeof(buffer2));
+		IntToString(i, buffer, sizeof(buffer));
+		IntToString(i+1, buffer2, sizeof(buffer2));
 
-			// Shift down
-			LastRequest temp; gamemode.hLRS.GetValue(buffer2, temp);
-			temp.SetValue("__LRID", temp.GetID()-1);
-			gamemode.hLRS.SetValue(buffer, temp);
-		}
-
-		IntToString(i+1, buffer, sizeof(buffer));
-		gamemode.hLRS.Remove(buffer);	// Get rid of the last index
-		gamemode.hLRCount.Erase(index);
+		// Shift down
+		LastRequest temp; gamemode.hLRS.GetValue(buffer2, temp);
+		temp.SetValue("__LRID", temp.GetID()-1);
+		gamemode.hLRS.SetValue(buffer, temp);
 	}
 
+	IntToString(i+1, buffer, sizeof(buffer));
+	gamemode.hLRS.Remove(buffer);	// Get rid of the last index
 	gamemode.hLRS.Remove(name);
+	gamemode.hLRCount.Erase(index);
 	--gamemode.iLRs;
 
 	delete lr.GetKv();
-	FuncTable t; lr.GetValue("__FUNCS", t);		// I don't want functables exposed... yet...
+	FuncTable t; lr.GetValue("__FUNCS", t);
 	delete t;
 	delete lr;
 }

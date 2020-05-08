@@ -74,6 +74,13 @@ void InitializeForwards()
 	hPrivFwds[OnLRActivatePlayer] 		= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
 	hPrivFwds[OnLRDenied] 				= CreateForward(ET_Ignore, Param_Cell);
 	hPrivFwds[OnRoundReset] 			= CreateForward(ET_Ignore);
+	hPrivFwds[OnCellsManaged] 			= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnWardenGetPost] 			= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnRebelGivenPost] 		= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnLRPickedPost] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
+	hPrivFwds[OnWMenuSelectPost] 		= CreateForward(ET_Ignore, Param_Cell, Param_String);
+	hPrivFwds[OnCellsFullyOpened] 		= CreateForward(ET_Ignore);
+	hPrivFwds[OnCellsFullyClosed] 		= CreateForward(ET_Ignore);
 
 	hLegacyFwds[Old_OnWardenGiven] 			= CreateGlobalForward("TF2Jail_OnWardenGiven", ET_Ignore, Param_Cell);
 	hLegacyFwds[Old_OnWardenRemoved] 		= CreateGlobalForward("TF2Jail_OnWardenRemoved", ET_Ignore, Param_Cell);
@@ -191,10 +198,6 @@ Action Call_OnWardenGet(const JailFighter player)
 	Call_StartForward(hPrivFwds[OnWardenGet]);
 	Call_PushCell(player);
 	Call_Finish(action);
-
-	Call_StartForward(hLegacyFwds[Old_OnWardenGiven]);
-	Call_PushCell(player);
-	Call_Finish();
 
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
@@ -1061,10 +1064,6 @@ Action Call_OnRebelGiven(const JailFighter player)
 	Call_PushCell(player);
 	Call_Finish(action);
 
-	Call_StartForward(hLegacyFwds[Old_OnRebelGiven]);
-	Call_PushCell(player);
-	Call_Finish();
-
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
 	{
@@ -1249,6 +1248,142 @@ void Call_OnRoundReset()
 				Call_PushCell(lr);
 				Call_Finish();
 			}
+		}
+	}
+}
+void Call_OnCellsManaged(eDoorsMode status)
+{
+	Call_StartForward(hPrivFwds[OnCellsManaged]);
+	Call_PushCell(status);
+	Call_Finish();
+
+	LastRequest lr = gamemode.GetCurrentLR();
+	if (lr != null)
+	{
+		Function f = GetLRFunction(lr, OnCellsManaged);
+		if (f != INVALID_FUNCTION)
+		{
+			Call_StartFunction(lr.GetOwnerPlugin(), f);
+			Call_PushCell(lr);
+			Call_PushCell(status);
+			Call_Finish();
+		}
+	}
+}
+void Call_OnWardenGetPost(const JailFighter player)
+{
+	Call_StartForward(hPrivFwds[OnWardenGetPost]);
+	Call_PushCell(player);
+	Call_Finish();
+
+	Call_StartForward(hLegacyFwds[Old_OnWardenGiven]);
+	Call_PushCell(player);
+	Call_Finish();
+
+	LastRequest lr = gamemode.GetCurrentLR();
+	if (lr != null)
+	{
+		Function f = GetLRFunction(lr, OnWardenGetPost);
+		if (f != INVALID_FUNCTION)
+		{
+			Call_StartFunction(lr.GetOwnerPlugin(), f);
+			Call_PushCell(lr);
+			Call_PushCell(player);
+			Call_Finish();
+		}
+	}
+}
+void Call_OnRebelGivenPost(const JailFighter player)
+{
+	Call_StartForward(hPrivFwds[OnRebelGivenPost]);
+	Call_PushCell(player);
+	Call_Finish();
+
+	Call_StartForward(hLegacyFwds[Old_OnRebelGiven]);
+	Call_PushCell(player);
+	Call_Finish();
+
+	LastRequest lr = gamemode.GetCurrentLR();
+	if (lr != null)
+	{
+		Function f = GetLRFunction(lr, OnRebelGivenPost);
+		if (f != INVALID_FUNCTION)
+		{
+			Call_StartFunction(lr.GetOwnerPlugin(), f);
+			Call_PushCell(lr);
+			Call_PushCell(player);
+			Call_Finish();
+		}
+	}
+}
+void Call_OnLRPickedPost(LastRequest lr, const JailFighter player)
+{
+	Call_StartForward(hPrivFwds[OnLRPickedPost]);
+	Call_PushCell(lr);
+	Call_PushCell(player);
+	Call_Finish();
+
+	Function f = GetLRFunction(lr, OnLRPickedPost);
+	if (f != INVALID_FUNCTION)
+	{
+		Call_StartFunction(lr.GetOwnerPlugin(), f);
+		Call_PushCell(lr);
+		Call_PushCell(player);
+		Call_Finish();
+	}
+}
+void Call_OnWMenuSelectPost(const JailFighter player, const char[] command)
+{
+	Call_StartForward(hPrivFwds[OnWMenuSelectPost]);
+	Call_PushCell(player);
+	Call_PushString(command);
+	Call_Finish();
+
+	LastRequest lr = gamemode.GetCurrentLR();
+	if (lr != null)
+	{
+		Function f = GetLRFunction(lr, OnWMenuSelectPost);
+		if (f != INVALID_FUNCTION)
+		{
+			Call_StartFunction(lr.GetOwnerPlugin(), f);
+			Call_PushCell(lr);
+			Call_PushCell(player);
+			Call_PushString(command);
+			Call_Finish();
+		}
+	}
+}
+void Call_OnCellsFullyOpened()
+{
+	Call_StartForward(hPrivFwds[OnCellsFullyOpened]);
+	Call_Finish();
+
+	LastRequest lr = gamemode.GetCurrentLR();
+	if (lr != null)
+	{
+		Function f = GetLRFunction(lr, OnCellsFullyOpened);
+		if (f != INVALID_FUNCTION)
+		{
+			Call_StartFunction(lr.GetOwnerPlugin(), f);
+			Call_PushCell(lr);
+			Call_Finish();
+		}
+	}
+}
+void Call_OnCellsFullyClosed()
+{
+	Call_StartForward(hPrivFwds[OnCellsFullyClosed]);
+	Call_Finish();
+
+	LastRequest lr = gamemode.GetCurrentLR();
+	if (lr != null)
+	{
+		Function f = GetLRFunction(lr, OnCellsFullyClosed);
+		if (f != INVALID_FUNCTION)
+		{
+			Call_StartFunction(lr.GetOwnerPlugin(), f);
+			Call_PushCell(lr);
+			Call_Finish();
 		}
 	}
 }
