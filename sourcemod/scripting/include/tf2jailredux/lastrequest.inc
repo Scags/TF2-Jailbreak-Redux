@@ -20,7 +20,7 @@ methodmap LastRequest < StringMap
 	 *	@param exists 			If this LR is already cached, this will be set
 	 *							to true, false otherwise.
 	 *
-	 *	@return 				Link to LR if it existed before, otherwise
+	 *	@return 				Link to LR if it exists, otherwise,
 	 *							It creates a new, empty LR. If new, this will
 	 * 							set the "Name" entry as name.
 	*/
@@ -32,11 +32,11 @@ methodmap LastRequest < StringMap
 	 *	skip importing data from the config!
 	 *	If an LR of this name already exists in the config, then it will
 	 *	copy the data in that config. Otherwise, it will return null.
-	 *	Contrary to LastRequest(), this will only fail if the LR does
+	 *	Contrary to LastRequest.Create(), this will only fail if the LR does
 	 *	not exist in the config.
 	 *	Note that the purpose of this native is to be able to delete and 
-	 *	recreate Last Request instances with LRs that can be deleted from memory, 
-	 *	and import their data. See Destroy() for more information.
+	 *	recreate Last Request Handles with data that comes from the config.
+	 *	See Destroy() for more information.
 	 *
 	 *	@note 					DO *NOT* DELETE THIS, EVER. IF YOU WANT TO 
 	 *							REMOVE IT, USE Destroy()!!!
@@ -163,7 +163,7 @@ methodmap LastRequest < StringMap
 	 * 							it completely from memory! This means that,
 	 *							should you call LastRequest.Create() with the
 	 *							same name afterwards, you will receive an empty LR.
-	 * 							If you wish to destroy and recreate an LR
+	 * 							If you wish to destroy and recreate an LR Handle
 	 *							(say, when reloading a sub-plugin), you should
 	 *							use LastRequest.CreateFromConfig()!
 	*/
@@ -238,8 +238,10 @@ methodmap LastRequest < StringMap
 	 *	@param name 			Name of the entry to delete, if empty,
 	 *							the LR's name is used. This is its SECTION name
 	 *							in the config and is case-insensitive.
+	 *
+	 *	@return 				True on success. False if LR does not exist in config.
 	*/
-	public native void Refresh(const char[] name = "");
+	public native bool Refresh(const char[] name = "");
 
 	/**
 	 *	Add an LR to the LR menu.
@@ -258,8 +260,8 @@ methodmap LastRequest < StringMap
 	/**
 	 *	** ** INTERNAL PROPERTIES ** **
 	 *
-	 *	THESE SHOULD NOT BE SET, EVER
-	 * 	THESE ARE ALL CREATED ONCE YOU INITIALIZE A LastRequest HANDLE
+	 *	DO NOT DELETE. DO NOT SET. EVER!
+	 * 	THESE ARE ALL CREATED ONCE YOU INITIALIZE A LastRequest HANDLE.
 	*/
 	public int GetID()
 	{
@@ -856,7 +858,7 @@ methodmap LastRequest < StringMap
 	{
 		KeyValues k = this.GetKv();
 		if (k != null && k.JumpToKey("Music"))
-			k.SetFloat("Time", 0.0);
+			k.SetFloat("Time", val);
 	}
 
 	public any GetProp(const char[] key)

@@ -33,6 +33,8 @@ public void ManageDownloads()
 			continue;
 
 		lr.GetMusicFileName(s, sizeof(s));
+		if (s[0] == '\0')
+			continue;
 
 		// If they included 'sound/', help them out
 		if (!strncmp(s, "sound/", 6, false))
@@ -44,24 +46,6 @@ public void ManageDownloads()
 	}
 
 	Call_OnDownloads();
-}
-
-public void ManageHUDText()
-{
-	char hud[MAX_LRNAME_LENGTH];
-
-	LastRequest lr = gamemode.GetCurrentLR();
-	if (lr != null)
-	{
-		lr.GetHudName(hud, sizeof(hud));
-		if (hud[0] == '\0')
-			lr.GetName(hud, sizeof(hud));
-	}
-
-	Call_OnShowHud(hud, sizeof(hud));
-
-	if (hud[0] != '\0')
-		SetTextNode(hTextNodes[1], hud, EnumTNPS[1].fCoord_X, EnumTNPS[1].fCoord_Y, EnumTNPS[1].fHoldTime, EnumTNPS[1].iRed, EnumTNPS[1].iGreen, EnumTNPS[1].iBlue, EnumTNPS[1].iAlpha, EnumTNPS[1].iEffect, EnumTNPS[1].fFXTime, EnumTNPS[1].fFadeIn, EnumTNPS[1].fFadeOut);
 }
 
 public void ManageSpawn(const JailFighter base, Event event)
@@ -122,7 +106,19 @@ public void ManageRoundStart()
 {
 	LastRequest lr = gamemode.GetCurrentLR();
 	if (lr != null)
+	{
 		ExecuteLR(lr);
+		char hud[MAX_LRNAME_LENGTH];
+
+		lr.GetHudName(hud, sizeof(hud));
+		if (hud[0] == '\0')
+			lr.GetName(hud, sizeof(hud));
+
+		Call_OnShowHud(hud, sizeof(hud));
+
+		if (hud[0] != '\0')
+			EnumTNPS[1].Display(hTextNodes[1], hud);
+	}
 
 	Call_OnRoundStart();
 }
@@ -162,13 +158,8 @@ public void ManageWarden(const JailFighter base)
 	base.WardenMenu();
 
 	LastRequest lr = gamemode.GetCurrentLR();
-	if (lr != null)
-	{
-		KeyValues kv = lr.GetKv();
-		if (kv && kv.JumpToKey("Parameters") && kv.JumpToKey("KillWeapons"))
-			if (kv.GetNum("Warden", 0))
-				TF2_AddCondition(base.index, TFCond_RestrictToMelee);	// This'll do, removed when warden is lost
-	}
+	if (lr != null && lr.KillWeapons_Warden())
+		TF2_AddCondition(base.index, TFCond_RestrictToMelee);	// This'll do, removed when warden is lost
 }
 
 public void ManageTouch(const JailFighter toucher, const JailFighter touchee)
@@ -185,17 +176,14 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 			if (cvarTF2Jail[HideParticles].BoolValue)
 			{
 				JailFighter player = JailFighter(client);
-				int particle = EntRefToEntIndex(player.iRebelParticle);
-				if (particle != -1)
-					AcceptEntityInput(particle, "Stop");
+				if (IsValidEntity(player.iRebelParticle))
+					AcceptEntityInput(player.iRebelParticle, "Stop");
 
-				particle = EntRefToEntIndex(player.iFreedayParticle);
-				if (particle != -1)
-					AcceptEntityInput(particle, "Stop");
+				if (IsValidEntity(player.iFreedayParticle))
+					AcceptEntityInput(player.iFreedayParticle, "Stop");
 
-				particle = EntRefToEntIndex(player.iWardenParticle);
-				if (particle != -1)
-					AcceptEntityInput(particle, "Stop");
+				if (IsValidEntity(player.iWardenParticle))
+					AcceptEntityInput(player.iWardenParticle, "Stop");
 			}
 		}
 		case TFCond_Disguising, TFCond_Disguised:
@@ -228,17 +216,14 @@ public void TF2_OnConditionRemoved(int client, TFCond cond)
 			if (cvarTF2Jail[HideParticles].BoolValue)
 			{
 				JailFighter player = JailFighter(client);
-				int particle = EntRefToEntIndex(player.iRebelParticle);
-				if (particle != -1)
-					AcceptEntityInput(particle, "Start");
+				if (IsValidEntity(player.iRebelParticle))
+					AcceptEntityInput(player.iRebelParticle, "Start");
 
-				particle = EntRefToEntIndex(player.iFreedayParticle);
-				if (particle != -1)
-					AcceptEntityInput(particle, "Start");
+				if (IsValidEntity(player.iFreedayParticle))
+					AcceptEntityInput(player.iFreedayParticle, "Start");
 
-				particle = EntRefToEntIndex(player.iWardenParticle);
-				if (particle != -1)
-					AcceptEntityInput(particle, "Start");
+				if (IsValidEntity(player.iWardenParticle))
+					AcceptEntityInput(player.iWardenParticle, "Start");
 			}
 		}
 	}
@@ -325,7 +310,7 @@ public Action ManageOnTakeDamage(const JailFighter victim, int &attacker, int &i
 			damagetype |= DMG_CRIT;
 			action = Plugin_Changed;
 		}
-		else if (GetClientTeam(attacker) == RED && GetClientTeam(victim.index) == BLU && (gamemode.iRoundState == StateRunning || gamemode.iRoundState == StateDisabled))
+		else if (GetClientTeam(attacker) == RED && GetClientTeam(victim.index) == BLU && gamemode.iRoundState == StateRunning)
 			base.MarkRebel();
 	}
 

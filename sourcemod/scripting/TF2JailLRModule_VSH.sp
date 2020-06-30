@@ -320,8 +320,8 @@ int
 	iHealthChecks,		// For !halehp
 	iTeamBansCVar,		// Mid-round detection in case a player is guardbanned
 	iNoChargeCVar,		// Allow for charging
-	iDroppedWeaponsCVar,// Allow dropped weapons
-	iHealthBar			// Healthbar
+	iDroppedWeaponsCVar	// Allow dropped weapons
+//	iHealthBar			// Healthbar
 ;
 
 bool
@@ -393,7 +393,7 @@ public void InitSubPlugin()
 		g_LR.SetParameterNum("NoMuting", 1);
 		g_LR.SetParameterNum("DisableMedic", 1);
 		g_LR.SetParameterNum("AllowBuilding", 1);
-		g_LR.SetParameterNum("RegenerateReds", 0);	// Changing this does nothing
+		g_LR.SetParameterNum("RegenerateReds", 0);	// Changing this does nothing in this mode
 		g_LR.SetParameterNum("EnableCriticals", 0);
 		g_LR.SetParameterNum("IgnoreRebels", 1);
 		g_LR.SetParameterNum("VoidFreekills", 1);
@@ -430,11 +430,13 @@ public void InitSubPlugin()
 public void OnPluginEnd()
 {
 	if (LibraryExists("TF2Jail_Redux"))
+	{
 		if (g_LR != null)
 		{
 			g_LR.Destroy();
 			g_LR = null;
 		}
+	}
 }
 
 public void OnLibraryRemoved(const char[] name)
@@ -465,7 +467,7 @@ public void OnLibraryAdded(const char[] name)
 public bool HaleTargetFilter(const char[] pattern, ArrayList clients)
 {
 	if (NOTVSH)
-		return false;	// What am I supposed  to return here?
+		return false;	// What am I supposed to return here?
 
 	bool non = StrContains(pattern, "!", false) != - 1;
 	for (int i = MaxClients; i; --i) 
@@ -1085,13 +1087,12 @@ public void OnEggBombSpawned(int entity)
 
 public void UpdateBossHealth()
 {
-	int hpbar = EntRefToEntIndex(iHealthBar);
-	if (hpbar > MaxClients && IsValidEntity(hpbar))
-	{
-		int pct = RoundToCeil( float(iCurrBoss.iHealth)/float(iCurrBoss.iMaxHealth)*255.0 );
-		Clamp(pct, 0, 255);
-		SetEntProp(hpbar, Prop_Send, "m_iBossHealthPercentageByte", pct);
-	}
+//	if (IsValidEntity(iHealthBar))
+//	{
+//		int pct = RoundToCeil(float(iCurrBoss.iHealth)/float(iCurrBoss.iMaxHealth)*255.0);
+//		Clamp(pct, 0, 255);
+//		SetEntProp(iHealthBar, Prop_Send, "m_iBossHealthPercentageByte", pct);
+//	}
 }
 
 public void ManageBossTransition(const JailBoss base)/* whatever stuff needs initializing should be done here */
@@ -2017,18 +2018,18 @@ public void fwdOnRoundStart(LastRequest lr)
 		hDroppedWeaponsCVar.SetInt(1);
 	}
 
-	if (hNoChargeCVar != null)
-		hNoChargeCVar.SetInt(0);
-
 	// FIXME; why does this not work!?!
-	if (g_LR.GetParameterNum("HealthBar", 0) && FindEntityByClassname(-1, "monster_resource") == -1)
-	{
-		if ((iHealthBar = CreateEntityByName("monster_resource")) != -1)
-		{
-			DispatchSpawn(iHealthBar);
-			iHealthBar = EntIndexToEntRef(iHealthBar);
-		}
-	}
+//	iHealthBar = -1;
+//	if (g_LR.GetParameterNum("HealthBar", 0))
+//	{
+//		iHealthBar = FindEntityByClassname(-1, "monster_resource");
+//		if (iHealthBar == -1)
+//		{
+//			iHealthBar = CreateEntityByName("monster_resource");
+//			DispatchSpawn(iHealthBar);
+//		}
+//		iHealthBar = EntIndexToEntRef(iHealthBar);
+//	}
 
 	JailBoss rand = JailBoss( GetRandomClient(true) );	// It's probably best to keep the second param true
 	if (rand.index <= 0)
@@ -2062,10 +2063,6 @@ public void fwdOnRoundEnd(LastRequest lr, Event event)
 	gamemode.DoorHandler(OPEN);
 	ShowPlayerScores();
 	SetPawnTimer(CalcScores, 3.0);
-
-	int hpbar = EntRefToEntIndex(iHealthBar);
-	if (hpbar > MaxClients && IsValidEntity(hpbar))
-		RemoveEntity(hpbar);
 
 	if (hTeamBansCVar != null && iTeamBansCVar)
 	{
@@ -2796,8 +2793,22 @@ public void TF2ItemsFix(const int client)
 	if (!IsClientInGame(client))
 		return;
 
-	TF2_RemoveAllWeapons(client);
-	TF2_RegeneratePlayer(client);
+// CRASH! BUGBUG; what the fuck why does this crash with engineer PDA's?
+//	TF2_RemoveAllWeapons(client);
+
+// When an engineer pulls out his PDA, a building is created (usually a sentry) and is our culprit
+// This happens when the engineer needs a new builder
+// Since we're removing his old builder to fix TF2Items, the game gives a new one, engi
+// starts trying to place a new building (which he might already have), which hits our segfault
+
+	for (int i = 0; i <= TFWeaponSlot_Melee; ++i)
+	{
+		int wep = GetPlayerWeaponSlot(client, i);
+		if (wep != -1)
+			TF2_RemoveWeaponSlot(client, i);
+	}
+	if (IsPlayerAlive(client))
+		TF2_RegeneratePlayer(client);
 }
 
 public Action fwdOnSetWardenLock(LastRequest lr, const bool status)

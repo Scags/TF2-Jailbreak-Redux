@@ -7,7 +7,7 @@ public void Suicide_Init()
 	g_LR = LastRequest.CreateFromConfig("Commit Suicide", false);
 	if (g_LR != null)
 	{
-		g_LR.AddHook(OnLRPicked, Suicide_OnLRPicked);
+		g_LR.AddHook(OnLRPickedPost, Suicide_OnLRPicked);
 
 		JB_Hook(OnDownloads, Suicide_OnDownloads);		
 	}
@@ -24,7 +24,7 @@ public void Suicide_OnDownloads()
 	PrecacheSound(BANG, true);
 }
 
-public Action Suicide_OnLRPicked(LastRequest lr, const JBPlayer player)
+public void Suicide_OnLRPicked(LastRequest lr, const JBPlayer player)
 {
 	SetPawnTimer(PerformSuicide, GetRandomFloat(0.5, 7.0), player.userid);
 }

@@ -326,12 +326,8 @@ methodmap JailFighter < JBPlayer
 
 		if (cvarTF2Jail[RendererParticles].BoolValue && strFreedayParticles[0] != '\0')
 		{
-			if (this.iFreedayParticle != -1)
-			{
-				int old = EntRefToEntIndex(this.iFreedayParticle);
-				if (IsValidEntity(old))
-					RemoveEntity(old);
-			}
+			if (this.iFreedayParticle && IsValidEntity(this.iFreedayParticle))
+				RemoveEntity(this.iFreedayParticle);
 
 			this.iFreedayParticle = AttachParticle(this.index, strFreedayParticles, _, flFreedayOffset);
 //			if (cvarTF2Jail[HideParticles].BoolValue)
@@ -355,14 +351,10 @@ methodmap JailFighter < JBPlayer
 		SetEntityFlags(client, flags);
 		this.bIsFreeday = false;
 
-		if (this.iFreedayParticle != -1)
-		{
-			int old = EntRefToEntIndex(this.iFreedayParticle);
-			if (IsValidEntity(old))
-				RemoveEntity(old);
+		if (this.iFreedayParticle && IsValidEntity(this.iFreedayParticle))
+			RemoveEntity(this.iFreedayParticle);
 
-			this.iFreedayParticle = -1;
-		}
+		this.iFreedayParticle = -1;
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
 			SetEntityRenderColor(this.index);
@@ -463,7 +455,7 @@ methodmap JailFighter < JBPlayer
 		char strWarden[64];
 		int client = this.index;
 		FormatEx(strWarden, sizeof(strWarden), "%t", "New Warden Center", client);
-		SetTextNode(hTextNodes[2], strWarden, EnumTNPS[2].fCoord_X, EnumTNPS[2].fCoord_Y, EnumTNPS[2].fHoldTime, EnumTNPS[2].iRed, EnumTNPS[2].iGreen, EnumTNPS[2].iBlue, EnumTNPS[2].iAlpha, EnumTNPS[2].iEffect, EnumTNPS[2].fFXTime, EnumTNPS[2].fFadeIn, EnumTNPS[2].fFadeOut);
+		EnumTNPS[2].Display(hTextNodes[2], strWarden);
 		CPrintToChatAll("%t %t.", "Plugin Tag", "New Warden", client);
 
 		float annottime = cvarTF2Jail[WardenAnnotation].FloatValue;
@@ -499,12 +491,8 @@ methodmap JailFighter < JBPlayer
 
 		if (cvarTF2Jail[RendererParticles].BoolValue && strWardenParticles[0] != '\0')
 		{
-			if (this.iWardenParticle != -1)
-			{
-				int old = EntRefToEntIndex(this.iWardenParticle);
-				if (IsValidEntity(old))
-					RemoveEntity(old);
-			}
+			if (this.iWardenParticle && IsValidEntity(this.iWardenParticle))
+				RemoveEntity(this.iWardenParticle);
 
 			this.iWardenParticle = AttachParticle(this.index, strWardenParticles, _, flWardenOffset);
 //			if (cvarTF2Jail[HideParticles].BoolValue)
@@ -549,26 +537,17 @@ methodmap JailFighter < JBPlayer
 				SetPawnTimer(DisableWarden, time, JBGameMode_GetProp("iRoundCount"));
 		}
 
-		if (this.iWardenParticle != -1)
-		{
-			int old = EntRefToEntIndex(this.iWardenParticle);
-			if (IsValidEntity(old))
-				RemoveEntity(old);
+		if (this.iWardenParticle && IsValidEntity(this.iWardenParticle))
+			RemoveEntity(this.iWardenParticle);
 
-			this.iWardenParticle = -1;
-		}
+		this.iWardenParticle = -1;
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
 			SetEntityRenderColor(this.index);
 
 		LastRequest lr = JBGameMode_GetCurrentLR();
-		if (lr != null)
-		{
-			KeyValues kv = lr.GetKv();
-			if (kv && kv.JumpToKey("Parameters") && kv.JumpToKey("KillWeapons"))
-				if (kv.GetNum("Warden", 0))
-					TF2_RemoveCondition(this.index, TFCond_RestrictToMelee);
-		}
+		if (lr != null && lr.KillWeapons_Warden())
+			TF2_RemoveCondition(this.index, TFCond_RestrictToMelee);	// This'll do, removed when warden is lost
 
 		Call_OnWardenRemoved(this);
 		return true;
@@ -760,12 +739,8 @@ methodmap JailFighter < JBPlayer
 		this.bIsRebel = true;
 		if (cvarTF2Jail[RendererParticles].BoolValue && strRebelParticles[0] != '\0')
 		{
-			if (this.iRebelParticle != -1)
-			{
-				int old = EntRefToEntIndex(this.iRebelParticle);
-				if (IsValidEntity(old))
-					RemoveEntity(old);
-			}
+			if (this.iRebelParticle && IsValidEntity(this.iRebelParticle))
+				RemoveEntity(this.iRebelParticle);
 
 			this.iRebelParticle = AttachParticle(this.index, strRebelParticles, _, flRebelOffset);
 //			if (cvarTF2Jail[HideParticles].BoolValue)
@@ -780,8 +755,8 @@ methodmap JailFighter < JBPlayer
 		float time = cvarTF2Jail[RebelTime].FloatValue;
 		if (time != 0.0)
 		{
+			this.hRebelTimer = CreateTimer(time, Timer_ClearRebel, this.userid, TIMER_FLAG_NO_MAPCHANGE);
 			CPrintToChat(this.index, "%t %t", "Plugin Tag", "Rebel Timer Start", RoundFloat(time));
-			SetPawnTimer(RemoveRebel, time, this.userid, JBGameMode_GetProp("iRoundCount"));
 		}
 		Call_OnRebelGivenPost(this);
 	}
@@ -796,14 +771,10 @@ methodmap JailFighter < JBPlayer
 			return;
 
 		this.bIsRebel = false;
-		if (this.iRebelParticle != -1)
-		{
-			int old = EntRefToEntIndex(this.iRebelParticle);
-			if (IsValidEntity(old))
-				RemoveEntity(old);
+		if (this.iRebelParticle && IsValidEntity(this.iRebelParticle))
+			RemoveEntity(this.iRebelParticle);
 
-			this.iRebelParticle = -1;
-		}
+		this.iRebelParticle = -1;
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
 			SetEntityRenderColor(this.index);
@@ -811,7 +782,7 @@ methodmap JailFighter < JBPlayer
 		// What the fuck
 		Handle h = this.hRebelTimer;
 		KillTimerSafe(h);
-		this.hRebelTimer = h;
+		this.hRebelTimer = null;
 
 		CPrintToChat(this.index, "%t %t", "Plugin Tag", "Rebel Timer Remove");
 		Call_OnRebelRemoved(this);

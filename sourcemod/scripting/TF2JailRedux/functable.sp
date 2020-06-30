@@ -4,6 +4,14 @@
 //	Function funcs[JBFWD_LENGTH];
 //}
 
+// Store the positions of each callback index
+// This is because SourceMod's DataPack system breaks every 20 seconds, and 
+// setting the position manually/statically will eventually break and that would make people sad
+// Thanks asherkin for the idea \o/
+static DataPackPos
+	g_PackPos[JBFWD_LENGTH]
+;
+
 methodmap FuncTable < DataPack
 {
 	/*
@@ -19,7 +27,10 @@ methodmap FuncTable < DataPack
 		DataPack pack = new DataPack();
 		pack.WriteCell(size);
 		for (int i = 0; i < size; ++i)
+		{
+			g_PackPos[i] = pack.Position;	// This resets every time but it doesn't really matter
 			pack.WriteFunction(INVALID_FUNCTION);
+		}
 		return view_as< FuncTable >(pack);
 	}
 
@@ -27,20 +38,20 @@ methodmap FuncTable < DataPack
 	{
 		public get()
 		{
-			this.Position = view_as< DataPackPos >(0);
+			this.Reset();
 			return this.ReadCell();
 		}
 	}
 
 	public Function GetFunction(const int idx)
 	{
-		this.Position = view_as< DataPackPos >(idx + 1);
+		this.Position = g_PackPos[idx];
 		return this.IsReadable() ? this.ReadFunction() : INVALID_FUNCTION;
 	}
 
 	public void SetFunction(Function func, const int idx)
 	{
-		this.Position = view_as< DataPackPos >(idx + 1);
+		this.Position = g_PackPos[idx];
 		this.WriteFunction(func);
 	}
 

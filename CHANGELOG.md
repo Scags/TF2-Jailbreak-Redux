@@ -45,5 +45,18 @@
 - Enhanced door handler function where success/return value relies on door status.
 - Removed support for prop_door_rotating cell doors. They probably didn't work anyway.
 - Removed old LR files that were no longer used.
-- Added a property to detect if warden was locked by the plugin manually, other than by other means.
+- Added a property to detect if warden was locked by the plugin manually, rather than by other means.
 - Added forwards for cells after they fully open and fully close.
+
+### V2.0.3Beta ###
+- Removed redundancies with some entity code.
+- Patched a bug where teambanned players could not be re-teambanned.
+- Patched a bug where an engineer's existence could crash the server on a VSH round.
+- Future-proofed last request function tables.
+- Extended the freeday beam CVar to where beams can be disabled if the CVar is 0.
+- Patched killing warden weapons via LR if warden is auto-selected on round start.
+- Fixed errors revolving around rebel timer handles.
+- Fixed random-wardening failing if it happened to select a player who was warden-banned by the teambans plugin.
+- Cleaned up some more Teamban plugin code.
+- Patched a bug with setting internal LR music.
+- Fixed another bad crash with the VSH LR.

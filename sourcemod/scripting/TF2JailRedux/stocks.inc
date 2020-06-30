@@ -1232,7 +1232,7 @@ stock int FindStringIndex2(int tableidx, const char[] str)
 
     return INVALID_STRING_INDEX;
 }
-stock void HealPlayer(const int client, const int health, bool on_hud=false)
+stock void HealPlayer(const int client, const int health, bool on_hud = false)
 {
 	int hp = GetEntProp(client, Prop_Data, "m_iHealth");
 	int maxhp = GetEntProp(client, Prop_Data, "m_iMaxHealth");
@@ -1339,6 +1339,6 @@ stock void KillTimerSafe(Handle &timer)
 	if (timer != null)
 	{
 		KillTimer(timer);
-		delete timer;
+		timer = null;
 	}
 }

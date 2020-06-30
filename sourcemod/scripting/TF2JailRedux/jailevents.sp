@@ -78,7 +78,7 @@ public Action OnPlayerDamaged(Event event, const char[] name, bool dontBroadcast
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-	if (!bEnabled.BoolValue || gamemode.iRoundState == StateDisabled)
+	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
 	JailFighter victim = JailFighter.OfUserId( event.GetInt("userid") );	
@@ -104,7 +104,8 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 
 		if (gamemode.iRoundState == StateRunning)
 		{
-			if (Call_OnWardenKilled(victim, attacker, event) == Plugin_Continue || !gamemode.bSilentWardenKills)
+			Action act = Call_OnWardenKilled(victim, attacker, event);
+			if (!gamemode.bSilentWardenKills && act == Plugin_Continue)
 				PrintCenterTextAll("%t", "Warden Killed");
 		}
 	}
@@ -139,7 +140,9 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 			i = FindEntity(strCellOpener, "func_button");
 			if (i != -1)
 				SetEntProp(i, Prop_Data, "m_bLocked", 1, 1);
-			else LogError("***TF2JB ERROR*** Entity name not found for Cell Door Opener! Please verify integrity of the config and the map.");
+
+			// I'll just comment this out to prevent spammage. Not everyone uses/needs cell door buttons
+//			else LogError("***TF2JB ERROR*** Entity name not found for Cell Door Opener! Please verify integrity of the config and the map.");
 		}
 
 		if (strFFButton[0] != '\0')
@@ -209,7 +212,7 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 	return Plugin_Continue;
 }
 
-// TODO; optimize me! We're taking on average 20~25ms to get through here! Too slow!!!
+// TODO; optimize me! We're taking on average ~20-25ms (with children) to get through here! Too slow!!!
 public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!bEnabled.BoolValue)
@@ -228,6 +231,7 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	JailFighter player;
 
 	CreateTimer(1.0, Timer_Round, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	gamemode.iRoundState = StateRunning;
 
 	SetPawnTimer(CheckLivingPlayers, 0.1);
 
@@ -240,9 +244,9 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 		char firstday[32];
 		FormatEx(firstday, sizeof(firstday), "%t", "First Day Freeday");
-		SetTextNode(hTextNodes[0], firstday, EnumTNPS[0].fCoord_X, EnumTNPS[0].fCoord_Y, EnumTNPS[0].fHoldTime, EnumTNPS[0].iRed, EnumTNPS[0].iGreen, EnumTNPS[0].iBlue, EnumTNPS[0].iAlpha, EnumTNPS[0].iEffect, EnumTNPS[0].fFXTime, EnumTNPS[0].fFadeIn, EnumTNPS[0].fFadeOut);
+		EnumTNPS[0].Display(hTextNodes[0], firstday);
 		PrintCenterTextAll(firstday);
-		
+
 		gamemode.iTimeLeft = cvarTF2Jail[RoundTime_Freeday].IntValue;
 		gamemode.iLRType = -1;
 		return Plugin_Continue;
@@ -254,11 +258,9 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 	gamemode.iTimeLeft = cvarTF2Jail[RoundTime].IntValue;
 	gamemode.iLRType = gamemode.iLRPresetType;
-	gamemode.iRoundState = StateRunning;
 	gamemode.bIsLRRound = gamemode.iLRType > -1;
 
 	ManageRoundStart();	// NOTE THE ORDER OF EXECUTION; *RoundStart BEFORE *RoundStartPlayer
-	ManageHUDText();
 
 	warday = gamemode.bIsWarday;
 
@@ -277,14 +279,14 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 			player.TeleportToPosition(GetClientTeam(i));
 
 			wep = GetPlayerWeaponSlot(i, 2);
-			if (wep > MaxClients && IsValidEntity(wep) && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 589 && GetClientTeam(i) == BLU)	// Eureka Effect
+			if (wep > MaxClients && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 589 && GetClientTeam(i) == BLU)	// Eureka Effect
 			{
 				TF2_RemoveWeaponSlot(i, 2);
 				player.SpawnWeapon("tf_weapon_wrench", 7, 1, 0, "");
 			}
 
 			wep = GetPlayerWeaponSlot(i, 4);
-			if (wep > MaxClients && IsValidEntity(wep) && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 60)	// Cloak and Dagger
+			if (wep > MaxClients && GetEntProp(wep, Prop_Send, "m_iItemDefinitionIndex") == 60)	// Cloak and Dagger
 			{
 				TF2_RemoveWeaponSlot(i, 4);
 				player.SpawnWeapon("tf_weapon_invis", 30, 1, 0, "");
@@ -385,7 +387,6 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 
 	return Plugin_Continue;
 }
-
 
 public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 {

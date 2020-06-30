@@ -13,7 +13,7 @@
 
 enum
 {	// JBGameMode.iRoundStates
-	StateDisabled = -1,
+//	StateDisabled = -1,
 	StateStarting = 0,
 	StateRunning = 1,
 	StateEnding = 2,

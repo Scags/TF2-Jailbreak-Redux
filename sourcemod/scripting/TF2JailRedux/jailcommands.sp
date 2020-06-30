@@ -1686,7 +1686,7 @@ public Action AdminWardayBlue(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	if (!(StateDisabled < gamemode.iRoundState <= StateRunning))
+	if (!(StateStarting <= gamemode.iRoundState <= StateRunning))
 	{
 		CReplyToCommand(client, "%t %t", "Plugin Tag", "Before Or During Round");
 		return Plugin_Handled;
@@ -1719,7 +1719,7 @@ public Action AdminFullWarday(int client, int args)
 	if (!bEnabled.BoolValue)
 		return Plugin_Handled;
 
-	if (!(StateDisabled < gamemode.iRoundState <= StateRunning))
+	if (!(StateRunning <= gamemode.iRoundState <= StateRunning))
 	{
 		CReplyToCommand(client, "%t %t", "Plugin Tag", "Before Or During Round");
 		return Plugin_Handled;

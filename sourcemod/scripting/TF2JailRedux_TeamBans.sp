@@ -264,8 +264,8 @@ public void fwdOnPlayerSpawn(const JBPlayer Player, Event event)
 	if (GetClientTeam(Player.index) != BLU)
 		return;
 
-	bool running = JBGameMode_GetProp("iRoundState") == StateRunning;
-	if (cvarJBANS[IgnoreMidRound].BoolValue && running)
+	int state = JBGameMode_GetProp("iRoundState");
+	if (cvarJBANS[IgnoreMidRound].BoolValue && state == StateRunning)
 		return;
 
 	JailPlayer base = JailPlayer.Of(Player);
@@ -276,7 +276,7 @@ public void fwdOnPlayerSpawn(const JBPlayer Player, Event event)
 	char BanMsg[128]; cvarJBANS[JoinMessage].GetString(BanMsg, sizeof(BanMsg));	
 	PrintCenterText(base.index, "%t", "Guardbanned Center");
 	CPrintToChat(base.index, "%t %s", "Plugin Tag Teambans", BanMsg);
-	base.ForceTeamChange(RED, !running);
+	base.ForceTeamChange(RED, state == StateStarting);
 }
 
 public Action fwdOnWardenGet(const JBPlayer Player)
@@ -438,22 +438,20 @@ public Action Cmd_GuardBan(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (!IsFakeClient(target_list[0]))
+	if (IsFakeClient(target_list[0]))
 	{
-		if (JailPlayer(target_list[0]).bIsGuardbanned)
-			CReplyToCommand(client, "%t %t ", "Plugin Tag Teambans", "Already Guardbanned", target_list[0]);
-		else
-		{
-			char reason[256];
-			for (int i = 3; i <= args; i++)
-			{
-				GetCmdArg(i, s, sizeof(s));
-				Format(reason, sizeof(reason), "%s %s", reason, s);
-			}
-			GuardBan(target_list[0], client, time, reason);
-		}
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Unable to target");
+		return Plugin_Handled;
 	}
-	else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Unable to target");
+
+	char reason[256];
+	for (int i = 3; i <= args; i++)
+	{
+		GetCmdArg(i, s, sizeof(s));
+		Format(reason, sizeof(reason), "%s %s", reason, s);
+	}
+	GuardBan(target_list[0], client, time, reason);
+
 	return Plugin_Handled;
 }
 
@@ -485,16 +483,23 @@ public Action Cmd_IsBanned(int client, int args)
 		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
 	}
-	if (!IsFakeClient(target_list[0]))
+
+	if (IsFakeClient(target_list[0]))
 	{
-		JailPlayer player = JailPlayer(target_list[0]);
-		if (player.bIsGuardbanned)
-			if (player.iTimeLeft <= 0)
-				CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Guardbanned permanently", target_list[0]);
-			else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Guardbanned Time Left", target_list[0], player.iTimeLeft);
-		else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Not Guardbanned", target_list[0]);
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Unable to Target");
+		return Plugin_Handled;
 	}
-	else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Unable to Target");
+
+	JailPlayer player = JailPlayer(target_list[0]);
+	if (!player.bIsGuardbanned)
+	{
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Not Guardbanned", target_list[0]);
+		return Plugin_Handled;
+	}
+
+	if (player.iTimeLeft <= 0)
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Guardbanned permanently", target_list[0]);
+	else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Is Guardbanned Time Left", target_list[0], player.iTimeLeft);
 	return Plugin_Handled;
 }
 
@@ -533,8 +538,8 @@ public Action Cmd_OfflineGuardBan(int client, int args)
 		return Plugin_Handled;
 	}
 
-	char ID[32]; GetCmdArgString( ID, sizeof(ID));
-
+	// TODO; allow admins to input reasons
+	char ID[32]; GetCmdArgString(ID, sizeof(ID));
 	OfflineBan(ID, client);
 	CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Offline Guardban", ID);
 
@@ -612,11 +617,15 @@ public Action Cmd_WardenBan(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (!IsFakeClient(target_list[0]))
-		if (JailPlayer(target_list[0]).bIsWardenBanned)
-			CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Already Wardenbanned", target_list[0]);
-		else WardenBan(target_list[0], client, time);
-	else CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Cannot target bot");
+	if (IsFakeClient(target_list[0]))
+	{
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Cannot target bot");
+		return Plugin_Handled;
+	}
+
+	if (JailPlayer(target_list[0]).bIsWardenBanned)
+		CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Already Wardenbanned", target_list[0]);
+	else WardenBan(target_list[0], client, time);
 	return Plugin_Handled;
 }
 
@@ -655,7 +664,7 @@ public Action Cmd_OfflineWardenBan(int client, int args)
 		return Plugin_Handled;
 	}
 
-	char ID[32]; GetCmdArgString( ID, sizeof(ID));
+	char ID[32]; GetCmdArgString(ID, sizeof(ID));
 
 	OfflineWardenBan(ID, client);
 	CReplyToCommand(client, "%t %t", "Plugin Tag Teambans", "Offline Wardenban", ID);
@@ -691,7 +700,9 @@ public void OfflineBan(const char[] ID, int admin)
 
 	int timestamp = GetTime();
 	char ID2[32]; 
-	if (admin) GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2)); else ID2 = "Console";
+	if (admin)
+		GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2));
+	else ID2 = "Console";
 
 	hTheDB.Format(query, sizeof(query), 
 			"INSERT INTO %s "
@@ -792,15 +803,15 @@ void GuardBan(int victim, int admin, int time, char reason[256] = "")
 		return;
 
 	JailPlayer player = JailPlayer(victim);
-	if (player.bIsGuardbanned)
-		return;
+//	if (player.bIsGuardbanned)	// Let the ON DUPLICATE KEY statement fix this by itself
+//		return;
 
 	Action action = Plugin_Continue;
 	Call_StartForward(hOnBan);
 	Call_PushCell(victim);
 	Call_PushCell(admin);
 	Call_PushCellRef(time);
-	Call_PushStringEx(reason, sizeof(reason), 0, SM_PARAM_COPYBACK);
+	Call_PushStringEx(reason, sizeof(reason), SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_Finish(action);
 	if (action >= Plugin_Handled)
 		return;
@@ -842,7 +853,10 @@ void GuardBan(int victim, int admin, int time, char reason[256] = "")
 		LogMessage("[JBANS] Querying client %N's ban with query: %s", victim, query);
 
 	int timestamp = GetTime();
-	char ID2[32]; if (admin) GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2)); else ID2 = "Console";
+	char ID2[32];
+	if (admin)
+		GetClientAuthId(admin, AuthId_Steam2, ID2, sizeof(ID2));
+	else ID2 = "Console";
 
 	hTheDB.Format(query, sizeof(query),
 			"INSERT INTO %s "
@@ -901,8 +915,8 @@ public void WardenBan(int victim, int admin, int time)
 		return;
 
 	JailPlayer player = JailPlayer(victim);
-	if (player.bIsWardenBanned)
-		return;
+//	if (player.bIsWardenBanned)
+//		return;
 
 	Action action = Plugin_Continue;
 	Call_StartForward(hOnWardenBan);

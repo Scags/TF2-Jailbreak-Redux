@@ -242,6 +242,7 @@ native KeyValues JBGameMode_GetMapKvSection(const char[] name, bool create = fal
 /**
  *	Retrieve a Handle to the gamemode's current last request.
  *	@note 					Last requests are only active when iRoundState is StateRunning.
+ *							DO NOT DELETE.
  *
  *	@return 				LastRequest Handle to current LR, or null if iLRType is -1.
 */
@@ -252,7 +253,8 @@ stock LastRequest JBGameMode_GetCurrentLR()
 
 /**
  *	Retrieve a last request by it's name.
- *	@note 					This is also its 'Name' entry in the config if it exists
+ *	@note 					This is also its 'Name' entry in the config if it exists.
+ *							DO NOT DELETE.
  *
  *	@return 				LastRequest Handle to LR if found, null otherwise.
 */
@@ -1109,7 +1111,8 @@ methodmap JBGameMode < StringMap
 
 	/**
 	 *	Retrieve a Handle to the gamemode's current last request
-	 *	@note 					Last requests are only active when iRoundState is StateRunning
+	 *	@note 					Last requests are only active when iRoundState is StateRunning.
+	 *							DO NOT DELETE.
 	 *
 	 *	@return 				LastRequest Handle to current LR, or null if iLRType is -1
 	*/
@@ -1125,7 +1128,7 @@ methodmap JBGameMode < StringMap
 	 *							for the type of config.
 	 *
 	 *	@return 				A new KeyValues Handle to the config, if it exists,
-	 *							null otherwise. This must be closed or deleted when you
+	 *							null otherwise. This MUST be closed or deleted when you
 	 *							are finished with it.
 	*/
 	public KeyValues GetKv(int cfgtype)
@@ -1134,11 +1137,11 @@ methodmap JBGameMode < StringMap
 	}
 
 	/**
-	 *	Get a KV import of the map's config entry.
+	 *	Get a KV import of the current map's config entry.
 	 *	@note 					This is the same as GetKv(CFG_MAP) and jumping to the current map.
 	 *
 	 *	@return 				A new KeyValues Handle to the config, if it exists,
-	 *							null otherwise. This must be closed or deleted when you
+	 *							null otherwise. This MUST be closed or deleted when you
 	 *							are finished with it.
 	*/
 	public KeyValues GetMapKv()
@@ -1154,7 +1157,7 @@ methodmap JBGameMode < StringMap
 	 *							if it does not exist.
 	 *
 	 *	@return 				A new KeyValues Handle to the kv section, if it exists,
-	 *							null otherwise. This must be closed or deleted when you
+	 *							null otherwise. This MUST be closed or deleted when you
 	 *							are finished with it.
 	*/
 	public KeyValues GetMapKvSection(const char[] name, bool create = false)

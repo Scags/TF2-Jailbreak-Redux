@@ -9,7 +9,7 @@
 #endif
 
 #define PLUGIN_NAME 		"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION 		"2.0.2Beta"
+#define PLUGIN_VERSION 		"2.0.3Beta"
 #define PLUGIN_AUTHOR 		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION 	"Deluxe version of TF2Jail"
 
@@ -127,6 +127,15 @@ enum struct TextNodeParam
 	float fFXTime;
 	float fFadeIn;
 	float fFadeOut;
+
+	void Display(Handle hud, const char[] text)
+	{
+		SetHudTextParams(this.fCoord_X, this.fCoord_Y, this.fHoldTime, this.iRed, this.iGreen, this.iBlue, this.iAlpha, this.iEffect, this.fFXTime, this.fFadeIn, this.fFadeOut);
+
+		for (int i = MaxClients; i; --i)
+			if (IsClientInGame(i))
+				ShowSyncHudText(i, hud, text);
+	}
 }
 
 TextNodeParam EnumTNPS[4];
@@ -246,7 +255,7 @@ public void OnPluginStart()
 	cvarTF2Jail[WardenInvite] 				= CreateConVar("sm_tf2jr_warden_invite", "0", "Allow the Warden to invite players to the Guards' team?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WardenToggleMuting] 		= CreateConVar("sm_tf2jr_warden_mute", "0", "Allow the Warden to toggle plugin muting?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[MedicLoseFreeday] 			= CreateConVar("sm_tf2jr_medic_freeday", "2", "If a Medic with a freeday is healing rebels, should that medic lose freeday? If so, how long must they heal said rebels?", FCVAR_NOTIFY, true, 0.0);
-	cvarTF2Jail[FreedayBeamLifetime] 		= CreateConVar("sm_tf2jr_freeday_beamtime", "10", "Time in seconds for the Freeday beam's lifetime.", FCVAR_NOTIFY, true, 0.0);
+	cvarTF2Jail[FreedayBeamLifetime] 		= CreateConVar("sm_tf2jr_freeday_beamtime", "10", "Time in seconds for the Freeday beam's lifetime. Set to -1 for no beam effect", FCVAR_NOTIFY);
 	cvarTF2Jail[WardenDelay2] 				= CreateConVar("sm_tf2jr_warden_delay2", "0", "If \"sm_tf2jr_warden_delay\" is -1, Time in seconds after the round starts to randomly select a warden.", FCVAR_NOTIFY, true, 0.0);
 	cvarTF2Jail[WardenStabProtect] 			= CreateConVar("sm_tf2jr_warden_stab", "0.0", "The amount of damage reduction for wardens against backstabs. Ex: 0 -> no change; 0.6 -> 60%; 1.0 -> 100% damage resistance.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WardenStabCount] 			= CreateConVar("sm_tf2jr_warden_stabcount", "0", "If \"sm_tf2jr_warden_stab\" is not 0.0, how many backstabs will the damage effect protect? 0 -> infinite", FCVAR_NOTIFY, true, 0.0);
@@ -593,8 +602,7 @@ public void OnMapEnd()
 
 public void OnClientConnected(int client)
 {
-	if (hJailFields[client])
-		delete hJailFields[client];
+	delete hJailFields[client];
 
 	hJailFields[client] = new StringMap();
 
@@ -747,8 +755,12 @@ public Action Timer_PlayerThink(Handle timer)
 
 			/* Props to <eVa>Dog */
 			float vecOrigin[3]; GetClientAbsOrigin(i, vecOrigin);
-			TE_SetupBeamPoints(vecOld[i], vecOrigin, iLaserBeam, iHalo2, 0, 0, cvarTF2Jail[FreedayBeamLifetime].FloatValue, 20.0, 10.0, 5, 0.0, {255, 25, 25, 255}, 30);
-			TE_SendToAll();
+			float time = cvarTF2Jail[FreedayBeamLifetime].FloatValue;
+			if (time >= 0.0)
+			{
+				TE_SetupBeamPoints(vecOld[i], vecOrigin, iLaserBeam, iHalo2, 0, 0, time, 20.0, 10.0, 5, 0.0, {255, 25, 25, 255}, 30);
+				TE_SendToAll();
+			}
 
 			vecOld[i] = vecOrigin;
 
@@ -782,7 +794,7 @@ public Action Timer_Announce(Handle timer)
 
 public Action Timer_Round(Handle timer)
 {
-	if (!bEnabled.BoolValue || gamemode.iRoundState == StateEnding || gamemode.iTimeLeft < 0)
+	if (!bEnabled.BoolValue || gamemode.iRoundState == StateEnding || gamemode.iRoundState == StateStarting || gamemode.iTimeLeft < 0)
 		return Plugin_Stop;
 
 	int time = gamemode.iTimeLeft;
@@ -797,7 +809,7 @@ public Action Timer_Round(Handle timer)
 		Format(time2, 6, "%s:%i", time2, time % 60);
 	else Format(time2, 6, "%s:0%i", time2, time % 60);
 
-	SetTextNode(hTextNodes[3], time2, EnumTNPS[3].fCoord_X, EnumTNPS[3].fCoord_Y, EnumTNPS[3].fHoldTime, EnumTNPS[3].iRed, EnumTNPS[3].iGreen, EnumTNPS[3].iBlue, EnumTNPS[3].iAlpha, EnumTNPS[3].iEffect, EnumTNPS[3].fFXTime, EnumTNPS[3].fFadeIn, EnumTNPS[3].fFadeOut);
+	EnumTNPS[3].Display(hTextNodes[3], time2);
 
 	switch (time) 
 	{
@@ -810,6 +822,7 @@ public Action Timer_Round(Handle timer)
 			FormatEx(sound, PLATFORM_MAX_PATH, "vo/announcer_ends_%isec.mp3", time);
 			EmitSoundToAll(sound);
 		}
+		// This should actually happen 1 second later, but this is fine I guess. Shouldn't even happen that often
 		case 0:
 		{
 			if (ManageTimeEnd() == Plugin_Continue)	// Handler
@@ -1321,9 +1334,8 @@ public void OnEntityCreated(int entity, const char[] classname)
 
 public void RemoveEnt(any data)
 {
-	int ent = EntRefToEntIndex(data);
-	if (IsValidEntity(ent))
-		RemoveEntity(ent);
+	if (IsValidEntity(data))
+		RemoveEntity(data);
 }
 
 public void MusicPlay()
@@ -1447,6 +1459,7 @@ public void EnableFFTimer(const int roundcount)
 	CPrintToChatAll("%t %t", "Plugin Tag", "FF On");
 }
 
+// TODO; make this more useful, perhaps an actual freekiller system?
 public void FreeKillSystem(const JailFighter attacker)
 {
 	if (GetClientTeam(attacker.index) != BLU)
@@ -1505,18 +1518,6 @@ public void EnableWarden2(const int roundcount)
 		gamemode.FindRandomWarden();
 }
 
-public void RemoveRebel(const int userid, const int roundcount)
-{
-	if (roundcount != gamemode.iRoundCount || gamemode.iRoundState != StateRunning)
-		return;
-
-	JailFighter player = JailFighter.OfUserId(userid);
-	if (!player || !IsPlayerAlive(player.index))
-		return;
-
-	player.ClearRebel();
-}
-
 public Action KillOnSpawn(int ent)
 {
 	if (IsValidEntity(ent))
@@ -1570,7 +1571,6 @@ public void ExecuteLR(LastRequest lr)
 	if (kv == null)
 		return;
 
-//	PrintToChatAll("Executing");
 	char command[256];
 	kv.GetString("Execute_Cmd", command, sizeof(command));
 	if (command[0] != '\0')
@@ -1583,7 +1583,6 @@ public void ExecuteLR(LastRequest lr)
 	bool freeday;
 	if (kv.JumpToKey("Parameters"))
 	{
-//		PrintToChatAll("params");
 		freeday = !!kv.GetNum("IsFreedayType", 0);
 
 		if (kv.GetNum("OpenCells", 0))
@@ -1626,6 +1625,7 @@ public void ExecuteLR(LastRequest lr)
 				{
 					JailFighter(i).bSkipPrep = true;
 					TF2_RegeneratePlayer(i);
+					JailFighter(i).bSkipPrep = false;
 				}
 			}
 		}
@@ -1651,13 +1651,14 @@ public void ExecuteLR(LastRequest lr)
 						if (kill[0])
 							player.StripToMelee();
 					case BLU:
-						if (kill[1] || (kill[2] && player.bIsWarden))
+						if (kill[1])
 							player.StripToMelee();
+						else if (kill[2] && player.bIsWarden)
+							TF2_AddCondition(i, TFCond_RestrictToMelee);
 				}
 				if (kill[3])
 					TF2_RemoveAllWeapons(i);
 			}
-
 			kv.GoBack();
 		}
 
@@ -1672,10 +1673,8 @@ public void ExecuteLR(LastRequest lr)
 				Call_OnFFTimer(lr, fftime);
 				SetPawnTimer(EnableFFTimer, fftime, gamemode.iRoundCount);
 			}
-
 			kv.GoBack();
 		}
-
 		kv.GoBack();
 	}
 
@@ -1778,19 +1777,19 @@ public bool TraceRayDontHitSelf(int ent, int mask, any data)
 public Action Timer_ClearRebel(Handle timer, any userid)
 {
 	JailFighter player = JailFighter.OfUserId(userid);
-	if (IsClientValid(player.index) && gamemode.iRoundState == StateRunning)
+	if (IsClientValid(player.index))
 	{
 		// Null it first since ClearRebel() kills the timer and that's a bad thing to do in it's own callback
 		player.hRebelTimer = null;
-		player.ClearRebel();
+		if (gamemode.iRoundState == StateRunning)
+			player.ClearRebel();
 	}
 }
 
 public Function GetLRFunction(LastRequest lr, int index)
 {
-	DataPack pack; lr.GetValue("__FUNCS", pack);
-	pack.Position = view_as< DataPackPos >(index + 1);
-	return pack.ReadFunction();
+	FuncTable pack; lr.GetValue("__FUNCS", pack);
+	return pack.GetFunction(index);
 }
 
 #file "TF2Jail_Redux"

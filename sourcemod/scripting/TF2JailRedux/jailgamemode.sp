@@ -281,6 +281,9 @@ methodmap JailGameMode < JBGameMode
 	*/
 	public void ToggleMuting( const JailFighter player, bool forcedead = false, int teamchange = 0 )
 	{
+		if (IsFakeClient(player.index))
+			return;
+
 		if (this.iRoundState != StateRunning || this.bDisableMuting)
 		{
 			player.UnmutePlayer();
@@ -530,6 +533,10 @@ methodmap JailGameMode < JBGameMode
 
 			player = JailFighter(i);
 			if (player.bLockedFromWarden)
+				continue;
+
+			// Account for the teambans plugin
+			if (player.GetProp("bIsWardenBanned"))
 				continue;
 
 			players[count++] = player;

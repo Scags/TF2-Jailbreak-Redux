@@ -672,7 +672,7 @@ public any Native_LastRequest_Refresh(Handle plugin, int numParams)
 	if (!FileExists(strConfig[CFG_LR]) || !kv.ImportFromFile(strConfig[CFG_LR]))
 	{
 		delete kv;
-		return;
+		return false;
 	}
 	delete lr.GetKv();
 
@@ -681,6 +681,7 @@ public any Native_LastRequest_Refresh(Handle plugin, int numParams)
 	lr.SetValue("__KV", me);
 
 	delete kv;
+	return true;
 }
 public any Native_LastRequest_SetFunction(Handle plugin, int numParams)
 {
