@@ -811,7 +811,7 @@ public Action Timer_Round(Handle timer)
 
 	EnumTNPS[3].Display(hTextNodes[3], time2);
 
-	switch (time) 
+	switch (time)
 	{
 		case 60:EmitSoundToAll("vo/announcer_ends_60sec.mp3");
 		case 30:EmitSoundToAll("vo/announcer_ends_30sec.mp3");
@@ -1362,14 +1362,17 @@ public void MusicPlay()
 	if (sound[0] != EOS && time != -1.0)
 	{
 		float vol = cvarTF2Jail[MusicVolume].FloatValue;
-		strcopy(strBackgroundSong, PLATFORM_MAX_PATH, sound);
+		if (strncmp(sound, "sound/", 6, false))
+			strcopy(strBackgroundSong, PLATFORM_MAX_PATH, sound[6]);
+		else strcopy(strBackgroundSong, PLATFORM_MAX_PATH, sound);
+
 		for (int i = MaxClients; i; --i) 
 		{
 			if (!IsClientInGame(i))
 				continue;
 			if (JailFighter(i).bNoMusic)
 				continue;
-			EmitSoundToClient(i, sound, _, _, SNDLEVEL_NORMAL, SND_NOFLAGS, vol, 100, _, NULL_VECTOR, NULL_VECTOR, false, 0.0);
+			EmitSoundToClient(i, strBackgroundSong, _, _, SNDLEVEL_NORMAL, SND_NOFLAGS, vol, 100, _, NULL_VECTOR, NULL_VECTOR, false, 0.0);
 		}
 		gamemode.flMusicTime = GetGameTime() + time;
 	}

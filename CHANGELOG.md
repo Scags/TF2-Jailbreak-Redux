@@ -60,3 +60,4 @@
 - Cleaned up some more Teamban plugin code.
 - Patched a bug with setting internal LR music.
 - Fixed another bad crash with the VSH LR.
+- Extended LR music to allow "sound/" in the file path.
