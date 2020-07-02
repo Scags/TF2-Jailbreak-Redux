@@ -1362,7 +1362,7 @@ public void MusicPlay()
 	if (sound[0] != EOS && time != -1.0)
 	{
 		float vol = cvarTF2Jail[MusicVolume].FloatValue;
-		if (strncmp(sound, "sound/", 6, false))
+		if (!strncmp(sound, "sound/", 6, false))
 			strcopy(strBackgroundSong, PLATFORM_MAX_PATH, sound[6]);
 		else strcopy(strBackgroundSong, PLATFORM_MAX_PATH, sound);
 
