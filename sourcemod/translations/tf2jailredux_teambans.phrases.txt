@@ -189,6 +189,12 @@
 		"en" 			"Select a time in minutes"
 		"pl"			"Wybierz czas w minutach"
 	}
+	
+	"Unban Menu"
+	{
+		"en" 			"Select a player to Unban"
+		"pl"			"Wybierz gracza do odblokowania"
+	}
 }
 
 
