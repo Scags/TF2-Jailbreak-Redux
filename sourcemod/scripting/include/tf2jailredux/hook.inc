@@ -76,6 +76,9 @@ enum	// Hook Types
 	OnWMenuSelectPost,			// After the warden selects an item in the warden menu and executes the command
 	OnCellsFullyOpened,			// When the cell doors finish their opening action
 	OnCellsFullyClosed,			// When the cell doors finish their closing action
+	OnMarkedFreekiller,			// Right before a player is marked as a freekiller
+	OnMarkedFreekillerPost, 	// After a player is marked as a freekiller
+	OnFreekillerStatusRemoved, 	// When a freekiller's freekiller status is removed
 
 	JBFWD_LENGTH
 };
@@ -128,6 +131,7 @@ typeset JBHookCB
 	/** When a role is given to a player
 	 *	OnWardenGet				>> Return > Plugin_Continue to prevent player from becoming Warden
 	 *	OnRebelGiven			>> Return > Plugin_Continue to prevent player from becoming a Rebel
+	 *	OnMarkedFreekiller		>> Return > Plugin_Continue to prevent player from becoming a Freekiller
 	*/
 	function Action (const JBPlayer player);
 	function Action (LastRequest lr, const JBPlayer player);
@@ -136,6 +140,7 @@ typeset JBHookCB
 	 *	OnWardenGetPost
 	 *	OnRebelGivenPost
 	 *	OnFreedayGiven
+	 *	OnMarkedFreekillerPost
 	*/
 	function void (const JBPlayer player);
 	function void (LastRequest lr, const JBPlayer player);
@@ -144,6 +149,7 @@ typeset JBHookCB
 	 *	OnWardenRemoved
 	 *	OnRebelRemoved
 	 *	OnFreedayRemoved
+	 *	OnFreekillerStatusRemoved
 	*/
 	function void (const JBPlayer player);
 	function void (LastRequest lr, const JBPlayer player);

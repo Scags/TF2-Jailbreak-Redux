@@ -81,6 +81,9 @@ void InitializeForwards()
 	hPrivFwds[OnWMenuSelectPost] 		= CreateForward(ET_Ignore, Param_Cell, Param_String);
 	hPrivFwds[OnCellsFullyOpened] 		= CreateForward(ET_Ignore);
 	hPrivFwds[OnCellsFullyClosed] 		= CreateForward(ET_Ignore);
+	hPrivFwds[OnMarkedFreekiller] 		= CreateForward(ET_Hook, Param_Cell);
+	hPrivFwds[OnMarkedFreekillerPost] 	= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnFreekillerStatusRemoved]= CreateForward(ET_Ignore, Param_Cell);
 
 	hLegacyFwds[Old_OnWardenGiven] 			= CreateGlobalForward("TF2Jail_OnWardenGiven", ET_Ignore, Param_Cell);
 	hLegacyFwds[Old_OnWardenRemoved] 		= CreateGlobalForward("TF2Jail_OnWardenRemoved", ET_Ignore, Param_Cell);
@@ -1383,6 +1386,65 @@ void Call_OnCellsFullyClosed()
 		{
 			Call_StartFunction(lr.GetOwnerPlugin(), f);
 			Call_PushCell(lr);
+			Call_Finish();
+		}
+	}
+}
+Action Call_OnMarkedFreekiller(JailFighter player)
+{
+	Action action, action2;
+	Call_StartForward(hPrivFwds[OnMarkedFreekiller]);
+	Call_PushCell(player);
+	Call_Finish(action);
+
+	LastRequest lr = gamemode.GetCurrentLR();
+	if (lr != null)
+	{
+		Function f = GetLRFunction(lr, OnMarkedFreekiller);
+		if (f != INVALID_FUNCTION)
+		{
+			Call_StartFunction(lr.GetOwnerPlugin(), f);
+			Call_PushCell(lr);
+			Call_PushCell(player);
+			Call_Finish(action2);
+		}
+	}
+	return action > action2 ? action : action2;
+}
+void Call_OnMarkedFreekillerPost(JailFighter player)
+{
+	Call_StartForward(hPrivFwds[OnMarkedFreekillerPost]);
+	Call_PushCell(player);
+	Call_Finish();
+
+	LastRequest lr = gamemode.GetCurrentLR();
+	if (lr != null)
+	{
+		Function f = GetLRFunction(lr, OnMarkedFreekillerPost);
+		if (f != INVALID_FUNCTION)
+		{
+			Call_StartFunction(lr.GetOwnerPlugin(), f);
+			Call_PushCell(lr);
+			Call_PushCell(player);
+			Call_Finish();
+		}
+	}
+}
+void Call_OnFreekillerStatusRemoved(JailFighter player)
+{
+	Call_StartForward(hPrivFwds[OnFreekillerStatusRemoved]);
+	Call_PushCell(player);
+	Call_Finish();
+
+	LastRequest lr = gamemode.GetCurrentLR();
+	if (lr != null)
+	{
+		Function f = GetLRFunction(lr, OnFreekillerStatusRemoved);
+		if (f != INVALID_FUNCTION)
+		{
+			Call_StartFunction(lr.GetOwnerPlugin(), f);
+			Call_PushCell(lr);
+			Call_PushCell(player);
 			Call_Finish();
 		}
 	}

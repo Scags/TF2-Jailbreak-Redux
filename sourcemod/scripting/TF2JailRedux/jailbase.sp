@@ -1,11 +1,72 @@
+enum struct TextNodeParam
+{	// Hud Text Parameters
+	float fCoord_X;
+	float fCoord_Y;
+	float fHoldTime;
+	int iRed;
+	int iBlue;
+	int iGreen;
+	int iAlpha;
+	int iEffect;
+	float fFXTime;
+	float fFadeIn;
+	float fFadeOut;
+	Handle hHud;
+
+	void Display(const char[] text)
+	{
+		SetHudTextParams(this.fCoord_X, this.fCoord_Y, this.fHoldTime, this.iRed, this.iGreen, this.iBlue, this.iAlpha, this.iEffect, this.fFXTime, this.fFadeIn, this.fFadeOut);
+
+		for (int i = MaxClients; i; --i)
+			if (IsClientInGame(i))
+				ShowSyncHudText(i, this.hHud, text);
+	}
+}
+
+enum struct TargetFilter
+{	// Custom target filters allocated by config
+	float vecLoc[3];
+	float flDist;
+	bool bML;
+	char strDescriptN[64];
+	char strDescriptA[64];
+	char strName[32];	// If you have a filter > 32 chars then you got some serious problems
+}
+
+enum struct JailRole
+{
+	int iColor[4];
+	float flOffset;
+	char strParticle[64];
+	char strAttachment[64];
+
+	void Reset()
+	{
+		this.iColor[0] = this.iColor[1] = this.iColor[2] = this.iColor[3] = 255;
+		this.flOffset = 0.0;
+		this.strParticle[0] = '\0';
+		this.strAttachment[0] = '\0';
+	}
+
+	void Create(KeyValues kv, const char[] role)
+	{
+		this.Reset();
+		if (!kv.JumpToKey(role))
+			return;
+
+		kv.GetColor4("Color", this.iColor);
+		kv.GetString("Particle", this.strParticle, 64);
+		this.flOffset = kv.GetFloat("Offset", 0.0);
+		kv.GetString("Attachment", this.strAttachment, 64);
+		kv.GoBack();
+	}
+}
+
 char
 	strBackgroundSong[PLATFORM_MAX_PATH],	// Background song
 	strCellNames[32],						// Names of Cells
 	strCellOpener[32],						// Cell button
 	strFFButton[32],						// FF button
-	strRebelParticles[64],					// Rebel particles
-	strFreedayParticles[64],				// Freeday particles
-	strWardenParticles[64],					// Warden particles
 	strConfig[CFG_LENGTH][256]				// Path to config files
 ;
 
@@ -21,20 +82,14 @@ char strKVConfig[CFG_LENGTH][64] = {
 int
 	iHalo,									// Particle
 	iLaserBeam,								// Particle
-	iHalo2,									// Particle
-	iRebelColors[4], 						// Rebel colors
-	iFreedayColors[4], 						// Freeday colors
-	iWardenColors[4] 						// Warden colors
+	iHalo2									// Particle
 ;
 
 float
 	vecOld[MAX_TF_PLAYERS][3],				// Freeday beam vector
 	vecFreedayPosition[3], 					// Freeday map position
 	vecWardayBlu[3], 						// Blue warday map position
-	vecWardayRed[3],						// Red warday map position
-	flRebelOffset,							// Rebel offset
-	flFreedayOffset,						// Freeday offset
-	flWardenOffset							// Warden offset
+	vecWardayRed[3]							// Red warday map position
 ;
 
 bool
@@ -53,6 +108,32 @@ bool
 #endif
 	g_bTF2Attribs,							// TF2Attributes enabled
 	g_bSC									// SourceComms enabled
+;
+
+TextNodeParam
+	EnumTNPS[4]								// HUD elements
+;
+
+JailRole
+	g_WardenRole,							// Warden role
+	g_FreedayRole,							// Freeday role
+	g_RebelRole,							// Rebel role
+	g_FreekillerRole						// Freekiller role
+;
+
+// If adding new cvars put them above Version in the enum in TF2Jail_Redux.sp
+ConVar
+	cvarTF2Jail[Version + 1],
+	bEnabled,
+	hEngineConVars[2]						// 0 -> mp_friendlyfire; 1 -> tf_avoidteammates_pushaway
+;
+
+Handle
+	AimHud
+;
+
+Cookie
+	MusicCookie
 ;
 
 StringMap
@@ -324,18 +405,18 @@ methodmap JailFighter < JBPlayer
 		this.bIsQueuedFreeday = false;
 		this.bIsFreeday = true;
 
-		if (cvarTF2Jail[RendererParticles].BoolValue && strFreedayParticles[0] != '\0')
+		if (cvarTF2Jail[RendererParticles].BoolValue && g_FreedayRole.strParticle[0] != '\0')
 		{
 			if (this.iFreedayParticle && IsValidEntity(this.iFreedayParticle))
 				RemoveEntity(this.iFreedayParticle);
 
-			this.iFreedayParticle = AttachParticle(this.index, strFreedayParticles, _, flFreedayOffset);
+			this.iFreedayParticle = AttachParticle(this.index, g_FreedayRole.strParticle, _, g_FreedayRole.flOffset, _, g_FreedayRole.strAttachment);
 //			if (cvarTF2Jail[HideParticles].BoolValue)
 //				SDKHook(EntRefToEntIndex(this.iFreedayParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
-			SetEntityRenderColor(this.index, iFreedayColors[0], iFreedayColors[1], iFreedayColors[2], iFreedayColors[3]);
+			SetEntityRenderColor(this.index, g_FreedayRole.iColor[0], g_FreedayRole.iColor[1], g_FreedayRole.iColor[2], g_FreedayRole.iColor[3]);
 
 		Call_OnFreedayGiven(this);
 	}
@@ -392,20 +473,18 @@ methodmap JailFighter < JBPlayer
 		if (!IsClientValid(client))
 			return;
 
-		int weapon, clip;
-		int offset = FindSendPropInfo("CTFPlayer", "m_hMyWeapons");	// Thx Mr. Panica
+		int weapon;
+		// Thx Mr. Panica
 		int length = GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons");
-		for (int i = 0; i <= length; i += 4)
+		for (int i = 0; i < length; ++i)
 		{
-			weapon = GetEntDataEnt2(client, offset + i);
+			weapon = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
 			if (weapon != -1)
 			{
-				clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
-				if (clip != -1)
+				if (GetEntProp(weapon, Prop_Data, "m_iClip1") != -1)
 					SetEntProp(weapon, Prop_Send, "m_iClip1", 0);
 
-				clip = GetEntProp(weapon, Prop_Data, "m_iClip2");
-				if (clip != -1)
+				if (GetEntProp(weapon, Prop_Data, "m_iClip2") != -1)
 					SetEntProp(weapon, Prop_Send, "m_iClip2", 0);
 
 				SetWeaponAmmo(weapon, 0);
@@ -414,9 +493,8 @@ methodmap JailFighter < JBPlayer
 
 		SetEntProp(client, Prop_Send, "m_iAmmo", 0, 4, 3);
 
-		char classname[64];
 		int wep = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
-		if (wep > MaxClients && IsValidEntity(wep) && GetEdictClassname(wep, classname, sizeof(classname)))
+		if (wep != -1)
 			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", wep);
 	}
 	/**	Props to VoIDed
@@ -455,7 +533,8 @@ methodmap JailFighter < JBPlayer
 		char strWarden[64];
 		int client = this.index;
 		FormatEx(strWarden, sizeof(strWarden), "%t", "New Warden Center", client);
-		EnumTNPS[2].Display(hTextNodes[2], strWarden);
+		if (EnumTNPS[2].hHud != null)
+			EnumTNPS[2].Display(strWarden);
 		CPrintToChatAll("%t %t.", "Plugin Tag", "New Warden", client);
 
 		float annottime = cvarTF2Jail[WardenAnnotation].FloatValue;
@@ -489,18 +568,18 @@ methodmap JailFighter < JBPlayer
 			}
 		}
 
-		if (cvarTF2Jail[RendererParticles].BoolValue && strWardenParticles[0] != '\0')
+		if (cvarTF2Jail[RendererParticles].BoolValue && g_WardenRole.strParticle[0] != '\0')
 		{
 			if (this.iWardenParticle && IsValidEntity(this.iWardenParticle))
 				RemoveEntity(this.iWardenParticle);
 
-			this.iWardenParticle = AttachParticle(this.index, strWardenParticles, _, flWardenOffset);
+			this.iWardenParticle = AttachParticle(this.index, g_WardenRole.strParticle, _, g_WardenRole.flOffset, _, g_WardenRole.strAttachment);
 //			if (cvarTF2Jail[HideParticles].BoolValue)
 //				SDKHook(EntRefToEntIndex(this.iWardenParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
-			SetEntityRenderColor(this.index, iWardenColors[0], iWardenColors[1], iWardenColors[2], iWardenColors[3]);
+			SetEntityRenderColor(this.index, g_WardenRole.iColor[0], g_WardenRole.iColor[1], g_WardenRole.iColor[2], g_WardenRole.iColor[3]);
 
 		ManageWarden(this);
 		Call_OnWardenGetPost(this);
@@ -519,10 +598,10 @@ methodmap JailFighter < JBPlayer
 		if (!this.bIsWarden)
 			return false;
 
-		if (hTextNodes[2])
+		if (EnumTNPS[2].hHud != null)
 			for (int i = MaxClients; i; --i)
 				if (IsClientInGame(i))
-					ClearSyncHud(i, hTextNodes[2]);
+					ClearSyncHud(i, EnumTNPS[2].hHud);
 
 		this.bIsWarden = false;
 		this.bLasering = false;
@@ -737,18 +816,18 @@ methodmap JailFighter < JBPlayer
 			return;
 
 		this.bIsRebel = true;
-		if (cvarTF2Jail[RendererParticles].BoolValue && strRebelParticles[0] != '\0')
+		if (cvarTF2Jail[RendererParticles].BoolValue && g_RebelRole.strParticle[0] != '\0')
 		{
 			if (this.iRebelParticle && IsValidEntity(this.iRebelParticle))
 				RemoveEntity(this.iRebelParticle);
 
-			this.iRebelParticle = AttachParticle(this.index, strRebelParticles, _, flRebelOffset);
+			this.iRebelParticle = AttachParticle(this.index, g_RebelRole.strParticle, _, g_RebelRole.flOffset, _, g_RebelRole.strAttachment);
 //			if (cvarTF2Jail[HideParticles].BoolValue)
 //				SDKHook(EntRefToEntIndex(this.iRebelParticle), SDKHook_SetTransmit, OnParticleTransmit);
 		}
 
 		if (cvarTF2Jail[RendererColor].BoolValue)
-			SetEntityRenderColor(this.index, iRebelColors[0], iRebelColors[1], iRebelColors[2], iRebelColors[3]);
+			SetEntityRenderColor(this.index, g_RebelRole.iColor[0], g_RebelRole.iColor[1], g_RebelRole.iColor[2], g_RebelRole.iColor[3]);
 
 		CPrintToChatAll("%t %t", "Plugin Tag", "Prisoner Has Rebelled", this.index);
 
@@ -801,5 +880,140 @@ methodmap JailFighter < JBPlayer
 		menu.AddItem("1", s);
 
 		menu.Display(other.index, 15);
+	}
+
+	public bool ResetFreekillerTimer()
+	{
+		if (this.bIsFreekiller)
+		{
+			float time = cvarTF2Jail[FreeKillTimer].FloatValue;
+			if (time != 0.0)
+			{
+				Handle h = this.hFreekillTimer;
+				KillTimerSafe(h);
+				this.hFreekillTimer = CreateTimer(time, Timer_ClearFreekiller, this.userid, TIMER_FLAG_NO_MAPCHANGE);
+			}
+			return true;
+		}
+		return false;
+	}
+
+	public void MarkFreekiller()
+	{
+		if (this.ResetFreekillerTimer())
+			return;
+
+		if (Call_OnMarkedFreekiller(this) != Plugin_Continue)
+			return;
+
+		int messagetype = cvarTF2Jail[FreeKillMessage].IntValue;
+		bool silent = cvarTF2Jail[FreeKillSilent].BoolValue;
+		char msg[512];
+
+		if (!silent)
+			CPrintToChatAll("%t %t", "Plugin Tag", "Marked as Freekiller", this.index);
+		else
+		{
+			for (int i = MaxClients; i; --i)
+			{
+				if (!IsClientInGame(i) || i == this.index)
+					continue;
+
+				if (!JailFighter(i).bIsAdmin)
+					continue;
+
+				CPrintToChat(i, "%t %t", "Plugin Tag", "Marked as Freekiller", this.index);
+			}
+		}
+
+		if (messagetype)
+		{
+			char ip[32]; GetClientIP(this.index, ip, sizeof(ip));
+			char steam[32]; GetClientAuthId(this.index, AuthId_Steam2, steam, sizeof(steam));
+			FormatEx(msg, sizeof(msg), 
+					"{burlywood}********************\n"
+//				...	"%t\n"
+				...	"UID: %d\n"
+				...	"Steam: %s\n"
+				... "IP: %s\n"
+				... "********************",
+//				"Freekiller Admin Message", this.index, 
+				this.userid, steam, ip);
+
+			for (int i = MaxClients; i; --i)
+			{
+				if (!IsClientInGame(i) || i == this.index)
+					continue;
+
+				if (!JailFighter(i).bIsAdmin)
+					continue;
+
+				if (messagetype & (1 << 0))		// Chat
+					CPrintToChat(i, msg);
+				if (messagetype & (1 << 1))		// Console
+				{
+					CRemoveTags(msg, sizeof(msg));
+					PrintToConsole(i, msg);
+				}
+			}
+		}
+
+		this.bIsFreekiller = true;
+		if (!silent && cvarTF2Jail[RendererParticles].BoolValue && g_FreekillerRole.strParticle[0] != '\0')
+		{
+			if (this.iFreekillerParticle && IsValidEntity(this.iFreekillerParticle))
+				RemoveEntity(this.iFreekillerParticle);
+
+			this.iFreekillerParticle = AttachParticle(this.index, g_FreekillerRole.strParticle, _, g_FreekillerRole.flOffset, _, g_FreekillerRole.strAttachment);
+		}
+
+		if (!silent && cvarTF2Jail[RendererColor].BoolValue)
+			SetEntityRenderColor(this.index, g_FreekillerRole.iColor[0], g_FreekillerRole.iColor[1], g_FreekillerRole.iColor[2], g_FreekillerRole.iColor[3]);
+
+		cvarTF2Jail[FreeKillCommand].GetString(msg, sizeof(msg));
+		if (msg[0] != '\0')
+		{
+			char s[12]; FormatEx(s, sizeof(s), "#%d", this.userid);
+			ReplaceString(msg, sizeof(msg), "{PLAYER}", s);
+			ServerCommand("%s", msg);
+		}
+
+		// Pretty sure a majority of plugins kick/ban in the next frame but just in case
+		if (IsClientValid(this.index))
+		{
+			float time = cvarTF2Jail[FreeKillTimer].FloatValue;
+			if (time != 0.0)
+			{
+				this.hFreekillTimer = CreateTimer(time, Timer_ClearFreekiller, this.userid, TIMER_FLAG_NO_MAPCHANGE);
+				if (!silent)
+					CPrintToChat(this.index, "%t %t", "Plugin Tag", "Freekiller Timer Start", RoundFloat(time));
+			}
+
+			Call_OnMarkedFreekillerPost(this);
+		}
+	}
+
+	public void ClearFreekiller()
+	{
+		if (!this.bIsFreekiller)
+			return;
+
+		this.bIsFreekiller = false;
+		if (this.iFreekillerParticle && IsValidEntity(this.iFreekillerParticle))
+			RemoveEntity(this.iFreekillerParticle);
+
+		this.iFreekillerParticle = -1;
+
+		if (cvarTF2Jail[RendererColor].BoolValue)
+			SetEntityRenderColor(this.index);
+
+		Handle h = this.hFreekillTimer;
+		KillTimerSafe(h);
+		this.hFreekillTimer = null;
+
+		if (!cvarTF2Jail[FreeKillSilent].BoolValue)
+			CPrintToChat(this.index, "%t %t", "Plugin Tag", "Freekiller Timer Remove");
+		this.flKillingSpree = 0.0;
+		Call_OnFreekillerStatusRemoved(this);
 	}
 };

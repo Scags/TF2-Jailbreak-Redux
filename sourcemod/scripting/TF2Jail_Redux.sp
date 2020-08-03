@@ -9,7 +9,7 @@
 #endif
 
 #define PLUGIN_NAME 		"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION 		"2.0.3Beta"
+#define PLUGIN_VERSION 		"2.0.4"
 #define PLUGIN_AUTHOR 		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION 	"Deluxe version of TF2Jail"
 
@@ -76,10 +76,6 @@ enum	// Cvar name
 	LivingMuteType,
 	Disguising,
 	WardenDelay,
-	LRDefault,
-	FreeKill,
-	FreeKillTime,
-	FreeKillMessage,
 	AutobalanceImmunity,
 	NoCharge,
 	NoAirblast,
@@ -111,60 +107,15 @@ enum	// Cvar name
 	ImmunityDuringLRSelect,
 	FFType,
 	WardenSetHP,
+	FreeKillers,
+	FreeKill,
+	FreeKillTime,
+	FreeKillMessage,
+	FreeKillCommand,
+	FreeKillTimer,
+	FreeKillSilent,
 	Version
 };
-
-enum struct TextNodeParam
-{	// Hud Text Parameters
-	float fCoord_X;
-	float fCoord_Y;
-	float fHoldTime;
-	int iRed;
-	int iBlue;
-	int iGreen;
-	int iAlpha;
-	int iEffect;
-	float fFXTime;
-	float fFadeIn;
-	float fFadeOut;
-
-	void Display(Handle hud, const char[] text)
-	{
-		SetHudTextParams(this.fCoord_X, this.fCoord_Y, this.fHoldTime, this.iRed, this.iGreen, this.iBlue, this.iAlpha, this.iEffect, this.fFXTime, this.fFadeIn, this.fFadeOut);
-
-		for (int i = MaxClients; i; --i)
-			if (IsClientInGame(i))
-				ShowSyncHudText(i, hud, text);
-	}
-}
-
-TextNodeParam EnumTNPS[4];
-
-enum struct TargetFilter
-{	// Custom target filters allocated by config
-	float vecLoc[3];
-	float flDist;
-	bool bML;
-	char strDescriptN[64];
-	char strDescriptA[64];
-	char strName[32];	// If you have a filter > 32 chars then you got some serious problems
-}
-
-// If adding new cvars put them above Version in the enum
-ConVar
-	cvarTF2Jail[Version + 1],
-	bEnabled,
-	hEngineConVars[2]
-;
-
-Handle
-	hTextNodes[4],
-	AimHud
-;
-
-Cookie
-	MusicCookie
-;
 
 public Plugin myinfo =
 {
@@ -227,10 +178,6 @@ public void OnPluginStart()
 	cvarTF2Jail[LivingMuteType] 			= CreateConVar("sm_tf2jr_live_muting", "1", "What type of living player muting should occur? 0 = none; 1 = red players(except VIPs); 2 = blue players(except VIPs and warden); 3 = all players(except VIPs and warden); 4 = all red players; 5 = all blue players(except warden); 6 = everybody(except warden). ADMINS ARE EXEMPT FROM ALL OF THESE!", FCVAR_NOTIFY, true, 0.0, true, 6.0);
 	cvarTF2Jail[Disguising] 				= CreateConVar("sm_tf2jr_disguising", "0", "What teams can disguise, if any? (Your Eternal Reward only) 0 = no disguising; 1 = only Red can disguise; 2 = Only blue can disguise; 3 = all players can disguise", FCVAR_NOTIFY, true, 0.0, true, 3.0);
 	cvarTF2Jail[WardenDelay] 				= CreateConVar("sm_tf2jr_warden_delay", "0", "Delay in seconds after round start until players can toggle becoming the warden. 0 to disable delay. -1 to automatically pick a warden on round start.", FCVAR_NOTIFY, true, -1.0);
-	cvarTF2Jail[LRDefault] 					= CreateConVar("sm_tf2jr_lr_default", "5", "Default number of times the basic last requests can be picked in a single map. 0 for no limit.", FCVAR_NOTIFY, true, 0.0);
-	cvarTF2Jail[FreeKill] 					= CreateConVar("sm_tf2jr_freekill", "3", "How many kills in a row must a player get before the freekiller system activates? 0 to disable. (This does not affect gameplay, prints SourceBans information to admin consoles determined by \"sm_tf2jr_admin_flag\").", FCVAR_NOTIFY, true, 0.0, true, 33.0);
-	cvarTF2Jail[FreeKillTime] 				= CreateConVar("sm_tf2jr_freekill_time", "15", "Maximum time between kills in order to increment a would-be freekiller's kill count.", FCVAR_NOTIFY, true, 0.0);
-	cvarTF2Jail[FreeKillMessage] 			= CreateConVar("sm_tf2jr_freekill_message", "0", "If \"sm_tf2jr_freekill\" is enabled, how are admins to be notified of a freekiller? 0 = Console message; 1 = Chat message.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[AutobalanceImmunity] 		= CreateConVar("sm_tf2jr_auto_balance_immunity", "1", "Allow VIP's/admins to have autobalance immunity? (If autobalancing is enabled). 0 = disabled; 1 = VIPs only; 2 = Admins only", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	cvarTF2Jail[NoCharge] 					= CreateConVar("sm_tf2jr_demo_charge", "3", "Disable DemoMan's charge ability? 0 = Allow; 1 = Disable for Blue team; 2 = Disable for Red team; 3 = Disable for all", FCVAR_NOTIFY, true, 0.0, true, 3.0);
 	cvarTF2Jail[NoAirblast] 				= CreateConVar("sm_tf2jr_airblast", "1", "Disable Pyro airblast? (Requires TF2Attributes)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -262,6 +209,13 @@ public void OnPluginStart()
 	cvarTF2Jail[ImmunityDuringLRSelect] 	= CreateConVar("sm_tf2jr_lr_select_godmode", "0", "When a player is selecting their last request, should they receive damage immunity? This will not apply to environmental damage", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[FFType] 					= CreateConVar("sm_tf2jr_warden_friendlyfire_type", "0", "When a warden toggles friendly-fire, should only prisoners be able to damage each other? Guards will not deal damage to each other.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	cvarTF2Jail[WardenSetHP] 				= CreateConVar("sm_tf2jr_warden_set_hp", "0", "Should the warden be able to restore health for prisoners?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[FreeKillers] 				= CreateConVar("sm_tf2jr_freekillers", "0", "Enable the TF2Jail Redux freekiller system?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	cvarTF2Jail[FreeKill] 					= CreateConVar("sm_tf2jr_freekill", "3", "How many kills in a row must a player get before the freekiller system activates?", FCVAR_NOTIFY, true, 0.0);
+	cvarTF2Jail[FreeKillTime] 				= CreateConVar("sm_tf2jr_freekill_time", "15", "Maximum time in seconds between kills in order to increment a would-be freekiller's kill count.", FCVAR_NOTIFY, true, 0.0);
+	cvarTF2Jail[FreeKillMessage] 			= CreateConVar("sm_tf2jr_freekill_message", "3", "When a freekiller is marked, print Sourcebans information to admins? 0 = Disable; 1 = Via Chat; 2 = Via Console; 3 = Both", FCVAR_NOTIFY, true, 0.0, true, 3.0);
+	cvarTF2Jail[FreeKillCommand] 			= CreateConVar("sm_tf2jr_freekill_command", "", "When a player is marked as a freekiller, what command should be executed? Leave blank for no command. \"{PLAYER}\" is replaced with player ID. EX: \"sm_ban {PLAYER} 30\"", FCVAR_NOTIFY);
+	cvarTF2Jail[FreeKillTimer] 				= CreateConVar("sm_tf2jr_freekill_timer", "30", "When a player is marked as a freekiller, how long should they be marked as such?", FCVAR_NOTIFY, true, 0.0);
+	cvarTF2Jail[FreeKillSilent] 			= CreateConVar("sm_tf2jr_freekill_silent", "0", "If the freekiller system is enabled. Should it operate silently? Marked freekillers will not be notified of their status and only admins will receive a message.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	AutoExecConfig(true, "TF2JailRedux");
 
@@ -424,8 +378,8 @@ public void OnPluginStart()
 		}
 	}
 
-	for (i = 0; i < sizeof(hTextNodes); i++)
-		hTextNodes[i] = CreateHudSynchronizer();
+	for (i = 0; i < sizeof(EnumTNPS); i++)
+		EnumTNPS[i].hHud = CreateHudSynchronizer();
 
 	hJailFields[0] = new StringMap();
 
@@ -518,9 +472,9 @@ public void OnPluginEnd()
 	int i, u;
 	for (i = MaxClients; i; --i)
 		if (IsClientInGame(i))
-			for (u = 0; u < sizeof(hTextNodes); ++u)
-				if (hTextNodes[u] != null)
-					ClearSyncHud(i, hTextNodes[u]);
+			for (u = 0; u < sizeof(EnumTNPS); ++u)
+				if (EnumTNPS[u].hHud != null)
+					ClearSyncHud(i, EnumTNPS[u].hHud);
 }
 
 public void OnMapStart()
@@ -595,9 +549,9 @@ public void OnMapEnd()
 	int i, u;
 	for (i = MaxClients; i; --i)
 		if (IsClientInGame(i))
-			for (u = 0; u < sizeof(hTextNodes); ++u)
-				if (hTextNodes[u] != null)
-					ClearSyncHud(i, hTextNodes[u]);
+			for (u = 0; u < sizeof(EnumTNPS); ++u)
+				if (EnumTNPS[u].hHud != null)
+					ClearSyncHud(i, EnumTNPS[u].hHud);
 }
 
 public void OnClientConnected(int client)
@@ -629,11 +583,13 @@ public void OnClientPutInServer(int client)
 	player.iRebelParticle = -1;
 	player.iWardenParticle = -1;
 	player.iFreedayParticle = -1;
+	player.iFreekillerParticle = -1;
 	player.iHealth = 0;
 	player.nWardenStabbed = 0;
 	player.bIsWarden = false;
 	player.bIsQueuedFreeday = false;
 	player.bIsFreeday = false;
+	player.bIsFreekiller = false;
 	player.bLockedFromWarden = false;
 	//player.bIsVIP = false;
 	//player.bIsAdmin = false;
@@ -647,6 +603,7 @@ public void OnClientPutInServer(int client)
 	player.flKillingSpree = 0.0;
 	player.flHealTime = 0.0;
 	player.hRebelTimer = null;
+	player.hFreekillTimer = null;
 
 	SetPawnTimer(WelcomeMessage, 5.0, player.userid);
 	ManageClientStartVariables(player);
@@ -654,13 +611,13 @@ public void OnClientPutInServer(int client)
 
 public void OnClientPostAdminCheck(int client)
 {
-	char strVIP[16]; cvarTF2Jail[VIPFlag].GetString(strVIP, sizeof(strVIP));
-	char strAdmin[16]; cvarTF2Jail[AdmFlag].GetString(strAdmin, sizeof(strAdmin));
-
 	JailFighter player = JailFighter(client);
 
-	player.bIsVIP = (strVIP[0] != '\0' && IsValidAdmin(client, strVIP)); // Very useful stock ^^
-	player.bIsAdmin = (strAdmin[0] != '\0' && IsValidAdmin(client, strAdmin));
+	char s[16]; cvarTF2Jail[VIPFlag].GetString(s, sizeof(s));
+	player.bIsVIP = (s[0] != '\0' && CheckCommandAccess(client, "TF2Jail_VIP", ReadFlagString(s), true));
+
+	cvarTF2Jail[AdmFlag].GetString(s, sizeof(s));
+	player.bIsAdmin = (s[0] != '\0' && CheckCommandAccess(client, "TF2Jail_Admin", ReadFlagString(s), true));
 
 	if (!AlreadyMuted(client))
 		SetClientListeningFlags(client, VOICE_NORMAL);
@@ -809,7 +766,8 @@ public Action Timer_Round(Handle timer)
 		Format(time2, 6, "%s:%i", time2, time % 60);
 	else Format(time2, 6, "%s:0%i", time2, time % 60);
 
-	EnumTNPS[3].Display(hTextNodes[3], time2);
+	if (EnumTNPS[3].hHud != null)
+		EnumTNPS[3].Display(time2);
 
 	switch (time)
 	{
@@ -1166,9 +1124,10 @@ public void ParseRoleRenderersConfig()
 		return;
 	}
 
-	SetRoleRender(kv, "Warden", iWardenColors, strWardenParticles, sizeof(strWardenParticles), flWardenOffset);
-	SetRoleRender(kv, "Freedays", iFreedayColors, strFreedayParticles, sizeof(strFreedayParticles), flFreedayOffset);
-	SetRoleRender(kv, "Rebellers", iRebelColors, strRebelParticles, sizeof(strRebelParticles), flRebelOffset);
+	g_WardenRole.Create(kv, "Warden");
+	g_FreedayRole.Create(kv, "Freedays");
+	g_RebelRole.Create(kv, "Rebellers");
+	g_FreekillerRole.Create(kv, "Freekillers");
 
 	delete kv;
 }
@@ -1225,18 +1184,6 @@ public void ParseLRConfig()
 	}
 
 	delete kv;
-}
-
-public void SetRoleRender(KeyValues kv, const char[] role, int color[4], char[] particle, int size, float &offset)
-{
-	if (!kv.JumpToKey(role))
-		return;
-
-	color[0] = color[1] = color[2] = color[3] = 255;
-	kv.GetColor("Color", color[0], color[1], color[2], color[3]);
-	kv.GetString("Particle", particle, size);
-	offset = kv.GetFloat("Offset", 0.0);
-	kv.GoBack();
 }
 
 public void BuildMenu()
@@ -1462,40 +1409,6 @@ public void EnableFFTimer(const int roundcount)
 	CPrintToChatAll("%t %t", "Plugin Tag", "FF On");
 }
 
-// TODO; make this more useful, perhaps an actual freekiller system?
-public void FreeKillSystem(const JailFighter attacker)
-{
-	if (GetClientTeam(attacker.index) != BLU)
-		return;
-
-//	if (attacker.bIsAdmin) 	// Admin abuse :o
-//		return;
-
-	if (gamemode.iRoundState != StateRunning)
-		return;
-
-	float currtime = GetGameTime();
-	if (currtime <= attacker.flKillingSpree)
-		attacker.iKillCount++;
-	else attacker.iKillCount = 0;
-
-	if (attacker.iKillCount == cvarTF2Jail[FreeKill].IntValue)
-	{
-		char ip[32];
-		bool messagetype = cvarTF2Jail[FreeKillMessage].BoolValue;
-		GetClientIP(attacker.index, ip, sizeof(ip));
-
-		for (int i = MaxClients; i; --i)
-			if (IsClientInGame(i))
-				if (JailFighter(i).bIsAdmin)
-					if (messagetype)
-						CPrintToChat(i, "%t **********\n%L\nIP:%s\n**********", "Plugin Tag", attacker.index, ip);
-					else PrintToConsole(i, "**********\n%L\nIP:%s\n**********", attacker.index, ip);
-		attacker.iKillCount = 0;
-	}
-	else attacker.flKillingSpree = currtime + cvarTF2Jail[FreeKillTime].FloatValue;
-}
-
 public void EnableWarden(const int roundcount)
 {
 	if (roundcount != gamemode.iRoundCount 
@@ -1591,7 +1504,7 @@ public void ExecuteLR(LastRequest lr)
 		if (kv.GetNum("OpenCells", 0))
 			gamemode.DoorHandler(OPEN);
 
-		gamemode.bDisableKillSpree = !!kv.GetNum("VoidFreekills", 0);
+		gamemode.bIgnoreFreekillers = !!kv.GetNum("VoidFreekills", 0);
 
 		int time = cvarTF2Jail[RoundTime].IntValue;
 		if (!kv.GetNum("TimerStatus", 1))
@@ -1603,8 +1516,7 @@ public void ExecuteLR(LastRequest lr)
 		if (time)
 			gamemode.iTimeLeft = time;
 
-		gamemode.bIsWardenLocked = !!kv.GetNum("AdminLockWarden", 0) || !!kv.GetNum("LockWarden", 0);
-		gamemode.bWardenStartLocked = gamemode.bIsWardenLocked;
+		gamemode.bWardenStartLocked = gamemode.bIsWardenLocked = !!kv.GetNum("AdminLockWarden", 0) || !!kv.GetNum("LockWarden", 0);
 		gamemode.bDisableCriticals = !kv.GetNum("EnableCriticals", 1);
 
 		if (kv.GetNum("BalanceTeams", 0))
@@ -1786,6 +1698,17 @@ public Action Timer_ClearRebel(Handle timer, any userid)
 		player.hRebelTimer = null;
 		if (gamemode.iRoundState == StateRunning)
 			player.ClearRebel();
+	}
+}
+
+public Action Timer_ClearFreekiller(Handle timer, any userid)
+{
+	JailFighter player = JailFighter.OfUserId(userid);
+	if (IsClientValid(player.index))
+	{
+		player.hFreekillTimer = null;
+		if (gamemode.iRoundState == StateRunning)
+			player.ClearFreekiller();
 	}
 }
 

@@ -80,12 +80,6 @@ public Action Command_BecomeWarden(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (gamemode.bIsWardenLocked)
-	{
-		CPrintToChat(client, "%t %t", "Plugin Tag", "Admin Lock Warden");
-		return Plugin_Handled;
-	}
-
 	if (gamemode.b1stRoundFreeday || gamemode.bIsWardenLocked)
 	{
 		CPrintToChat(client, "%t %t", "Plugin Tag", "Warden Locked");
@@ -416,7 +410,7 @@ public Action Command_RemoveLastRequest(int client, int args)
 		if (IsClientInGame(i))
 			JailFighter(i).bIsQueuedFreeday = false;
 
-	gamemode.hLRCount.Set( gamemode.iLRPresetType, gamemode.hLRCount.Get(gamemode.iLRPresetType)-1 );
+	gamemode.hLRCount.Set(gamemode.iLRPresetType, gamemode.hLRCount.Get(gamemode.iLRPresetType)-1);
 	gamemode.bIsLRInUse = false;
 	CPrintToChatAll("%t %t", "Plugin Tag", "Warden Deny LR", client);
 

@@ -10,7 +10,7 @@
 #endif
 
 //materials
-#if defined USE_NEW_HALE_MODEL
+#if !defined USE_NEW_HALE_MODEL
 static const char HaleMatsV2[][] = {
 	"materials/models/player/saxton_test4/eyeball_l.vmt",
 	"materials/models/player/saxton_test4/eyeball_r.vmt",

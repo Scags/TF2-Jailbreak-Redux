@@ -105,21 +105,17 @@ public void PrepPlayer(int userid)
 public void ManageRoundStart()
 {
 	LastRequest lr = gamemode.GetCurrentLR();
+	char hud[MAX_LRNAME_LENGTH];
 	if (lr != null)
 	{
 		ExecuteLR(lr);
-		char hud[MAX_LRNAME_LENGTH];
 
 		lr.GetHudName(hud, sizeof(hud));
 		if (hud[0] == '\0')
 			lr.GetName(hud, sizeof(hud));
-
-		Call_OnShowHud(hud, sizeof(hud));
-
-		if (hud[0] != '\0')
-			EnumTNPS[1].Display(hTextNodes[1], hud);
 	}
 
+	ManageLRHud(hud);
 	Call_OnRoundStart();
 }
 
@@ -162,6 +158,22 @@ public void ManageWarden(const JailFighter base)
 		TF2_AddCondition(base.index, TFCond_RestrictToMelee);	// This'll do, removed when warden is lost
 }
 
+public void ManageLRHud(const char[] name)
+{
+	char hud[MAX_LRNAME_LENGTH];
+	strcopy(hud, sizeof(hud), name);
+	Call_OnShowHud(hud, sizeof(hud));
+
+	if (EnumTNPS[1].hHud != null)
+	{
+		for (int i = MaxClients; i; --i)
+			if (IsClientInGame(i))
+				ClearSyncHud(i, EnumTNPS[1].hHud);
+		if (hud[0] != '\0')
+			EnumTNPS[1].Display(hud);
+	}
+}
+
 public void ManageTouch(const JailFighter toucher, const JailFighter touchee)
 {
 	Call_OnPlayerTouch(toucher, touchee);
@@ -184,6 +196,9 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 
 				if (IsValidEntity(player.iWardenParticle))
 					AcceptEntityInput(player.iWardenParticle, "Stop");
+
+				if (IsValidEntity(player.iFreekillerParticle))
+					AcceptEntityInput(player.iFreekillerParticle, "Stop");
 			}
 		}
 		case TFCond_Disguising, TFCond_Disguised:
@@ -224,6 +239,9 @@ public void TF2_OnConditionRemoved(int client, TFCond cond)
 
 				if (IsValidEntity(player.iWardenParticle))
 					AcceptEntityInput(player.iWardenParticle, "Start");
+
+				if (IsValidEntity(player.iFreekillerParticle))
+					AcceptEntityInput(player.iFreekillerParticle, "Start");
 			}
 		}
 	}
@@ -351,7 +369,6 @@ public void CheckLivingPlayers()
 
 			if (action == Plugin_Continue)
 				PrintCenterTextAll("%t", "One Guard Left");
-
 			else if (action == Plugin_Stop)
 				return;	// Avoid multi-calls if necessary
 		}
@@ -367,6 +384,43 @@ public void CheckLivingPlayers()
 		}
 	}
 	Call_OnCheckLivingPlayers();
+}
+
+public void ManageFreekilling(const JailFighter attacker)
+{
+	if (!cvarTF2Jail[FreeKillers].BoolValue)
+		return;
+
+	if (GetClientTeam(attacker.index) != BLU)
+		return;
+
+//	if (attacker.bIsAdmin) 	// Admin abuse :o
+//		return;
+
+	if (gamemode.iRoundState != StateRunning)
+		return;
+
+	if (gamemode.bIgnoreFreekillers || gamemode.bDisableKillSpree)
+		return;
+
+	if (attacker.bIsFreekiller)
+	{
+		attacker.ResetFreekillerTimer();
+		return;
+	}
+
+	float currtime = GetGameTime();
+	if (currtime <= attacker.flKillingSpree || attacker.flKillingSpree == 0.0)
+		attacker.iKillCount++;
+	else attacker.iKillCount = 0;
+
+	if (attacker.iKillCount == cvarTF2Jail[FreeKill].IntValue)
+	{
+		attacker.MarkFreekiller();
+		attacker.iKillCount = 0;
+		attacker.flKillingSpree = 0.0;
+	}
+	else attacker.flKillingSpree = currtime + cvarTF2Jail[FreeKillTime].FloatValue;
 }
 
 public void ManageBuildingDestroyed(const JailFighter base, const int building, const int objecttype, Event event)
@@ -439,7 +493,7 @@ public void AddLRsToMenu(JailFighter player, Menu menu)
 			value = gamemode.hLRCount.Get(i);
 			FormatEx(valuestr, sizeof(valuestr), " (%i/%i)", value, max);
 			if (value >= max)
-				flags |= ITEMDRAW_DISABLED;	// Disables the LR selection if the max is too high
+				flags |= ITEMDRAW_DISABLED;	// Disables after n selections
 		}
 
 		lr.GetName(buffer, MAX_LRNAME_LENGTH);
@@ -449,7 +503,6 @@ public void AddLRsToMenu(JailFighter player, Menu menu)
 		menu.AddItem(id, buffer, flags);
 	}
 }
-
 
 public void AddLRToPanel(Menu &panel)
 {
@@ -487,9 +540,7 @@ public int LRMenuHandler(Menu menu, MenuAction action, int client, int select)
 				return ITEMDRAW_DISABLED;
 		}
 		case MenuAction_Display:
-		{
 			JailFighter(client).bSelectingLR = true;
-		}
 		case MenuAction_Select:
 		{
 			if (!IsPlayerAlive(client))
@@ -537,14 +588,14 @@ public int LRMenuHandler(Menu menu, MenuAction action, int client, int select)
 
 			switch (lr.GetFreedayType())
 			{
+				case 1: // Freeday For Yourself
+					base.bIsQueuedFreeday = true;
+				case 2: // Freeday For Clients
+					FreedayforClientsMenu(client);
 				case 3: // Freeday For All
 				{
 					// N/A
 				}
-				case 2: // Freeday For Clients
-					FreedayforClientsMenu(client);
-				case 1: // Freeday For Yourself
-					base.bIsQueuedFreeday = true;
 			}
 
 			gamemode.iLRPresetType = request;
@@ -560,22 +611,11 @@ public int LRMenuHandler(Menu menu, MenuAction action, int client, int select)
 				gamemode.iLRType = request;
 
 				ExecuteLR(lr);
-
-//				FuncWrapper f; lr.GetArray("__FUNCS", f, sizeof(f));
-//				if (IsValidFunctionPointer(f.funcs[OnRoundStart]))
-//				{
-//					// The best that can be done atm, silly lr's doing stuff before the next round sm my h
-//					Call_StartFunction(lr.GetOwnerPlugin(), f.funcs[OnRoundStart]);
-//					Call_PushCell(lr);
-//					Call_Finish();
-//				}
 			}
 		}
 		case MenuAction_Cancel:
-		{
 			JailFighter(client).bSelectingLR = false;
-		}
-//		case MenuAction_End:delete menu;
+		case MenuAction_End:delete menu;
 	}
 	return 0;
 }
@@ -592,12 +632,14 @@ public void ResetVariables(const JailFighter base, const bool compl)
 	base.iRebelParticle = -1;
 	base.iWardenParticle = -1;
 	base.iFreedayParticle = -1;
+	base.iFreekillerParticle = -1;
 	base.iHealth = 0;
 	base.bIsWarden = false;
 	base.bLockedFromWarden = false;
 	base.bInJump = false;
 	base.bUnableToTeleport = false;
 	base.bIsRebel = false;
+	base.bIsFreekiller = false;
 	base.bSkipPrep = false;
 	base.flSpeed = 0.0;
 	base.flKillingSpree = 0.0;
@@ -632,12 +674,12 @@ public void ManageEntityCreated(int ent, const char[] classname)
 		SDKHook(ent, SDKHook_Spawn, gamemode.bAllowBuilding ? OnBuildingSpawn : KillOnSpawn);
 }
 
-public void ManageWardenMenu(Menu &menu)
+public void ManageWardenMenu(Menu menu)
 {
 	Call_OnWMenuAdd(menu);
 }
 
- public int WardenMenuHandler(Menu menu, MenuAction action, int client, int select)
+public int WardenMenuHandler(Menu menu, MenuAction action, int client, int select)
  {
  	switch (action)
 	{

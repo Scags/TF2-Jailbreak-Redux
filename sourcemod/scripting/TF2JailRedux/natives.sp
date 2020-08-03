@@ -62,13 +62,13 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("JBGameMode_GetKv", Native_JBGameMode_GetKv);
 	CreateNative("JBGameMode_GetMapKv", Native_JBGameMode_GetMapKv);
 	CreateNative("JBGameMode_GetMapKvSection", Native_JBGameMode_GetMapKvSection);
+	CreateNative("JBGameMode_UpdateLRHud", Native_JBGameMode_UpdateLRHud);
 		/* Gamemode Methodmap */
 	CreateNative("JBGameMode.JBGameMode", Native_JBGameMode_Instance);
 
 		/* Last Requests */
 	CreateNative("LastRequest.Create", Native_LastRequest_Instance);
 	CreateNative("LastRequest.CreateFromConfig", Native_LastRequest_CreateFromConfig);
-	CreateNative("LastRequest.FromIndex", Native_LastRequest_FromIndex);
 	CreateNative("LastRequest.At", Native_LastRequest_FromIndex);
 	CreateNative("LastRequest.ByName", Native_LastRequest_ByName);
 	CreateNative("LastRequest.AddHook", Native_LastRequest_AddHook);
@@ -245,7 +245,7 @@ public any Native_JBGameMode_FindRandomWarden(Handle plugin, int numParams)
 }
 public any Native_JBGameMode_ManageCells(Handle plugin, int numParams)
 {
-	gamemode.DoorHandler(GetNativeCell(1));
+	return gamemode.DoorHandler(GetNativeCell(1));
 }
 public any Native_JBGameMode_Warden(Handle plugin, int numParams)
 {
@@ -759,4 +759,10 @@ public any Native_LastRequest_ForceFireFunction(Handle plugin, int numParams)
 	}
 	Call_Finish(action);
 	return action;
+}
+public any Native_JBGameMode_UpdateLRHud(Handle plugin, int numParams)
+{
+	char name[256];
+	GetNativeString(1, name, sizeof(name));
+	gamemode.UpdateLRHud(name);
 }

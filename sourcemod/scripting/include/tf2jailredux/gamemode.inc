@@ -60,9 +60,9 @@ native JBPlayer JBGameMode_FindRandomWarden();
  *
  *	@param status 			Type of cell door usage found in the eDoorsMode enum.
  *
- *	@noreturn
+ *	@return					True on success, false otherwise.
 */
-native void JBGameMode_ManageCells(const eDoorsMode status);
+native bool JBGameMode_ManageCells(const eDoorsMode status);
 
 /**
  *	Find the current warden if one exists.
@@ -238,6 +238,15 @@ native KeyValues JBGameMode_GetMapKv();
  *							are finished with it.
 */
 native KeyValues JBGameMode_GetMapKvSection(const char[] name, bool create = false);
+
+/**
+ *	Refresh the LR hud element.
+ *
+ *	@param name 			String to assign to the hud.
+ *
+ *	@noreturn
+*/
+native void JBGameMode_UpdateLRHud(const char[] name);
 
 /**
  *	Retrieve a Handle to the gamemode's current last request.
@@ -798,7 +807,7 @@ methodmap JBGameMode < StringMap
 			this.SetValue("bDisableMuting", i);
 		}
 	}
-	property bool bDisableKillSpree
+	property bool bDisableKillSpree		// No longer used
 	{
 		public get()
 		{
@@ -844,6 +853,18 @@ methodmap JBGameMode < StringMap
 		public set( const bool i )
 		{
 			this.SetValue("bIgnoreRebels", i);
+		}
+	}
+	property bool bIgnoreFreekillers
+	{
+		public get()
+		{
+			bool i; this.GetValue("bIgnoreFreekillers", i);
+			return i;
+		}
+		public set( const bool i )
+		{
+			this.SetValue("bIgnoreFreekillers", i);
 		}
 	}
 	property bool bIsLRRound
@@ -978,11 +999,11 @@ methodmap JBGameMode < StringMap
 	 *
 	 *	@param status 		Type of cell door usage found in the eDoorsMode enum.
 	 *
-	 *	@noreturn
+	 *	@return				True on success, false otherwise.
 	*/
-	public void DoorHandler( const eDoorsMode status )
+	public bool DoorHandler( const eDoorsMode status )
 	{
-		JBGameMode_ManageCells(status);
+		return JBGameMode_ManageCells(status);
 	}
 
 	/**

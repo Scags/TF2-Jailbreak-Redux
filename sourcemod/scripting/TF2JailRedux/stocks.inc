@@ -129,7 +129,7 @@ stock int GetItemQuality(const int item)
 		return GetEntProp(item, Prop_Send, "m_iEntityQuality");
 	return -1;
 }
-stock int AttachParticle(const int ent, const char[] particleType, float selfdestruct = 0.0, float offset = 0.0, bool battach = true)
+stock int AttachParticle(const int ent, const char[] particleType, float selfdestruct = 0.0, float offset = 0.0, bool battach = true, const char[] sattach = "")
 {
 	int particle = CreateEntityByName("info_particle_system");
 	char tName[16];
@@ -150,6 +150,11 @@ stock int AttachParticle(const int ent, const char[] particleType, float selfdes
 	{
 		AcceptEntityInput(particle, "SetParent", particle, particle, 0);
 		SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", ent);
+		if (sattach[0] != '\0')
+		{
+			SetVariantString(sattach);
+			AcceptEntityInput(particle, "SetParentAttachmentMaintainOffset");
+		}
 	}
 
 	ActivateEntity(particle);
@@ -515,7 +520,7 @@ stock void RemovePlayerBack(int client, int[] indices, int len)
 	{
 		int wearable = TF2_GetWearable(client, i);
 
-		if (wearable != -1 && !GetEntProp(wearable, Prop_Send, "m_bDisguiseWearable"))
+		if (wearable != -1 && (HasEntProp(wearable, Prop_Send, "m_bDisguiseWearable") && !GetEntProp(wearable, Prop_Send, "m_bDisguiseWearable")))
 		{
 			int idx = GetItemIndex(wearable);
 			for(int u; u < len; u++)
@@ -538,11 +543,11 @@ stock int FindPlayerBack(int client, int[] indices, int len)
 	for (int i = numwearables-1; i >= 0; --i)
 	{
 		int wearable = TF2_GetWearable(client, i);
-		if (wearable != -1 && !GetEntProp(wearable, Prop_Send, "m_bDisguiseWearable"))
+		if (wearable != -1 && (HasEntProp(wearable, Prop_Send, "m_bDisguiseWearable") && !GetEntProp(wearable, Prop_Send, "m_bDisguiseWearable")))
 		{
 			int idx = GetItemIndex(wearable);
 			for (int u; u < len; u++)
-				if( idx == indices[u])
+				if(idx == indices[u])
 					return wearable;
 		}
 	}
@@ -956,7 +961,7 @@ stock bool IsInRange(const int client, const int target, const float dist, bool 
 	}
 	return false;
 }
-stock void AddClientsToMenu(Menu &menu, bool alive = false, int team = 2)
+stock void AddClientsToMenu(Menu menu, bool alive = false, int team = 2)
 {
 	char name[32], strID[8];
 	for (int i = MaxClients; i; --i)
@@ -1159,9 +1164,7 @@ stock void KillFlameManager(const int client)
 stock bool IsMedicUbering(const int medic)
 {
 	int medigun = GetPlayerWeaponSlot(medic, TFWeaponSlot_Secondary);
-	if (medigun > MaxClients && IsValidEntity(medigun))
-		return HasEntProp(medigun, Prop_Send, "m_bChargeRelease") ? !!GetEntProp(medigun, Prop_Send, "m_bChargeRelease") : false;
-	return false;
+	return medigun > MaxClients && HasEntProp(medigun, Prop_Send, "m_bChargeRelease") ? !!GetEntProp(medigun, Prop_Send, "m_bChargeRelease") : false;
 }
 stock bool IsStringNumeric(const char[] s)
 {
@@ -1170,10 +1173,6 @@ stock bool IsStringNumeric(const char[] s)
 			return false;
 
 	return true;
-}
-stock int TF2_GetNumWeapons(int client)
-{
-	return GetEntData(client, FindSendPropInfo("CTFPlayer", "m_hActiveWeapon")-4);
 }
 // Credit to Sikari
 stock bool IsValidFunctionPointer(Function func)

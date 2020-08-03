@@ -112,13 +112,13 @@ stock void TF2Jail_StripAllWeapons(int client)
 	JBPlayer(client).StripToMelee();
 }
 
-#pragma deprecated Use JBGameMode_SetProp("bIsWardenLocked", true)
+#pragma deprecated Use JBGameMode_SetWardenLock(true)
 stock void TF2Jail_LockWarden()
 {
 	JBGameMode_SetProperty("bIsWardenLocked", true);
 }
 
-#pragma deprecated Use JBGameMode_SetProp("bIsWardenLocked", false)
+#pragma deprecated Use JBGameMode_SetWardenLock(false)
 stock void TF2Jail_UnlockWarden()
 {
 	JBGameMode_SetProperty("bIsWardenLocked", false);
@@ -135,8 +135,7 @@ stock bool TF2Jail_IsLRRound()
 #pragma deprecated Use JBGameMode_ManageCells() instead
 stock bool TF2Jail_ManageCells(eDoorsMode Status)
 {
-	JBGameMode_ManageCells(Status);
-	return true;
+	return JBGameMode_ManageCells(Status);
 }
 
 #pragma deprecated JB_Hook Action OnWardenGet(JBPlayer) instead
@@ -177,20 +176,15 @@ public SharedPlugin __pl_tf2jailredux = {
 #if !defined REQUIRE_PLUGIN
 public void __pl_tf2jailredux_SetNTVOptional()
 {
-	MarkNativeAsOptional("TF2JailRedux_RegisterPlugin");
-	MarkNativeAsOptional("TF2JailRedux_RegisterLR");
-	MarkNativeAsOptional("TF2JailRedux_UnRegisterPlugin");
-	MarkNativeAsOptional("TF2JailRedux_UnRegisterLR");
-	MarkNativeAsOptional("TF2JailRedux_LRIndex");
-
 	MarkNativeAsOptional("JB_Hook");
 	MarkNativeAsOptional("JB_HookEx");
 	MarkNativeAsOptional("JB_Unhook");
 	MarkNativeAsOptional("JB_UnhookEx");
-
+		/* Player */
+	MarkNativeAsOptional("JBPlayer.GetValue");
+	MarkNativeAsOptional("JBPlayer.SetValue");
 	MarkNativeAsOptional("JBPlayer.bNoMusic.get");
 	MarkNativeAsOptional("JBPlayer.hMap.get");
-
 	MarkNativeAsOptional("JBPlayer.SpawnWeapon");
 	MarkNativeAsOptional("JBPlayer.GetWeaponSlotIndex");
 	MarkNativeAsOptional("JBPlayer.SetWepInvis");
@@ -208,14 +202,12 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBPlayer.UnmutePlayer");
 	MarkNativeAsOptional("JBPlayer.WardenSet");
 	MarkNativeAsOptional("JBPlayer.WardenUnset");
-	MarkNativeAsOptional("JBPlayer.MakeHorsemann");
-	MarkNativeAsOptional("JBPlayer.UnHorsemann");
 	MarkNativeAsOptional("JBPlayer.WardenMenu");
 	MarkNativeAsOptional("JBPlayer.ClimbWall");
 	MarkNativeAsOptional("JBPlayer.AttemptFireWarden");
 	MarkNativeAsOptional("JBPlayer.MarkRebel");
 	MarkNativeAsOptional("JBPlayer.ClearRebel");
-
+		/* Gamemode */
 	MarkNativeAsOptional("JBGameMode_Playing");
 	MarkNativeAsOptional("JBGameMode_ManageCells");
 	MarkNativeAsOptional("JBGameMode_FindRandomWarden");
@@ -223,15 +215,45 @@ public void __pl_tf2jailredux_SetNTVOptional()
 	MarkNativeAsOptional("JBGameMode_FireWarden");
 	MarkNativeAsOptional("JBGameMode_OpenAllDoors");
 	MarkNativeAsOptional("JBGameMode_ToggleMedic");
-	// MarkNativeAsOptional("JBGameMode_ToggleMedicTeam");
+	MarkNativeAsOptional("JBGameMode_ToggleMuting");
 	MarkNativeAsOptional("JBGameMode_ResetVotes");
 	MarkNativeAsOptional("JBGameMode_GetTelePosition");
 	MarkNativeAsOptional("JBGameMode_SetWardenLock");
-
+	MarkNativeAsOptional("JBGameMode_AutobalanceTeams");
+	MarkNativeAsOptional("JBGameMode_EvenTeams");
+		/* Gamemode StringMap */
 	MarkNativeAsOptional("JBGameMode_Instance");
 	MarkNativeAsOptional("JBGameMode_GetProperty");
 	MarkNativeAsOptional("JBGameMode_SetProperty");
-
+	MarkNativeAsOptional("JBGameMode_GetProp");
+	MarkNativeAsOptional("JBGameMode_SetProp");
+	MarkNativeAsOptional("JBGameMode_GetPropFloat");
+	MarkNativeAsOptional("JBGameMode_SetPropFloat");
+	MarkNativeAsOptional("JBGameMode_GetPropString");
+	MarkNativeAsOptional("JBGameMode_SetPropString");
+	MarkNativeAsOptional("JBGameMode_GetPropArray");
+	MarkNativeAsOptional("JBGameMode_SetPropArray");
+	MarkNativeAsOptional("JBGameMode_GetKv");
+	MarkNativeAsOptional("JBGameMode_GetMapKv");
+	MarkNativeAsOptional("JBGameMode_GetMapKvSection");
+	MarkNativeAsOptional("JBGameMode_UpdateLRHud");
+		/* Gamemode Methodmap */
 	MarkNativeAsOptional("JBGameMode.JBGameMode");
+
+		/* Last Requests */
+	MarkNativeAsOptional("LastRequest.Create");
+	MarkNativeAsOptional("LastRequest.CreateFromConfig");
+	MarkNativeAsOptional("LastRequest.At");
+	MarkNativeAsOptional("LastRequest.ByName");
+	MarkNativeAsOptional("LastRequest.AddHook");
+	MarkNativeAsOptional("LastRequest.RemoveHook");
+	MarkNativeAsOptional("LastRequest.Execute");
+	MarkNativeAsOptional("LastRequest.Destroy");
+	MarkNativeAsOptional("LastRequest.IsInConfig");
+	MarkNativeAsOptional("LastRequest.ImportFromConfig");
+	MarkNativeAsOptional("LastRequest.ExportToConfig");
+	MarkNativeAsOptional("LastRequest.DeleteFromConfig");
+	MarkNativeAsOptional("LastRequest.Refresh");
+	MarkNativeAsOptional("LastRequest.SetFunction");
 }
 #endif

@@ -61,3 +61,24 @@
 - Patched a bug with setting internal LR music.
 - Fixed another bad crash with the VSH LR.
 - Extended LR music to allow "sound/" in the file path.
+
+### V2.0.4 ###
+- Added a native for refreshing the LR Hud element.
+- Fixed up marking natives as optional.
+- Added a return value to JBGameMode_ManageCells/JBGameMode.DoorHandler
+- Implemented a Freekiller system with CVars to control it.
+- Added natives and forwards for the Freekiller system.
+- Fixed an awful memory leak in the LR menu handler.
+- Removed an old CVar that isn't used anymore.
+- Moved enum structs to jailbase.sp.
+- Reworked TextNodeParam enum struct to hold a Hud Handle.
+- Patched weapon management extending beyond the size of the weapon netprop array.
+- Added support for particle attachments for roles in rolerenderers.cfg.
+- Removed a bogus native.
+- Fool-proofed the wearable stocks in stocks.inc.
+- Removed an invalid stock function.
+- Fixed a bug where Hale materials were not downloading properly.
+- Removed weaponblocker.cfg and assigned it to it's own repository.
+- Revamped the weaponblocker plugin to be able to operate under different sub-gamemodes including freedays and wardays.
+- Added "VoidFreekills" to the proper LR config files.
+- Added last resort command overrides for VIPs and Admins with TF2Jail_VIP and TF2Jail_Admin respectively.

@@ -187,6 +187,11 @@ methodmap JBPlayer
 		public get() 				{ return this.GetProp("iFreedayParticle"); }
 		public set( const int i )	{ this.SetProp("iFreedayParticle", i); }
 	}
+	property int iFreekillerParticle
+	{
+		public get() 				{ return this.GetProp("iFreekillerParticle"); }
+		public set( const int i )	{ this.SetProp("iFreekillerParticle", i); }
+	}
 	property int iHealth
 	{
 		public get() 				{ return this.GetProp("iHealth"); }
@@ -248,6 +253,11 @@ methodmap JBPlayer
 		public get() 				{ return this.GetProp("bIsRebel"); }
 		public set( const bool i )	{ this.SetProp("bIsRebel", i); }
 	}
+	property bool bIsFreekiller
+	{
+		public get() 				{ return this.GetProp("bIsFreekiller"); }
+		public set( const bool i )	{ this.SetProp("bIsFreekiller", i); }
+	}
 	property bool bIsVIP
 	{
 		public get() 				{ return this.GetProp("bIsVIP"); }
@@ -289,6 +299,11 @@ methodmap JBPlayer
 	{
 		public get() 				{ return this.GetProp("hRebelTimer"); }
 		public set( const Handle i ){ this.SetProp("hRebelTimer", i); }		
+	}
+	property Handle hFreekillTimer
+	{
+		public get() 				{ return this.GetProp("hFreekillTimer"); }
+		public set( const Handle i ){ this.SetProp("hFreekillTimer", i); }		
 	}
 
 	/**

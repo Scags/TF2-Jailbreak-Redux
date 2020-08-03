@@ -42,6 +42,7 @@ methodmap JailGameMode < JBGameMode
 		gm.bDisableMuting = false;
 		gm.bDisableKillSpree = false;
 		gm.bIgnoreRebels = false;
+		gm.bIgnoreFreekillers = false;
 		gm.bMarkerExists = false;
 		gm.bIsLRRound = false;
 		gm.flMusicTime = 0.0;
@@ -111,10 +112,10 @@ methodmap JailGameMode < JBGameMode
 		}
 
 		char name[32];
-//			if (announce)
-//				if (fromwarden)
-//					CPrintToChatAll("%t %t", "Plugin Tag", "Warden Work Cells", this.iWarden.index, name);
-//				else CPrintToChatAll("%t %t", "Admin Tag", "Admin Work Cells", name);
+//		if (announce)
+//			if (fromwarden)
+//				CPrintToChatAll("%t %t", "Plugin Tag", "Warden Work Cells", this.iWarden.index, name);
+//			else CPrintToChatAll("%t %t", "Admin Tag", "Admin Work Cells", name);
 
 		int i, ent = -1;
 		bool success;
@@ -381,6 +382,9 @@ methodmap JailGameMode < JBGameMode
 	*/
 	public bool SetWardenLock(const bool status, bool unsetwarden = false)
 	{
+		if (this.bIsWardenLocked == status)
+			return true;
+
 		if (Call_OnSetWardenLock(status) != Plugin_Continue)
 			return false;
 
@@ -407,8 +411,8 @@ methodmap JailGameMode < JBGameMode
 
 		int immunity = cvarTF2Jail[AutobalanceImmunity].IntValue;
 		float balance = cvarTF2Jail[BalanceRatio].FloatValue;
-		float lBlue = float( GetLivingPlayers(BLU) );
-		float lRed = float( GetLivingPlayers(RED) );
+		float lBlue = float(GetLivingPlayers(BLU));
+		float lRed = float(GetLivingPlayers(RED));
 		JailFighter player;
 
 		float ratio;
@@ -549,5 +553,10 @@ methodmap JailGameMode < JBGameMode
 			return view_as< JailFighter >(0);
 
 		return player.WardenSet() ? player : view_as< JailFighter >(0);
+	}
+
+	public void UpdateLRHud(const char[] name)
+	{
+		ManageLRHud(name);
 	}
 };

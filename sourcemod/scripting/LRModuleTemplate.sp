@@ -3,7 +3,7 @@
 
 #pragma semicolon 1
 #pragma newdecls required
-// #include "TF2JailRedux/stocks.inc"
+//#include "TF2JailRedux/stocks.inc"
 
 #define PLUGIN_VERSION 		"1.0.0"
 
@@ -21,15 +21,6 @@ LastRequest g_LR;
 // Only useful with SM forwards or callbacks where you used JB_Hook
 #define CHECK() 				if (g_LR == null || g_LR.GetID() != JBGameMode_GetPrope("iLRType")) return
 #define CHECK_ACT(%0) 			if (g_LR == null || g_LR.GetID() != JBGameMode_GetPrope("iLRType")) return %0
-
-public void OnPluginEnd()
-{
-	if (LibraryExists("TF2Jail_Redux") && g_LR != null)
-	{
-		g_LR.Destroy();
-		g_LR = null;
-	}
-}
 
 public void OnLibraryAdded(const char[] name)
 {
@@ -81,7 +72,6 @@ public void OnLibraryAdded(const char[] name)
 		// Now we should hook into functions that we want
 		// Just un-comment the ones that you need and make a callback for it!
 		// Note that you can only hook one function per index per LR
-
 		//g_LR.AddHook(OnDownloads, MyLR_OnDownloads);
 		//g_LR.AddHook(OnRoundStart, MyLR_OnRoundStart);
 		//g_LR.AddHook(OnRoundStartPlayer, MyLR_OnRoundStartPlayer);
@@ -135,6 +125,17 @@ public void OnLibraryAdded(const char[] name)
 		//g_LR.AddHook(OnLRDenied, MyLR_OnLRDenied);
 		//g_LR.AddHook(OnLRActivate, MyLR_OnLRActivate);
 		//g_LR.AddHook(OnLRActivatePlayer, MyLR_OnLRActivatePlayer);
+		//g_LR.AddHook(OnRoundReset, MyLR_OnRoundReset);
+		//g_LR.AddHook(OnCellsManaged, MyLR_OnCellsManaged);
+		//g_LR.AddHook(OnWardenGetPost, MyLR_OnWardenGetPost);
+		//g_LR.AddHook(OnRebelGivenPost, MyLR_OnRebelGivenPost);
+		//g_LR.AddHook(OnLRPickedPost, MyLR_OnLRPickedPost);
+		//g_LR.AddHook(OnWMenuSelectPost, MyLR_OnWMenuSelectPost);
+		//g_LR.AddHook(OnCellsFullyOpened, MyLR_OnCellsFullyOpened);
+		//g_LR.AddHook(OnCellsFullyClosed, MyLR_OnCellsFullyClosed);
+		//g_LR.AddHook(OnMarkedFreekiller, MyLR_OnMarkedFreekiller);
+		//g_LR.AddHook(OnMarkedFreekillerPost, MyLR_OnMarkedFreekillerPost);
+		//g_LR.AddHook(OnFreekillerStatusRemoved, MyLR_OnFreekillerStatusRemoved);
 
 		// These do not have LR hooks, so use JB_Hook if u need it
 		//g_LR.AddHook(OnLRGiven, MyLR_OnLRGiven);
@@ -151,5 +152,14 @@ public void OnLibraryRemoved(const char[] name)
 			g_LR.Destroy();
 			g_LR = null;
 		}
+	}
+}
+
+public void OnPluginEnd()
+{
+	if (LibraryExists("TF2Jail_Redux") && g_LR != null)
+	{
+		g_LR.Destroy();
+		g_LR = null;
 	}
 }

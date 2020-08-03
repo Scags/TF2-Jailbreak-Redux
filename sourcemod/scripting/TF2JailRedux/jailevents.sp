@@ -3,7 +3,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	int client = GetClientOfUserId( event.GetInt("userid") );
+	int client = GetClientOfUserId(event.GetInt("userid"));
 
 	if (!IsClientValid(client))
 		return Plugin_Continue;
@@ -56,6 +56,7 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 
 	player.flHealTime = 0.0;
 	player.nWardenStabbed = 0;
+	player.flKillingSpree = 0.0;
 
 	return Plugin_Continue;
 }
@@ -65,8 +66,8 @@ public Action OnPlayerDamaged(Event event, const char[] name, bool dontBroadcast
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter victim = JailFighter.OfUserId( event.GetInt("userid") );
-	JailFighter attacker = JailFighter.OfUserId( event.GetInt("attacker") );
+	JailFighter victim = JailFighter.OfUserId(event.GetInt("userid"));
+	JailFighter attacker = JailFighter.OfUserId(event.GetInt("attacker"));
 
 	if (victim.index == attacker.index || attacker.index <= 0)
 		return Plugin_Continue;
@@ -81,15 +82,14 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter victim = JailFighter.OfUserId( event.GetInt("userid") );	
-	JailFighter attacker = JailFighter.OfUserId( event.GetInt("attacker") );
+	JailFighter victim = JailFighter.OfUserId(event.GetInt("userid"));	
+	JailFighter attacker = JailFighter.OfUserId(event.GetInt("attacker"));
 
 	if (g_bTF2Attribs)
 		TF2Attrib_RemoveAll(victim.index);
 
 	if (IsClientValid(attacker.index))
-		if (!gamemode.bDisableKillSpree)
-			FreeKillSystem(attacker);
+		ManageFreekilling(attacker);
 
 	SetPawnTimer(CheckLivingPlayers, 0.1);
 
@@ -97,7 +97,8 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		victim.RemoveFreeday();
 	else if (victim.bIsRebel)
 		victim.ClearRebel();
-
+	else if (victim.bIsFreekiller)
+		victim.ClearFreekiller();
 	else if (victim.bIsWarden)
 	{
 		victim.WardenUnset();
@@ -177,9 +178,13 @@ public Action OnPreRoundStart(Event event, const char[] name, bool dontBroadcast
 							HookSingleEntityOutput(ent, "OnFullyClosed", OnCellsFullyClose);
 
 							hooked = true;
+							break;
 						}
 					}
 				}
+				// The one time I want goto...
+				if (hooked)
+					break;
 			}
 		}
 	}
@@ -244,7 +249,8 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 
 		char firstday[32];
 		FormatEx(firstday, sizeof(firstday), "%t", "First Day Freeday");
-		EnumTNPS[0].Display(hTextNodes[0], firstday);
+		if (EnumTNPS[0].hHud != null)
+			EnumTNPS[0].Display(firstday);
 		PrintCenterTextAll(firstday);
 
 		gamemode.iTimeLeft = cvarTF2Jail[RoundTime_Freeday].IntValue;
@@ -307,16 +313,18 @@ public Action OnArenaRoundStart(Event event, const char[] name, bool dontBroadca
 	time = cvarTF2Jail[WardenDelay].FloatValue;
 	if (time != 0.0)
 	{
-		gamemode.bIsWardenLocked = true;
-		// If an LR disables warden, don't use the delayed enablers
-		if (!gamemode.bWardenStartLocked)
+		if (gamemode.SetWardenLock(true))
 		{
-			if (time == -1.0)
+			// If an LR disables warden, don't use the delayed enablers
+			if (!gamemode.bWardenStartLocked)
 			{
-				SetPawnTimer(EnableWarden2, cvarTF2Jail[WardenDelay2].FloatValue, gamemode.iRoundCount);
-//				gamemode.FindRandomWarden();
+				if (time == -1.0)
+				{
+					SetPawnTimer(EnableWarden2, cvarTF2Jail[WardenDelay2].FloatValue, gamemode.iRoundCount);
+//					gamemode.FindRandomWarden();
+				}
+				else SetPawnTimer(EnableWarden, time, gamemode.iRoundCount);
 			}
-			else SetPawnTimer(EnableWarden, time, gamemode.iRoundCount);
 		}
 	}
 
@@ -347,10 +355,12 @@ public Action OnRoundEnded(Event event, const char[] name, bool dontBroadcast)
 			player.RemoveFreeday();
 		else if (player.bIsRebel)
 			player.ClearRebel();
+		else if (player.bIsFreekiller)
+			player.ClearFreekiller();
 
-		for (x = 0; x < sizeof(hTextNodes); x++)
-			if (hTextNodes[x] != null)
-				ClearSyncHud(i, hTextNodes[x]);
+		for (x = 0; x < sizeof(EnumTNPS); x++)
+			if (EnumTNPS[x].hHud != null)
+				ClearSyncHud(i, EnumTNPS[x].hHud);
 
 		if (GetClientMenu(i) != MenuSource_None)
 			CancelClientMenu(i, true);
@@ -393,7 +403,7 @@ public Action OnRegeneration(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player = JailFighter.OfUserId( event.GetInt("userid") );
+	JailFighter player = JailFighter.OfUserId(event.GetInt("userid"));
 
 	if (IsClientValid(player.index) 
 	&& gamemode.iRoundState != StateEnding 
@@ -411,7 +421,7 @@ public Action OnChangeClass(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter player = JailFighter.OfUserId( event.GetInt("userid") );
+	JailFighter player = JailFighter.OfUserId(event.GetInt("userid"));
 
 	if (IsClientValid(player.index))
 		SetPawnTimer(PrepPlayer, 0.1, player.userid);
@@ -427,7 +437,7 @@ public void OnChangeTeam(Event event, const char[] name, bool dontBroadcast)
 	if (event.GetBool("disconnect"))
 		return;
 
-	gamemode.ToggleMuting(JailFighter.OfUserId( event.GetInt("userid") ), _, event.GetInt("team"));
+	gamemode.ToggleMuting(JailFighter.OfUserId(event.GetInt("userid")), _, event.GetInt("team"));
 }
 
 public void OnHookedEvent(Event event, const char[] name, bool dontBroadcast)
@@ -435,7 +445,7 @@ public void OnHookedEvent(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return;
 
-	JailFighter.OfUserId( event.GetInt("userid") ).bInJump = StrEqual(name, "rocket_jump", false) || StrEqual(name, "sticky_jump", false);
+	JailFighter.OfUserId(event.GetInt("userid")).bInJump = StrEqual(name, "rocket_jump", false) || StrEqual(name, "sticky_jump", false);
 }
 
 /** Events that aren't used in core (but are used in VSH plugin module) :^) **/
@@ -444,8 +454,8 @@ public Action ObjectDeflected(Event event, const char[] name, bool dontBroadcast
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter airblaster = JailFighter.OfUserId( event.GetInt("userid") );
-	JailFighter airblasted = JailFighter.OfUserId( event.GetInt("ownerid") );
+	JailFighter airblaster = JailFighter.OfUserId(event.GetInt("userid"));
+	JailFighter airblasted = JailFighter.OfUserId(event.GetInt("ownerid"));
 	int weaponid = GetEventInt(event, "weaponid");
 	if (weaponid)
 		return Plugin_Continue;
@@ -458,7 +468,7 @@ public Action ObjectDestroyed(Event event, const char[] name, bool dontBroadcast
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter destroyer = JailFighter.OfUserId( event.GetInt("attacker") );
+	JailFighter destroyer = JailFighter.OfUserId(event.GetInt("attacker"));
 	int building = event.GetInt("index");
 	int objecttype = event.GetInt("objecttype");
 	ManageBuildingDestroyed(destroyer, building, objecttype, event);
@@ -470,8 +480,8 @@ public Action PlayerJarated(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	JailFighter jarateer = JailFighter.OfUserId( event.GetInt("thrower_entindex") );
-	JailFighter jarateed = JailFighter.OfUserId( event.GetInt("victim_entindex") );
+	JailFighter jarateer = JailFighter.OfUserId(event.GetInt("thrower_entindex"));
+	JailFighter jarateed = JailFighter.OfUserId(event.GetInt("victim_entindex"));
 	ManageOnPlayerJarated(jarateer, jarateed, event);
 	return Plugin_Continue;
 }
@@ -481,8 +491,8 @@ public Action UberDeployed(Event event, const char[] name, bool dontBroadcast)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 	
-	JailFighter medic = JailFighter.OfUserId( event.GetInt("userid") );
-	JailFighter patient = JailFighter.OfUserId( event.GetInt("targetid") );
+	JailFighter medic = JailFighter.OfUserId(event.GetInt("userid"));
+	JailFighter patient = JailFighter.OfUserId(event.GetInt("targetid"));
 	if (!medic || !patient)
 		return Plugin_Continue;
 

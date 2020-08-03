@@ -645,9 +645,9 @@
 	"New Warden"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"{1}{burlywood} is the new Warden"
-		"pl"			"{1}{burlywood} jest nowym Naczelnikiem"
-		"pt" 			"{1}{burlywood} é o novo Diretor"
+		"en" 			"{default}{1}{burlywood} is the new Warden"
+		"pl"			"{default}{1}{burlywood} jest nowym Naczelnikiem"
+		"pt" 			"{default}{1}{burlywood} é o novo Diretor"
 	}
 
 	// 1: Client name/index
@@ -1218,5 +1218,22 @@
 	{
 		"#format" 	"{1:N}"
 		"en" 		"Warden {default}{1}{burlywood} has restored the health of all prisoners."
+	}
+	
+	"Marked as Freekiller"
+	{
+		"#format" 	"{1:N}"
+		"en" 		"{default}{1}{burlywood} has been marked as a Freekiller."
+	}
+	
+	"Freekiller Timer Start"
+	{
+		"#format" 	"{1:d}"
+		"en" 		"Your Freekiller status will be removed automatically in {1} seconds."
+	}
+	
+	"Freekiller Timer Remove"
+	{
+		"en" 		"Your Freekiller status has been removed."
 	}
 }
