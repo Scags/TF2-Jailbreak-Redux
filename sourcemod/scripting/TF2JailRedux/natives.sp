@@ -442,7 +442,7 @@ public any Native_LastRequest_CreateFromConfig(Handle plugin, int numParams)
 
 	// Check this last so that if it's not in config, we aren't just killing an LR
 	if (gamemode.hLRS.GetValue(buffer, lr))
-		lr.Destroy();	// If it already exists, destroy it and make anew
+		lr.Destroy(buffer);	// If it already exists, destroy it and make anew
 
 	lr = LastRequest.Create(buffer);
 	lr.GetKv().Import(kv);
@@ -511,6 +511,10 @@ public any Native_LastRequest_Destroy(Handle plugin, int numParams)
 
 	if (name[0] == '\0')
 		lr.GetName(name, sizeof(name));
+
+	any dummy;
+	if (!gamemode.hLRS.Get(name, dummy))
+		return ThrowNativeError(SP_ERROR_NATIVE, "Could not find LR named '%s' to delete!", name);
 
 	int index = lr.GetID();
 	char buffer[4], buffer2[4];

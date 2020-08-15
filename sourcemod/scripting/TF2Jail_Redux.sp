@@ -664,7 +664,7 @@ public Action Timer_PlayerThink(Handle timer)
 	if (!bEnabled.BoolValue)
 		return Plugin_Continue;
 
-	if (gamemode.flMusicTime <= GetGameTime() && cvarTF2Jail[EnableMusic].BoolValue)
+	if (cvarTF2Jail[EnableMusic].BoolValue)
 		MusicPlay();
 
 	JailFighter player;
@@ -1288,6 +1288,9 @@ public void RemoveEnt(any data)
 public void MusicPlay()
 {
 	if (gamemode.iRoundState != StateRunning)
+		return;
+
+	if (gamemode.flMusicTime > GetGameTime())
 		return;
 
 	char sound[PLATFORM_MAX_PATH];

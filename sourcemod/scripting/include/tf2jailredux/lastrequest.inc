@@ -847,7 +847,7 @@ methodmap LastRequest < StringMap
 
 	public float GetMusicTime()
 	{
-		float val;
+		float val = -1.0;
 		KeyValues k = this.GetKv();
 		if (k != null && k.JumpToKey("Music"))
 			val = k.GetFloat("Time", -1.0);
@@ -857,7 +857,7 @@ methodmap LastRequest < StringMap
 	public void SetMusicTime(float val)
 	{
 		KeyValues k = this.GetKv();
-		if (k != null && k.JumpToKey("Music"))
+		if (k != null && k.JumpToKey("Music", true))
 			k.SetFloat("Time", val);
 	}
 

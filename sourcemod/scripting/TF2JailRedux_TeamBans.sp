@@ -241,18 +241,18 @@ public void OnClientPostAdminCheck(int client)
 
 	char query[256];
 	FormatEx(query, sizeof(query), 
-			"SELECT b.ban_time, w.ban_time "
-		...	"FROM %s b, %s w "
-		...	"WHERE b.steamid = '%s';",
-			strCoreTable, strWardenTable, ID);
+			"SELECT ban_time "
+		...	"FROM %s "
+		...	"WHERE steamid = '%s';",
+			strCoreTable, ID);
 
 	hTheDB.Query(CCB_Induction, query, GetClientUserId(client));
 
 	if (cvarJBANS[Debug].BoolValue)
 		LogMessage("Querying client %N connection with query %s", client, query);
 
-//	ReplaceStringEx(query, sizeof(query), strCoreTable, strWardenTable);
-//	hTheDB.Query(CCB_Induction_Warden, query, GetClientUserId(client));
+	ReplaceStringEx(query, sizeof(query), strCoreTable, strWardenTable);
+	hTheDB.Query(CCB_Induction_Warden, query, GetClientUserId(client));
 }
 
 public void fwdOnPlayerSpawn(const JBPlayer Player, Event event)
@@ -276,7 +276,11 @@ public void fwdOnPlayerSpawn(const JBPlayer Player, Event event)
 	char BanMsg[128]; cvarJBANS[JoinMessage].GetString(BanMsg, sizeof(BanMsg));	
 	PrintCenterText(base.index, "%t", "Guardbanned Center");
 	CPrintToChat(base.index, "%t %s", "Plugin Tag Teambans", BanMsg);
-	base.ForceTeamChange(RED, state == StateStarting);
+
+	ForcePlayerSuicide(base.index);
+	ChangeClientTeam(base.index, RED);
+	if (state == StateStarting)
+		TF2_RespawnPlayer(base.index);
 }
 
 public Action fwdOnWardenGet(const JBPlayer Player)
@@ -1389,29 +1393,45 @@ public int CCB_Induction(Database db, DBResultSet results, const char[] error, a
 		{
 			results.FetchRow();
 
-			int time;
-			if (!results.IsFieldNull(0))	// Regular bans
-			{
-				time = results.FetchInt(0);
-				if (cvarJBANS[Debug].BoolValue)
-					LogMessage("[JBANS]: %N joined with %i time remaining on ban.", client, time);
+			int time = results.FetchInt(0);
+			if (cvarJBANS[Debug].BoolValue)
+				LogMessage("[JBANS]: %N joined with %i time remaining on ban.", client, time);
 
-				player.iTimeLeft = time;
-				player.bIsGuardbanned = true;
-			}
-
-			if (!results.IsFieldNull(1))	// Warden bans
-			{
-				time = results.FetchInt(1);
-				if (cvarJBANS[Debug].BoolValue)
-					LogMessage("[JBANS]: %N joined with %i time remaining on warden ban.", client, time);
-
-				player.iWardenTimeLeft = time;
-				player.bIsWardenBanned = true;				
-			}
+			player.iTimeLeft = time;
+			player.bIsGuardbanned = true;
 		}
+		else player.bIsGuardbanned = false;
 	}
 	else LogError("[JBANS] Database error on client (%N) induction: %s", client, error);
+}
+
+public int CCB_Induction_Warden(Database db, DBResultSet results, const char[] error, any data)
+{
+	int client = GetClientOfUserId(data);
+	if (!client || !IsClientInGame(client))
+		return;
+
+	if (results)
+	{
+		int rows = results.RowCount;
+		if (cvarJBANS[Debug].BoolValue)
+			LogMessage("[JBANS] Found client (%N) warden induction rowcount %d.", client, rows);
+
+		JailPlayer player = JailPlayer(client);
+		if (rows)
+		{
+			results.FetchRow();
+
+			int time = results.FetchInt(0);
+			if (cvarJBANS[Debug].BoolValue)
+				LogMessage("[JBANS]: %N joined with %i time remaining on wardenban.", client, time);
+
+			player.iWardenTimeLeft = time;
+			player.bIsWardenBanned = true;
+		}
+		else player.bIsWardenBanned = false;
+	}
+	else LogError("[JBANS] Database error on client (%N) warden induction: %s", client, error);
 }
 
 public int DBCB_Disconnect(Database db, DBResultSet results, const char[] error, any data)
