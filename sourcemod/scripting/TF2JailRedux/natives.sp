@@ -513,7 +513,7 @@ public any Native_LastRequest_Destroy(Handle plugin, int numParams)
 		lr.GetName(name, sizeof(name));
 
 	any dummy;
-	if (!gamemode.hLRS.Get(name, dummy))
+	if (!gamemode.hLRS.GetValue(name, dummy))
 		return ThrowNativeError(SP_ERROR_NATIVE, "Could not find LR named '%s' to delete!", name);
 
 	int index = lr.GetID();
@@ -540,6 +540,7 @@ public any Native_LastRequest_Destroy(Handle plugin, int numParams)
 	FuncTable t; lr.GetValue("__FUNCS", t);
 	delete t;
 	delete lr;
+	return 0;
 }
 public any Native_LastRequest_IsInConfig(Handle plugin, int numParams)
 {
