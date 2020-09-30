@@ -9,7 +9,7 @@
 #endif
 
 #define PLUGIN_NAME 		"[TF2] Jailbreak Redux"
-#define PLUGIN_VERSION 		"2.0.4"
+#define PLUGIN_VERSION 		"2.0.5"
 #define PLUGIN_AUTHOR 		"Scag/Ragenewb, props to Drixevel and Nergal/Assyrian"
 #define PLUGIN_DESCRIPTION 	"Deluxe version of TF2Jail"
 
@@ -401,6 +401,8 @@ public void OnPluginStart()
 //	}
 
 	ParseLRConfig();	// Only happens once
+
+	Call_OnFullyLoaded();	// Tell everyone to get started
 }
 
 public void OnLibraryAdded(const char[] name)

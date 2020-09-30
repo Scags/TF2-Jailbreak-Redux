@@ -359,21 +359,11 @@ methodmap JailFighter < JBPlayer
 	*/
 	public void MutePlayer()
 	{
-		if (this.bIsMuted)
+		if (this.bIsMuted || this.bIsAdmin || this.bIsWarden || AlreadyMuted(this.index))
 			return;
 
-		if (this.bIsAdmin)
-			return;
-
-		if (this.bIsWarden)
-			return;
-
-		int client = this.index;
-		if (!AlreadyMuted(client))
-		{
-			SetClientListeningFlags(client, VOICE_MUTED);
-			this.bIsMuted = true;
-		}
+		SetClientListeningFlags(this.index, VOICE_MUTED);
+		this.bIsMuted = true;
 	}
 	/**
 	 *	Unmute a player through the plugin.
@@ -382,7 +372,7 @@ methodmap JailFighter < JBPlayer
 	*/
 	public void UnmutePlayer()
 	{
-		if (!this.bIsMuted)
+		if (!this.bIsMuted || AlreadyMuted(this.index))
 			return;
 
 		SetClientListeningFlags(this.index, VOICE_NORMAL);
@@ -933,7 +923,7 @@ methodmap JailFighter < JBPlayer
 			FormatEx(msg, sizeof(msg), 
 					"{burlywood}********************\n"
 //				...	"%t\n"
-				...	"UID: %d\n"
+				...	"UID: #%d\n"
 				...	"Steam: %s\n"
 				... "IP: %s\n"
 				... "********************",

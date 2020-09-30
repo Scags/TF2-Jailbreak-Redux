@@ -38,22 +38,19 @@ public void OnPluginStart()
 	LoadTranslations("tf2jail_redux.phrases");
 }
 
-public void OnLibraryAdded(const char[] name)
+public void TF2JailRedux_OnFullyLoaded()
 {
-	if (!strcmp(name, "TF2Jail_Redux", true))
-	{
-		Random_Init();
-		Suicide_Init();
-		Freedays_Init();
-		Custom_Init();
-		Melee_Init();
-		HHH_Init();
-		Tiny_Init();
-		Hot_Init();
-		Gravity_Init();
-		SWA_Init();
-		Warday_Init();
-	}
+	Random_Init();
+	Suicide_Init();
+	Freedays_Init();
+	Custom_Init();
+	Melee_Init();
+	HHH_Init();
+	Tiny_Init();
+	Hot_Init();
+	Gravity_Init();
+	SWA_Init();
+	Warday_Init();
 }
 
 public void OnLibraryRemoved(const char[] name)

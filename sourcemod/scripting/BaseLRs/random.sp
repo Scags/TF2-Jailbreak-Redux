@@ -36,11 +36,11 @@ public Action Random_OnLRPicked(LastRequest lr, const JBPlayer player)
 
 		LastRequest exceptions = LastRequest.ByName("Commit Suicide");
 		if (exceptions != null && exceptions.GetID() == id)
-		{
 			continue;
-//			exceptions.ForceFireFunction(OnLRPicked, Param_Cell, player);
-//			break;
-		}
+
+		exceptions = LastRequest.ByName("Custom Request");
+		if (exceptions != null && exceptions.GetID() == id)
+			continue;
 
 		exceptions = LastRequest.ByName("Freeday for Others");
 		if (exceptions != null && exceptions.GetID() == id)
