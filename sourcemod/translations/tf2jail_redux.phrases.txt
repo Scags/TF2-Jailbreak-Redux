@@ -406,7 +406,7 @@
 	{
 		"en" 			"Cell door functionality is inactive."
 		"pl"			"Funkcjonalność guzików od drzwi jest nieaktywna."
-		"pt" 			"A funcionalidade as portas das celas está desativada."
+		"pt" 			"A funcionalidade das portas das celas está desativada."
 	}
 
 	"Target Is Freeday"
@@ -1077,14 +1077,14 @@
 	{
 		"en" 		"Living"
 		"pl"		"Żywi"
-		"pt" 		"Alterar emudecimento de jogadores VIVOS"
+		"pt" 		"Alterar emudecimento dos jogadores VIVOS"
 	}
 	
 	"Dead"
 	{
 		"en" 		"Dead"
 		"pl"		"Zmarli"
-		"pt" 		"Alterar emudecimento de jogadores MORTOS"
+		"pt" 		"Alterar emudecimento dos jogadores MORTOS"
 	}
 
 	"Mute No One"
