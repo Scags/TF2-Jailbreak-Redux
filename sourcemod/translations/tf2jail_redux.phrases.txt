@@ -545,7 +545,7 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has toggled Medic {lightgreen}On{burlywood}!"
 		"pl"			"Naczelnik {default}{1}{burlywood} zmienił status medyka na {lightgreen}Włączony{burlywood}!"
-		"pt" 			"O(A) Diretor(a) {default}{1}{burlywood} {lightgreen}ativou{burlywood} a funcionalidade das enfermarias!"
+		"pt" 			"O(A) Diretor(a) {default}{1} {lightgreen}ativou{burlywood} a funcionalidade das enfermarias!"
 	}
 
 	// 1: Client name/index
@@ -554,7 +554,7 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has toggled Medic {lightgreen}Off{burlywood}!"
 		"pl"			"Naczelnik {default}{1}{burlywood} zmienił status medyka na {lightgreen}Wyłączony{burlywood}!"
-		"pt" 			"O(A) Diretor(a) {default}{1}{burlywood} {lightgreen}desativou{burlywood} a funcionalidade das enfermarias!"
+		"pt" 			"O(A) Diretor(a) {default}{1} {lightgreen}desativou{burlywood} a funcionalidade das enfermarias!"
 	}
 
 	"Before Or During Round"
@@ -663,7 +663,7 @@
 	{
 		"en" 			"You are muted, therefore you cannot join Blue Team."
 		"pl"			"Jesteś wyciszony, dlatego nie możesz dołączyć do drużyny Niebieskich."
-		"pt" 			"Você foi emudecido(a), portanto não poderá entrar na equipe BLU."
+		"pt" 			"Você está emudecido(a), portanto não poderá entrar na equipe BLU."
 	}
 
 	"Warden Killed"
