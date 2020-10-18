@@ -545,7 +545,7 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has toggled Medic {lightgreen}On{burlywood}!"
 		"pl"			"Naczelnik {default}{1}{burlywood} zmienił status medyka na {lightgreen}Włączony{burlywood}!"
-		"pt" 			"O(A) Diretor(a) {default}{1} {lightgreen}ativou{burlywood} a funcionalidade das enfermarias!"
+		"pt" 			"O(A) Diretor(a) {default}{1} {lightgreen}ativou{burlywood} a regeneração de vida das enfermarias!"
 	}
 
 	// 1: Client name/index
@@ -554,7 +554,7 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has toggled Medic {lightgreen}Off{burlywood}!"
 		"pl"			"Naczelnik {default}{1}{burlywood} zmienił status medyka na {lightgreen}Wyłączony{burlywood}!"
-		"pt" 			"O(A) Diretor(a) {default}{1} {lightgreen}desativou{burlywood} a funcionalidade das enfermarias!"
+		"pt" 			"O(A) Diretor(a) {default}{1} {lightgreen}desativou{burlywood} a regeneração de vida das enfermarias!"
 	}
 
 	"Before Or During Round"
@@ -566,9 +566,9 @@
 
 	"No Warday Config At Location"
 	{
-		"en" 			"Warday configuration is not set for this location!"
-		"pl"			"Konfiguracja Dnia Wojny nie jest ustawiona dla tej lokalizacji!"
-		"pt" 			"Não há nenhum arquivo de configuração presente para o Dia de Guerra nesta localização!"
+		"en" 			"Warday configuration is not set for this location."
+		"pl"			"Konfiguracja Dnia Wojny nie jest ustawiona dla tej lokalizacji."
+		"pt" 			"Não há nenhum arquivo de configuração presente para o Dia de Guerra nesta localização."
 	}
 
 	"Warday Red Active"
@@ -589,14 +589,14 @@
 	{
 		"en" 			"Warday for Red Team is not configured, ignoring..."
 		"pl"			"Dzień Wojny dla drużyny Czerwonej nie jest skonfigurowany, ignoruję..."
-		"pt" 			"O Dia de Guerra não está configurando para a equipe RED, ignorando..."
+		"pt" 			"O Dia de Guerra não está configurado para a equipe RED, ignorando..."
 	}
 
 	"Ignore Blue Team Warday"
 	{
 		"en" 			"Warday for Blue Team is not configured, ignoring..."
 		"pl"			"Dzień Wojny dla drużyny Niebieskiej nie jest skonfigurowany, ignoruję..."
-		"pt" 			"O Dia de Guerra não está configurando para a equipe BLU, ignorando..."
+		"pt" 			"O Dia de Guerra não está configurado para a equipe BLU, ignorando..."
 	}
 
 	"No Warday Config"
@@ -631,14 +631,14 @@
 	{
 		"en" 			"has toggled Medic {lightgreen}On{burlywood}!"
 		"pl"			"przełączył status Medyka na {lightgreen}Włączony{burlywood}!"
-		"pt" 			"{lightgreen}ativou{burlywood} a funcionalidade das enfermarias!"
+		"pt" 			"{lightgreen}ativou{burlywood} a regeneração de vida das enfermarias!"
 	}
 
 	"Medic Room Disabled Admin"
 	{
 		"en" 			"has toggled Medic {lightgreen}Off{burlywood}!"
 		"pl"			"przełączył status Medyka na {lightgreen}Wyłączony{burlywood}!"
-		"pt" 			"{lightgreen}desativou{burlywood} a funcionalidade das enfermarias!"
+		"pt" 			"{lightgreen}desativou{burlywood} a regeneração de vida das enfermarias!"
 	}
 
 	// 1: Client name/index
@@ -926,9 +926,9 @@
 	"Guard Melee Select"
 	{
 		"#format" 	"{1:N}"
-		"en" 		"{1} has chosen to strip the Guards of their weapons."
+		"en" 		"{1} has chosen to strip the Guards of their weapons next round."
 		"pl"		"{1} postanowił zabrać strażnikom ich broń."
-		"pt" 		"{1} escolheu desarmar os Guardas."
+		"pt" 		"{1} escolheu desarmar os Guardas na próxima rodada."
 	}
 	
 	"HHHDay Select"
@@ -950,8 +950,8 @@
 	"Hot Prisoner Select"
 	{
 		"#format" 	"{1:N}"
-		"en" 		"{1} has chosen to ignite all of the prisoners next round!"
-		"pl"		"{1} postanowił zapalić wszystkich więźniów w następnej rundzie!"
+		"en" 		"{1} has chosen to ignite all of the prisoners next round."
+		"pl"		"{1} postanowił zapalić wszystkich więźniów w następnej rundzie."
 		"pt" 		"{1} escolheu incendiar todos os prisioneiros na próxima rodada."
 	}
 	
@@ -968,7 +968,7 @@
 		"#format" 	"{1:N}"
 		"en" 		"{1} has chosen {default}Stealy Wheely Automobiley{burlywood} as their Last Request."
 		"pl"		"{1} wybrał {default}Stealy Wheely Automobiley{burlywood} jako swoje ostatnie życzenie."
-		"pt" 		"{1} escolheu {default}Carrinhos de Bate-Bate{burlywood} como seu Último Pedido."
+		"pt" 		"{1} escolheu {default}Carrinhos de Bate-bate{burlywood} como seu Último Pedido."
 	}
 	
 	"Warday Select"
@@ -1034,7 +1034,7 @@
 	{
 		"en" 		"Running Weapon Blocker config."
 		"pl"		"Uruchamianie konfiguracji blokowania broni."
-		"pt" 		"Ativando a configuração do Bloqueio de Armas."
+		"pt" 		"Executando a configuração do Bloqueador de Armas."
 	}
 	
 	"Warden Invite Player"
