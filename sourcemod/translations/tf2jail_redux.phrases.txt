@@ -843,7 +843,7 @@
 	{
 		"#format" 	"{1:s}"
 		"en" 		"V{1} by {default}Scag/Ragenewb{burlywood}."
-		"pl"		"V{1} przez {default}Scag/Ragenewb{burlywood}."
+		"pl"		"V{1} przez {default}Scag/Ragenewb{burlywood}, Tłumaczenie Polskie przez {default}Wolfyo{burlywood}."
 		"pt" 		"V{1} por {default}Scag/Ragenewb{burlywood}."
 	}
 	
@@ -1185,12 +1185,14 @@
 	"Jail Time Usage"
 	{
 		"en" 		"Usage: sm_jt <time>."
+		"pl"		"Użycie: sm_jt <czas>."
 		"pt"		"Uso: sm_jt <tempo>."
 	}
 	
 	"Requires Number"
 	{
 		"en" 		"Argument must be numeric."
+		"pl"		"Argument musi być liczbą."
 		"pt"		"O argumento deve ser númerico."
 	}
 	
@@ -1198,6 +1200,7 @@
 	{
 		"#format" 	"{1:d}"
 		"en" 		"Time set to {default}{1}{burlywood}."
+		"pl"		"Czas ustawiono na {default}{1}{burlywood}."
 		"pt"		"Tempo definido para {default}{1}{burlywood}."
 	}
 	
@@ -1205,6 +1208,7 @@
 	{
 		"#format"	"{1:N}"
 		"en"		"has fired {1} from Warden."
+		"pl"		"Wyrzucił {1} z roli Naczelnika."
 		"pt"		"destituiu {1} da Diretoria."
 	}
 	
@@ -1212,12 +1216,14 @@
 	"Warden"
 	{
 		"en" 		"Warden"
+		"pl"		"Naczelnik"
 		"pt"		"Diretor(a)"
 	}
 	
 	"Warden Marker Annotation"
 	{
 		"en" 		"Here"
+		"pl"		"Tutaj"
 		"pt"		"Aqui"
 	}
 	
@@ -1225,6 +1231,7 @@
 	{
 		"#format" 	"{1:N}"
 		"en" 		"Warden {default}{1}{burlywood} has restored the health of all prisoners."
+		"pl"		"Naczelnik {default}{1}{burlywood} uleczył wszystkich więźniów."
 		"pt"		"O(A) Diretor(a) {default}{1}{burlywood} restaurou a vida de todos os prisioneiros."
 	}
 	
@@ -1232,6 +1239,7 @@
 	{
 		"#format" 	"{1:N}"
 		"en" 		"{default}{1}{burlywood} has been marked as a Freekiller."
+		"pl"		"{defailt}{1}{burlywood} został oznaczony jako Freekiller."
 		"pt"		"{default}{1}{burlywood} foi marcado como um(a) Freekiller."
 	}
 	
@@ -1239,12 +1247,14 @@
 	{
 		"#format" 	"{1:d}"
 		"en" 		"Your Freekiller status will be removed automatically in {1} seconds."
+		"pl"		"Twój status Freekillera zostanie automatycznie usunięty za {1} sekund."
 		"pt"		"Seu status de Freekiller será removido automaticamente em {1} segundos."
 	}
 	
 	"Freekiller Timer Remove"
 	{
 		"en" 		"Your Freekiller status has been removed."
+		"pl"		"Twój status Freekillera został usunięty."
 		"pt"		"Seu status de Freekiller foi removido."
 	}
 }
