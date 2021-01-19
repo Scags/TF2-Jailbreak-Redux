@@ -1,4 +1,8 @@
 # TF2Jail-Redux #
+
+## Languages
+ - [Русский](https://github.com/Scags/TF2-Jailbreak-Redux/blob/develop/README_RU.md)
+
 Born out of my dislike with the unorganized and jumbled mess the original TF2Jail plugin was, I went out and did a complete rewrite of it, opening up Jailbreak gameplay into a useable API that is very developer-friendly. The entirety of the plugin is built with developers in mind with the goal of making Last Request creation and event management as streamlined as possible.
 
 Take a look at the [wiki](https://github.com/Scags/TF2-Jailbreak-Redux/wiki) for not only a complete guide on custom Last Request configuration, but detailed instructions and explanations for each aspect of the plugin.

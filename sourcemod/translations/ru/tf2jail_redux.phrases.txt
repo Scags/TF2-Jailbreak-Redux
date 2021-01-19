@@ -1,0 +1,793 @@
+"Phrases"
+{
+	"Plugin Tag"
+	{
+		"ru" 			"{crimson}[TF2Jail]{burlywood}"
+	}
+	
+	"Admin Tag"
+	{
+		"ru" 			"{orange}[TF2Jail]{burlywood}"
+	}
+	
+	// 1: Client name/index
+	"Taken Ammo"
+	{
+		"ru"			"{1} взял боеприпасы и потерял свой Фридэй!"
+	}
+	
+	// 1: Client name/index
+	"Hit Vent"
+	{
+		"ru" 			"{1} попал в вентиляцию и потерял свой Фридэй!"
+	}
+	
+	"Can't Teleport"
+	{
+		"ru" 			"Вы ещё не можете телепортироваться!"
+	}
+	
+	"Welcome Message"
+	{
+		"ru" 			"Добро пожаловать в TF2 Jailbreak Redux. Напишите \"!jhelp\" для помощи."
+	}
+	
+	"Warden Locked Lack"
+	{
+		"ru" 			"Командир заблокирован из-за отсутствия охранников."
+	}
+	
+	"No Marker"
+	{
+		"ru" 			"Невозможно создать маркер."
+	}
+	
+	// 1: sm_tf2jr_cell_timer CVar value
+	"Door Open Timer"
+	{
+		"ru" 			"Двери камер откроются через {1} сек. после закрытия."
+	}
+	
+	"FF On"
+	{
+		"ru" 			"Огонь по своим был включен!"
+	}
+	
+	"Warden Enabled"
+	{
+		"ru" 			"Командир был включен."
+	}
+	// 1: Client name/index
+	"Collisions On Warden"
+	{
+		"ru" 			"Командир {default}{1}{burlywood} включил столкновения между игроками!"
+	}
+	
+	// 1: Client name/index
+	"Collisions Off Warden"
+	{
+		"ru" 			"Командир {default}{1}{burlywood} отключил столкновения между игроками."
+	}
+	// 1: Client name/index
+	"FF On Warden"
+	{
+		"ru" 			"Командир {default}{1}{burlywood} включил огонь по своим!"
+	}
+	
+	// 1: Client name/index
+	"FF Off Warden"
+	{
+		"ru" 			"Командир {default}{1}{burlywood} отключил огонь по своим!"
+	}
+	
+	"Help Panel Welcome"
+	{
+		"ru" 			"Добро пожаловать в TF2Jail Redux!"
+	}
+	
+	"Help Panel Who's Warden"
+	{
+		"ru" 			"Кто нынешний командир?"
+	}
+	
+	"Help Panel What are LR's"
+	{
+		"ru" 			"Что такое последнее желание?"
+	}
+	
+	"Help Panel Turn Off Music"
+	{
+		"ru" 			"Отключить фоновую музыку?"
+	}
+	
+	// 1: Client name/index
+	"Current Warden"
+	{
+		"ru" 			"Текущий командир {1}{burlywood}."
+	}
+	
+	"No Current Warden"
+	{
+		"ru" 			"Текущего командира нет."
+	}
+	
+	"Needs Active Round"
+	{
+		"ru" 			"Раунд должен быть начат."
+	}
+	
+	"Already Warden"
+	{
+		"ru" 			"Вы уже командир."
+	}
+	
+	"Need Alive"
+	{
+		"ru" 			"Вы должны быть живы."
+	}
+	
+	"Need Blue Team"
+	{
+		"ru" 			"Вы не в команде Синих."
+	}
+	
+	"Admin Lock Warden"
+	{
+		"ru" 			"заблокировал командира."
+	}
+	
+	"Warden Locked"
+	{
+		"ru" 			"Командир заблокирован."
+	}
+	
+	"Locked From Warden"
+	{
+		"ru" 			"Вы не можете стать командиром до следующего раунда."
+	}
+	
+	"Not Warden"
+	{
+		"ru" 			"Вы не командир."
+	}
+	
+	// 1: Client name/index
+	"Warden Retired Chat"
+	{
+		"ru" 			"Командир {default}{1}{burlywood} ушёл в отставку!"
+	}
+	
+	"Warden Retired Center"
+	{
+		"ru"			"Командир ушёл в отставку!"
+	}
+	
+	"Map Incompatible"
+	{
+		"ru" 			"Карта несовместима."
+	}
+	
+	"Admin Locked LR"
+	{
+		"ru" 			"заблокировал последнее желание."
+	}
+	
+	"LR Given"
+	{
+		"ru" 			"Последнее желание уже было дано."
+	}
+	
+	"Choose Player"
+	{
+		"ru" 			"Выберите игрока"
+	}
+	"Target Not On Red"
+	{
+		"ru" 			"Цель не в команде Красных."
+	}
+	"Denying LR Disabled"
+	{
+		"ru" 			"Отказ от последних желаний отключён."
+	}
+	"No LR Next Round"
+	{
+		"ru" 			"Для следующего раунда последнее желание не установлено."
+	}
+	"Warden Deny LR"
+	{
+		"ru" 			"Командир {default}{1}{burlywood} отклонил последнее желание!"
+	}
+	"Last Request List"
+	{
+		"ru" 			"Список последних желаний"
+	}
+	"Music On"
+	{
+		"ru" 			"Вы {lightgreen}включили{default} фоновую музыку TF2Jail."
+	}
+	// \n Stands for new line, ignore it please
+	"Music Off"
+	{
+		"ru" 			"Вы {lightgreen}выключили{default} фоновую музыку TF2Jail.\nКогда музыка останавливается, она больше не воспроизводится."
+	}
+	"Admin Removed Queued Freeday"
+	{
+		"ru" 			"Администратор удалил ваш запрос на Фридэй!"
+	}
+	"Admin Removed Freeday"
+	{
+		"ru" 			"Администратор удалил ваш Фридэй!"
+	}
+	"Admin Denied LR"
+	{
+		"ru" 			"отклонил текущее последнее желание!"
+	}
+	"Target Need Blue Team"
+	{
+		"ru" 			"Цель не в команде Синих."
+	}
+	// 1: Client name/index
+	"Admin Force Warden"
+	{
+		"ru" 			"сделал {default}{1}{burlywood} командиром."
+	}
+	"Admin Force Random Warden"
+	{
+		"ru" 			"сделал случайного игрока командиром."
+	}
+	// 1: Client name/index
+	"Admin Force LR"
+	{
+		"ru" 			"выдал {default}{1}{burlywood} последнее желание."
+	}
+	"Admin Force LR Self"
+	{
+		"ru" 			"выдал последнее желание для себя."
+	}
+	"Admin Reset Plugin"
+	{
+		"ru" 			"Админ сбросил плагин!"
+	}
+	"Doors Work"
+	{
+		"ru" 			"Двери работают."
+	}
+	"Doors Don't Work"
+	{
+		"ru" 			"Двери не работают."
+	}
+	"Buttons Work"
+	{
+		"ru" 			"Функционал кнопок дверей от камер активен."
+	}
+	"Buttons Don't Work"
+	{
+		"ru" 			"Функционал кнопок дверей от камер неактивен."
+	}
+	"Target Is Freeday"
+	{
+		"ru" 			"Цель в настоящее время имеет Фридэй."
+	}
+	// 1: Client name/index
+	"Admin Give Freeday"
+	{
+		"ru" 			"выдал {default}{1}{burlywood} Фридэй."
+	}
+	"Select For Freeday"
+	{
+		"ru" 			"Выберите игрока для Фридэя"
+	}
+	"Admin Remove Freeday"
+	{
+		"ru" 			"Фридэй удалён у {default}{1}{burlywood}."
+	}
+	"Player Not Freeday"
+	{
+		"ru" 			"У игрока нет Фридэя"
+	}
+	"Warden Already Locked"
+	{
+		"ru" 			"Командир уже заблокирован."
+	}
+	"Admin Lock Warden"
+	{
+		"ru" 			"заблокировал командира!"
+	}
+	"Warden Not Locked"
+	{
+		"ru" 			"Командир не заблокирован."
+	}
+	"Admin Unlock Warden"
+	{
+		"ru" 			"разблокировал командира."
+	}
+	// 1: Warden name/index
+	// 2: Receiver name/index
+	"Warden Give LR"
+	{
+		"ru" 			"Командир {default}{1}{burlywood} выдал {default}{2}{burlywood} последнее желание."
+	}
+	// 1: Client name/index
+	"Freeday Already Queued"
+	{
+		"ru" 			"Фридэй для {default}{1}{burlywood} в очереди."
+	}
+	// 1: Chooser name/index
+	// 2: Receiver name/index
+	"Chosen For Freeday"
+	{
+		"ru" 			"{default}{1}{burlywood} выбрал {default}{2}{burlywood} для Фридэя."
+	}
+	"Freeday Max"
+	{
+		"ru" 			"Вы выбрали максимальное количество Фридэев."
+	}
+	"Not Enabled"
+	{
+		"ru" 			"Это не включено."
+	}
+	"Slow Down"
+	{
+		"ru" 			"Притормози, ковбой!"
+	}
+	"Laser Off"
+	{
+		"ru" 			"Вы {default}выключили{burlywood} лазеры командира."
+	}
+	"Laser On"
+	{
+		"ru" 			"Вы {default}включили{burlywood} лазеры командира. Удерживайте перезарядку, чтобы активировать."
+	}
+	// 1: Client name/index
+	"Medic Room Enabled"
+	{
+		"ru" 			"Командир {default}{1}{burlywood} {lightgreen}включил{burlywood} комнату медика!"
+	}
+	// 1: Client name/index
+	"Medic Room Disabled"
+	{
+		"ru" 			"Командир {default}{1}{burlywood} {lightgreen}выключил{burlywood} комнату медика!"
+	}
+	"Before Or During Round"
+	{
+		"ru" 			"Должно быть выполнено до или во время активного раунда."
+	}
+	"No Warday Config At Location"
+	{
+		"ru" 			"Конфигурация ДняВойны для этого места не задана."
+	}
+	"Warday Red Active"
+	{
+		"ru" 			"Активирован ДеньВойны для команды Красных!"
+	}	
+	"Warday Blue Active"
+	{
+		"ru" 			"Активирован ДеньВойны для команды Синих!"
+	}
+	"Ignore Red Team Warday"
+	{
+		"ru" 			"ДеньВойны для команды Красных не настроен, игнорируем..."
+	}
+	"Ignore Blue Team Warday"
+	{
+		"ru" 			"ДеньВойны для команды Синих не настроен, игнорируем..."
+	}
+	"No Warday Config"
+	{
+		"ru" 			"Конфигурация ДняВойны не установлена."
+	}
+	"Warden Commands"
+	{
+		"ru"			"Команды командира"
+	}
+	"Warday Activate"
+	{
+		"ru" 			"ДеньВойны активирован!"
+	}
+	"Reload CFG"
+	{
+		"ru" 			"Перезагрузка CFG плагина."
+	}
+	"Medic Room Enabled Admin"
+	{
+		"ru" 			"{lightgreen}включил{burlywood} комнату медика!"
+	}
+	"Medic Room Disabled Admin"
+	{
+		"ru" 			"{lightgreen}выключил{burlywood} комнату медика!"
+	}
+	// 1: Client name/index
+	"New Warden"
+	{
+		"ru" 			"{default}{1}{burlywood} новый командир."
+	}
+	// 1: Client name/index
+	"New Warden Center"
+	{
+		"ru" 			"{1} новый командир."
+	}
+	"Muted Can't Join"
+	{
+		"ru" 			"Вас заглушили, поэтому вы не можете присоединиться к команде Синих."
+	}
+	"Warden Killed"
+	{
+		"ru" 			"Командир убит!"
+	}
+	"Autobalanced"
+	{
+		"ru" 			"Вы были автосбалансированы."
+	}
+	"First Day Freeday"
+	{
+		"ru" 			"Первый день Фридэй"
+	}
+	// 1: Client name/index
+	// 2: Door format, see Opened, Closed, Locked, Unlocked
+	"Warden Work Cells"
+	{
+		"ru" 			"Командир {default}{1}{burlywood} {2} камер."
+	}
+	// 1: Door format, see Opened, Closed, Locked, Unlocked
+	"Admin Work Cells"
+	{
+		"ru" 			"{1} камер."
+	}
+	"Opened"
+	{
+		"ru" 			"открыл"
+	}
+	"Closed"
+	{
+		"ru" 			"закрыл"
+	}
+	"Locked"
+	{
+		"ru" 			"запер"
+	}
+	"Unlocked"
+	{
+		"ru" 			"разблокировал"
+	}
+	"Warden Fired"
+	{
+		"ru" 			"Командир был уволен!"
+	}
+	// 1: Client name/index
+	"Freeday Active"
+	{
+		"ru" 			"Фридэй активен для {default}{1}{burlywood}."
+	}
+	"Attack Guard Lose Freeday"
+	{
+		"ru" 			"{1} напал на охранника и потерял свой Фридэй!"
+	}
+	"One Guard Left"
+	{
+		"ru" 			"Остался один охранник..."
+	}
+	"LR Chosen"
+	{
+		"ru" 			"Последнее желание было выбрано. Фридэи были сняты."
+	}
+	"Cells Already Open"
+	{
+		"ru" 			"Камеры уже открыты."
+	}
+	"Cells Not Open"
+	{
+		"ru" 			"Камеры не открыты."
+	}
+	// 1: Current votes
+	// 2: Votes needed
+	"Fire Warden Already Voted"
+	{
+		"ru"		"Вы уже проголосовали за изгнание этого командира. ({1} голосов, {2} требуется)"
+	}
+	// 1: Client name/index
+	// 2: Current votes
+	// 3: Votes needed
+	"Fire Warden Requested"
+	{
+		"ru"		"{1} хочет уволить текущего командира. ({2} голосов, {3} требуется)"
+	}
+	
+	// 1: Client name/index
+	"Prisoner Has Rebelled"
+	{
+		"ru"		"{default}{1}{burlywood} взбунтовал"
+	}
+	
+	// 1: Time of rebel timer
+	"Rebel Timer Start"
+	{
+		"ru"		"Ваш статус бунтовщика будет автоматически удалён через {1} сек."
+	}
+	
+	"Rebel Timer Remove"
+	{
+		"ru" 		"Ваш статус бунтовщика был удалён."
+	}
+	
+	"Warden Disconnected"
+	{
+		"ru" 		"Командир вышел из игры!"
+	}
+	
+	"Announce Timer"
+	{
+		"ru" 		"Вер.{1} от {default}Scag/Ragenewb{burlywood}."
+	}
+	
+	"Freeday All Start"
+	{
+		"ru" 		"Фридэй активирован для {default}ВСЕХ игроков{burlywood}."
+	}
+	
+	"Tiny Round Start"
+	{
+		"ru" 		"Супер уменьшение активировано для всех."
+	}
+	
+	"Gravity Start"
+	{
+		"ru" 		"Куда делась гравитация?"
+	}
+	
+	"Warday Start"
+	{
+		"ru" 		"{burlywood}*Звуки войны казу*"
+	}
+	
+	"Random Select"
+	{
+		"ru" 		"{1} выбрал {default}случайное последнее желание{burlywood} в качестве его последнего желания"
+	}
+	
+	"Suicide Select"
+	{
+		"ru" 		"{1} выбрал убийство самого себя. Какая жалость..."
+	}
+	
+	"Custom Select"
+	{
+		"ru" 		"{1} выбрал напечатать своё последнее желание в чате."
+	}
+	
+	"Freeday Self Select"
+	{
+		"ru" 		"{1} выбрал {default}Фридэй для себя{burlywood} в следующем раунде."
+	}
+	
+	"Freeday Other Select"
+	{
+		"ru" 		"{1} выбирает Фридэи для следующего раунда..."
+	}
+	
+	"Freeday All Select"
+	{
+		"ru" 		"{1} выбрал предоставить {default}Фридэй для всех{burlywood} в следующем раунде."
+	}
+	
+	"Guard Melee Select"
+	{
+		"ru" 		"{1} выбрал лишить оружия охранников в следующем раунде."
+	}
+	
+	"HHHDay Select"
+	{
+		"ru" 		"{1} выбрал {default}убийство Пешего всадника без головы{burlywood} для следующего раунда."
+	}
+	
+	"Tiny Round Select"
+	{
+		"ru" 		"{1} выбрал {default}Супер уменьшение{burlywood} для всех."
+	}
+	
+	"Hot Prisoner Select"
+	{
+		"ru" 		"{1} выбрал поджечь всех заключённых в следующем раунде."
+	}
+	
+	"Gravity Round Select"
+	{
+		"ru" 		"{1} выбрал {default}Низкую гравитацию{burlywood} в качестве последнего желания."
+	}
+	
+	"Automobile Start"
+	{
+		"ru" 		"{1} выбрал {default}Стили-Вилли-Автомобили{burlywood} в качестве последнего желания."
+	}
+	
+	"Warday Select"
+	{
+		"ru" 		"{1} выбрал сделать {default}ДеньВойны{burlywood}."
+	}
+	
+	"ClassWars Select"
+	{
+		"ru" 		"{1} выбрал {default}Классовую войну{burlywood} в качестве последнего желания."
+	}
+	
+	"Custom Activate"
+	{
+		"ru" 		"Ваше последнее желание {default}{1}{burlywood}."
+	}
+	
+	"Music Panel"
+	{
+		"ru" 		"Музыка TF2Jail..."
+	}
+	
+	"On"
+	{
+		"ru" 		"Вкл."
+	}
+	
+	"Off"
+	{
+		"ru" 		"Выкл."
+	}
+	
+	"Exit"
+	{
+		"ru" 		"Выйти"
+	}
+	
+	"Repeats Surpassed"
+	{
+		"ru" 		"Вы превысили максимальное количество повторных аннотаций для этого раунда."
+	}
+	
+	"Weapon Config"
+	{
+		"ru" 		"Запуск конфигурации блокировки оружия."
+	}
+	
+	"Warden Invite Player"
+	{
+		"ru" 		"Командир {default}{1}{burlywood} пригласил {default}{2}{burlywood} в команду охранников."
+	}
+	
+	"Menu Title Invited"
+	{
+		"ru" 		"Вас пригласили в команду охранников."
+	}
+	
+	"Join"
+	{
+		"ru" 		"Присоединиться"
+	}
+	
+	"Don't Join"
+	{
+		"ru" 		"Не присоединяться"
+	}
+	
+	"Mute Style Select"
+	{
+		"ru" 		"Выберите стиль заглушения, который вы хотите переключить"
+	}
+	
+	"Living"
+	{
+		"ru" 		"Живые"
+	}
+	
+	"Dead"
+	{
+		"ru" 		"Мёртвые"
+	}
+	"Mute No One"
+	{
+		"ru" 		"Нет заглушения"
+	}
+	
+	"Mute Red Ex VIP"
+	{
+		"ru" 		"Заглушить всех Красных (исключая VIP)"
+	}
+	
+	"Mute Blue Ex VIP"
+	{
+		"ru" 		"Заглушить всех Синих (исключая VIP)"
+	}
+	
+	"Mute All Ex VIP"
+	{
+		"ru" 		"Заглушить всех игроков (исключая VIP)"
+	}
+	
+	"Mute All Red"
+	{
+		"ru" 		"Заглушить всех Красных"
+	}
+	
+	"Mute All Blue"
+	{
+		"ru" 		"Заглушить всех Синих"
+	}
+	
+	"Mute All"
+	{
+		"ru" 		"Заглушить всех"
+	}
+	"Warden Toggle Mute"
+	{
+		"ru" 		"Командир {default}{1}{burlywood} переключил заглушение игроков!"
+	}
+	
+	"Player Invited Accepted"
+	{
+		"ru" 		"{default}{1}{burlywood} согласился присоединиться к команде охранников."
+	}
+	
+	"Player Invited Denied"
+	{
+		"ru" 		"{default}{1}{burlywood} отказался присоединиться к команде охранников."
+	}
+	
+	"Unmuted"
+	{
+		"ru" 		"С вас сняли заглушение."
+	}
+	
+	"Muted"
+	{
+		"ru" 		"Вы были заглушены."
+	}
+	"Medic Heal Rebel"
+	{
+		"ru" 		"{1} лечил бунтовщика и потерял свой Фридэй!"
+	}
+	"Jail Time Usage"
+	{
+		"ru" 		"Использование: sm_jt <время>."
+	}
+	
+	"Requires Number"
+	{
+		"ru" 		"Аргумент должен быть числовым."
+	}
+	
+	"Time Set"
+	{
+		"ru" 		"Время установлено на {default}{1}{burlywood}."
+	}
+	
+	"Admin Remove Warden"
+	{
+		"ru"		"уволил {1} с поста командира."
+	}
+	
+	// Warden name annotation
+	"Warden"
+	{
+		"ru" 		"Командир"
+	}
+	
+	"Warden Marker Annotation"
+	{
+		"ru" 		"Сюда"
+	}
+	
+	"Warden Health Restore"
+	{
+		"ru" 		"Командир {default}{1}{burlywood} восстановил здоровье всех заключённых."
+	}
+	
+	"Marked as Freekiller"
+	{
+		"ru" 		"{default}{1}{burlywood} был помечен как фрикиллер."
+	}
+	
+	"Freekiller Timer Start"
+	{
+		"ru" 		"Ваш статус фрикиллера будет автоматически удалён через {1} сек."
+	}
+	
+	"Freekiller Timer Remove"
+	{
+		"ru" 		"Ваш статус фрикиллера был удалён."
+	}
+}

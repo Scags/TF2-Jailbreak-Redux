@@ -3,226 +3,143 @@
 	"Plugin Tag Teambans"
 	{
 		"en" 			"{crimson}[TF2Jail Teambans]{burlywood}"
-		"pl" 			"{crimson}[TF2Jail Teambans]{burlywood}"
-		"pt"			"{crimson}[Banimentos de Equipe do TF2Jail]{burlywood}"
 	}
 	
 	"Guardbanned Center"
 	{
 		"en" 			"You are Guardbanned."
-		"pl"			"Jesteś zbanowany na role Strażnika"
-		"pt"			"Você está banido(a) da equipe dos Guardas."
 	}
 	
 	"Already Guardbanned"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"{1} is already Guardbanned."
-		"pl"			"{1} jest już zbanowany na role strażnika."
-		"pt"			"{1} já está banido(a) da equipe dos Guardas."
 	}
-
 	"Cmd Usage IsBanned"
 	{
 		"en"	 		"Usage: sm_gbs <player>."
-		"pl"			"Użycie: sm_gbs <gracz>"
-		"pt"			"Uso: sm_gbs <jogador(a)>."
 	}
-
 	"Is Guardbanned permanently"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"{1} is Guardbanned permanently."
-		"pl"			"{1} jest zbanowany w roli strażnika na zawsze."
-		"pt"			"{1} está permanentemente banido(a) da equipe dos Guardas."
 	}
-
 	"Is Guardbanned time left"
 	{
 		"#format" 		"{1:N},{2:d}"
 		"en" 			"{1} is Guardbanned for {2} more minutes."
-		"pl"			"{1} jest zbanowany w roli strażnika na {2} minut."
-		"pt"			"{1} está banido(a) da equipe dos Guardas por mais {2} minutos."
 	}
-
 	"Is Not Guardbanned"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"{1} is not Guardbanned."
-		"pl"			"{1} nie jest zbanowany na role strażnika."
-		"pt"			"{1} não está banido(a) da equipe dos Guardas."
 	}
-
 	"Cmd Usage OfflineUnguardban"
 	{
 		"en" 			"Usage: sm_tuboff <steamid>."
-		"pl"			"Użycie: sm_tuboff <steamid>."
-		"pt"			"Uso: sm_tuboff <steamid>."
 	}
-
 	"Offline Unguardban"
 	{
 		"#format" 		"{1:s}"
 		"en" 			"Successfully Unguardbanned Steam ID {1}."
-		"pl"			"Sukcesywnie Odbanowano Steam ID {1}."
-		"pt"			"Você desbaniu a ID Steam {1} da equipe dos Guardas."
 	}
-
 	"Cmd Usage OfflineGuardban"
 	{
 		"en" 			"Usage: sm_gboff <steamid>."
-		"pl"			"Użycie: sm_gboff <steamid>."
-		"pt"			"Uso: sm_gboff <steamid>."
 	}
-
 	"Offline Guardban"
 	{
 		"#format" 		"{1:s}"
 		"en" 			"Successfully Guardbanned Steam ID {1}."
-		"pl"			"Sukcesywnie Zbanowano Steam ID {1}.
-		"pt"			"Você baniu a ID Steam {1} da equipe dos Guardas."
 	}
-
 	"Already Wardenbanned"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"{1} is already Wardenbanned."
-		"pl"			"{1} jest już zbanowany w roli Naczelnika."
-		"pt"			"{1} já está banido(a) de exercer a Diretoria."
 	}
-
 	"Cmd Usage OfflineUnwardenban"
 	{
 		"en" 			"Usage: sm_wuboff <steamid>."
-		"pl"			"Użycie: sm_wuboff <steamid>."
-		"pt"			"Uso: sm_wuboff <steamid>."
 	}
-
 	"Offline Unwardenban"
 	{
 		"#format" 		"{1:s}"
 		"en" 			"Successfully Unwardenbanned Steam ID %s."
-		"pl"			"Sukcesywnie Odbanowano Steam ID %s."
-		"pt"			"Você desbaniu a ID Steam {1} de exercer a Diretoria."
 	}
-
 	"Cmd Usage OfflineWardenban"
 	{
 		"en" 			"Usage: sm_wboff <steamid>."
-		"pl"			"Użycie: sm_wboff <steamid>."
-		"pt"			"Uso: sm_wboff <steamid>."
 	}
-
 	"Offline Wardenban"
 	{
 		"#format" 		"{1:s}"
 		"en" 			"Successfully Wardenbanned Steam ID {1}."
-		"pl"			"Sukcesywnie Zbanowano Steam ID {1}."
-		"pt"			"Você baniu a ID Steam {1} de exercer a Diretoria."
 	}
-
 	"Unguardban"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Unguardbanned {1}."
-		"pl"			"Odbanowano {1} na role Strażnika."
-		"pt"			"Você desbaniu o(a) jogador(a) {1} da equipe dos Guardas."
 	}
-
 	"Guardban Permanent"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Guardbanned {1} permanently."
-		"pl"			"Zbanowano {1} w roli Strażnika na zawsze."
-		"pt"			"Você baniu permanentemente o(a) jogador(a) {1} da equipe dos Guardas."
 	}
-
 	"Guardban Timed"
 	{
 		"#format" 		"{1:N},{2:d}"
 		"en" 			"Guardbanned {1} for {2} minutes."
-		"pl"			"Zbanowano {1} na {2} minut w roli Strażnika."
-		"pt"			"Você baniu o(a) jogador(a) {1} da equipe dos Guardas por {2} minutos."
 	}
-
 	"Unwardenban"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Unwardenbanned {1}."
-		"pl"			"Odbanowano {1} w roli Naczelnika."
-		"pt"			"Você desbaniu o(a) jogador(a) {1} de exercer a Diretoria."
 	}
-
 	"Wardenban Permanent"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Wardenbanned {1} permanently."
-		"pl"			"Zbanowano {1} w roli Naczelnika na zawsze."
-		"pt" 			"Você baniu permanentemente o(a) jogador(a) {1} de exercer a Diretoria."
 	}
-
 	"Wardenban Timed"
 	{
 		"#format" 		"{1:N},{2:d}"
 		"en" 			"Wardenbanned {1} for {2} minutes."
-		"pl"			"Zbanowano {1} na {2} minut w roli Naczelnika."
-		"pt"			"Você baniu o(a) jogador(a) {1} de exercer a Diretoria por {2} minutos."
 	}
 	
 	"Rage Ban Menu"
 	{
 		"en" 			"Rage Ban Menu"
-		"pl"			"Rage Ban Menu"
-		"pt"			"Menu de Rage Ban"
 	}
-
 	"Rageban"
 	{
 		"#format" 		"{1:s}"
 		"en" 			"Successfully Rage Banned player with Steam ID {1}."
-		"pl"			"Sukcesywnie Rage Zbanowano gracza ze Steam ID {1}."
-		"pt"			"Você aplicou um Rage Ban na ID Steam {1}."
 	}
-
 	"Ban Menu"
 	{
 		"en" 			"Select a player to Guardban"
-		"pl"			"Wybierz gracza do zablokowania"
-		"pt"			"Selecione um(a) jogador(a) para ser banido(a) da equipe dos Guardas"
 	}
-
 	"Already Guardbanned"
 	{
 		"en" 			"Client is already Guardbanned."
-		"pl"			"Gracz jest już zablokowany w roli Strażnika."
-		"pt"			"O(A) jogador(a) escolhido(a) já está banido(a) da equipe dos Guardas."
 	}
-
 	"Not Guardbanned"
 	{
 		"en" 			"Client is not Guardbanned."
-		"pl"			"Gracz nie jest zablokowany w roli Strażnika."
-		"pt"			"O(A) jogador(a) escolhido(a) não está banido(a) da equipe dos Guardas."
 	}
 	
 	"Not Wardenbanned"
 	{
 		"en" 			"Client is not Wardenbanned."
-		"pl"			"Gracz nie jest zablokowany w roli Naczelnika."
-		"pt"			"O(A) jogador(a) escolhido(a) não está banido(a) de exercer a Diretoria."
 	}
 	
 	"Select Time"
 	{
 		"en" 			"Select a time in minutes."
-		"pl"			"Wybierz czas w minutach"
-		"pt"			"Selecione um tempo em minutos."
 	}
 	
 	"Unban Menu"
 	{
 		"en" 			"Select a player to Unban"
-		"pl"			"Wybierz gracza do odblokowania"
-		"pt"			"Selecione um(a) jogador(a) a ser desbanido(a)"
 	}
 }
