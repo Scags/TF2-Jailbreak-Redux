@@ -843,7 +843,7 @@
 	{
 		"#format" 	"{1:s}"
 		"en" 		"V{1} by {default}Scag/Ragenewb{burlywood}."
-		"pl"		"V{1} przez {default}Scag/Ragenewb{burlywood}, Tłumaczenie Polskie przez {default}Wolfyo{burlywood}."
+		"pl"		"V{1} przez {default}Scag/Ragenewb{burlywood}."
 		"pt" 		"V{1} por {default}Scag/Ragenewb{burlywood}."
 	}
 	
