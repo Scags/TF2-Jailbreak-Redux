@@ -60,6 +60,7 @@
 	{
 		"en" 			"Warden has been enabled."
 	}
+	
 	// 1: Client name/index
 	"Collisions On Warden"
 	{
@@ -73,6 +74,7 @@
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has disabled Collisions."
 	}
+	
 	// 1: Client name/index
 	"FF On Warden"
 	{
@@ -190,131 +192,161 @@
 	{
 		"en" 			"Choose a Player"
 	}
+	
 	"Target Not On Red"
 	{
 		"en" 			"Target is not on Red Team."
 	}
+	
 	"Denying LR Disabled"
 	{
 		"en" 			"Denying Last Requests has been disabled."
 	}
+	
 	"No LR Next Round"
 	{
 		"en" 			"There is no Last Request set for next round."
 	}
+	
 	"Warden Deny LR"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has denied the Last Request!"
 	}
+	
 	"Last Request List"
 	{
 		"en" 			"Last Request List"
 	}
+	
 	"Music On"
 	{
 		"en" 			"You've turned {lightgreen}On{default} the TF2Jail Background Music."
 	}
+	
 	// \n Stands for new line, ignore it please
 	"Music Off"
 	{
 		"en" 			"You've turned {lightgreen}Off{default} the TF2Jail Background Music.\nWhen the music stops, it won't play again."
 	}
+	
 	"Admin Removed Queued Freeday"
 	{
 		"en" 			"Admin has removed your queued Freeday!"
 	}
+	
 	"Admin Removed Freeday"
 	{
 		"en" 			"Admin has removed your Freeday!"
 	}
+	
 	"Admin Denied LR"
 	{
 		"en" 			"has denied the current Last Request!"
 	}
+	
 	"Target Need Blue Team"
 	{
 		"en" 			"Target is not on Blue Team."
 	}
+	
 	// 1: Client name/index
 	"Admin Force Warden"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"has forced {default}{1}{burlywood} as Warden."
 	}
+	
 	"Admin Force Random Warden"
 	{
 		"en" 			"has forced a random player as Warden."
 	}
+	
 	// 1: Client name/index
 	"Admin Force LR"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"has forced {default}{1}{burlywood} to receive a Last Request."
 	}
+	
 	"Admin Force LR Self"
 	{
 		"en" 			"has forced a Last Request for themselves."
 	}
+	
 	"Admin Reset Plugin"
 	{
 		"en" 			"Admin has reset plugin!"
 	}
+	
 	"Doors Work"
 	{
 		"en" 			"Doors are functional."
 	}
+	
 	"Doors Don't Work"
 	{
 		"en" 			"Doors are not functional."
 	}
+	
 	"Buttons Work"
 	{
 		"en" 			"Cell door functionality is active."
 	}
+	
 	"Buttons Don't Work"
 	{
 		"en" 			"Cell door functionality is inactive."
 	}
+	
 	"Target Is Freeday"
 	{
 		"en" 			"Target is currently a Freeday."
 	}
+	
 	// 1: Client name/index
 	"Admin Give Freeday"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"has given {default}{1}{burlywood} a Freeday."
 	}
+	
 	"Select For Freeday"
 	{
 		"en" 			"Select Player(s) for Freeday"
 	}
+	
 	"Admin Remove Freeday"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"removed Freeday from {default}{1}{burlywood}."
 	}
+	
 	"Player Not Freeday"
 	{
 		"en" 			"Player is not a Freeday."
 	}
+	
 	"Warden Already Locked"
 	{
 		"en" 			"Warden is already locked."
 	}
+	
 	"Admin Lock Warden"
 	{
 		"en" 			"has locked Warden!"
 	}
+	
 	"Warden Not Locked"
 	{
 		"en" 			"Warden is not locked."
 	}
+	
 	"Admin Unlock Warden"
 	{
 		"en" 			"has unlocked Warden."
 	}
+	
 	// 1: Warden name/index
 	// 2: Receiver name/index
 	"Warden Give LR"
@@ -322,12 +354,14 @@
 		"#format" 		"{1:N},{2:N}"
 		"en" 			"Warden {default}{1}{burlywood} has given {default}{2}{burlywood} a Last Request."
 	}
+	
 	// 1: Client name/index
 	"Freeday Already Queued"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Freeday for {default}{1}{burlywood} is currently queued."
 	}
+	
 	// 1: Chooser name/index
 	// 2: Receiver name/index
 	"Chosen For Freeday"
@@ -335,114 +369,140 @@
 		"#format" 		"{1:N},{2:N}"
 		"en" 			"{default}{1}{burlywood} has chosen {default}{2}{burlywood} for Freeday."
 	}
+	
 	"Freeday Max"
 	{
 		"en" 			"You have picked the maximum amount of Freedays."
 	}
+	
 	"Not Enabled"
 	{
 		"en" 			"This is not enabled."
 	}
+	
 	"Slow Down"
 	{
 		"en" 			"Slow down there cowboy!"
 	}
+	
 	"Laser Off"
 	{
 		"en" 			"You have turned Warden Lasers {default}off{burlywood}."
 	}
+	
 	"Laser On"
 	{
 		"en" 			"You have turned Warden Lasers {default}on{burlywood}. Hold reload to activate."
 	}
+	
 	// 1: Client name/index
 	"Medic Room Enabled"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has toggled Medic {lightgreen}On{burlywood}!"
 	}
+	
 	// 1: Client name/index
 	"Medic Room Disabled"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Warden {default}{1}{burlywood} has toggled Medic {lightgreen}Off{burlywood}!"
 	}
+	
 	"Before Or During Round"
 	{
 		"en" 			"Must be done before or during active round."
 	}
+	
 	"No Warday Config At Location"
 	{
 		"en" 			"Warday configuration is not set for this location."
 	}
+	
 	"Warday Red Active"
 	{
 		"en" 			"Warday for Red team has been activated!"
-	}	
+	}
+	
 	"Warday Blue Active"
 	{
 		"en" 			"Warday for Blue team has been activated!"
 	}
+	
 	"Ignore Red Team Warday"
 	{
 		"en" 			"Warday for Red Team is not configured, ignoring..."
 	}
+	
 	"Ignore Blue Team Warday"
 	{
 		"en" 			"Warday for Blue Team is not configured, ignoring..."
 	}
+	
 	"No Warday Config"
 	{
 		"en" 			"Warday configuration is not set."
 	}
+	
 	"Warden Commands"
 	{
 		"en"			"Warden Commands"
 	}
+	
 	"Warday Activate"
 	{
 		"en" 			"Warday has been activated!"
 	}
+	
 	"Reload CFG"
 	{
 		"en" 			"Reloading plugin CFG."
 	}
+	
 	"Medic Room Enabled Admin"
 	{
 		"en" 			"has toggled Medic {lightgreen}On{burlywood}!"
 	}
+	
 	"Medic Room Disabled Admin"
 	{
 		"en" 			"has toggled Medic {lightgreen}Off{burlywood}!"
 	}
+	
 	// 1: Client name/index
 	"New Warden"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"{default}{1}{burlywood} is the new Warden."
 	}
+	
 	// 1: Client name/index
 	"New Warden Center"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"{1} is the new Warden."
 	}
+	
 	"Muted Can't Join"
 	{
 		"en" 			"You are muted, therefore you cannot join Blue Team."
 	}
+	
 	"Warden Killed"
 	{
 		"en" 			"Warden has been killed!"
 	}
+	
 	"Autobalanced"
 	{
 		"en" 			"You have been autobalanced."
 	}
+	
 	"First Day Freeday"
 	{
 		"en" 			"First Day Freeday"
 	}
+	
 	// 1: Client name/index
 	// 2: Door format, see Opened, Closed, Locked, Unlocked
 	"Warden Work Cells"
@@ -450,59 +510,72 @@
 		"#format" 		"{1:N},{2:s}"
 		"en" 			"Warden {default}{1}{burlywood} has {2} cells."
 	}
+	
 	// 1: Door format, see Opened, Closed, Locked, Unlocked
 	"Admin Work Cells"
 	{
 		"#format" 		"{1:s}"
 		"en" 			"{1} cells."
 	}
+	
 	"Opened"
 	{
 		"en" 			"opened"
 	}
+	
 	"Closed"
 	{
 		"en" 			"closed"
 	}
+	
 	"Locked"
 	{
 		"en" 			"locked"
 	}
+	
 	"Unlocked"
 	{
 		"en" 			"unlocked"
 	}
+	
 	"Warden Fired"
 	{
 		"en" 			"Warden has been fired!"
 	}
+	
 	// 1: Client name/index
 	"Freeday Active"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"Freeday is now active for {default}{1}{burlywood}."
 	}
+	
 	"Attack Guard Lose Freeday"
 	{
 		"#format" 		"{1:N}"
 		"en" 			"{1} has attacked a Guard and lost their Freeday!"
 	}
+	
 	"One Guard Left"
 	{
 		"en" 			"One Guard left..."
 	}
+	
 	"LR Chosen"
 	{
 		"en" 			"Last Request has been chosen. Freedays have been stripped."
 	}
+	
 	"Cells Already Open"
 	{
 		"en" 			"Cells are already open."
 	}
+	
 	"Cells Not Open"
 	{
 		"en" 			"Cells are not open."
 	}
+	
 	// 1: Current votes
 	// 2: Votes needed
 	"Fire Warden Already Voted"
@@ -510,6 +583,7 @@
 		"#format"	"{1:d},{2:d}"
 		"en"		"You have already voted to cast off this Warden. ({1} votes, {2} required)"
 	}
+	
 	// 1: Client name/index
 	// 2: Current votes
 	// 3: Votes needed
@@ -724,6 +798,7 @@
 	{
 		"en" 		"Dead"
 	}
+	
 	"Mute No One"
 	{
 		"en" 		"No Muting"
@@ -758,6 +833,7 @@
 	{
 		"en" 		"Mute Everyone"
 	}
+	
 	"Warden Toggle Mute"
 	{
 		"#format" 	"{1:N}"
@@ -785,11 +861,13 @@
 	{
 		"en" 		"You have been muted."
 	}
+	
 	"Medic Heal Rebel"
 	{
 		"#format" 	"{1:N}"
 		"en" 		"{1} has been healing a rebel and has lost their Freeday!"
 	}
+	
 	"Jail Time Usage"
 	{
 		"en" 		"Usage: sm_jt <time>."
