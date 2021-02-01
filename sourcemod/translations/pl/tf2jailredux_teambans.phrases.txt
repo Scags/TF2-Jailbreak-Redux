@@ -14,78 +14,97 @@
 	{
 		"pl"			"{1} jest już zbanowany na role strażnika."
 	}
+	
 	"Cmd Usage IsBanned"
 	{
 		"pl"			"Użycie: sm_gbs <gracz>"
 	}
+	
 	"Is Guardbanned permanently"
 	{
 		"pl"			"{1} jest zbanowany w roli strażnika na zawsze."
 	}
+	
 	"Is Guardbanned time left"
 	{
 		"pl"			"{1} jest zbanowany w roli strażnika na {2} minut."
 	}
+	
 	"Is Not Guardbanned"
 	{
 		"pl"			"{1} nie jest zbanowany na role strażnika."
 	}
+	
 	"Cmd Usage OfflineUnguardban"
 	{
 		"pl"			"Użycie: sm_tuboff <steamid>."
 	}
+	
 	"Offline Unguardban"
 	{
 		"pl"			"Sukcesywnie Odbanowano Steam ID {1}."
 	}
+	
 	"Cmd Usage OfflineGuardban"
 	{
 		"pl"			"Użycie: sm_gboff <steamid>."
 	}
+	
 	"Offline Guardban"
 	{
 		"pl"			"Sukcesywnie Zbanowano Steam ID {1}.
 	}
+	
 	"Already Wardenbanned"
 	{
 		"pl"			"{1} jest już zbanowany w roli Naczelnika."
 	}
+	
 	"Cmd Usage OfflineUnwardenban"
 	{
 		"pl"			"Użycie: sm_wuboff <steamid>."
 	}
+	
 	"Offline Unwardenban"
 	{
 		"pl"			"Sukcesywnie Odbanowano Steam ID %s."
 	}
+	
 	"Cmd Usage OfflineWardenban"
 	{
 		"pl"			"Użycie: sm_wboff <steamid>."
 	}
+	
 	"Offline Wardenban"
 	{
 		"pl"			"Sukcesywnie Zbanowano Steam ID {1}."
 	}
+	
 	"Unguardban"
 	{
 		"pl"			"Odbanowano {1} na role Strażnika."
 	}
+	
 	"Guardban Permanent"
 	{
 		"pl"			"Zbanowano {1} w roli Strażnika na zawsze."
 	}
+	
 	"Guardban Timed"
 	{
 		"pl"			"Zbanowano {1} na {2} minut w roli Strażnika."
 	}
+	
 	"Unwardenban"
 	{
 		"pl"			"Odbanowano {1} w roli Naczelnika."
 	}
+	
 	"Wardenban Permanent"
 	{
 		"pl"			"Zbanowano {1} w roli Naczelnika na zawsze."
 	}
+	
 	"Wardenban Timed"
 	{
 		"pl"			"Zbanowano {1} na {2} minut w roli Naczelnika."
@@ -95,18 +114,22 @@
 	{
 		"pl"			"Rage Ban Menu"
 	}
+	
 	"Rageban"
 	{
 		"pl"			"Sukcesywnie Rage Zbanowano gracza ze Steam ID {1}."
 	}
+	
 	"Ban Menu"
 	{
 		"pl"			"Wybierz gracza do zablokowania"
 	}
+	
 	"Already Guardbanned"
 	{
 		"pl"			"Gracz jest już zablokowany w roli Strażnika."
 	}
+	
 	"Not Guardbanned"
 	{
 		"pl"			"Gracz nie jest zablokowany w roli Strażnika."
