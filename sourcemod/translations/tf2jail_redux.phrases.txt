@@ -153,7 +153,7 @@
 	
 	"Locked From Warden"
 	{
-		"en" 			"You may not become Warden until next round."
+		"en" 			"You may not become Warden until the next round."
 	}
 	
 	"Not Warden"
@@ -205,7 +205,7 @@
 	
 	"No LR Next Round"
 	{
-		"en" 			"There is no Last Request set for next round."
+		"en" 			"There is no Last Request set for the next round."
 	}
 	
 	"Warden Deny LR"
@@ -664,31 +664,31 @@
 	"Freeday Self Select"
 	{
 		"#format" 	"{1:N}"
-		"en" 		"{1} has chosen {default}Freeday for Themselves{burlywood} next round."
+		"en" 		"{1} has chosen {default}Freeday for Themselves{burlywood} for the next round."
 	}
 	
 	"Freeday Other Select"
 	{
 		"#format" 	"{1:N}"
-		"en" 		"{1} is picking Freedays for next round..."
+		"en" 		"{1} is picking Freedays for the next round..."
 	}
 	
 	"Freeday All Select"
 	{
 		"#format" 	"{1:N}"
-		"en" 		"{1} has chosen to grant a {default}Freeday for All{burlywood} next round."
+		"en" 		"{1} has chosen to grant a {default}Freeday for All{burlywood} in the next round."
 	}
 	
 	"Guard Melee Select"
 	{
 		"#format" 	"{1:N}"
-		"en" 		"{1} has chosen to strip the Guards of their weapons next round."
+		"en" 		"{1} has chosen to strip the Guards of their weapons in the next round."
 	}
 	
 	"HHHDay Select"
 	{
 		"#format" 	"{1:N}"
-		"en" 		"{1} has chosen {default}Horseless Headless Horsemann Kill Round{burlywood} next round."
+		"en" 		"{1} has chosen {default}Horseless Headless Horsemann Kill Round{burlywood} for the next round."
 	}
 	
 	"Tiny Round Select"
@@ -700,7 +700,7 @@
 	"Hot Prisoner Select"
 	{
 		"#format" 	"{1:N}"
-		"en" 		"{1} has chosen to ignite all of the prisoners next round."
+		"en" 		"{1} has chosen to ignite all prisoners in the next round."
 	}
 	
 	"Gravity Round Select"
