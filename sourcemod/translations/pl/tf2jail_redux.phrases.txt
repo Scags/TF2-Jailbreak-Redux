@@ -13,14 +13,12 @@
 	// 1: Client name/index
 	"Taken Ammo"
 	{
-		"#format"		"{1:N}"
 		"pl"			"{1} zebrał amunicję i stracił swój Dzień Wolny!"
 	}
 	
 	// 1: Client name/index
 	"Hit Vent"
 	{
-		"#format"		"{1:N}"
 		"pl"			"{1} właśnie dokonał wandalizacji mienia i stracił swój Dzień Wolny!"
 	}
 	
@@ -47,7 +45,6 @@
 	// 1: sm_tf2jr_cell_timer CVar value
 	"Door Open Timer"
 	{
-		"#format" 		"{1:d}"
 		"pl"			"Drzwi cel otworzyły się po {1} sekund bycia zamkniętymi."
 	}
 	
@@ -64,28 +61,24 @@
 	// 1: Client name/index
 	"Collisions On Warden"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Naczelnik {default}{1}{burlywood} włączył Kolizje!"
 	}
 	
 	// 1: Client name/index
 	"Collisions Off Warden"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Naczelnik {default}{1}{burlywood} wyłączył Kolizje."
 	}
 	
 	// 1: Client name/index
 	"FF On Warden"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Naczelnik {default}{1}{burlywood} Włączył Ogień Przyjacielski!"
 	}
 	
 	// 1: Client name/index
 	"FF Off Warden"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Naczelnik {default}{1}{burlywood} wyłączył Ogień Przyjacielski!"
 	}
 	
@@ -112,7 +105,6 @@
 	// 1: Client name/index
 	"Current Warden"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"{1}{burlywood} jest teraz naczelnikiem."
 	}
 	
@@ -164,7 +156,6 @@
 	// 1: Client name/index
 	"Warden Retired Chat"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Naczelnik {default}{1}{burlywood} się zwolnił!"
 	}
 	
@@ -210,7 +201,6 @@
 	
 	"Warden Deny LR"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Naczelnik {default}{1}{burlywood} odmówił ostatnie życzenie!"
 	}
 	
@@ -253,7 +243,6 @@
 	// 1: Client name/index
 	"Admin Force Warden"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"zmusił {default}{1}{burlywood} aby został Naczelnikiem."
 	}
 	
@@ -265,7 +254,6 @@
 	// 1: Client name/index
 	"Admin Force LR"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"wymusił otrzymanie Ostatniego Życzenia na {default}{1}{burlywood}."
 	}
 	
@@ -307,7 +295,6 @@
 	// 1: Client name/index
 	"Admin Give Freeday"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"dał {default}{1}{burlywood} Dzień Wolny."
 	}
 	
@@ -318,7 +305,6 @@
 	
 	"Admin Remove Freeday"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"zabrał Dzień Wolny od {default}{1}{burlywood}."
 	}
 	
@@ -351,14 +337,12 @@
 	// 2: Receiver name/index
 	"Warden Give LR"
 	{
-		"#format" 		"{1:N},{2:N}"
 		"pl"			"Naczelnik {default}{1}{burlywood} dał {default}{2}{burlywood} Ostatnie Życzenie."
 	}
 	
 	// 1: Client name/index
 	"Freeday Already Queued"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Dzień Wolny dla {default}{1}{burlywood} jest teraz w kolejce."
 	}
 	
@@ -366,7 +350,6 @@
 	// 2: Receiver name/index
 	"Chosen For Freeday"
 	{
-		"#format" 		"{1:N},{2:N}"
 		"pl"			"{default}{1}{burlywood} wybrał {default}{2}{burlywood} na Dzień wolny."
 	}
 	
@@ -398,14 +381,12 @@
 	// 1: Client name/index
 	"Medic Room Enabled"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Naczelnik {default}{1}{burlywood} zmienił status medyka na {lightgreen}Włączony{burlywood}!"
 	}
 	
 	// 1: Client name/index
 	"Medic Room Disabled"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Naczelnik {default}{1}{burlywood} zmienił status medyka na {lightgreen}Wyłączony{burlywood}!"
 	}
 	
@@ -472,14 +453,12 @@
 	// 1: Client name/index
 	"New Warden"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"{default}{1}{burlywood} jest nowym Naczelnikiem"
 	}
 	
 	// 1: Client name/index
 	"New Warden Center"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"{1} jest nowym naczelnikiem"
 	}
 	
@@ -507,14 +486,12 @@
 	// 2: Door format, see Opened, Closed, Locked, Unlocked
 	"Warden Work Cells"
 	{
-		"#format" 		"{1:N},{2:s}"
 		"pl"			"Naczelnik {default}{1}{burlywood} {2} cele."
 	}
 	
 	// 1: Door format, see Opened, Closed, Locked, Unlocked
 	"Admin Work Cells"
 	{
-		"#format" 		"{1:s}"
 		"pl"			"{1} cele."
 	}
 	
@@ -546,13 +523,11 @@
 	// 1: Client name/index
 	"Freeday Active"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Dzień Wolny jest aktywny dla {default}{1}{burlywood}."
 	}
 	
 	"Attack Guard Lose Freeday"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"{1} Zaatakował strażnika i stracił swój Dzień Wolny!"
 	}
 	
@@ -580,7 +555,6 @@
 	// 2: Votes needed
 	"Fire Warden Already Voted"
 	{
-		"#format"	"{1:d},{2:d}"
 		"pl"		"Już głosowałeś na zwolnienie tego naczelnika. ({1} głosów, {2} wymagane)"
 	}
 	
@@ -589,21 +563,18 @@
 	// 3: Votes needed
 	"Fire Warden Requested"
 	{
-		"#format"	"{1:N},{2:d},{3:d}"
 		"pl"		"{1} chce zwolnić obecnego naczelnika. ({2} głosów, {3} wymagane)"
 	}
 	
 	// 1: Client name/index
 	"Prisoner Has Rebelled"
 	{
-		"#format"	"{1:N}"
 		"pl"		"{default}{1}{burlywood} zbuntował się."
 	}
 	
 	// 1: Time of rebel timer
 	"Rebel Timer Start"
 	{
-		"#format"	"{1:d}"
 		"pl"		"Twój status buntownika zostanie automatycznie usunięty w {1} sekund."
 	}
 	
@@ -619,7 +590,6 @@
 	
 	"Announce Timer"
 	{
-		"#format" 	"{1:s}"
 		"pl"		"V{1} przez {default}Scag/Ragenewb{burlywood}, Tłumaczenie Polskie przez {default}Wolfyo{burlywood}."
 	}
 	
@@ -645,91 +615,76 @@
 	
 	"Random Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} wybrał {default}Losowe Życzenie{burlywood} jako swoje ostatnie życzenie."
 	}
 	
 	"Suicide Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} zdecydował się zabić. Jaka szkoda..."
 	}
 	
 	"Custom Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} wybrał wypisanie swojego LR na czacie."
 	}
 	
 	"Freeday Self Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} wybrał {default}Wolny Dzień dla siebie{burlywood} na następną rundę."
 	}
 	
 	"Freeday Other Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} wybiera graczy na Wolny Dzień do następnej rundy..."
 	}
 	
 	"Freeday All Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} zdecydował się przyznać {default}Dzień Wolny dla każdego{burlywood} na następną rundę."
 	}
 	
 	"Guard Melee Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} postanowił zabrać strażnikom ich broń."
 	}
 	
 	"HHHDay Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} wybrał {default}Horseless Headless Horsemann Kill Round{burlywood} na następną rundę."
 	}
 	
 	"Tiny Round Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} wybrał {default}Super Karzeł{burlywood} dla wszystkich."
 	}
 	
 	"Hot Prisoner Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} postanowił zapalić wszystkich więźniów w następnej rundzie."
 	}
 	
 	"Gravity Round Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} wybrał {default}Niską Grawitacje{burlywood} jako swoje ostatnie życzenie."
 	}
 	
 	"Automobile Start"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} wybrał {default}Stealy Wheely Automobiley{burlywood} jako swoje ostatnie życzenie."
 	}
 	
 	"Warday Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} zdecydował się zrobić {default}Dzień Wojny{burlywood}."
 	}
 	
 	"ClassWars Select"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} wybrał {default}Wojny Klasowe{burlywood} jako swoje ostatnie życzenie."
 	}
 	
 	"Custom Activate"
 	{
-		"#format" 	"{1:s}"
 		"pl"		"Twoje niestandardowe ostatnie życzenie to {default}{1}"
 	}
 	
@@ -765,7 +720,6 @@
 	
 	"Warden Invite Player"
 	{
-		"#format" 	"{1:N},{2:N}"
 		"pl"		"Naczelnik {default}{1}{burlywood} zaprosił {default}{2}{burlywood} do drużyny Strażników."
 	}
 	
@@ -836,19 +790,16 @@
 	
 	"Warden Toggle Mute"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"Naczelnik {default}{1}{burlywood} zmienił tryb wyciszenia!"
 	}
 	
 	"Player Invited Accepted"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{default}{1}{burlywood} zgodził się na wstąpienie w szeregi Strażników."
 	}
 	
 	"Player Invited Denied"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{default}{1}{burlywood} odrzucił propozycje Naczelnika."
 	}
 	
@@ -864,7 +815,6 @@
 	
 	"Medic Heal Rebel"
 	{
-		"#format" 	"{1:N}"
 		"pl"		"{1} leczył zbuntowanego i stracił swój dzień wolny!"
 	}
 	
@@ -880,13 +830,11 @@
 	
 	"Time Set"
 	{
-		"#format" 	"{1:d}"
 		"pl"		"Czas ustawiono na {default}{1}{burlywood}."
 	}
 	
 	"Admin Remove Warden"
 	{
-		"#format"	"{1:N}"
 		"pl"		"Wyrzucił {1} z roli Naczelnika."
 	}
 	
@@ -903,19 +851,16 @@
 	
 	"Warden Health Restore"
 	{
-		"#format"	"{1:N}"
 		"pl"		"Naczelnik {default}{1}{burlywood} uleczył wszystkich więźniów."
 	}
 	
 	"Marked as Freekiller"
 	{
-		"#format"	"{1:N}"
 		"pl"		"{defailt}{1}{burlywood} został oznaczony jako Freekiller."
 	}
 	
 	"Freekiller Timer Start"
 	{
-		"#format" 	"{1:d}"
 		"pl"		"Twój status Freekillera zostanie automatycznie usunięty za {1} sekund."
 	}
 	
