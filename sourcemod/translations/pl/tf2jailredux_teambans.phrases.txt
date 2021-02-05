@@ -12,7 +12,6 @@
 	
 	"Already Guardbanned"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"{1} jest już zbanowany na role strażnika."
 	}
 	
@@ -23,19 +22,16 @@
 	
 	"Is Guardbanned permanently"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"{1} jest zbanowany w roli strażnika na zawsze."
 	}
 	
 	"Is Guardbanned time left"
 	{
-		"#format" 		"{1:N},{2:d}"
 		"pl"			"{1} jest zbanowany w roli strażnika na {2} minut."
 	}
 	
 	"Is Not Guardbanned"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"{1} nie jest zbanowany na role strażnika."
 	}
 	
@@ -46,7 +42,6 @@
 	
 	"Offline Unguardban"
 	{
-		"#format" 		"{1:s}"
 		"pl"			"Sukcesywnie Odbanowano Steam ID {1}."
 	}
 	
@@ -57,13 +52,11 @@
 	
 	"Offline Guardban"
 	{
-		"#format" 		"{1:s}"
 		"pl"			"Sukcesywnie Zbanowano Steam ID {1}.
 	}
 	
 	"Already Wardenbanned"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"{1} jest już zbanowany w roli Naczelnika."
 	}
 	
@@ -74,7 +67,6 @@
 	
 	"Offline Unwardenban"
 	{
-		"#format" 		"{1:s}"
 		"pl"			"Sukcesywnie Odbanowano Steam ID %s."
 	}
 	
@@ -85,43 +77,36 @@
 	
 	"Offline Wardenban"
 	{
-		"#format" 		"{1:s}"
 		"pl"			"Sukcesywnie Zbanowano Steam ID {1}."
 	}
 	
 	"Unguardban"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Odbanowano {1} na role Strażnika."
 	}
 	
 	"Guardban Permanent"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Zbanowano {1} w roli Strażnika na zawsze."
 	}
 	
 	"Guardban Timed"
 	{
-		"#format" 		"{1:N},{2:d}"
 		"pl"			"Zbanowano {1} na {2} minut w roli Strażnika."
 	}
 	
 	"Unwardenban"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Odbanowano {1} w roli Naczelnika."
 	}
 	
 	"Wardenban Permanent"
 	{
-		"#format" 		"{1:N}"
 		"pl"			"Zbanowano {1} w roli Naczelnika na zawsze."
 	}
 	
 	"Wardenban Timed"
 	{
-		"#format" 		"{1:N},{2:d}"
 		"pl"			"Zbanowano {1} na {2} minut w roli Naczelnika."
 	}
 	
@@ -132,7 +117,6 @@
 	
 	"Rageban"
 	{
-		"#format" 		"{1:s}"
 		"pl"			"Sukcesywnie Rage Zbanowano gracza ze Steam ID {1}."
 	}
 	
