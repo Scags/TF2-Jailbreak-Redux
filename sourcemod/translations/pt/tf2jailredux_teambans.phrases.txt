@@ -12,7 +12,6 @@
 	
 	"Already Guardbanned"
 	{
-		"#format" 		"{1:N}"
 		"pt"			"{1} já está banido(a) da equipe dos Guardas."
 	}
 	
@@ -23,19 +22,16 @@
 	
 	"Is Guardbanned permanently"
 	{
-		"#format" 		"{1:N}"
 		"pt"			"{1} está permanentemente banido(a) da equipe dos Guardas."
 	}
 	
 	"Is Guardbanned time left"
 	{
-		"#format" 		"{1:N},{2:d}"
 		"pt"			"{1} está banido(a) da equipe dos Guardas por mais {2} minutos."
 	}
 	
 	"Is Not Guardbanned"
 	{
-		"#format" 		"{1:N}"
 		"pt"			"{1} não está banido(a) da equipe dos Guardas."
 	}
 	
@@ -46,7 +42,6 @@
 	
 	"Offline Unguardban"
 	{
-		"#format" 		"{1:s}"
 		"pt"			"Você desbaniu a ID Steam {1} da equipe dos Guardas."
 	}
 	
@@ -57,13 +52,11 @@
 	
 	"Offline Guardban"
 	{
-		"#format" 		"{1:s}"
 		"pt"			"Você baniu a ID Steam {1} da equipe dos Guardas."
 	}
 	
 	"Already Wardenbanned"
 	{
-		"#format" 		"{1:N}"
 		"pt"			"{1} já está banido(a) de exercer a Diretoria."
 	}
 	
@@ -74,7 +67,6 @@
 	
 	"Offline Unwardenban"
 	{
-		"#format" 		"{1:s}"
 		"pt"			"Você desbaniu a ID Steam {1} de exercer a Diretoria."
 	}
 	
@@ -85,43 +77,36 @@
 	
 	"Offline Wardenban"
 	{
-		"#format" 		"{1:s}"
 		"pt"			"Você baniu a ID Steam {1} de exercer a Diretoria."
 	}
 	
 	"Unguardban"
 	{
-		"#format" 		"{1:N}"
 		"pt"			"Você desbaniu o(a) jogador(a) {1} da equipe dos Guardas."
 	}
 	
 	"Guardban Permanent"
 	{
-		"#format" 		"{1:N}"
 		"pt"			"Você baniu permanentemente o(a) jogador(a) {1} da equipe dos Guardas."
 	}
 	
 	"Guardban Timed"
 	{
-		"#format" 		"{1:N},{2:d}"
 		"pt"			"Você baniu o(a) jogador(a) {1} da equipe dos Guardas por {2} minutos."
 	}
 	
 	"Unwardenban"
 	{
-		"#format" 		"{1:N}"
 		"pt"			"Você desbaniu o(a) jogador(a) {1} de exercer a Diretoria."
 	}
 	
 	"Wardenban Permanent"
 	{
-		"#format" 		"{1:N}"
 		"pt" 			"Você baniu permanentemente o(a) jogador(a) {1} de exercer a Diretoria."
 	}
 	
 	"Wardenban Timed"
 	{
-		"#format" 		"{1:N},{2:d}"
 		"pt"			"Você baniu o(a) jogador(a) {1} de exercer a Diretoria por {2} minutos."
 	}
 	
@@ -132,7 +117,6 @@
 	
 	"Rageban"
 	{
-		"#format" 		"{1:s}"
 		"pt"			"Você aplicou um Rage Ban na ID Steam {1}."
 	}
 	
