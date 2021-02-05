@@ -13,14 +13,12 @@
 	// 1: Client name/index
 	"Taken Ammo"
 	{
-		"#format"		"{1:N}"
 		"ru"			"{1} взял боеприпасы и потерял свой Фридэй!"
 	}
 	
 	// 1: Client name/index
 	"Hit Vent"
 	{
-		"#format"		"{1:N}"
 		"ru" 			"{1} попал в вентиляцию и потерял свой Фридэй!"
 	}
 	
@@ -47,7 +45,6 @@
 	// 1: sm_tf2jr_cell_timer CVar value
 	"Door Open Timer"
 	{
-		"#format" 		"{1:d}"
 		"ru" 			"Двери камер откроются через {1} сек. после закрытия."
 	}
 	
@@ -64,28 +61,24 @@
 	// 1: Client name/index
 	"Collisions On Warden"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Командир {default}{1}{burlywood} включил столкновения между игроками!"
 	}
 	
 	// 1: Client name/index
 	"Collisions Off Warden"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Командир {default}{1}{burlywood} отключил столкновения между игроками."
 	}
 	
 	// 1: Client name/index
 	"FF On Warden"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Командир {default}{1}{burlywood} включил огонь по своим!"
 	}
 	
 	// 1: Client name/index
 	"FF Off Warden"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Командир {default}{1}{burlywood} отключил огонь по своим!"
 	}
 	
@@ -112,7 +105,6 @@
 	// 1: Client name/index
 	"Current Warden"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Текущий командир {1}{burlywood}."
 	}
 	
@@ -164,7 +156,6 @@
 	// 1: Client name/index
 	"Warden Retired Chat"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Командир {default}{1}{burlywood} ушёл в отставку!"
 	}
 	
@@ -209,7 +200,6 @@
 	
 	"Warden Deny LR"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Командир {default}{1}{burlywood} отклонил последнее желание!"
 	}
 	
@@ -252,7 +242,6 @@
 	// 1: Client name/index
 	"Admin Force Warden"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"сделал {default}{1}{burlywood} командиром."
 	}
 	
@@ -264,7 +253,6 @@
 	// 1: Client name/index
 	"Admin Force LR"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"выдал {default}{1}{burlywood} последнее желание."
 	}
 	
@@ -306,7 +294,6 @@
 	// 1: Client name/index
 	"Admin Give Freeday"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"выдал {default}{1}{burlywood} Фридэй."
 	}
 	
@@ -317,7 +304,6 @@
 	
 	"Admin Remove Freeday"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Фридэй удалён у {default}{1}{burlywood}."
 	}
 	
@@ -350,14 +336,12 @@
 	// 2: Receiver name/index
 	"Warden Give LR"
 	{
-		"#format" 		"{1:N},{2:N}"
 		"ru" 			"Командир {default}{1}{burlywood} выдал {default}{2}{burlywood} последнее желание."
 	}
 	
 	// 1: Client name/index
 	"Freeday Already Queued"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Фридэй для {default}{1}{burlywood} в очереди."
 	}
 	
@@ -365,7 +349,6 @@
 	// 2: Receiver name/index
 	"Chosen For Freeday"
 	{
-		"#format" 		"{1:N},{2:N}"
 		"ru" 			"{default}{1}{burlywood} выбрал {default}{2}{burlywood} для Фридэя."
 	}
 	
@@ -397,14 +380,12 @@
 	// 1: Client name/index
 	"Medic Room Enabled"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Командир {default}{1}{burlywood} {lightgreen}включил{burlywood} комнату медика!"
 	}
 	
 	// 1: Client name/index
 	"Medic Room Disabled"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Командир {default}{1}{burlywood} {lightgreen}выключил{burlywood} комнату медика!"
 	}
 	
@@ -471,14 +452,12 @@
 	// 1: Client name/index
 	"New Warden"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"{default}{1}{burlywood} новый командир."
 	}
 	
 	// 1: Client name/index
 	"New Warden Center"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"{1} новый командир."
 	}
 	
@@ -506,14 +485,12 @@
 	// 2: Door format, see Opened, Closed, Locked, Unlocked
 	"Warden Work Cells"
 	{
-		"#format" 		"{1:N},{2:s}"
 		"ru" 			"Командир {default}{1}{burlywood} {2} камер."
 	}
 	
 	// 1: Door format, see Opened, Closed, Locked, Unlocked
 	"Admin Work Cells"
 	{
-		"#format" 		"{1:s}"
 		"ru" 			"{1} камер."
 	}
 	
@@ -545,13 +522,11 @@
 	// 1: Client name/index
 	"Freeday Active"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"Фридэй активен для {default}{1}{burlywood}."
 	}
 	
 	"Attack Guard Lose Freeday"
 	{
-		"#format" 		"{1:N}"
 		"ru" 			"{1} напал на охранника и потерял свой Фридэй!"
 	}
 	
@@ -579,7 +554,6 @@
 	// 2: Votes needed
 	"Fire Warden Already Voted"
 	{
-		"#format"	"{1:d},{2:d}"
 		"ru"		"Вы уже проголосовали за изгнание этого командира. ({1} голосов, {2} требуется)"
 	}
 	
@@ -588,21 +562,18 @@
 	// 3: Votes needed
 	"Fire Warden Requested"
 	{
-		"#format"	"{1:N},{2:d},{3:d}"
 		"ru"		"{1} хочет уволить текущего командира. ({2} голосов, {3} требуется)"
 	}
 	
 	// 1: Client name/index
 	"Prisoner Has Rebelled"
 	{
-		"#format"	"{1:N}"
 		"ru"		"{default}{1}{burlywood} взбунтовал"
 	}
 	
 	// 1: Time of rebel timer
 	"Rebel Timer Start"
 	{
-		"#format"	"{1:d}"
 		"ru"		"Ваш статус бунтовщика будет автоматически удалён через {1} сек."
 	}
 	
@@ -618,7 +589,6 @@
 	
 	"Announce Timer"
 	{
-		"#format" 	"{1:s}"
 		"ru" 		"Вер.{1} от {default}Scag/Ragenewb{burlywood}."
 	}
 	
@@ -644,91 +614,76 @@
 	
 	"Random Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал {default}случайное последнее желание{burlywood} в качестве его последнего желания"
 	}
 	
 	"Suicide Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал убийство самого себя. Какая жалость..."
 	}
 	
 	"Custom Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал напечатать своё последнее желание в чате."
 	}
 	
 	"Freeday Self Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал {default}Фридэй для себя{burlywood} в следующем раунде."
 	}
 	
 	"Freeday Other Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбирает Фридэи для следующего раунда..."
 	}
 	
 	"Freeday All Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал предоставить {default}Фридэй для всех{burlywood} в следующем раунде."
 	}
 	
 	"Guard Melee Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал лишить оружия охранников в следующем раунде."
 	}
 	
 	"HHHDay Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал {default}убийство Пешего всадника без головы{burlywood} для следующего раунда."
 	}
 	
 	"Tiny Round Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал {default}Супер уменьшение{burlywood} для всех."
 	}
 	
 	"Hot Prisoner Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал поджечь всех заключённых в следующем раунде."
 	}
 	
 	"Gravity Round Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал {default}Низкую гравитацию{burlywood} в качестве последнего желания."
 	}
 	
 	"Automobile Start"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал {default}Стили-Вилли-Автомобили{burlywood} в качестве последнего желания."
 	}
 	
 	"Warday Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал сделать {default}ДеньВойны{burlywood}."
 	}
 	
 	"ClassWars Select"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} выбрал {default}Классовую войну{burlywood} в качестве последнего желания."
 	}
 	
 	"Custom Activate"
 	{
-		"#format" 	"{1:s}"
 		"ru" 		"Ваше последнее желание {default}{1}{burlywood}."
 	}
 	
@@ -764,7 +719,6 @@
 	
 	"Warden Invite Player"
 	{
-		"#format" 	"{1:N},{2:N}"
 		"ru" 		"Командир {default}{1}{burlywood} пригласил {default}{2}{burlywood} в команду охранников."
 	}
 	
@@ -835,19 +789,16 @@
 	
 	"Warden Toggle Mute"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"Командир {default}{1}{burlywood} переключил заглушение игроков!"
 	}
 	
 	"Player Invited Accepted"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{default}{1}{burlywood} согласился присоединиться к команде охранников."
 	}
 	
 	"Player Invited Denied"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{default}{1}{burlywood} отказался присоединиться к команде охранников."
 	}
 	
@@ -863,7 +814,6 @@
 	
 	"Medic Heal Rebel"
 	{
-		"#format" 	"{1:N}"
 		"ru" 		"{1} лечил бунтовщика и потерял свой Фридэй!"
 	}
 	
@@ -879,13 +829,11 @@
 	
 	"Time Set"
 	{
-		"#format" 	"{1:d}"
 		"ru" 		"Время установлено на {default}{1}{burlywood}."
 	}
 	
 	"Admin Remove Warden"
 	{
-		"#format"	"{1:N}"
 		"ru"		"уволил {1} с поста командира."
 	}
 	
@@ -902,13 +850,11 @@
 	
 	"Warden Health Restore"
 	{
-		"#format"	"{1:N}"
 		"ru" 		"Командир {default}{1}{burlywood} восстановил здоровье всех заключённых."
 	}
 	
 	"Marked as Freekiller"
 	{
-		"#format"	"{1:N}"
 		"ru" 		"{default}{1}{burlywood} был помечен как фрикиллер."
 	}
 	
@@ -919,7 +865,6 @@
 	
 	"Freekiller Timer Remove"
 	{
-		"#format" 	"{1:d}"
 		"ru" 		"Ваш статус фрикиллера был удалён."
 	}
 }
