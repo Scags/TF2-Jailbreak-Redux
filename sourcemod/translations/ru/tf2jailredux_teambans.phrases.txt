@@ -12,82 +12,116 @@
 	
 	"Already Guardbanned"
 	{
+		"#format" 		"{1:N}"
 		"ru" 			"{1} уже заблокирован за охранника."
 	}
+	
 	"Cmd Usage IsBanned"
 	{
 		"ru"	 		"Использование: sm_gbs <игрок>."
 	}
+	
 	"Is Guardbanned permanently"
 	{
+		"#format" 		"{1:N}"
 		"ru" 			"{1} был заблокирован за охранника навсегда."
 	}
+	
 	"Is Guardbanned time left"
 	{
+		"#format" 		"{1:N},{2:d}"
 		"ru" 			"{1} заблокирован за охранника ещё {2} мин."
 	}
+	
 	"Is Not Guardbanned"
 	{
+		"#format" 		"{1:N}"
 		"ru" 			"{1} больше не заблокирован за охранника."
 	}
+	
 	"Cmd Usage OfflineUnguardban"
 	{
 		"ru" 			"Использование: sm_tuboff <steamid>."
 	}
+	
 	"Offline Unguardban"
 	{
+		"#format" 		"{1:s}"
 		"ru" 			"Успешно снята блокировка за охранника для Steam ID {1}."
 	}
+	
 	"Cmd Usage OfflineGuardban"
 	{
 		"ru" 			"Использование: sm_gboff <steamid>."
 	}
+	
 	"Offline Guardban"
 	{
+		"#format" 		"{1:s}"
 		"ru" 			"Успешно заблокирован охранник для Steam ID {1}."
 	}
+	
 	"Already Wardenbanned"
 	{
+		"#format" 		"{1:N}"
 		"ru" 			"{1} уже заблокирован за командира."
 	}
+	
 	"Cmd Usage OfflineUnwardenban"
 	{
 		"ru" 			"Использование: sm_wuboff <steamid>."
 	}
+	
 	"Offline Unwardenban"
 	{
+		"#format" 		"{1:s}"
 		"ru" 			"Успешно снята блокировка за командира для Steam ID %s."
 	}
+	
 	"Cmd Usage OfflineWardenban"
 	{
 		"ru" 			"Использование: sm_wboff <steamid>."
 	}
+	
 	"Offline Wardenban"
 	{
+		"#format" 		"{1:s}"
 		"ru" 			"Успешно заблокирован командир для Steam ID {1}."
 	}
+	
 	"Unguardban"
 	{
+		"#format" 		"{1:N}"
 		"ru" 			"Снята блокировка за охранника {1}."
 	}
+	
 	"Guardban Permanent"
 	{
+		"#format" 		"{1:N}"
 		"ru" 			"Заблокирован охранник для {1} навсегда."
 	}
+	
 	"Guardban Timed"
 	{
+		"#format" 		"{1:N},{2:d}"
 		"ru" 			"Заблокирован охранник для {1} на {2} мин."
 	}
+	
 	"Unwardenban"
 	{
+		"#format" 		"{1:N}"
 		"ru" 			"Снята блокировка за командира {1}."
 	}
+	
 	"Wardenban Permanent"
 	{
+		"#format" 		"{1:N}"
 		"ru" 			"Заблокирован командир для {1} навсегда."
 	}
+	
 	"Wardenban Timed"
 	{
+		"#format" 		"{1:N},{2:d}"
 		"ru" 			"Заблокирован командир для {1} на {2} мин."
 	}
 	
@@ -95,18 +129,23 @@
 	{
 		"ru" 			"Меню яростной блокировки"
 	}
+	
 	"Rageban"
 	{
+		"#format" 		"{1:s}"
 		"ru" 			"Успешно заблокирован яростный игрок Steam ID {1}."
 	}
+	
 	"Ban Menu"
 	{
 		"ru" 			"Выберите игрока для блокировки за охранника"
 	}
+	
 	"Already Guardbanned"
 	{
 		"ru" 			"Клиент уже заблокирован за охранника."
 	}
+	
 	"Not Guardbanned"
 	{
 		"ru" 			"Клиент не заблокирован за охранника."
