@@ -13,12 +13,14 @@
 	// 1: Client name/index
 	"Taken Ammo"
 	{
+		"#format"		"{1:N}"
 		"pt"			"{1} pegou munição e perdeu seu Freeday!"
 	}
 	
 	// 1: Client name/index
 	"Hit Vent"
 	{
+		"#format"		"{1:N}"
 		"pt" 			"{1} danificou um duto de ventilação e perdeu seu Freeday!"
 	}
 	
@@ -45,6 +47,7 @@
 	// 1: sm_tf2jr_cell_timer CVar value
 	"Door Open Timer"
 	{
+		"#format" 		"{1:d}"
 		"pt" 			"As celas se abriram após permanecerem {1} segundos fechadas."
 	}
 	
@@ -57,26 +60,32 @@
 	{
 		"pt" 			"A Diretoria foi habilitada."
 	}
+	
 	// 1: Client name/index
 	"Collisions On Warden"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"O(A) Diretor(a) {default}{1}{burlywood} ativou as Colisões!"
 	}
 	
 	// 1: Client name/index
 	"Collisions Off Warden"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"O(A) Diretor(a) {default}{1}{burlywood} desativou as Colisões."
 	}
+	
 	// 1: Client name/index
 	"FF On Warden"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"O(A) Diretor(a) {default}{1}{burlywood} ativou o Fogo Amigo!"
 	}
 	
 	// 1: Client name/index
 	"FF Off Warden"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"O(A) Diretor(a) {default}{1}{burlywood} desativou o Fogo Amigo!"
 	}
 	
@@ -103,6 +112,7 @@
 	// 1: Client name/index
 	"Current Warden"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"{1}{burlywood} está atualmente exercendo a Diretoria."
 	}
 	
@@ -154,6 +164,7 @@
 	// 1: Client name/index
 	"Warden Retired Chat"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"O(A) Diretor(a) {default}{1}{burlywood} renunciou!"
 	}
 	
@@ -185,322 +196,412 @@
 	{
 		"pt" 			"O(A) jogador(a) escolhido(a) não está na equipe RED."
 	}
+	
 	"Denying LR Disabled"
 	{
 		"pt" 			"A funcionalidade de Negar Últimos Pedidos foi desativada."
 	}
+	
 	"No LR Next Round"
 	{
 		"pt" 			"Não há nenhum Último Pedido pendente para a próxima rodada."
 	}
+	
 	"Warden Deny LR"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"O(A) Diretor(a) {default}{1}{burlywood} negou o Último Pedido!"
 	}
+	
 	"Last Request List"
 	{
 		"pt" 			"Lista de Últimos Pedidos"
 	}
+	
 	"Music On"
 	{
 		"pt" 			"Você {lightgreen}ativou{default} a música de fundo do TF2Jail."
 	}
+	
 	// \n Stands for new line, ignore it please
 	"Music Off"
 	{
 		"pt" 			"Você {lightgreen}desativou{default} a música de fundo do TF2Jail.\nQuando a música parar, ela não irá tocar novamente."
 	}
+	
 	"Admin Removed Queued Freeday"
 	{
 		"pt" 			"Um(a) administrador(a) removeu seu Freeday pendente!"
 	}
+	
 	"Admin Removed Freeday"
 	{
 		"pt" 			"Um(a) administrador(a) removeu seu Freeday!"
 	}
+	
 	"Admin Denied LR"
 	{
 		"pt" 			"negou o Último Pedido atual!"
 	}
+	
 	"Target Need Blue Team"
 	{
 		"pt" 			"O(A) jogador(a) escolhido(a) não está na equipe BLU."
 	}
+	
 	// 1: Client name/index
 	"Admin Force Warden"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"designou {default}{1}{burlywood} para exercer a Diretoria."
 	}
+	
 	"Admin Force Random Warden"
 	{
 		"pt" 			"designou um(a) jogador(a) aleatório(a) para exercer a Diretoria."
 	}
+	
 	// 1: Client name/index
 	"Admin Force LR"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"concedeu um Último Pedido a {default}{1}{burlywood}."
 	}
+	
 	"Admin Force LR Self"
 	{
 		"pt" 			"concedeu um Último Pedido a si mesmo(a)."
 	}
+	
 	"Admin Reset Plugin"
 	{
 		"pt" 			"Um(a) administrador(a) redefiniu o plugin!"
 	}
+	
 	"Doors Work"
 	{
 		"pt" 			"As portas são funcionais."
 	}
+	
 	"Doors Don't Work"
 	{
 		"pt" 			"As portas não são funcionais."
 	}
+	
 	"Buttons Work"
 	{
 		"pt" 			"A funcionalidade das portas das celas está ativada."
 	}
+	
 	"Buttons Don't Work"
 	{
 		"pt" 			"A funcionalidade das portas das celas está desativada."
 	}
+	
 	"Target Is Freeday"
 	{
 		"pt" 			"O(A) jogador(a) escolhido(a) é um(a) Freeday."
 	}
+	
 	// 1: Client name/index
 	"Admin Give Freeday"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"concedeu um Freeday para {default}{1}{burlywood}."
 	}
+	
 	"Select For Freeday"
 	{
 		"pt" 			"Selecione os jogadores que irão receber o Freeday"
 	}
+	
 	"Admin Remove Freeday"
 	{
 		"pt" 			"removeu o Freeday de {default}{1}{burlywood}."
 	}
+	
 	"Player Not Freeday"
 	{
 		"pt" 			"O(A) jogador(a) escolhido(a) não é um(a) Freeday."
 	}
+	
 	"Warden Already Locked"
 	{
 		"pt" 			"A Diretoria já está bloqueada."
 	}
+	
 	"Admin Lock Warden"
 	{
 		"pt" 			"bloqueou a Diretoria!"
 	}
+	
 	"Warden Not Locked"
 	{
 		"pt" 			"A Diretoria não está bloqueada."
 	}
+	
 	"Admin Unlock Warden"
 	{
 		"pt" 			"desbloqueou a Diretoria."
 	}
+	
 	// 1: Warden name/index
 	// 2: Receiver name/index
 	"Warden Give LR"
 	{
+		"#format" 		"{1:N},{2:N}"
 		"pt" 			"O(A) Diretor(a) {default}{1}{burlywood} concedeu a {default}{2}{burlywood} um Último Pedido."
 	}
+	
 	// 1: Client name/index
 	"Freeday Already Queued"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"O Freeday de {default}{1}{burlywood} está pendente."
 	}
+	
 	// 1: Chooser name/index
 	// 2: Receiver name/index
 	"Chosen For Freeday"
 	{
+		"#format" 		"{1:N},{2:N}"
 		"pt" 			"{default}{1}{burlywood} escolheu {default}{2}{burlywood} para ter um Freeday."
 	}
+	
 	"Freeday Max"
 	{
 		"pt" 			"Você já selecionou a quantidade máxima de Freedays."
 	}
+	
 	"Not Enabled"
 	{
 		"pt" 			"Isto não está ativado."
 	}
+	
 	"Slow Down"
 	{
 		"pt" 			"Calma aê cara!"
 	}
+	
 	"Laser Off"
 	{
 		"pt" 			"Você {default}desativou{burlywood} o Laser da Diretoria."
 	}
+	
 	"Laser On"
 	{
 		"pt" 			"Você {default}ativou{burlywood} o Laser da Diretoria. Segure o botão de recarregar para usá-lo."
 	}
+	
 	// 1: Client name/index
 	"Medic Room Enabled"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"O(A) Diretor(a) {default}{1} {lightgreen}ativou{burlywood} a regeneração de vida das enfermarias!"
 	}
+	
 	// 1: Client name/index
 	"Medic Room Disabled"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"O(A) Diretor(a) {default}{1} {lightgreen}desativou{burlywood} a regeneração de vida das enfermarias!"
 	}
+	
 	"Before Or During Round"
 	{
 		"pt" 			"Isto deve ser feito antes ou durante uma rodada."
 	}
+	
 	"No Warday Config At Location"
 	{
 		"pt" 			"Não há nenhum arquivo de configuração presente para o Dia de Guerra nesta localização."
 	}
+	
 	"Warday Red Active"
 	{
 		"pt" 			"O Dia de Guerra foi ativado para a equipe RED!"
-	}	
+	}
+	
 	"Warday Blue Active"
 	{
 		"pt" 			"O Dia de Guerra foi ativado para a equipe BLU!"
 	}
+	
 	"Ignore Red Team Warday"
 	{
 		"pt" 			"O Dia de Guerra não está configurado para a equipe RED, ignorando..."
 	}
+	
 	"Ignore Blue Team Warday"
 	{
 		"pt" 			"O Dia de Guerra não está configurado para a equipe BLU, ignorando..."
 	}
+	
 	"No Warday Config"
 	{
 		"pt" 			"Não há nenhum arquivo de configuração presente para o Dia de Guerra."
 	}
+	
 	"Warden Commands"
 	{
 		"pt"			"Comandos da Diretoria"
 	}
+	
 	"Warday Activate"
 	{
 		"pt" 			"O Dia de Guerra foi ativado!"
 	}
+	
 	"Reload CFG"
 	{
 		"pt" 			"Recarregando a configuração do plugin."
 	}
+	
 	"Medic Room Enabled Admin"
 	{
 		"pt" 			"{lightgreen}ativou{burlywood} a regeneração de vida das enfermarias!"
 	}
+	
 	"Medic Room Disabled Admin"
 	{
 		"pt" 			"{lightgreen}desativou{burlywood} a regeneração de vida das enfermarias!"
 	}
+	
 	// 1: Client name/index
 	"New Warden"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"{default}{1}{burlywood} é o novo(a) Diretor(a)."
 	}
+	
 	// 1: Client name/index
 	"New Warden Center"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"{1} é o novo(a) Diretor(a)."
 	}
+	
 	"Muted Can't Join"
 	{
 		"pt" 			"Você está emudecido(a), portanto não poderá entrar na equipe BLU."
 	}
+	
 	"Warden Killed"
 	{
 		"pt" 			"O(A) Diretor(a) foi morto(a)!"
 	}
+	
 	"Autobalanced"
 	{
 		"pt" 			"Você foi equilibrado(a) automaticamente."
 	}
+	
 	"First Day Freeday"
 	{
 		"pt" 			"Freeday de Primeiro Dia"
 	}
+	
 	// 1: Client name/index
 	// 2: Door format, see Opened, Closed, Locked, Unlocked
 	"Warden Work Cells"
 	{
+		"#format" 		"{1:N},{2:s}"
 		"pt" 			"O(A) Diretor(a) {default}{1}{burlywood} {2} as celas."
 	}
+	
 	// 1: Door format, see Opened, Closed, Locked, Unlocked
 	"Admin Work Cells"
 	{
+		"#format" 		"{1:s}"
 		"pt" 			"{1} as celas."
 	}
+	
 	"Opened"
 	{
 		"pt" 			"abriu"
 	}
+	
 	"Closed"
 	{
 		"pt" 			"fechou"
 	}
+	
 	"Locked"
 	{
 		"pt" 			"bloqueou"
 	}
+	
 	"Unlocked"
 	{
 		"pt" 			"desbloqueou"
 	}
+	
 	"Warden Fired"
 	{
 		"pt" 			"O(A) Diretor(a) foi destituído(a)!"
 	}
+	
 	// 1: Client name/index
 	"Freeday Active"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"O Freeday foi ativado para {default}{1}{burlywood}."
 	}
+	
 	"Attack Guard Lose Freeday"
 	{
+		"#format" 		"{1:N}"
 		"pt" 			"{1} atacou um Guarda e perdeu seu Freeday!"
 	}
+	
 	"One Guard Left"
 	{
 		"pt" 			"Um(a) Guarda restante..."
 	}
+	
 	"LR Chosen"
 	{
 		"pt" 			"O Último Pedido foi escolhido. Os Freedays atuais foram removidos."
 	}
+	
 	"Cells Already Open"
 	{
 		"pt" 			"As celas já estão abertas."
 	}
+	
 	"Cells Not Open"
 	{
 		"pt" 			"As celas não estão abertas."
 	}
+	
 	// 1: Current votes
 	// 2: Votes needed
 	"Fire Warden Already Voted"
 	{
+		"#format"	"{1:d},{2:d}"
 		"pt"		"Você já votou para destituir o(a) Diretor(a) atual. ({1} votos, {2} necessários)"
 	}
+	
 	// 1: Client name/index
 	// 2: Current votes
 	// 3: Votes needed
 	"Fire Warden Requested"
 	{
+		"#format"	"{1:N},{2:d},{3:d}"
 		"pt"		"{1} quer destituir o(a) Diretor(a) atual. ({2} votos, {3} necessários)"
 	}
 	
 	// 1: Client name/index
 	"Prisoner Has Rebelled"
 	{
+		"#format"	"{1:N}"
 		"pt"		"{default}{1}{burlywood} rebelou."
 	}
 	
 	// 1: Time of rebel timer
 	"Rebel Timer Start"
 	{
+		"#format"	"{1:d}"
 		"pt"		"Seu status de rebelde será removido automaticamente em {1} segundos."
 	}
 	
@@ -516,7 +617,8 @@
 	
 	"Announce Timer"
 	{
-		"pt" 		"V{1} por {default}Scag/Ragenewb{burlywood}."
+		"#format" 	"{1:s}"
+		"pt" 		"Versão {1} feita por {default}Scag/Ragenewb{burlywood}. Tradução em Português Brasileiro feita por {default}Tiagoquix{burlywood}."
 	}
 	
 	"Freeday All Start"
@@ -541,76 +643,91 @@
 	
 	"Random Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} escolheu um {default}Último Pedido Aleatório{burlywood} como seu Úlitmo Pedido!"
 	}
 	
 	"Suicide Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} escolheu se matar. Que vergonha..."
 	}
 	
 	"Custom Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} escolheu digitar seu Último Pedido no chat."
 	}
 	
 	"Freeday Self Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} escolheu {default}Freeday para si mesmo(a){burlywood} para a próxima rodada."
 	}
 	
 	"Freeday Other Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} está escolhendo os(as) Freedays para a próxima rodada..."
 	}
 	
 	"Freeday All Select"
 	{
-		"pt" 		"{1} escolheu conceder um {default}Freeday para Todos{burlywood} para a próxima rodada."
+		"#format" 	"{1:N}"
+		"pt" 		"{1} escolheu conceder um {default}Freeday para Todos{burlywood} na próxima rodada."
 	}
 	
 	"Guard Melee Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} escolheu desarmar os Guardas na próxima rodada."
 	}
 	
 	"HHHDay Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} escolheu {default}Guerra dos Cavaleiros Carentes de Cavalos e Cabeças{burlywood} para a próxima rodada."
 	}
 	
 	"Tiny Round Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} escolheu {default}Super Pequeno{burlywood} para todos."
 	}
 	
 	"Hot Prisoner Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} escolheu incendiar todos os prisioneiros na próxima rodada."
 	}
 	
 	"Gravity Round Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} escolheu {default}Gravidade Baixa{burlywood} como seu Último Pedido."
 	}
 	
 	"Automobile Start"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} escolheu {default}Carrinhos de Bate-bate{burlywood} como seu Último Pedido."
 	}
 	
 	"Warday Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} tocou as trombetas e acionou um {default}Dia de Guerra{burlywood} para a próxima rodada."
 	}
 	
 	"ClassWars Select"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{1} escolheu {default}Guerra de Classes{burlywood} como seu Último Pedido."
 	}
 	
 	"Custom Activate"
 	{
+		"#format" 	"{1:s}"
 		"pt" 		"Seu Último Pedido personalizado é {default}{1}{burlywood}."
 	}
 	
@@ -646,6 +763,7 @@
 	
 	"Warden Invite Player"
 	{
+		"#format" 	"{1:N},{2:N}"
 		"pt" 		"O(A) Diretor(a) {default}{1}{burlywood} convidou {default}{2}{burlywood} para a equipe BLU."
 	}
 	
@@ -678,6 +796,7 @@
 	{
 		"pt" 		"Alterar emudecimento dos jogadores MORTOS"
 	}
+	
 	"Mute No One"
 	{
 		"pt" 		"Desativar emudecimento"
@@ -712,18 +831,22 @@
 	{
 		"pt" 		"Emudecer Todos"
 	}
+	
 	"Warden Toggle Mute"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"O(A) Diretor(a) {default}{1}{burlywood} alterou o emudecimento!"
 	}
 	
 	"Player Invited Accepted"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{default}{1}{burlywood} aceitou o convite para juntar-se à equipe dos Guardas."
 	}
 	
 	"Player Invited Denied"
 	{
+		"#format" 	"{1:N}"
 		"pt" 		"{default}{1}{burlywood} rejeitou o convite do(a) Diretor(a)."
 	}
 	
@@ -736,10 +859,13 @@
 	{
 		"pt" 		"Você foi emudecido(a)."
 	}
+	
 	"Medic Heal Rebel"
 	{
+		"#format" 	"{1:N}"
 		"pt"		"{1} curou um rebelde e perdeu seu Freeday!"
 	}
+	
 	"Jail Time Usage"
 	{
 		"pt"		"Uso: sm_jt <tempo>."
@@ -752,11 +878,13 @@
 	
 	"Time Set"
 	{
+		"#format" 	"{1:d}"
 		"pt"		"Tempo definido para {default}{1}{burlywood}."
 	}
 	
 	"Admin Remove Warden"
 	{
+		"#format"	"{1:N}"
 		"pt"		"destituiu {1} da Diretoria."
 	}
 	
@@ -773,16 +901,19 @@
 	
 	"Warden Health Restore"
 	{
+		"#format"	"{1:N}"
 		"pt"		"O(A) Diretor(a) {default}{1}{burlywood} restaurou a vida de todos os prisioneiros."
 	}
 	
 	"Marked as Freekiller"
 	{
+		"#format"	"{1:N}"
 		"pt"		"{default}{1}{burlywood} foi marcado como um(a) Freekiller."
 	}
 	
 	"Freekiller Timer Start"
 	{
+		"#format" 	"{1:d}"
 		"pt"		"Seu status de Freekiller será removido automaticamente em {1} segundos."
 	}
 	
