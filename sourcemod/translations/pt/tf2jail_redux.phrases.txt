@@ -183,6 +183,7 @@
 	{
 		"pt" 			"Escolha um(a) jogador(a)"
 	}
+	
 	"Target Not On Red"
 	{
 		"pt" 			"O(A) jogador(a) escolhido(a) não está na equipe RED."
