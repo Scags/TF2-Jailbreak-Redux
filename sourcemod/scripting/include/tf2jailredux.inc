@@ -40,6 +40,20 @@ enum
 stock char strDoorsList[][] =  { "func_door", "func_door_rotating", "func_movelinear"/*, "prop_door_rotating"*/ };
 
 /**
+ *	@section TF2Jail Redux core forwards
+*/
+
+/**
+ *	Calls when TF2Jail Redux loads fully and successfully.
+ *	It is recommended to use this for loading hooks and creating last requests.
+*/
+forward void TF2JailRedux_OnFullyLoaded();
+
+/**
+ *	@endsection
+*/
+
+/**
  *	@section TF2Jail compatibility forwards and functions
 */
 

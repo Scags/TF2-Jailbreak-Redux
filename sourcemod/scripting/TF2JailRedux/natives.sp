@@ -451,7 +451,6 @@ public any Native_LastRequest_CreateFromConfig(Handle plugin, int numParams)
 
 	return lr;
 }
-// Just make this a direct call?
 public any Native_LastRequest_ByName(Handle plugin, int numParams)
 {
 	char buffer[MAX_LRNAME_LENGTH];
@@ -696,9 +695,8 @@ public any Native_LastRequest_SetFunction(Handle plugin, int numParams)
 		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid index (%d) specified for hook!", idx);
 
 	Function f = GetNativeFunction(3);
-	DataPack pack; lr.GetValue("__FUNCS", pack);
-	pack.Position = view_as< DataPackPos >(idx + 1);
-	pack.WriteFunction(f);
+	FuncTable pack; lr.GetValue("__FUNCS", pack);
+	pack.SetFunction(f, idx);
 	return 1;
 }
 public any Native_LastRequest_ForceFireFunction(Handle plugin, int numParams)

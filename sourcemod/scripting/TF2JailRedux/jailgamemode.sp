@@ -310,8 +310,14 @@ methodmap JailGameMode < JBGameMode
 					player.MutePlayer();
 				else player.UnmutePlayer();
 			case 3:if (!player.bIsVIP) player.MutePlayer();
-			case 4:if (team == RED) player.MutePlayer();
-			case 5:if (team == BLU) player.MutePlayer();
+			case 4:
+				if (team == RED)
+					player.MutePlayer();
+				else player.UnmutePlayer();
+			case 5:
+				if (team == BLU)
+					player.MutePlayer();
+				else player.UnmutePlayer();
 			default:player.MutePlayer();
 		}
 

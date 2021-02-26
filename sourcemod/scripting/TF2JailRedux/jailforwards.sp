@@ -11,89 +11,101 @@ enum	// Legacy forwards
 	Old_OnRebelRemoved
 };
 
-Handle
-	hPrivFwds[JBFWD_LENGTH],
+PrivateForward
+	hPrivFwds[JBFWD_LENGTH]
+;
+
+GlobalForward
+	hOnFullyLoaded,
 	hLegacyFwds[Old_OnRebelRemoved+1]
 ;
 
 void InitializeForwards()
 {
-	hPrivFwds[OnDownloads] 				= CreateForward(ET_Ignore);
-	hPrivFwds[OnRoundStart] 			= CreateForward(ET_Ignore);
-	hPrivFwds[OnRoundStartPlayer]		= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnRoundEnd] 				= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnRoundEndPlayer] 		= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
-	hPrivFwds[OnWardenGet] 				= CreateForward(ET_Hook,   Param_Cell);
-	hPrivFwds[OnPlayerTouch]			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
-	hPrivFwds[OnRedThink] 				= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnBlueThink] 				= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnWardenThink] 			= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnShowHud] 				= CreateForward(ET_Ignore, Param_String, Param_Cell);
-	hPrivFwds[OnLRPicked] 				= CreateForward(ET_Hook,   Param_Cell, Param_Cell);
-	hPrivFwds[OnPlayerDied] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
-	hPrivFwds[OnBuildingDestroyed]		= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
-	hPrivFwds[OnObjectDeflected] 		= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
-	hPrivFwds[OnPlayerJarated] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
-	hPrivFwds[OnUberDeployed] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
-	hPrivFwds[OnPlayerSpawned]			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
-	hPrivFwds[OnMenuAdd] 				= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_CellByRef);
-	hPrivFwds[OnTimeLeft] 				= CreateForward(ET_Ignore, Param_CellByRef);
-	hPrivFwds[OnPlayerPrepped] 			= CreateForward(ET_Hook,   Param_Cell);
-	hPrivFwds[OnPlayerHurt] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
-	hPrivFwds[OnTakeDamage] 			= CreateForward(ET_Hook,   Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
-	hPrivFwds[OnWMenuAdd] 				= CreateForward(ET_Ignore, Param_CellByRef);
-	hPrivFwds[OnWMenuSelect] 			= CreateForward(ET_Hook,   Param_Cell, Param_String);
-	hPrivFwds[OnClientInduction] 		= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnVariableReset] 			= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnTimeEnd] 				= CreateForward(ET_Hook);
-	hPrivFwds[OnLastGuard] 				= CreateForward(ET_Hook);
-	hPrivFwds[OnLastPrisoner] 			= CreateForward(ET_Hook);
-	hPrivFwds[OnCheckLivingPlayers] 	= CreateForward(ET_Ignore);
-	hPrivFwds[OnWardenKilled] 			= CreateForward(ET_Hook,   Param_Cell, Param_Cell, Param_Cell);
-	hPrivFwds[OnFreedayGiven] 			= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnFreedayRemoved] 		= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnPreThink] 				= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
-	hPrivFwds[OnFFTimer] 				= CreateForward(ET_Ignore, Param_Cell, Param_FloatByRef);
-	hPrivFwds[OnDoorsOpen] 				= CreateForward(ET_Hook);
-	hPrivFwds[OnDoorsClose] 			= CreateForward(ET_Hook);
-	hPrivFwds[OnDoorsLock] 				= CreateForward(ET_Hook);
-	hPrivFwds[OnDoorsUnlock] 			= CreateForward(ET_Hook);
-	hPrivFwds[OnPlayerPreppedPost] 		= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnSoundHook] 				= CreateForward(ET_Hook,   Param_Array, Param_CellByRef, Param_String, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_String, Param_CellByRef);
-	hPrivFwds[OnEntCreated]				= CreateForward(ET_Hook,   Param_Cell, Param_String);
-	hPrivFwds[OnCalcAttack] 			= CreateForward(ET_Hook,   Param_Cell, Param_Cell, Param_String, Param_CellByRef);
-	hPrivFwds[OnRebelGiven] 			= CreateForward(ET_Hook,   Param_Cell);
-	hPrivFwds[OnRebelRemoved] 			= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnWardenRemoved] 			= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnShouldAutobalance] 		= CreateForward(ET_Hook);
-	hPrivFwds[OnShouldAutobalancePlayer]= CreateForward(ET_Hook,   Param_Cell);
-	hPrivFwds[OnSetWardenLock] 			= CreateForward(ET_Hook,   Param_Cell);
-	hPrivFwds[OnPlayMusic]				= CreateForward(ET_Hook,   Param_String, Param_FloatByRef);
-	hPrivFwds[OnLRGiven] 				= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnLRActivate] 			= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnLRActivatePlayer] 		= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
-	hPrivFwds[OnLRDenied] 				= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnRoundReset] 			= CreateForward(ET_Ignore);
-	hPrivFwds[OnCellsManaged] 			= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnWardenGetPost] 			= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnRebelGivenPost] 		= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnLRPickedPost] 			= CreateForward(ET_Ignore, Param_Cell, Param_Cell);
-	hPrivFwds[OnWMenuSelectPost] 		= CreateForward(ET_Ignore, Param_Cell, Param_String);
-	hPrivFwds[OnCellsFullyOpened] 		= CreateForward(ET_Ignore);
-	hPrivFwds[OnCellsFullyClosed] 		= CreateForward(ET_Ignore);
-	hPrivFwds[OnMarkedFreekiller] 		= CreateForward(ET_Hook, Param_Cell);
-	hPrivFwds[OnMarkedFreekillerPost] 	= CreateForward(ET_Ignore, Param_Cell);
-	hPrivFwds[OnFreekillerStatusRemoved]= CreateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnDownloads] 				= new PrivateForward(ET_Ignore);
+	hPrivFwds[OnRoundStart] 			= new PrivateForward(ET_Ignore);
+	hPrivFwds[OnRoundStartPlayer]		= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnRoundEnd] 				= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnRoundEndPlayer] 		= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
+	hPrivFwds[OnWardenGet] 				= new PrivateForward(ET_Hook,   Param_Cell);
+	hPrivFwds[OnPlayerTouch]			= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
+	hPrivFwds[OnRedThink] 				= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnBlueThink] 				= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnWardenThink] 			= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnShowHud] 				= new PrivateForward(ET_Ignore, Param_String, Param_Cell);
+	hPrivFwds[OnLRPicked] 				= new PrivateForward(ET_Hook,   Param_Cell, Param_Cell);
+	hPrivFwds[OnPlayerDied] 			= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+	hPrivFwds[OnBuildingDestroyed]		= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+	hPrivFwds[OnObjectDeflected] 		= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+	hPrivFwds[OnPlayerJarated] 			= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+	hPrivFwds[OnUberDeployed] 			= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+	hPrivFwds[OnPlayerSpawned]			= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
+	hPrivFwds[OnMenuAdd] 				= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_CellByRef);
+	hPrivFwds[OnTimeLeft] 				= new PrivateForward(ET_Ignore, Param_CellByRef);
+	hPrivFwds[OnPlayerPrepped] 			= new PrivateForward(ET_Hook,   Param_Cell);
+	hPrivFwds[OnPlayerHurt] 			= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+	hPrivFwds[OnTakeDamage] 			= new PrivateForward(ET_Hook,   Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	hPrivFwds[OnWMenuAdd] 				= new PrivateForward(ET_Ignore, Param_CellByRef);
+	hPrivFwds[OnWMenuSelect] 			= new PrivateForward(ET_Hook,   Param_Cell, Param_String);
+	hPrivFwds[OnClientInduction] 		= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnVariableReset] 			= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnTimeEnd] 				= new PrivateForward(ET_Hook);
+	hPrivFwds[OnLastGuard] 				= new PrivateForward(ET_Hook);
+	hPrivFwds[OnLastPrisoner] 			= new PrivateForward(ET_Hook);
+	hPrivFwds[OnCheckLivingPlayers] 	= new PrivateForward(ET_Ignore);
+	hPrivFwds[OnWardenKilled] 			= new PrivateForward(ET_Hook,   Param_Cell, Param_Cell, Param_Cell);
+	hPrivFwds[OnFreedayGiven] 			= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnFreedayRemoved] 		= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnPreThink] 				= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
+	hPrivFwds[OnFFTimer] 				= new PrivateForward(ET_Ignore, Param_Cell, Param_FloatByRef);
+	hPrivFwds[OnDoorsOpen] 				= new PrivateForward(ET_Hook);
+	hPrivFwds[OnDoorsClose] 			= new PrivateForward(ET_Hook);
+	hPrivFwds[OnDoorsLock] 				= new PrivateForward(ET_Hook);
+	hPrivFwds[OnDoorsUnlock] 			= new PrivateForward(ET_Hook);
+	hPrivFwds[OnPlayerPreppedPost] 		= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnSoundHook] 				= new PrivateForward(ET_Hook,   Param_Array, Param_CellByRef, Param_String, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_String, Param_CellByRef);
+	hPrivFwds[OnEntCreated]				= new PrivateForward(ET_Hook,   Param_Cell, Param_String);
+	hPrivFwds[OnCalcAttack] 			= new PrivateForward(ET_Hook,   Param_Cell, Param_Cell, Param_String, Param_CellByRef);
+	hPrivFwds[OnRebelGiven] 			= new PrivateForward(ET_Hook,   Param_Cell);
+	hPrivFwds[OnRebelRemoved] 			= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnWardenRemoved] 			= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnShouldAutobalance] 		= new PrivateForward(ET_Hook);
+	hPrivFwds[OnShouldAutobalancePlayer]= new PrivateForward(ET_Hook,   Param_Cell);
+	hPrivFwds[OnSetWardenLock] 			= new PrivateForward(ET_Hook,   Param_Cell);
+	hPrivFwds[OnPlayMusic]				= new PrivateForward(ET_Hook,   Param_String, Param_FloatByRef);
+	hPrivFwds[OnLRGiven] 				= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnLRActivate] 			= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnLRActivatePlayer] 		= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
+	hPrivFwds[OnLRDenied] 				= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnRoundReset] 			= new PrivateForward(ET_Ignore);
+	hPrivFwds[OnCellsManaged] 			= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnWardenGetPost] 			= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnRebelGivenPost] 		= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnLRPickedPost] 			= new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
+	hPrivFwds[OnWMenuSelectPost] 		= new PrivateForward(ET_Ignore, Param_Cell, Param_String);
+	hPrivFwds[OnCellsFullyOpened] 		= new PrivateForward(ET_Ignore);
+	hPrivFwds[OnCellsFullyClosed] 		= new PrivateForward(ET_Ignore);
+	hPrivFwds[OnMarkedFreekiller] 		= new PrivateForward(ET_Hook, Param_Cell);
+	hPrivFwds[OnMarkedFreekillerPost] 	= new PrivateForward(ET_Ignore, Param_Cell);
+	hPrivFwds[OnFreekillerStatusRemoved]= new PrivateForward(ET_Ignore, Param_Cell);
 
-	hLegacyFwds[Old_OnWardenGiven] 			= CreateGlobalForward("TF2Jail_OnWardenGiven", ET_Ignore, Param_Cell);
-	hLegacyFwds[Old_OnWardenRemoved] 		= CreateGlobalForward("TF2Jail_OnWardenRemoved", ET_Ignore, Param_Cell);
-//	hLegacyFwds[Old_OnLastRequestExecute] 	= CreateGlobalForward("TF2Jail_OnLastRequestExecute", ET_Ignore, Param_String);
-	hLegacyFwds[Old_OnFreedayGiven] 		= CreateGlobalForward("TF2Jail_OnFreedayGiven", ET_Ignore, Param_Cell);
-	hLegacyFwds[Old_OnFreedayRemoved] 		= CreateGlobalForward("TF2Jail_OnFreedayRemoved", ET_Ignore, Param_Cell);
-//	hLegacyFwds[Old_OnFreekillerGiven] 		= CreateGlobalForward("TF2Jail_OnFreekillerGiven", ET_Ignore, Param_Cell);
-//	hLegacyFwds[Old_OnFreekillerRemoved] 	= CreateGlobalForward("TF2Jail_OnFreekillerRemoved", ET_Ignore, Param_Cell);
-	hLegacyFwds[Old_OnRebelGiven] 			= CreateGlobalForward("TF2Jail_OnRebelGiven", ET_Ignore, Param_Cell);
-	hLegacyFwds[Old_OnRebelRemoved] 		= CreateGlobalForward("TF2Jail_OnRebelRemoved", ET_Ignore, Param_Cell);
+	hLegacyFwds[Old_OnWardenGiven] 			= new GlobalForward("TF2Jail_OnWardenGiven", ET_Ignore, Param_Cell);
+	hLegacyFwds[Old_OnWardenRemoved] 		= new GlobalForward("TF2Jail_OnWardenRemoved", ET_Ignore, Param_Cell);
+//	hLegacyFwds[Old_OnLastRequestExecute] 	= new GlobalForward("TF2Jail_OnLastRequestExecute", ET_Ignore, Param_String);
+	hLegacyFwds[Old_OnFreedayGiven] 		= new GlobalForward("TF2Jail_OnFreedayGiven", ET_Ignore, Param_Cell);
+	hLegacyFwds[Old_OnFreedayRemoved] 		= new GlobalForward("TF2Jail_OnFreedayRemoved", ET_Ignore, Param_Cell);
+//	hLegacyFwds[Old_OnFreekillerGiven] 		= new GlobalForward("TF2Jail_OnFreekillerGiven", ET_Ignore, Param_Cell);
+//	hLegacyFwds[Old_OnFreekillerRemoved] 	= new GlobalForward("TF2Jail_OnFreekillerRemoved", ET_Ignore, Param_Cell);
+	hLegacyFwds[Old_OnRebelGiven] 			= new GlobalForward("TF2Jail_OnRebelGiven", ET_Ignore, Param_Cell);
+	hLegacyFwds[Old_OnRebelRemoved] 		= new GlobalForward("TF2Jail_OnRebelRemoved", ET_Ignore, Param_Cell);
+
+	hOnFullyLoaded = new GlobalForward("TF2JailRedux_OnFullyLoaded", ET_Ignore);
+}
+
+void Call_OnFullyLoaded()
+{
+	Call_StartForward(hOnFullyLoaded);
+	Call_Finish();
 }
 
 void Call_OnDownloads()
