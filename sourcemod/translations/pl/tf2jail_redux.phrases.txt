@@ -57,6 +57,7 @@
 	{
 		"pl"			"Pozycja Naczelnika została włączona."
 	}
+	
 	// 1: Client name/index
 	"Collisions On Warden"
 	{
@@ -68,6 +69,7 @@
 	{
 		"pl"			"Naczelnik {default}{1}{burlywood} wyłączył Kolizje."
 	}
+	
 	// 1: Client name/index
 	"FF On Warden"
 	{
@@ -181,309 +183,381 @@
 	{
 		"pl"			"Wybierz gracza"
 	}
+	
 	"Target Not On Red"
 	{
 		"pl"			"Cel nie należy do drużyny Czerwonej."
 	}
+	
 	"Denying LR Disabled"
 	{
 		"pl"			"Odmowa ostatnich życzeń została wyłączona."
 	}
+	
 	"No LR Next Round"
 	{
 		"pl"			"Nie ma ostatniego życzenia ustalonego na następnej rundy."
 	}
+	
 	"Warden Deny LR"
 	{
 		"pl"			"Naczelnik {default}{1}{burlywood} odmówił ostatnie życzenie!"
 	}
+	
 	"Last Request List"
 	{
 		"pl"			"Lista Ostatnich Życzeń"
 	}
+	
 	"Music On"
 	{
 		"pl"			"{lightgreen}Włączyłeś{default} Muzyke TF2Jail w tle."
 	}
+	
 	// \n Stands for new line, ignore it please
 	"Music Off"
 	{
 		"pl"			"{lightgreen}Wyłączyłeś{default} Muzyke TF2Jail w tle.\nKiedy muzyka przestanie grać, nie będzie odtwarzana ponownie."
 	}
+	
 	"Admin Removed Queued Freeday"
 	{
 		"pl"			"Administrator usunął twój przyszły Wolny Dzień!"
 	}
+	
 	"Admin Removed Freeday"
 	{
 		"pl"			"Administrator usunął twój Wolny Dzień!"
 	}
+	
 	"Admin Denied LR"
 	{
 		"pl"			"odrzucił bieżące ostatnie życzenie!"
 	}
+	
 	"Target Need Blue Team"
 	{
 		"pl"			"Cel nie jest w drużynie Niebieskich."
 	}
+	
 	// 1: Client name/index
 	"Admin Force Warden"
 	{
 		"pl"			"zmusił {default}{1}{burlywood} aby został Naczelnikiem."
 	}
+	
 	"Admin Force Random Warden"
 	{
 		"pl"			"wylosował gracza na Naczelnika."
 	}
+	
 	// 1: Client name/index
 	"Admin Force LR"
 	{
 		"pl"			"wymusił otrzymanie Ostatniego Życzenia na {default}{1}{burlywood}."
 	}
+	
 	"Admin Force LR Self"
 	{
 		"pl"			"wymusił na sobie Ostatnie Życzenie"
 	}
+	
 	"Admin Reset Plugin"
 	{
 		"pl"			"Admin zrestartował plugin!"
 	}
+	
 	"Doors Work"
 	{
 		"pl"			"Drzwi są funkcjonalne."
 	}
+	
 	"Doors Don't Work"
 	{
 		"pl"			"Drzwi nie są funkcjonalne."
 	}
+	
 	"Buttons Work"
 	{
 		"pl"			"Funkcjonalność guzików od drzwi jest aktywna."
 	}
+	
 	"Buttons Don't Work"
 	{
 		"pl"			"Funkcjonalność guzików od drzwi jest nieaktywna."
 	}
+	
 	"Target Is Freeday"
 	{
 		"pl"			"Cel ma teraz Dzień Wolny."
 	}
+	
 	// 1: Client name/index
 	"Admin Give Freeday"
 	{
 		"pl"			"dał {default}{1}{burlywood} Dzień Wolny."
 	}
+	
 	"Select For Freeday"
 	{
 		"pl"			"Wybierz gracza(y) na Dzień Wolny"
 	}
+	
 	"Admin Remove Freeday"
 	{
 		"pl"			"zabrał Dzień Wolny od {default}{1}{burlywood}."
 	}
+	
 	"Player Not Freeday"
 	{
 		"pl"			"Gracz nie ma Dnia Wolnego"
 	}
+	
 	"Warden Already Locked"
 	{
 		"pl"			"Pozycja Naczelnika jest już zablokowana."
 	}
+	
 	"Admin Lock Warden"
 	{
 		"pl"			"zablokował pozycje Naczelnika!"
 	}
+	
 	"Warden Not Locked"
 	{
 		"pl"			"Pozycja Naczelnika nie jest zablokowana."
 	}
+	
 	"Admin Unlock Warden"
 	{
 		"pl"			"odblokował Pozycje Naczelnika."
 	}
+	
 	// 1: Warden name/index
 	// 2: Receiver name/index
 	"Warden Give LR"
 	{
 		"pl"			"Naczelnik {default}{1}{burlywood} dał {default}{2}{burlywood} Ostatnie Życzenie."
 	}
+	
 	// 1: Client name/index
 	"Freeday Already Queued"
 	{
 		"pl"			"Dzień Wolny dla {default}{1}{burlywood} jest teraz w kolejce."
 	}
+	
 	// 1: Chooser name/index
 	// 2: Receiver name/index
 	"Chosen For Freeday"
 	{
 		"pl"			"{default}{1}{burlywood} wybrał {default}{2}{burlywood} na Dzień wolny."
 	}
+	
 	"Freeday Max"
 	{
 		"pl"			"Użyłes już limit Dni Wolnych."
 	}
+	
 	"Not Enabled"
 	{
 		"pl"			"To nie jest włączone."
 	}
+	
 	"Slow Down"
 	{
 		"pl"			"Zwolnij kowbuju!"
 	}
+	
 	"Laser Off"
 	{
 		"pl"			"Zmieniłeś status lasera na {default}Wyłączony{burlywood}."
 	}
+	
 	"Laser On"
 	{
 		"pl"			"Zmieniłeś status lasera na {default}Włączony{burlywood}. przytrzymaj r aby aktywować."
 	}
+	
 	// 1: Client name/index
 	"Medic Room Enabled"
 	{
 		"pl"			"Naczelnik {default}{1}{burlywood} zmienił status medyka na {lightgreen}Włączony{burlywood}!"
 	}
+	
 	// 1: Client name/index
 	"Medic Room Disabled"
 	{
 		"pl"			"Naczelnik {default}{1}{burlywood} zmienił status medyka na {lightgreen}Wyłączony{burlywood}!"
 	}
+	
 	"Before Or During Round"
 	{
 		"pl"			"Należy wykonać przed lub w trakcie aktywnej rundy."
 	}
+	
 	"No Warday Config At Location"
 	{
 		"pl"			"Konfiguracja Dnia Wojny nie jest ustawiona dla tej lokalizacji."
 	}
+	
 	"Warday Red Active"
 	{
 		"pl"			"Dzień Wojny dla drużyny Czerwonej został aktywowany!"
-	}	
+	}
+	
 	"Warday Blue Active"
 	{
 		"pl"			"Dzień Wojny dla drużyny Niebieskiej został aktywowany!"
 	}
+	
 	"Ignore Red Team Warday"
 	{
 		"pl"			"Dzień Wojny dla drużyny Czerwonej nie jest skonfigurowany, ignoruję..."
 	}
+	
 	"Ignore Blue Team Warday"
 	{
 		"pl"			"Dzień Wojny dla drużyny Niebieskiej nie jest skonfigurowany, ignoruję..."
 	}
+	
 	"No Warday Config"
 	{
 		"pl"			"Konfiguracja Dnia Wojny nie jest ustawiona."
 	}
+	
 	"Warden Commands"
 	{
 		"pl"			"Polecenia Naczelnika"
 	}
+	
 	"Warday Activate"
 	{
 		"pl"			"Dzień Wojny został aktywowany!"
 	}
+	
 	"Reload CFG"
 	{
 		"pl"			"Ponowne ładowanie konfiguracji pluginu."
 	}
+	
 	"Medic Room Enabled Admin"
 	{
 		"pl"			"przełączył status Medyka na {lightgreen}Włączony{burlywood}!"
 	}
+	
 	"Medic Room Disabled Admin"
 	{
 		"pl"			"przełączył status Medyka na {lightgreen}Wyłączony{burlywood}!"
 	}
+	
 	// 1: Client name/index
 	"New Warden"
 	{
 		"pl"			"{default}{1}{burlywood} jest nowym Naczelnikiem"
 	}
+	
 	// 1: Client name/index
 	"New Warden Center"
 	{
 		"pl"			"{1} jest nowym naczelnikiem"
 	}
+	
 	"Muted Can't Join"
 	{
 		"pl"			"Jesteś wyciszony, dlatego nie możesz dołączyć do drużyny Niebieskich."
 	}
+	
 	"Warden Killed"
 	{
 		"pl"			"Naczelnik został zabity!"
 	}
+	
 	"Autobalanced"
 	{
 		"pl"			"Zostałeś zautobalansowany."
 	}
+	
 	"First Day Freeday"
 	{
 		"pl"			"Pierwszy dzień, Dniem wolnym."
 	}
+	
 	// 1: Client name/index
 	// 2: Door format, see Opened, Closed, Locked, Unlocked
 	"Warden Work Cells"
 	{
 		"pl"			"Naczelnik {default}{1}{burlywood} {2} cele."
 	}
+	
 	// 1: Door format, see Opened, Closed, Locked, Unlocked
 	"Admin Work Cells"
 	{
 		"pl"			"{1} cele."
 	}
+	
 	"Opened"
 	{
 		"pl"			"otworzył"
 	}
+	
 	"Closed"
 	{
 		"pl"			"zamknął"
 	}
+	
 	"Locked"
 	{
 		"pl"			"zablokował"
 	}
+	
 	"Unlocked"
 	{
 		"pl"			"odblokował"
 	}
+	
 	"Warden Fired"
 	{
 		"pl"			"Naczelnik został zwolniony!"
 	}
+	
 	// 1: Client name/index
 	"Freeday Active"
 	{
 		"pl"			"Dzień Wolny jest aktywny dla {default}{1}{burlywood}."
 	}
+	
 	"Attack Guard Lose Freeday"
 	{
 		"pl"			"{1} Zaatakował strażnika i stracił swój Dzień Wolny!"
 	}
+	
 	"One Guard Left"
 	{
 		"pl"			"Jeden strażnik pozostał przy życiu..."
 	}
+	
 	"LR Chosen"
 	{
 		"pl"			"Ostanie Życzenie została wybrane. Aktywne Dni Wolne zostały zabrane."
 	}
+	
 	"Cells Already Open"
 	{
 		"pl"			"Cele są już otwarte."
 	}
+	
 	"Cells Not Open"
 	{
 		"pl"			"Cele nie są otwarte."
 	}
+	
 	// 1: Current votes
 	// 2: Votes needed
 	"Fire Warden Already Voted"
 	{
 		"pl"		"Już głosowałeś na zwolnienie tego naczelnika. ({1} głosów, {2} wymagane)"
 	}
+	
 	// 1: Client name/index
 	// 2: Current votes
 	// 3: Votes needed
@@ -678,6 +752,7 @@
 	{
 		"pl"		"Zmarli"
 	}
+	
 	"Mute No One"
 	{
 		"pl"		"Brak Wyciszenia"
@@ -712,6 +787,7 @@
 	{
 		"pl"		"Wycisz WSZYSTKICH"
 	}
+	
 	"Warden Toggle Mute"
 	{
 		"pl"		"Naczelnik {default}{1}{burlywood} zmienił tryb wyciszenia!"
@@ -736,10 +812,12 @@
 	{
 		"pl"		"Zostałeś wyciszony."
 	}
+	
 	"Medic Heal Rebel"
 	{
 		"pl"		"{1} leczył zbuntowanego i stracił swój dzień wolny!"
 	}
+	
 	"Jail Time Usage"
 	{
 		"pl"		"Użycie: sm_jt <czas>."
