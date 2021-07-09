@@ -536,7 +536,7 @@ public int LRMenuHandler(Menu menu, MenuAction action, int client, int select)
 				return ITEMDRAW_DEFAULT;
 			if (lr.IsVIPOnly() && !JailFighter(client).bIsVIP)
 				return ITEMDRAW_DISABLED;
-			if (gamemode.hLRCount.Get(select) >= lr.UsesPerMap())
+			if (lr.UsesPerMap() > 0 && gamemode.hLRCount.Get(select) >= lr.UsesPerMap())
 				return ITEMDRAW_DISABLED;
 		}
 		case MenuAction_Display:
@@ -671,7 +671,7 @@ public void ManageEntityCreated(int ent, const char[] classname)
 		SDKHook(ent, SDKHook_SpawnPost, HookVent);
 
 	if (!strcmp(classname, "obj_dispenser") || !strcmp(classname, "obj_sentrygun") || !strcmp(classname, "obj_teleporter"))
-		SDKHook(ent, SDKHook_Spawn, gamemode.bAllowBuilding ? OnBuildingSpawn : KillOnSpawn);
+		SDKHook(ent, SDKHook_Spawn, OnBuildingSpawn);
 }
 
 public void ManageWardenMenu(Menu menu)
