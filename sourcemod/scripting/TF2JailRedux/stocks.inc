@@ -1341,8 +1341,3 @@ stock void KillTimerSafe(Handle &timer)
 		timer = null;
 	}
 }
-stock void StringToLower(const char[] input, char[] output, int size)
-{
-	for (int i = 0 ; i < size; ++i)
-		output[i] = input[i] | ' ';
-}

@@ -693,14 +693,12 @@ public int WardenMenuHandler(Menu menu, MenuAction action, int client, int selec
 			}
 
 			char info[32]; menu.GetItem(select, info, sizeof(info));
-			char infoout[32];
-			StringToLower(info, infoout, sizeof(info));
-			if (Call_OnWMenuSelect(player, infoout) != Plugin_Continue)
+			if (Call_OnWMenuSelect(player, info) != Plugin_Continue)
 				return;
 
-			FakeClientCommandEx(client, infoout);
+			FakeClientCommandEx(client, info);
 			menu.DisplayAt(client, GetMenuSelectionPosition(), 0);
-			Call_OnWMenuSelectPost(player, infoout);
+			Call_OnWMenuSelectPost(player, info);
 		}
 	}
 }
