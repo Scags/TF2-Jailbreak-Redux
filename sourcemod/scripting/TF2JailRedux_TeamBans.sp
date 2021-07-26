@@ -5,6 +5,7 @@
 #include <tf2jailredux>
 #include <clientprefs>
 #include <sdktools>
+#include <tf2>
 
 #undef TAG
 #define TAG "{crimson}[TF2Jail] Teambans{burlywood} "
