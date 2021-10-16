@@ -24,7 +24,7 @@
 	
 	"Can't Teleport"
 	{
-		"pt" 			"Você ainda não pode se teletransportar!"
+		"pt" 			"Você ainda não pode teletransportar-se!"
 	}
 	
 	"Welcome Message"
@@ -620,7 +620,7 @@
 	
 	"Suicide Select"
 	{
-		"pt" 		"{1} escolheu se matar. Que vergonha..."
+		"pt" 		"{1} escolheu matar-se. Que vergonha..."
 	}
 	
 	"Custom Select"
