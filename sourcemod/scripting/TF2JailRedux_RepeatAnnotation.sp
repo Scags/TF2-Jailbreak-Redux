@@ -76,6 +76,9 @@ public void OnPluginStart()
 
 	LoadTranslations("tf2jail_redux.phrases");
 
+	PrecacheSound("/coach/coach_go_here.wav", true);
+
+	RegConsoleCmd("sm_r", SayRepeat);
 	RegConsoleCmd("sm_repeat", SayRepeat);
 }
 
@@ -136,6 +139,7 @@ public Action SayRepeat(int client, int args)
 	float origin[3]; GetClientAbsOrigin(client, origin);
 	DispatchKeyValueVector(ent, "origin", origin);
 	DispatchSpawn(ent);
+	EmitSoundToClient(client, "/coach/coach_go_here.wav");
 
 	event.SetInt("index", view_as< int >(GetEntityAddress(ent)));
 	event.Fire();
