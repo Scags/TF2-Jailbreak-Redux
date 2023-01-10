@@ -1087,12 +1087,12 @@ public void OnEggBombSpawned(int entity)
 
 public void UpdateBossHealth()
 {
-//	if (IsValidEntity(iHealthBar))
-//	{
-//		int pct = RoundToCeil(float(iCurrBoss.iHealth)/float(iCurrBoss.iMaxHealth)*255.0);
-//		Clamp(pct, 0, 255);
-//		SetEntProp(iHealthBar, Prop_Send, "m_iBossHealthPercentageByte", pct);
-//	}
+	if (IsValidEntity(iHealthBar))
+	{
+		int pct = RoundToCeil(float(iCurrBoss.iHealth)/float(iCurrBoss.iMaxHealth)*255.0);
+		Clamp(pct, 0, 255);
+		SetEntProp(iHealthBar, Prop_Send, "m_iBossHealthPercentageByte", pct);
+	}
 }
 
 public void ManageBossTransition(const JailBoss base)/* whatever stuff needs initializing should be done here */
@@ -2018,18 +2018,17 @@ public void fwdOnRoundStart(LastRequest lr)
 		hDroppedWeaponsCVar.SetInt(1);
 	}
 
-	// FIXME; why does this not work!?!
-//	iHealthBar = -1;
-//	if (g_LR.GetParameterNum("HealthBar", 0))
-//	{
-//		iHealthBar = FindEntityByClassname(-1, "monster_resource");
-//		if (iHealthBar == -1)
-//		{
-//			iHealthBar = CreateEntityByName("monster_resource");
-//			DispatchSpawn(iHealthBar);
-//		}
-//		iHealthBar = EntIndexToEntRef(iHealthBar);
-//	}
+	iHealthBar = -1;
+	if (g_LR.GetParameterNum("HealthBar", 0))
+	{
+		iHealthBar = FindEntityByClassname(-1, "monster_resource");
+		if (iHealthBar == -1)
+		{
+			iHealthBar = CreateEntityByName("monster_resource");
+			DispatchSpawn(iHealthBar);
+		}
+		iHealthBar = EntIndexToEntRef(iHealthBar);
+	}
 
 	JailBoss rand = JailBoss( GetRandomClient(true) );	// It's probably best to keep the second param true
 	if (rand.index <= 0)
@@ -2057,6 +2056,7 @@ public void fwdOnRoundStart(LastRequest lr)
 
 	SetPawnTimer(ManagePlayBossIntro, 0.2, rand);
 	ManageMessageIntro();
+	iCurrBoss = rand;
 }
 public void fwdOnRoundEnd(LastRequest lr, Event event)
 {
