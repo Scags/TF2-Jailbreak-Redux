@@ -2,142 +2,142 @@
 {
 	"Plugin Tag Teambans"
 	{
-		"pt"			"{crimson}[Banimentos de Equipe do TF2Jail]{burlywood}"
+		"pt"			"{crimson}[Banimentos de equipe do TF2Jail]{burlywood}"
 	}
 	
 	"Guardbanned Center"
 	{
-		"pt"			"Você está banido(a) da equipe dos Guardas."
+		"pt"			"Você está banido da equipe dos guardas."
 	}
 	
 	"Already Guardbanned"
 	{
-		"pt"			"{1} já está banido(a) da equipe dos Guardas."
+		"pt"			"{1} já está banido da equipe dos guardas."
 	}
 	
 	"Cmd Usage IsBanned"
 	{
-		"pt"			"Uso: sm_gbs <jogador(a)>."
+		"pt"			"Uso: sm_gbs <jogador>."
 	}
 	
 	"Is Guardbanned permanently"
 	{
-		"pt"			"{1} está permanentemente banido(a) da equipe dos Guardas."
+		"pt"			"{1} está banido permanentemente da equipe dos guardas."
 	}
 	
 	"Is Guardbanned time left"
 	{
-		"pt"			"{1} está banido(a) da equipe dos Guardas por mais {2} minutos."
+		"pt"			"{1} está banido da equipe dos guardas por mais {2} minutos."
 	}
 	
 	"Is Not Guardbanned"
 	{
-		"pt"			"{1} não está banido(a) da equipe dos Guardas."
+		"pt"			"{1} não está banido da equipe dos guardas."
 	}
 	
 	"Cmd Usage OfflineUnguardban"
 	{
-		"pt"			"Uso: sm_tuboff <steamid>."
+		"pt"			"Uso: sm_tuboff <id_steam>."
 	}
 	
 	"Offline Unguardban"
 	{
-		"pt"			"Você desbaniu a ID Steam {1} da equipe dos Guardas."
+		"pt"			"Você desbaniu o ID Steam {1} da equipe dos guardas."
 	}
 	
 	"Cmd Usage OfflineGuardban"
 	{
-		"pt"			"Uso: sm_gboff <steamid>."
+		"pt"			"Uso: sm_gboff <id_steam>."
 	}
 	
 	"Offline Guardban"
 	{
-		"pt"			"Você baniu a ID Steam {1} da equipe dos Guardas."
+		"pt"			"Você baniu o ID Steam {1} da equipe dos guardas."
 	}
 	
 	"Already Wardenbanned"
 	{
-		"pt"			"{1} já está banido(a) de exercer a Diretoria."
+		"pt"			"{1} já está banido da diretoria."
 	}
 	
 	"Cmd Usage OfflineUnwardenban"
 	{
-		"pt"			"Uso: sm_wuboff <steamid>."
+		"pt"			"Uso: sm_wuboff <id_steam>."
 	}
 	
 	"Offline Unwardenban"
 	{
-		"pt"			"Você desbaniu a ID Steam {1} de exercer a Diretoria."
+		"pt"			"Você desbaniu o ID Steam {1} da diretoria."
 	}
 	
 	"Cmd Usage OfflineWardenban"
 	{
-		"pt"			"Uso: sm_wboff <steamid>."
+		"pt"			"Uso: sm_wboff <id_steam>."
 	}
 	
 	"Offline Wardenban"
 	{
-		"pt"			"Você baniu a ID Steam {1} de exercer a Diretoria."
+		"pt"			"Você baniu o ID Steam {1} da diretoria."
 	}
 	
 	"Unguardban"
 	{
-		"pt"			"Você desbaniu o(a) jogador(a) {1} da equipe dos Guardas."
+		"pt"			"Você desbaniu o jogador {1} da equipe dos guardas."
 	}
 	
 	"Guardban Permanent"
 	{
-		"pt"			"Você baniu permanentemente o(a) jogador(a) {1} da equipe dos Guardas."
+		"pt"			"Você baniu permanentemente o jogador {1} da equipe dos guardas."
 	}
 	
 	"Guardban Timed"
 	{
-		"pt"			"Você baniu o(a) jogador(a) {1} da equipe dos Guardas por {2} minutos."
+		"pt"			"Você baniu o jogador {1} da equipe dos guardas por {2} minutos."
 	}
 	
 	"Unwardenban"
 	{
-		"pt"			"Você desbaniu o(a) jogador(a) {1} de exercer a Diretoria."
+		"pt"			"Você desbaniu o jogador {1} da diretoria."
 	}
 	
 	"Wardenban Permanent"
 	{
-		"pt" 			"Você baniu permanentemente o(a) jogador(a) {1} de exercer a Diretoria."
+		"pt" 			"Você baniu permanentemente o jogador {1} da diretoria."
 	}
 	
 	"Wardenban Timed"
 	{
-		"pt"			"Você baniu o(a) jogador(a) {1} de exercer a Diretoria por {2} minutos."
+		"pt"			"Você baniu o jogador {1} da diretoria por {2} minutos."
 	}
 	
 	"Rage Ban Menu"
 	{
-		"pt"			"Menu de Rage Ban"
+		"pt"			"Menu de rage ban"
 	}
 	
 	"Rageban"
 	{
-		"pt"			"Você aplicou um Rage Ban na ID Steam {1}."
+		"pt"			"Você aplicou um rage ban no ID Steam {1}."
 	}
 	
 	"Ban Menu"
 	{
-		"pt"			"Selecione um(a) jogador(a) para ser banido(a) da equipe dos Guardas"
+		"pt"			"Selecione um jogador para ser banido da equipe dos guardas"
 	}
 	
 	"Already Guardbanned"
 	{
-		"pt"			"O(A) jogador(a) escolhido(a) já está banido(a) da equipe dos Guardas."
+		"pt"			"O jogador selecionado já está banido da equipe dos guardas."
 	}
 	
 	"Not Guardbanned"
 	{
-		"pt"			"O(A) jogador(a) escolhido(a) não está banido(a) da equipe dos Guardas."
+		"pt"			"O jogador selecionado não está banido da equipe dos guardas."
 	}
 	
 	"Not Wardenbanned"
 	{
-		"pt"			"O(A) jogador(a) escolhido(a) não está banido(a) de exercer a Diretoria."
+		"pt"			"O jogador selecionado não está banido da diretoria."
 	}
 	
 	"Select Time"
@@ -147,6 +147,6 @@
 	
 	"Unban Menu"
 	{
-		"pt"			"Selecione um(a) jogador(a) a ser desbanido(a)"
+		"pt"			"Selecione um jogador para desbanir"
 	}
 }
