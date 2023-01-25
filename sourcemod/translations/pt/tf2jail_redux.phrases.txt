@@ -89,7 +89,7 @@
 	
 	"Help Panel Who's Warden"
 	{
-		"pt" 			"Quem é o diretor atual?"
+		"pt" 			"Quem é o diretor?"
 	}
 	
 	"Help Panel What are LR's"
@@ -232,7 +232,7 @@
 	
 	"Admin Denied LR"
 	{
-		"pt" 			"negou o último pedido atual!"
+		"pt" 			"negou o último pedido!"
 	}
 	
 	"Target Need Blue Team"
@@ -555,7 +555,7 @@
 	// 2: Votes needed
 	"Fire Warden Already Voted"
 	{
-		"pt"		"Você já votou para destituir o diretor atual. (Votos: {1}/{2}.)"
+		"pt"		"Você já votou para destituir o diretor. (Votos: {1}/{2}.)"
 	}
 	
 	// 1: Client name/index
@@ -563,7 +563,7 @@
 	// 3: Votes needed
 	"Fire Warden Requested"
 	{
-		"pt"		"{1} quer destituir o diretor atual. (Votos: {1}/{2}.)"
+		"pt"		"{1} quer destituir o diretor. (Votos: {1}/{2}.)"
 	}
 	
 	// 1: Client name/index
