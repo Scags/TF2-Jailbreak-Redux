@@ -42,7 +42,7 @@
 	
 	"Offline Unguardban"
 	{
-		"pl"			"Sukcesywnie Odbanowano Steam ID {1}."
+		"pl"			"Odbanowano Steam ID {1}."
 	}
 	
 	"Cmd Usage OfflineGuardban"
@@ -52,7 +52,7 @@
 	
 	"Offline Guardban"
 	{
-		"pl"			"Sukcesywnie Zbanowano Steam ID {1}.
+		"pl"			"Zbanowano Steam ID {1}.
 	}
 	
 	"Already Wardenbanned"
@@ -67,7 +67,7 @@
 	
 	"Offline Unwardenban"
 	{
-		"pl"			"Sukcesywnie Odbanowano Steam ID %s."
+		"pl"			"Odbanowano Steam ID %s."
 	}
 	
 	"Cmd Usage OfflineWardenban"
@@ -77,7 +77,7 @@
 	
 	"Offline Wardenban"
 	{
-		"pl"			"Sukcesywnie Zbanowano Steam ID {1}."
+		"pl"			"Zbanowano Steam ID {1}."
 	}
 	
 	"Unguardban"
@@ -117,7 +117,7 @@
 	
 	"Rageban"
 	{
-		"pl"			"Sukcesywnie Rage Zbanowano gracza ze Steam ID {1}."
+		"pl"			"Rage Zbanowano gracza ze Steam ID {1}."
 	}
 	
 	"Ban Menu"
