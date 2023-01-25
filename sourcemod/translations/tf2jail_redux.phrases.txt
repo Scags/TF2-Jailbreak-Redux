@@ -72,7 +72,7 @@
 	"Collisions Off Warden"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"Warden {default}{1}{burlywood} has disabled Collisions."
+		"en" 			"Warden {default}{1}{burlywood} has disabled Collisions!"
 	}
 	
 	// 1: Client name/index
