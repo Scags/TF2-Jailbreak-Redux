@@ -186,7 +186,7 @@
 	
 	"Target Not On Red"
 	{
-		"pt" 			"O jogador selecionado não está na equipe RED."
+		"pt" 			"O jogador em questão não está na equipe RED."
 	}
 	
 	"Denying LR Disabled"
@@ -237,7 +237,7 @@
 	
 	"Target Need Blue Team"
 	{
-		"pt" 			"O jogador selecionado não está na equipe BLU."
+		"pt" 			"O jogador em questão não está na equipe BLU."
 	}
 	
 	// 1: Client name/index
@@ -289,7 +289,7 @@
 	
 	"Target Is Freeday"
 	{
-		"pt" 			"O jogador selecionado está de dia livre."
+		"pt" 			"O jogador em questão está de dia livre."
 	}
 	
 	// 1: Client name/index
@@ -538,7 +538,7 @@
 	
 	"LR Chosen"
 	{
-		"pt" 			"O último pedido foi escolhido. Os dias livres desta rodada foram removidos."
+		"pt" 			"O último pedido foi escolhido. Os dias livres da rodada atual foram removidos."
 	}
 	
 	"Cells Already Open"
@@ -725,7 +725,7 @@
 	
 	"Menu Title Invited"
 	{
-		"pt" 		"Você recebeu um convite para entrar na equipe dos guardas."
+		"pt" 		"Você recebeu um convite para juntar-se à equipe dos guardas."
 	}
 	
 	"Join"
