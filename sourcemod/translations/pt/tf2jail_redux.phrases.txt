@@ -34,7 +34,7 @@
 	
 	"Warden Locked Lack"
 	{
-		"pt" 			"A diretoria foi travada por falta de um diretor."
+		"pt" 			"A diretoria foi travada devido à falta de um diretor."
 	}
 	
 	"No Marker"
@@ -45,7 +45,7 @@
 	// 1: sm_tf2jr_cell_timer CVar value
 	"Door Open Timer"
 	{
-		"pt" 			"As celas foram abertas após permanecerem {1} segundos fechadas."
+		"pt" 			"As celas foram abertas após permanecerem fechadas por {1} segundos."
 	}
 	
 	"FF On"
@@ -243,23 +243,23 @@
 	// 1: Client name/index
 	"Admin Force Warden"
 	{
-		"pt" 			"designou {default}{1}{burlywood} como diretor."
+		"pt" 			"forçou {default}{1}{burlywood} a ser o diretor."
 	}
 	
 	"Admin Force Random Warden"
 	{
-		"pt" 			"designou um jogador aleatório como diretor."
+		"pt" 			"forçou um jogador aleatório a ser o diretor."
 	}
 	
 	// 1: Client name/index
 	"Admin Force LR"
 	{
-		"pt" 			"concedeu um último pedido a {default}{1}{burlywood}."
+		"pt" 			"forçou um último pedido para {default}{1}{burlywood}."
 	}
 	
 	"Admin Force LR Self"
 	{
-		"pt" 			"concedeu um último pedido a si mesmo."
+		"pt" 			"forçou um último pedido para si mesmo."
 	}
 	
 	"Admin Reset Plugin"
@@ -295,7 +295,7 @@
 	// 1: Client name/index
 	"Admin Give Freeday"
 	{
-		"pt" 			"concedeu um dia livre para {default}{1}{burlywood}."
+		"pt" 			"forçou um dia livre para {default}{1}{burlywood}."
 	}
 	
 	"Select For Freeday"
@@ -310,7 +310,7 @@
 	
 	"Player Not Freeday"
 	{
-		"pt" 			"O jogador selecionado não está de dia livre."
+		"pt" 			"O jogador em questão não está de dia livre."
 	}
 	
 	"Warden Already Locked"
@@ -365,7 +365,7 @@
 	
 	"Slow Down"
 	{
-		"pt" 			"Acalme-se, amigo!"
+		"pt" 			"Acalme-se, meu caro!"
 	}
 	
 	"Laser Off"
@@ -397,7 +397,7 @@
 	
 	"No Warday Config At Location"
 	{
-		"pt" 			"Não há nenhum arquivo de configuração presente para o dia de guerra nesta localização."
+		"pt" 			"Não há uma configuração presente para o dia de guerra nesta localização."
 	}
 	
 	"Warday Red Active"
@@ -422,7 +422,7 @@
 	
 	"No Warday Config"
 	{
-		"pt" 			"Não há nenhum arquivo de configuração presente para o dia de guerra."
+		"pt" 			"Não há uma configuração presente para o dia de guerra."
 	}
 	
 	"Warden Commands"
@@ -437,7 +437,7 @@
 	
 	"Reload CFG"
 	{
-		"pt" 			"Recarregando a configuração do plugin."
+		"pt" 			"Recarregando as configurações do plugin."
 	}
 	
 	"Medic Room Enabled Admin"
@@ -538,7 +538,7 @@
 	
 	"LR Chosen"
 	{
-		"pt" 			"O último pedido foi escolhido. Os dias livres atuais foram removidos."
+		"pt" 			"O último pedido foi escolhido. Os dias livres desta rodada foram removidos."
 	}
 	
 	"Cells Already Open"
@@ -610,7 +610,7 @@
 	
 	"Warday Start"
 	{
-		"pt" 		"{burlywood}*Sons de trombetas de guerra*"
+		"pt" 		"{burlywood}*Sons de kazoos de guerra*"
 	}
 	
 	"Random Select"
@@ -675,7 +675,7 @@
 	
 	"Warday Select"
 	{
-		"pt" 		"{1} tocou as trombetas e acionou um {default}Dia de Guerra{burlywood} para a próxima rodada."
+		"pt" 		"{1} acionou um {default}Dia de Guerra{burlywood} para a próxima rodada."
 	}
 	
 	"ClassWars Select"
@@ -725,7 +725,7 @@
 	
 	"Menu Title Invited"
 	{
-		"pt" 		"Você foi convidado para a equipe dos Guardas."
+		"pt" 		"Você recebeu um convite para entrar na equipe dos guardas."
 	}
 	
 	"Join"
