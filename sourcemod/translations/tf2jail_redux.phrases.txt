@@ -470,6 +470,7 @@
 	}
 	
 	// 1: Client name/index
+	// Don't add a period here. A period is automatically added by the plugin.
 	"New Warden"
 	{
 		"#format" 		"{1:N}"
