@@ -105,7 +105,7 @@
 	// 1: Client name/index
 	"Current Warden"
 	{
-		"pt" 			"{1}{burlywood} é o diretor."
+		"pt" 			"{default}{1}{burlywood} é o diretor."
 	}
 	
 	"No Current Warden"
@@ -181,7 +181,7 @@
 	
 	"Choose Player"
 	{
-		"pt" 			"Selecione um jogador"
+		"pt" 			"Selec. jogador"
 	}
 	
 	"Target Not On Red"
@@ -211,13 +211,13 @@
 	
 	"Music On"
 	{
-		"pt" 			"Você {lightgreen}ativou{default} a música de fundo do TF2Jail."
+		"pt" 			"Você {default}ativou{burlywood} a música de fundo do TF2Jail."
 	}
 	
 	// \n Stands for new line, ignore it please
 	"Music Off"
 	{
-		"pt" 			"Você {lightgreen}desativou{default} a música de fundo do TF2Jail.\nQuando a música parar, ela não será reproduzida novamente."
+		"pt" 			"Você {default}desativou{burlywood} a música de fundo do TF2Jail.\nQuando a música parar, ela não será reproduzida novamente."
 	}
 	
 	"Admin Removed Queued Freeday"
@@ -300,7 +300,7 @@
 	
 	"Select For Freeday"
 	{
-		"pt" 			"Selecione os jogadores que receberão um dia livre"
+		"pt" 			"Selec. jogadores p/ dia livre"
 	}
 	
 	"Admin Remove Freeday"
@@ -381,13 +381,13 @@
 	// 1: Client name/index
 	"Medic Room Enabled"
 	{
-		"pt" 			"O diretor {default}{1} {lightgreen}ativou{burlywood} a regeneração de vida das enfermarias!"
+		"pt" 			"O diretor {default}{1}{burlywood} ativou a regeneração de vida das enfermarias!"
 	}
 	
 	// 1: Client name/index
 	"Medic Room Disabled"
 	{
-		"pt" 			"O diretor {default}{1} {lightgreen}desativou{burlywood} a regeneração de vida das enfermarias!"
+		"pt" 			"O diretor {default}{1}{burlywood} desativou a regeneração de vida das enfermarias!"
 	}
 	
 	"Before Or During Round"
@@ -442,18 +442,19 @@
 	
 	"Medic Room Enabled Admin"
 	{
-		"pt" 			"{lightgreen}ativou{burlywood} a regeneração de vida das enfermarias!"
+		"pt" 			"ativou a regeneração de vida das enfermarias!"
 	}
 	
 	"Medic Room Disabled Admin"
 	{
-		"pt" 			"{lightgreen}desativou{burlywood} a regeneração de vida das enfermarias!"
+		"pt" 			"desativou a regeneração de vida das enfermarias!"
 	}
 	
 	// 1: Client name/index
+	// Don't add a period here. A period is automatically added by the plugin.
 	"New Warden"
 	{
-		"pt" 			"{default}{1}{burlywood} é o novo diretor."
+		"pt" 			"{default}{1}{burlywood} é o novo diretor"
 	}
 	
 	// 1: Client name/index
@@ -740,17 +741,17 @@
 	
 	"Mute Style Select"
 	{
-		"pt" 		"Selecione o estilo de emudecimento que deseja aplicar"
+		"pt" 		"Selec. estilo de emudecimento"
 	}
 	
 	"Living"
 	{
-		"pt" 		"Alterar emudecimento dos jogadores VIVOS"
+		"pt" 		"Jogadores vivos"
 	}
 	
 	"Dead"
 	{
-		"pt" 		"Alterar emudecimento dos jogadores MORTOS"
+		"pt" 		"Jogadores mortos"
 	}
 	
 	"Mute No One"
@@ -760,32 +761,32 @@
 	
 	"Mute Red Ex VIP"
 	{
-		"pt" 		"Emudecer toda a equipe RED (exceto VIPs)"
+		"pt" 		"E. toda a equipe RED (exceto VIPs)"
 	}
 	
 	"Mute Blue Ex VIP"
 	{
-		"pt" 		"Emudecer toda a equipe BLU (exceto VIPs)"
+		"pt" 		"E. toda a equipe BLU (exceto VIPs)"
 	}
 	
 	"Mute All Ex VIP"
 	{
-		"pt" 		"Emudecer todos os jogadores (exceto VIPs)"
+		"pt" 		"E. todos os jogadores (exceto VIPs)"
 	}
 	
 	"Mute All Red"
 	{
-		"pt" 		"Emudecer toda a equipe RED"
+		"pt" 		"E. toda a equipe RED"
 	}
 	
 	"Mute All Blue"
 	{
-		"pt" 		"Emudecer toda a equipe BLU"
+		"pt" 		"E. toda a equipe BLU"
 	}
 	
 	"Mute All"
 	{
-		"pt" 		"Emudecer todos os jogadores"
+		"pt" 		"E. todos os jogadores"
 	}
 	
 	"Warden Toggle Mute"
