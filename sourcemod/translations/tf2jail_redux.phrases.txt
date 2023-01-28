@@ -72,7 +72,7 @@
 	"Collisions Off Warden"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"Warden {default}{1}{burlywood} has disabled Collisions."
+		"en" 			"Warden {default}{1}{burlywood} has disabled Collisions!"
 	}
 	
 	// 1: Client name/index
@@ -113,7 +113,7 @@
 	"Current Warden"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"{1}{burlywood} is the current Warden."
+		"en" 			"{default}{1}{burlywood} is the current Warden."
 	}
 	
 	"No Current Warden"
@@ -221,13 +221,13 @@
 	
 	"Music On"
 	{
-		"en" 			"You've turned {lightgreen}On{default} the TF2Jail Background Music."
+		"en" 			"You've turned {default}on{burlywood} the TF2Jail background music."
 	}
 	
 	// \n Stands for new line, ignore it please
 	"Music Off"
 	{
-		"en" 			"You've turned {lightgreen}Off{default} the TF2Jail Background Music.\nWhen the music stops, it won't play again."
+		"en" 			"You've turned {default}off{burlywood} the TF2Jail background music.\nWhen the music stops, it won't play again."
 	}
 	
 	"Admin Removed Queued Freeday"
@@ -399,14 +399,14 @@
 	"Medic Room Enabled"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"Warden {default}{1}{burlywood} has toggled Medic {lightgreen}On{burlywood}!"
+		"en" 			"Warden {default}{1}{burlywood} has disabled the Medic room!"
 	}
 	
 	// 1: Client name/index
 	"Medic Room Disabled"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"Warden {default}{1}{burlywood} has toggled Medic {lightgreen}Off{burlywood}!"
+		"en" 			"Warden {default}{1}{burlywood} has enabled the Medic room!"
 	}
 	
 	"Before Or During Round"
@@ -461,19 +461,20 @@
 	
 	"Medic Room Enabled Admin"
 	{
-		"en" 			"has toggled Medic {lightgreen}On{burlywood}!"
+		"en" 			"has enabled the Medic room!"
 	}
 	
 	"Medic Room Disabled Admin"
 	{
-		"en" 			"has toggled Medic {lightgreen}Off{burlywood}!"
+		"en" 			"has disabled the Medic room!"
 	}
 	
 	// 1: Client name/index
+	// Don't add a period here. A period is automatically added by the plugin.
 	"New Warden"
 	{
 		"#format" 		"{1:N}"
-		"en" 			"{default}{1}{burlywood} is the new Warden."
+		"en" 			"{default}{1}{burlywood} is the new Warden"
 	}
 	
 	// 1: Client name/index
@@ -620,7 +621,7 @@
 	"Announce Timer"
 	{
 		"#format" 	"{1:s}"
-		"en" 		"V{1} by {default}Scag/Ragenewb{burlywood}."
+		"en" 		"V{1} by {default}Scag{burlywood}/{default}Ragenewb{burlywood}."
 	}
 	
 	"Freeday All Start"
@@ -887,7 +888,7 @@
 	"Admin Remove Warden"
 	{
 		"#format"	"{1:N}"
-		"en"		"has fired {1} from Warden."
+		"en"		"has fired {default}{1}{burlywood} from Warden."
 	}
 	
 	// Warden name annotation
