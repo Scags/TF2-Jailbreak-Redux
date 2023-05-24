@@ -43,7 +43,7 @@
 
 #define RED 				2
 #define BLU 				3
-#define MAX_TF_PLAYERS 		34	// 32 + replay + console
+#define MAX_TF_PLAYERS 		MAXPLAYERS
 
 enum	// Cvar name
 {

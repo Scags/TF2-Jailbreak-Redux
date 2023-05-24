@@ -12,7 +12,7 @@
 #define LEFTFOOT 		"player/footsteps/giant1.wav"
 #define RIGHTFOOT 		"player/footsteps/giant2.wav"
 
-int iHHHParticle[34][3];
+int iHHHParticle[MAXPLAYERS][3];
 
 static LastRequest g_LR;
 
