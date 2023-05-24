@@ -42,7 +42,7 @@
 	
 	"Offline Unguardban"
 	{
-		"pl"			"Sukcesywnie Odbanowano Steam ID {1}."
+		"pl"			"Odbanowano Steam ID {1}."
 	}
 	
 	"Cmd Usage OfflineGuardban"
@@ -52,7 +52,7 @@
 	
 	"Offline Guardban"
 	{
-		"pl"			"Sukcesywnie Zbanowano Steam ID {1}.
+		"pl"			"Zbanowano Steam ID {1}.
 	}
 	
 	"Already Wardenbanned"
